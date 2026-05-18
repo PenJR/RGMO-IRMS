@@ -1,0 +1,6 @@
+{
+  "name": "RGMO-IRMS",
+  "description": "A Laravel-based Inventory and Resource Management System for Central Mindanao University (RGMO). Built with Blade, PHP 8, and Bootstrap.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

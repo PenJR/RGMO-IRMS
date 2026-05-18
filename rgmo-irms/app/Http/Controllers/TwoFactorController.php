@@ -1,0 +1,131 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Services\TwoFactorService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class TwoFactorController extends Controller
+{
+    public function __construct(private readonly TwoFactorService $twoFactor) {}
+
+    public function showEnable(Request $request)
+    {
+        $user = $request->user();
+        if (! $user) {
+            abort(403);
+        }
+
+        if (! $user->two_factor_secret) {
+            $secret = $this->twoFactor->generateSecret();
+            $user->update(['two_factor_secret' => $secret, 'two_factor_enabled' => false]);
+        } else {
+            $secret = $user->two_factor_secret;
+        }
+
+        $uri = $this->twoFactor->getProvisioningUri($user->email, $secret);
+
+        return response()->json(['secret' => $secret, 'otpauth_url' => $uri]);
+    }
+
+    public function confirm(Request $request)
+    {
+        $request->validate(['code' => 'required|string']);
+        $user = $request->user() ?? auth()->user();
+        if (! $user) abort(403);
+
+        $ok = $this->twoFactor->verifyCode($user->two_factor_secret, $request->input('code'));
+        if (! $ok) {
+            return response()->json(['message' => 'Invalid code'], 422);
+        }
+
+        $user->update(['two_factor_enabled' => true]);
+        return response()->json(['message' => 'Two-factor authentication enabled']);
+    }
+
+    public function disable(Request $request)
+    {
+        $request->validate(['password' => 'required|string']);
+        $user = $request->user();
+        if (! $user) abort(403);
+
+        if (! \Hash::check($request->input('password'), $user->password)) {
+            return response()->json(['message' => 'Invalid password'], 422);
+        }
+
+        $user->update(['two_factor_enabled' => false, 'two_factor_secret' => null]);
+        return response()->json(['message' => 'Two-factor authentication disabled']);
+    }
+
+    public function showVerify(Request $request)
+    {
+        if ($request->wantsJson()) {
+            return response()->json(['2fa_required' => true]);
+        }
+
+        return view('auth.2fa-verify');
+    }
+
+    public function verify(Request $request)
+    {
+        $request->validate(['code' => 'required|string']);
+
+        $pendingUserId = null;
+        if ($request->hasSession()) {
+            $pendingUserId = $request->session()->get('2fa:user_id');
+        }
+
+        // fallback to provided user_id for API flows
+        if (! $pendingUserId && $request->input('user_id')) {
+            $pendingUserId = (int) $request->input('user_id');
+        }
+
+        $user = null;
+        if ($pendingUserId) {
+            $user = User::find($pendingUserId);
+        }
+
+            // If no pending user found, for API flows try to identify the user by the provided code
+            if (! $user && $request->expectsJson()) {
+                $code = $request->input('code');
+                $candidates = User::whereNotNull('two_factor_secret')->where('two_factor_enabled', true)->get();
+                foreach ($candidates as $candidate) {
+                    $ok = $this->twoFactor->verifyCode($candidate->two_factor_secret, $code);
+                    if ($ok) {
+                        $user = $candidate;
+                        break;
+                    }
+                }
+            }
+
+            if (! $user) {
+                return redirect()->route('login')->withErrors(['message' => 'Invalid user.']);
+            }
+
+        $code = $request->input('code');
+        if (! $this->twoFactor->verifyCode($user->two_factor_secret, $code)) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'The provided two-factor code is invalid.'], 422);
+            }
+            return back()->withErrors(['code' => 'The provided two-factor code is invalid.']);
+        }
+
+        // Mark 2FA as confirmed
+        $user->update(['two_factor_enabled' => true]);
+
+        // Finalize login (session may not exist for API requests)
+        Auth::loginUsingId($user->id);
+        if ($request->hasSession()) {
+            $request->session()->forget('2fa:user_id');
+            $request->session()->regenerate();
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Authenticated']);
+        }
+
+        return redirect()->route('dashboard');
+    }
+}

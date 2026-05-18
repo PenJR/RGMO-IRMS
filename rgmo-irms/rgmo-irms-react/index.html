@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RGMO-IRMS | Laravel Preview</title>
+    <!-- Use Bootstrap and Inter font for the preview as per the design -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --cmu-green: #006837;
+            --cmu-dark-green: #004d29;
+            --cmu-gold: #FFCC00;
+        }
+        body {
+            background-color: #f9fafb;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #1f2937;
+            margin: 0;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--cmu-green);
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar .nav-link {
+            color: #d1d5db;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            text-decoration: none;
+            border-left: 4px solid transparent;
+        }
+        .sidebar .nav-link:hover { background: var(--cmu-dark-green); color: white; }
+        .sidebar .nav-link.active {
+            color: var(--cmu-gold);
+            background: rgba(255, 204, 0, 0.1);
+            border-left-color: var(--cmu-gold);
+            font-weight: 600;
+        }
+        .top-nav {
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        .card {
+            background: white;
+            border: 1px solid #f3f4f6;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+        }
+        .stat-label { font-size: 10px; text-transform: uppercase; font-weight: 700; color: #6b7280; margin-bottom: 0.25rem; }
+        .stat-value { font-size: 1.875rem; font-weight: 300; }
+        .btn-cmu { background: var(--cmu-green); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.875rem; }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex overflow-hidden" style="height: 100vh;">
+      <aside class="sidebar">
+        <div class="p-4 border-bottom border-dark-subtle mb-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; background: var(--cmu-gold); color: var(--cmu-green); font-size: 1.25rem;">U</div>
+                <div>
+                    <h1 class="text-sm fw-bold mb-0" style="font-size: 0.875rem; letter-spacing: -0.01em;">RGMO-IRMS</h1>
+                    <p class="text-uppercase mb-0 opacity-50" style="font-size: 10px; letter-spacing: 0.1em;">Central Mindanao</p>
+                </div>
+            </div>
+        </div>
+        <nav class="nav flex-column flex-grow-1">
+            <a href="#" class="nav-link active"><i data-lucide="layout-dashboard" class="d-inline-block me-3" style="width: 18px"></i> Dashboard</a>
+            <a href="#" class="nav-link"><i data-lucide="package" class="d-inline-block me-3" style="width: 18px"></i> Inventory</a>
+            <a href="#" class="nav-link"><i data-lucide="clipboard-list" class="d-inline-block me-3" style="width: 18px"></i> Resource Requests</a>
+            <a href="#" class="nav-link"><i data-lucide="bar-chart-3" class="d-inline-block me-3" style="width: 18px"></i> Reports</a>
+        </nav>
+      </aside>
+
+      <main class="d-flex flex-column flex-grow-1">
+        <header class="top-nav">
+            <h2 class="h5 fw-bold mb-0">Dashboard Overview</h2>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge rounded-pill bg-light text-muted fw-normal px-3 py-2 border">Session: 2024-Q3</span>
+                <button class="btn btn-cmu btn-sm shadow-sm">+ New Resource</button>
+            </div>
+        </header>
+        <div class="content">
+            <div class="row g-4 mb-5">
+                <div class="col-md-3">
+                    <div class="card h-100">
+                        <p class="stat-label">Total Stock Items</p>
+                        <p class="stat-value text-success">1,284</p>
+                        <div class="mt-2 text-success" style="font-size: 10px;">+12% from last month</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100">
+                        <p class="stat-label">Pending Approvals</p>
+                        <p class="stat-value" style="color: #FFCC00;">18</p>
+                        <p class="mt-2 text-muted" style="font-size: 10px;">Awaiting Head signature</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100">
+                        <p class="stat-label">Low Stock Alerts</p>
+                        <p class="stat-value text-danger">4</p>
+                        <p class="mt-2 text-muted" style="font-size: 10px;">Critical items needing reorder</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100">
+                        <p class="stat-label">Active Requests</p>
+                        <p class="stat-value text-primary">22</p>
+                        <p class="mt-2 text-muted" style="font-size: 10px;">In progress</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-0 overflow-hidden">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h6 class="mb-0 fw-bold">Critical Inventory Status</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr class="text-uppercase text-muted" style="font-size: 10px;">
+                                <th class="ps-4 py-3">Item Name</th>
+                                <th>Category</th>
+                                <th>Current Stock</th>
+                                <th class="text-end pe-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 0.8125rem;">
+                            <tr>
+                                <td class="ps-4 fw-bold">NPK Fertilizer (14-14-14)</td>
+                                <td class="text-muted">Chemicals</td>
+                                <td>12 Bags</td>
+                                <td class="text-end pe-4"><span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-1 fw-bold" style="font-size: 10px;">LOW</span></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-bold">Corn Hybrid Seeds (CMU-V1)</td>
+                                <td class="text-muted">Seeds</td>
+                                <td>450 Kilos</td>
+                                <td class="text-end pe-4"><span class="badge rounded-pill bg-success-subtle text-success px-3 py-1 fw-bold" style="font-size: 10px;">NORMAL</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+  </body>
+</html>
+
