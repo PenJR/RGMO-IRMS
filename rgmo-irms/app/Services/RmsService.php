@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
+use App\Models\LoginHistory;
 use App\Models\Notification;
 use App\Models\RequestItem;
 use App\Models\ResourceRequest;
@@ -53,6 +54,12 @@ class RmsService
         $user->resetLoginAttempts();
         $user->update(['last_login_at' => now()]);
         $this->logActivity($user->id, 'login', 'auth', ['email' => $user->email]);
+        LoginHistory::create([
+            'user_id' => $user->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => substr((string) request()->userAgent(), 0, 255),
+            'login_at' => now(),
+        ]);
 
         return true;
     }
@@ -60,7 +67,14 @@ class RmsService
     public function logoutUser(): void
     {
         if (Auth::check()) {
-            $this->logActivity(Auth::id(), 'logout', 'auth', []);
+            $userId = Auth::id();
+            $this->logActivity($userId, 'logout', 'auth', []);
+            $loginHistory = LoginHistory::where('user_id', $userId)
+                ->openSession()
+                ->latest('login_at')
+                ->first();
+
+            $loginHistory?->update(['logout_at' => now()]);
         }
         Auth::logout();
     }

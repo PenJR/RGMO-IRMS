@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LoginHistory;
 use App\Models\User;
 use App\Services\TwoFactorService;
 use Illuminate\Http\Request;
@@ -121,6 +122,13 @@ class TwoFactorController extends Controller
             $request->session()->forget('2fa:user_id');
             $request->session()->regenerate();
         }
+
+        LoginHistory::create([
+            'user_id' => $user->id,
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            'login_at' => now(),
+        ]);
 
         if ($request->expectsJson()) {
             return response()->json(['message' => 'Authenticated']);

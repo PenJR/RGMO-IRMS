@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LoginHistory;
 use App\Models\User;
-use App\Models\UserActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
 
@@ -35,6 +35,42 @@ class AdminUserController extends Controller
         $users = $query->paginate(15);
 
         return view('admin.users.index', ['users' => $users]);
+    }
+
+    /**
+     * Display login logs for all users.
+     */
+    public function loginLogs(Request $request)
+    {
+        $this->authorize('viewAny', User::class);
+
+        $query = LoginHistory::query()->with('user');
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('user', function ($userQuery) use ($search) {
+                $userQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->whereHas('user', function ($userQuery) use ($request) {
+                $userQuery->where('role', $request->input('role'));
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('login_at', '>=', $request->input('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('login_at', '<=', $request->input('date_to'));
+        }
+
+        $loginLogs = $query->latest('login_at')->paginate(25)->withQueryString();
+
+        return view('admin.login-logs.index', ['loginLogs' => $loginLogs]);
     }
 
     /**
@@ -177,9 +213,8 @@ class AdminUserController extends Controller
     {
         $this->authorize('view', $user);
 
-        $loginHistory = $user->activityLogs()
-            ->where('activity', 'like', '%login%')
-            ->orderBy('created_at', 'desc')
+        $loginHistory = $user->loginHistories()
+            ->latest('login_at')
             ->paginate(20);
 
         return view('admin.users.login-history', [

@@ -119,10 +119,9 @@ class ReportService
      */
     public function getUserLoginHistory(User $user, int $days = 30)
     {
-        return $user->activityLogs()
-            ->where('activity', 'like', '%login%')
-            ->dateRange(now()->subDays($days), now())
-            ->orderBy('created_at', 'desc')
+        return $user->loginHistories()
+            ->whereBetween('login_at', [now()->subDays($days), now()])
+            ->latest('login_at')
             ->get();
     }
 

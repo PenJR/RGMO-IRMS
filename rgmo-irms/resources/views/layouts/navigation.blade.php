@@ -53,6 +53,10 @@
         @endcan
 
         @if(auth()->user()->isAdmin())
+            <a href="{{ route('admin.login-logs.index') }}" class="nav-link {{ request()->routeIs('admin.login-logs.*') ? 'active' : '' }}">
+                <i data-lucide="history" class="me-3" style="width: 18px"></i>
+                Login Logs
+            </a>
             <a href="{{ route('admin.backup.index') }}" class="nav-link {{ request()->routeIs('admin.backup.*') ? 'active' : '' }}">
                 <i data-lucide="server" class="me-3" style="width: 18px"></i>
                 System Backup

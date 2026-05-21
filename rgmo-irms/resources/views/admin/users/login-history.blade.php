@@ -18,20 +18,34 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Date</th>
-                                    <th>Activity</th>
+                                    <th>Logout</th>
+                                    <th>Duration</th>
                                     <th>IP Address</th>
+                                    <th>Device</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($loginHistory as $log)
                                     <tr>
-                                        <td>{{ $log->created_at?->format('M d, Y H:i') }}</td>
-                                        <td>{{ $log->activity }}</td>
+                                        <td>{{ $log->login_at?->format('M d, Y H:i') }}</td>
+                                        <td>{{ $log->logout_at?->format('M d, Y H:i') ?? 'Active / not recorded' }}</td>
+                                        <td>
+                                            @if($log->logout_at)
+                                                {{ $log->login_at?->diffForHumans($log->logout_at, true) }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
                                         <td>{{ $log->ip_address ?? 'N/A' }}</td>
+                                        <td class="text-muted small" style="max-width: 360px;">{{ $log->user_agent ?? 'N/A' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="mt-4">
+                        {{ $loginHistory->links() }}
                     </div>
                 @else
                     <div class="text-center py-5">

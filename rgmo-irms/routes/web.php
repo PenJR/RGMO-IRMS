@@ -81,6 +81,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Admin Panel
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/login-logs', [AdminUserController::class, 'loginLogs'])->name('login-logs.index');
         Route::resource('users', AdminUserController::class);
         Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
         Route::post('/users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
