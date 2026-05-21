@@ -82,8 +82,10 @@ class InventoryController extends Controller
     /**
      * Display the specified inventory item
      */
-    public function show(InventoryItem $item)
+    public function show(InventoryItem $inventory)
     {
+        $item = $inventory;
+
         $this->authorize('view', $item);
 
         $item->load('category', 'transactions.user');
@@ -98,8 +100,10 @@ class InventoryController extends Controller
     /**
      * Show the form for editing the specified resource
      */
-    public function edit(InventoryItem $item)
+    public function edit(InventoryItem $inventory)
     {
+        $item = $inventory;
+
         $this->authorize('update', $item);
 
         return view('inventory.edit', [
@@ -112,8 +116,10 @@ class InventoryController extends Controller
     /**
      * Update the specified resource in storage
      */
-    public function update(Request $request, InventoryItem $item)
+    public function update(Request $request, InventoryItem $inventory)
     {
+        $item = $inventory;
+
         $this->authorize('update', $item);
 
         $units = config('inventory.units', $this->units());
@@ -138,8 +144,10 @@ class InventoryController extends Controller
     /**
      * Remove the specified resource from storage
      */
-    public function destroy(InventoryItem $item)
+    public function destroy(InventoryItem $inventory)
     {
+        $item = $inventory;
+
         $this->authorize('delete', $item);
 
         $this->inventoryService->deleteItem($item, auth()->id());

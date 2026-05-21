@@ -17,10 +17,22 @@
         </a>
 
         @if(in_array(auth()->user()->role, ['admin', 'staff']))
-            <a href="{{ route('inventory.index') }}" class="nav-link {{ request()->routeIs('inventory.*') ? 'active' : '' }}">
-                <i data-lucide="package" class="me-3" style="width: 18px"></i>
-                Inventory
-            </a>
+            <details class="nav-group {{ request()->routeIs('inventory.*') ? 'active' : '' }}" {{ request()->routeIs('inventory.*') ? 'open' : '' }}>
+                <summary>
+                    <span class="nav-group-toggle">
+                        <i data-lucide="package" class="me-3" style="width: 18px"></i>
+                        Inventory
+                        <i data-lucide="chevron-down" class="chevron"></i>
+                    </span>
+                </summary>
+                <div class="nav-submenu">
+                    <a href="{{ route('inventory.index') }}" class="nav-link {{ request()->routeIs('inventory.index') ? 'active' : '' }}">Items List</a>
+                    <a href="{{ route('inventory.low-stock') }}" class="nav-link {{ request()->routeIs('inventory.low-stock') ? 'active' : '' }}">Low Stock</a>
+                    @can('create', App\Models\InventoryItem::class)
+                        <a href="{{ route('inventory.create') }}" class="nav-link {{ request()->routeIs('inventory.create') ? 'active' : '' }}">Add Item</a>
+                    @endcan
+                </div>
+            </details>
         @endif
 
         <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
@@ -32,39 +44,72 @@
         </a>
 
         @if(auth()->user()->can('create', App\Models\ResourceRequest::class))
-            <a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('requests.*') ? 'active' : '' }}">
-                <i data-lucide="clipboard-list" class="me-3" style="width: 18px"></i>
-                Resource Requests
-            </a>
+            <details class="nav-group {{ request()->routeIs('requests.*') ? 'active' : '' }}" {{ request()->routeIs('requests.*') ? 'open' : '' }}>
+                <summary>
+                    <span class="nav-group-toggle">
+                        <i data-lucide="clipboard-list" class="me-3" style="width: 18px"></i>
+                        Requests
+                        <i data-lucide="chevron-down" class="chevron"></i>
+                    </span>
+                </summary>
+                <div class="nav-submenu">
+                    <a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('requests.index') ? 'active' : '' }}">All Requests</a>
+                    <a href="{{ route('requests.pending') }}" class="nav-link {{ request()->routeIs('requests.pending') ? 'active' : '' }}">Pending List</a>
+                    <a href="{{ route('requests.create') }}" class="nav-link {{ request()->routeIs('requests.create') ? 'active' : '' }}">New Request</a>
+                </div>
+            </details>
         @endif
 
         @if(in_array(auth()->user()->role, ['admin', 'staff']))
-            <a href="{{ route('reports.inventory') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                <i data-lucide="bar-chart-3" class="me-3" style="width: 18px"></i>
-                Reports
-            </a>
+            <details class="nav-group {{ request()->routeIs('reports.*') ? 'active' : '' }}" {{ request()->routeIs('reports.*') ? 'open' : '' }}>
+                <summary>
+                    <span class="nav-group-toggle">
+                        <i data-lucide="bar-chart-3" class="me-3" style="width: 18px"></i>
+                        Reports
+                        <i data-lucide="chevron-down" class="chevron"></i>
+                    </span>
+                </summary>
+                <div class="nav-submenu">
+                    <a href="{{ route('reports.inventory') }}" class="nav-link {{ request()->routeIs('reports.inventory') ? 'active' : '' }}">Inventory</a>
+                    <a href="{{ route('reports.resource-usage') }}" class="nav-link {{ request()->routeIs('reports.resource-usage') ? 'active' : '' }}">Resource Usage</a>
+                    <a href="{{ route('reports.requests') }}" class="nav-link {{ request()->routeIs('reports.requests') ? 'active' : '' }}">Requests</a>
+                    <a href="{{ route('reports.audit-trail') }}" class="nav-link {{ request()->routeIs('reports.audit-trail') ? 'active' : '' }}">Audit Trail</a>
+                </div>
+            </details>
         @endif
 
         @can('viewAny', App\Models\User::class)
-            <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                <i data-lucide="users" class="me-3" style="width: 18px"></i>
-                Admin Users
-            </a>
+            <details class="nav-group {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'active' : '' }}" {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'open' : '' }}>
+                <summary>
+                    <span class="nav-group-toggle">
+                        <i data-lucide="users" class="me-3" style="width: 18px"></i>
+                        User Management
+                        <i data-lucide="chevron-down" class="chevron"></i>
+                    </span>
+                </summary>
+                <div class="nav-submenu">
+                    <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">Account Management</a>
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('admin.login-logs.index') }}" class="nav-link {{ request()->routeIs('admin.login-logs.*') ? 'active' : '' }}">Login Logs</a>
+                    @endif
+                </div>
+            </details>
         @endcan
 
         @if(auth()->user()->isAdmin())
-            <a href="{{ route('admin.login-logs.index') }}" class="nav-link {{ request()->routeIs('admin.login-logs.*') ? 'active' : '' }}">
-                <i data-lucide="history" class="me-3" style="width: 18px"></i>
-                Login Logs
-            </a>
-            <a href="{{ route('admin.backup.index') }}" class="nav-link {{ request()->routeIs('admin.backup.*') ? 'active' : '' }}">
-                <i data-lucide="server" class="me-3" style="width: 18px"></i>
-                System Backup
-            </a>
-            <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                <i data-lucide="settings" class="me-3" style="width: 18px"></i>
-                System Settings
-            </a>
+            <details class="nav-group {{ request()->routeIs('admin.backup.*') || request()->routeIs('admin.settings.*') ? 'active' : '' }}" {{ request()->routeIs('admin.backup.*') || request()->routeIs('admin.settings.*') ? 'open' : '' }}>
+                <summary>
+                    <span class="nav-group-toggle">
+                        <i data-lucide="settings" class="me-3" style="width: 18px"></i>
+                        System
+                        <i data-lucide="chevron-down" class="chevron"></i>
+                    </span>
+                </summary>
+                <div class="nav-submenu">
+                    <a href="{{ route('admin.backup.index') }}" class="nav-link {{ request()->routeIs('admin.backup.*') ? 'active' : '' }}">Backup</a>
+                    <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">Settings</a>
+                </div>
+            </details>
         @endif
     </div>
 

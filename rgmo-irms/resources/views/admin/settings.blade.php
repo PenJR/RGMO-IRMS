@@ -39,7 +39,15 @@
                                 @foreach($settings as $key => $value)
                                     <tr>
                                         <td class="text-muted">{{ str_replace('_', ' ', ucfirst($key)) }}</td>
-                                        <td class="text-end">{{ is_array($value) ? json_encode($value) : $value }}</td>
+                                        <td class="text-end">
+                                            @if($key === 'default_currency' && is_array($value))
+                                                {{ $value['code'] ?? 'N/A' }}@if(!empty($value['symbol'])) ({{ $value['symbol'] }})@endif
+                                            @elseif(is_array($value))
+                                                {{ collect($value)->map(fn ($item, $label) => is_string($label) ? ucfirst(str_replace('_', ' ', $label)) . ': ' . $item : $item)->implode(', ') }}
+                                            @else
+                                                {{ $value }}
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>

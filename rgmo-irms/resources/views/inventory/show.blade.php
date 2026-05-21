@@ -1,15 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Inventory Item Details') }}
-            </h2>
-            <div class="flex space-x-2">
+        <div class="d-flex justify-content-between align-items-center w-100">
+            <div>
+                <h2 class="fw-bold mb-1">Inventory Item Details</h2>
+                <p class="text-muted mb-0">{{ $item->name }}</p>
+            </div>
+            <div class="d-flex gap-2">
                 @can('update', $item)
-                    <a href="{{ route('inventory.edit', ['inventory' => $item->id]) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
+                    <a href="{{ route('inventory.edit', ['inventory' => $item->id]) }}" class="btn btn-cmu d-inline-flex align-items-center gap-2">
+                        <i data-lucide="pencil" style="width: 16px; height: 16px;"></i>
                         Edit
                     </a>
                 @endcan
@@ -17,15 +16,13 @@
                     <form action="{{ route('inventory.destroy', ['inventory' => $item->id]) }}" method="POST" onsubmit="return confirm('Delete this item?');">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        <button type="submit" class="btn btn-outline-danger">
                             Delete
                         </button>
                     </form>
                 @endcan
-                <a href="{{ route('inventory.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
+                <a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+                    <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
                     Back to Inventory
                 </a>
             </div>

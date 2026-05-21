@@ -30,14 +30,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Inventory Module
     Route::middleware(['role:admin,staff'])->group(function () {
-        Route::resource('inventory', InventoryController::class);
-        Route::post('/inventory/{item}/stock-in', [InventoryController::class, 'stockIn'])->name('inventory.stock-in');
-        Route::post('/inventory/{item}/stock-out', [InventoryController::class, 'stockOut'])->name('inventory.stock-out');
-        Route::post('/inventory/{item}/adjust-stock', [InventoryController::class, 'adjustStock'])->name('inventory.adjust-stock');
         Route::get('/inventory/low-stock', [InventoryController::class, 'lowStock'])->name('inventory.low-stock');
         Route::get('/inventory/export-csv', [InventoryController::class, 'exportCsv'])->name('inventory.export-csv');
         Route::get('/inventory/export-excel', [InventoryController::class, 'exportExcel'])->name('inventory.export-excel');
         Route::post('/inventory/import', [InventoryController::class, 'import'])->name('inventory.import');
+        Route::resource('inventory', InventoryController::class);
+        Route::post('/inventory/{item}/stock-in', [InventoryController::class, 'stockIn'])->name('inventory.stock-in');
+        Route::post('/inventory/{item}/stock-out', [InventoryController::class, 'stockOut'])->name('inventory.stock-out');
+        Route::post('/inventory/{item}/adjust-stock', [InventoryController::class, 'adjustStock'])->name('inventory.adjust-stock');
         Route::post('/inventory/{id}/restore', [InventoryController::class, 'restore'])->name('inventory.restore');
     });
 

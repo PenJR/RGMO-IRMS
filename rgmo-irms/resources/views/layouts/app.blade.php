@@ -61,6 +61,65 @@
                 font-weight: 600;
             }
 
+            #sidebar .nav-group {
+                margin: 0.125rem 0;
+            }
+
+            #sidebar .nav-group summary {
+                list-style: none;
+                cursor: pointer;
+                user-select: none;
+            }
+
+            #sidebar .nav-group summary::-webkit-details-marker {
+                display: none;
+            }
+
+            #sidebar .nav-group-toggle {
+                color: #d1d5db;
+                padding: 0.75rem 1.5rem;
+                font-size: 0.875rem;
+                transition: all 0.2s;
+                border-left: 4px solid transparent;
+                display: flex;
+                align-items: center;
+            }
+
+            #sidebar .nav-group-toggle:hover,
+            #sidebar .nav-group[open] > summary .nav-group-toggle {
+                color: white;
+                background: var(--cmu-dark-green);
+            }
+
+            #sidebar .nav-group.active > summary .nav-group-toggle {
+                color: var(--cmu-gold);
+                background: rgba(255, 204, 0, 0.1);
+                border-left-color: var(--cmu-gold);
+                font-weight: 600;
+            }
+
+            #sidebar .nav-group-toggle .chevron {
+                margin-left: auto;
+                width: 16px;
+                height: 16px;
+                transition: transform 0.2s;
+            }
+
+            #sidebar .nav-group[open] .chevron {
+                transform: rotate(180deg);
+            }
+
+            #sidebar .nav-submenu {
+                padding: 0.25rem 0 0.5rem;
+                background: rgba(0, 0, 0, 0.08);
+            }
+
+            #sidebar .nav-submenu .nav-link {
+                padding: 0.55rem 1.5rem 0.55rem 3.25rem;
+                border-left-width: 4px;
+                font-size: 0.8125rem;
+            }
+
             .top-nav {
                 height: 72px;
                 background: white;
@@ -153,7 +212,7 @@
 
             <main class="d-flex flex-column flex-grow-1">
                 <header class="top-nav d-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="flex-grow-1" style="min-width: 0;">
                         @if(isset($header))
                             {{ $header }}
                         @else
