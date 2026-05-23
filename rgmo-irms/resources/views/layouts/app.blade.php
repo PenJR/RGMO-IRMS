@@ -52,7 +52,8 @@
 
             #sidebar .nav-link:hover {
                 color: white;
-                background: var(--cmu-dark-green);
+                background: rgba(255, 255, 255, 0.1);
+                padding-left: 1.75rem;
                 text-decoration: none;
             }
 
@@ -61,10 +62,12 @@
                 background: rgba(255, 204, 0, 0.1);
                 border-left-color: var(--cmu-gold);
                 font-weight: 600;
+                padding-left: 1.75rem;
             }
 
             #sidebar .nav-group {
                 margin: 0.125rem 0;
+                transition: all 0.3s ease;
             }
 
             #sidebar .nav-group summary {
@@ -85,41 +88,57 @@
                 border-left: 4px solid transparent;
                 display: flex;
                 align-items: center;
+                gap: 0.5rem;
             }
 
             #sidebar .nav-group-toggle:hover,
             #sidebar .nav-group[open] > summary .nav-group-toggle {
                 color: white;
-                background: var(--cmu-dark-green);
+                background: rgba(255, 255, 255, 0.05);
             }
 
             #sidebar .nav-group.active > summary .nav-group-toggle {
                 color: var(--cmu-gold);
-                background: rgba(255, 204, 0, 0.1);
                 border-left-color: var(--cmu-gold);
                 font-weight: 600;
             }
 
             #sidebar .nav-group-toggle .chevron {
                 margin-left: auto;
-                width: 16px;
-                height: 16px;
-                transition: transform 0.2s;
+                width: 14px;
+                height: 14px;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                opacity: 0.5;
             }
 
             #sidebar .nav-group[open] .chevron {
                 transform: rotate(180deg);
+                opacity: 1;
             }
 
             #sidebar .nav-submenu {
                 padding: 0.25rem 0 0.5rem;
-                background: rgba(0, 0, 0, 0.08);
+                background: rgba(0, 0, 0, 0.15);
+                overflow: hidden;
+                animation: slideDown 0.3s ease-out;
+            }
+
+            @keyframes slideDown {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
             }
 
             #sidebar .nav-submenu .nav-link {
                 padding: 0.55rem 1.5rem 0.55rem 3.25rem;
                 border-left-width: 4px;
                 font-size: 0.8125rem;
+                opacity: 0.8;
+            }
+
+            #sidebar .nav-submenu .nav-link:hover,
+            #sidebar .nav-submenu .nav-link.active {
+                opacity: 1;
+                padding-left: 3.5rem;
             }
 
             .top-nav {
@@ -128,6 +147,9 @@
                 background: white;
                 border-bottom: 1px solid #e5e7eb;
                 padding: 0.5rem 2rem;
+                position: sticky;
+                top: 0;
+                z-index: 1020;
             }
 
             .main-content {
@@ -140,6 +162,12 @@
                 border: 1px solid #f3f4f6;
                 border-radius: 12px;
                 box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .card-stat:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             }
 
             .card-header {
@@ -178,14 +206,46 @@
             }
 
             .sidebar-footer {
-                background: rgba(0,0,0,0.08);
-                padding: 1rem 1.5rem;
+                background: rgba(0, 0, 0, 0.15);
+                padding: 1.5rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
             }
 
             .sidebar-footer .user-pill {
-                width: 32px;
-                height: 32px;
-                font-size: 0.75rem;
+                width: 38px;
+                height: 38px;
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                font-size: 0.8125rem;
+                font-weight: 700;
+                color: white;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+
+            .sidebar-footer .btn-light {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: white;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .sidebar-footer .btn-light:hover {
+                background: var(--cmu-gold);
+                border-color: var(--cmu-gold);
+                color: var(--cmu-green) !important;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(255, 204, 0, 0.2);
+            }
+
+            .sidebar-footer .btn-outline-light {
+                border-color: rgba(255, 255, 255, 0.2);
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .sidebar-footer .btn-outline-light:hover {
+                background: rgba(255, 255, 255, 0.05);
+                border-color: rgba(255, 255, 255, 0.3);
+                transform: translateY(-2px);
             }
 
             .card small {
@@ -255,6 +315,32 @@
             </main>
         </div>
 
-        <script>lucide.createIcons();</script>
+        <script>
+            lucide.createIcons();
+
+            // Interactivity for Sidebar Dropdowns
+            document.querySelectorAll('#sidebar details').forEach((details) => {
+                details.addEventListener('click', (e) => {
+                    // Close other open details if we're opening a new one
+                    if (!details.open) {
+                        document.querySelectorAll('#sidebar details[open]').forEach((other) => {
+                            if (other !== details) {
+                                other.removeAttribute('open');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Handle hover state for parent items when summary is hovered
+            document.querySelectorAll('#sidebar summary').forEach(summary => {
+                summary.addEventListener('mouseenter', () => {
+                    summary.parentElement.classList.add('hover-active');
+                });
+                summary.addEventListener('mouseleave', () => {
+                    summary.parentElement.classList.remove('hover-active');
+                });
+            });
+        </script>
     </body>
 </html>
