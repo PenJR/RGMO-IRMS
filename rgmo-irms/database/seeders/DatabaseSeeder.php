@@ -32,6 +32,9 @@ class DatabaseSeeder extends Seeder
                 'email' => 'test@example.com',
             ], [
                 'name' => 'Test User',
+                'role' => 'staff',
+                'email_verified_at' => now(),
+                'password' => Hash::make('password'),
             ]);
 
             // Seed admin and sample accounts for local testing
@@ -64,7 +67,7 @@ class DatabaseSeeder extends Seeder
 
             // System settings
             SystemSetting::set('site_name', 'RGMO RMS Demo');
-            SystemSetting::set('default_currency', ['code' => 'USD', 'symbol' => '$']);
+            SystemSetting::set('default_currency', ['code' => 'PHP', 'symbol' => '₱']);
 
             // Categories and inventory
             $categories = [

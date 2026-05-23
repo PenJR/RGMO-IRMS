@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class InventoryItemsExport implements FromCollection, WithHeadings, ShouldAutoSize
 {
-    public function __construct(protected Collection $items)
+    public function __construct(protected Collection $items, protected string $currencyCode = 'PHP')
     {
     }
 
@@ -24,7 +24,7 @@ class InventoryItemsExport implements FromCollection, WithHeadings, ShouldAutoSi
                 'Min Stock' => $item->min_stock,
                 'Reorder Level' => $item->reorder_level,
                 'Unit' => $item->unit,
-                'Price' => $item->price,
+                "Price ({$this->currencyCode})" => $item->price,
                 'Description' => $item->description,
                 'Status' => $item->getStockStatus(),
             ];
@@ -41,7 +41,7 @@ class InventoryItemsExport implements FromCollection, WithHeadings, ShouldAutoSi
             'Min Stock',
             'Reorder Level',
             'Unit',
-            'Price',
+            "Price ({$this->currencyCode})",
             'Description',
             'Status',
         ];

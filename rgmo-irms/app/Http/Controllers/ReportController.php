@@ -6,6 +6,7 @@ use App\Models\InventoryItem;
 use App\Models\ResourceRequest;
 use App\Models\AuditLog;
 use App\Services\ReportService;
+use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -83,7 +84,7 @@ class ReportController extends Controller
         $filename = 'inventory_' . now()->format('Y-m-d_H-i-s') . '.csv';
 
         $handle = fopen('php://memory', 'w');
-        fputcsv($handle, ['Item Name', 'SKU', 'Category', 'Stock', 'Min Stock', 'Unit', 'Price', 'Status']);
+        fputcsv($handle, ['Item Name', 'SKU', 'Category', 'Stock', 'Min Stock', 'Unit', 'Price (' . SystemSetting::currencyCode() . ')', 'Status']);
 
         foreach ($report['items'] as $item) {
             fputcsv($handle, [

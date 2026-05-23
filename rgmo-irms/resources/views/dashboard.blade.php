@@ -1,9 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center justify-content-between">
             <div>
-                <h2 class="fw-bold mb-1">RGMO-IRMS Dashboard</h2>
-                <p class="text-muted mb-0">Welcome back, {{ Auth::user()->name }}.</p>
+                <h2 class="h5 fw-bold mb-0">RGMO-IRMS Dashboard</h2>
+                <p class="text-muted mb-0 small">Welcome back, {{ Auth::user()->name }}.</p>
             </div>
         </div>
     </x-slot>

@@ -31,6 +31,8 @@
 
             #sidebar {
                 width: var(--sidebar-width);
+                min-width: var(--sidebar-width);
+                flex-shrink: 0;
                 min-height: 100vh;
                 background: var(--cmu-green);
                 color: white;
@@ -121,10 +123,11 @@
             }
 
             .top-nav {
-                height: 72px;
+                min-height: 72px;
+                height: auto;
                 background: white;
                 border-bottom: 1px solid #e5e7eb;
-                padding: 0 2rem;
+                padding: 0.5rem 2rem;
             }
 
             .main-content {
@@ -193,7 +196,14 @@
                 #sidebar {
                     position: relative;
                     width: 100%;
+                    min-width: 100%;
                     min-height: auto;
+                }
+
+                .layout-wrapper {
+                    overflow: auto !important;
+                    height: auto !important;
+                    min-height: 100vh;
                 }
 
                 .top-nav {
@@ -202,15 +212,16 @@
 
                 .main-content {
                     padding: 1.5rem;
+                    overflow: visible !important;
                 }
             }
         </style>
     </head>
     <body class="font-sans antialiased">
-        <div class="d-flex overflow-hidden min-vh-100">
+        <div class="layout-wrapper d-flex flex-column flex-lg-row overflow-hidden min-vh-100">
             @include('layouts.navigation')
 
-            <main class="d-flex flex-column flex-grow-1">
+            <main class="d-flex flex-column flex-grow-1" style="min-width: 0;">
                 <header class="top-nav d-flex justify-content-between align-items-center">
                     <div class="flex-grow-1" style="min-width: 0;">
                         @if(isset($header))

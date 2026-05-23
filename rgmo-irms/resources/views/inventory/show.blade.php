@@ -85,7 +85,7 @@
                                 </div>
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">Unit Price</dt>
-                                    <dd class="text-sm text-gray-900">${{ number_format($item->price, 2) }}</dd>
+                                    <dd class="text-sm text-gray-900">{{ $currencySymbol }}{{ number_format($item->price, 2) }}</dd>
                                 </div>
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">Stock Status</dt>

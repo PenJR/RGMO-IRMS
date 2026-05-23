@@ -47,7 +47,7 @@
                                     <th>Category</th>
                                     <th>Stock</th>
                                     <th>Min Stock</th>
-                                    <th>Price</th>
+                                    <th>Price ({{ $currencyCode }})</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -59,7 +59,7 @@
                                         <td>{{ $item->category?->name ?? 'N/A' }}</td>
                                         <td>{{ $item->stock }} {{ $item->unit }}</td>
                                         <td>{{ $item->min_stock }} {{ $item->unit }}</td>
-                                        <td>${{ number_format($item->price, 2) }}</td>
+                                        <td>{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
                                         <td>
                                             <span class="badge rounded-pill
                                                 @if($item->stock <= $item->min_stock) bg-danger text-white

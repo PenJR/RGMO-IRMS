@@ -6,6 +6,7 @@ use App\Exports\InventoryItemsExport;
 use App\Imports\InventoryItemsImport;
 use App\Models\InventoryItem;
 use App\Models\Category;
+use App\Models\SystemSetting;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -194,7 +195,7 @@ class InventoryController extends Controller
         $items = $this->inventoryService->getAllItems(250)->items();
         $filename = 'inventory_' . now()->format('Y-m-d_H-i-s') . '.csv';
         $handle = fopen('php://memory', 'w');
-        fputcsv($handle, ['Category', 'Name', 'SKU', 'Stock', 'Min Stock', 'Reorder Level', 'Unit', 'Price', 'Description', 'Status']);
+        fputcsv($handle, ['Category', 'Name', 'SKU', 'Stock', 'Min Stock', 'Reorder Level', 'Unit', 'Price (' . SystemSetting::currencyCode() . ')', 'Description', 'Status']);
 
         foreach ($items as $item) {
             fputcsv($handle, [
@@ -231,7 +232,7 @@ class InventoryController extends Controller
         $items = $this->inventoryService->getAllItems(250)->items();
         $filename = 'inventory_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
 
-        return Excel::download(new InventoryItemsExport($items), $filename);
+        return Excel::download(new InventoryItemsExport($items, SystemSetting::currencyCode()), $filename);
     }
 
     /**
