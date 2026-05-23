@@ -26,6 +26,12 @@ class RmsService
     {
     }
 
+    /**
+     * Authenticate a user with email/password, handling account locking, login history, and activity logging.
+     *
+     * @param array $credentials
+     * @return bool
+     */
     public function loginUser(array $credentials): bool
     {
         $user = User::where('email', $credentials['email'])->first();
@@ -64,6 +70,11 @@ class RmsService
         return true;
     }
 
+    /**
+     * Log the current user out, terminating their login history session and recording the activity.
+     *
+     * @return void
+     */
     public function logoutUser(): void
     {
         if (Auth::check()) {
@@ -79,8 +90,31 @@ class RmsService
         Auth::logout();
     }
 
+    /**
+     * Register a new user account in the system.
+     *
+     * @param array $data
+     * @return User
+     */
     public function registerUser(array $data): User { return User::create($data); }
+
+    /**
+     * Send a password reset link to the specified user email.
+     *
+     * @param array $data
+     * @return string
+     */
     public function resetPassword(array $data): string { return Password::sendResetLink(['email' => $data['email']]); }
+
+    /**
+     * Update the authenticated user's password after verifying the current one.
+     *
+     * @param int $userId
+     * @param string $currentPassword
+     * @param string $newPassword
+     * @return void
+     * @throws ValidationException
+     */
     public function changePassword(int $userId, string $currentPassword, string $newPassword): void
     {
         $user = User::findOrFail($userId);
@@ -89,6 +123,12 @@ class RmsService
         }
         $user->update(['password' => Hash::make($newPassword)]);
     }
+
+    /**
+     * Retrieve the currently authenticated user session.
+     *
+     * @return User|null
+     */
     public function getAuthenticatedUser(): ?User { return Auth::user(); }
 
     public function createUser(array $data): User { return User::create($data); }
@@ -212,9 +252,22 @@ class RmsService
 
     public function setLowStockThreshold(int $value): SystemSetting { return $this->updateSetting('low_stock_threshold', $value); }
     public function updateSystemSettings(array $data): array { foreach ($data as $k => $v) { $this->updateSetting($k, $v); } return $this->getSystemSettings(); }
+    /**
+     * Retrieve all system settings from the database and return them as a key-value collection.
+     *
+     * @return \Illuminate\Support\Collection
+     */
     public function getSystemSettings() { return SystemSetting::all()->pluck('value', 'key'); }
-    public function manageRolesPermissions(): array { return ['roles' => ['admin', 'staff', 'field_personnel'], 'permissions' => 'Use policies/gates for detailed permissions.']; }
 
+    /**
+     * Internal helper to adjust inventory stock levels atomically within a database transaction.
+     *
+     * @param int $itemId
+     * @param int $delta Positive for increase, negative for decrease.
+     * @param string $changeType String descriptor for audit logging.
+     * @return InventoryItem
+     * @throws ValidationException
+     */
     private function adjustStock(int $itemId, int $delta, string $changeType): InventoryItem
     {
         return DB::transaction(function () use ($itemId, $delta, $changeType) {
@@ -229,6 +282,13 @@ class RmsService
         });
     }
 
+    /**
+     * Create or update a specific system setting in the database.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @return SystemSetting
+     */
     private function updateSetting(string $key, mixed $value): SystemSetting
     {
         return SystemSetting::updateOrCreate(['key' => $key], ['value' => $value]);

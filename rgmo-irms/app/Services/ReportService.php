@@ -12,7 +12,10 @@ use Illuminate\Support\Carbon;
 class ReportService
 {
     /**
-     * Get inventory report
+     * Compile a comprehensive inventory report with statistical aggregates.
+     *
+     * @param array $filters (category_id, low_stock).
+     * @return array Summary of total items, low stock counts, and total valuation.
      */
     public function getInventoryReport(array $filters = [])
     {
@@ -37,7 +40,10 @@ class ReportService
     }
 
     /**
-     * Get resource usage report
+     * Generate a report tracking how resources are consumed over time.
+     *
+     * @param array $filters (start_date, end_date, user_id, item_id).
+     * @return array Collection of usage records and total volume.
      */
     public function getResourceUsageReport(array $filters = [])
     {
@@ -63,7 +69,10 @@ class ReportService
     }
 
     /**
-     * Get audit trail report
+     * Extract a paginated list of system activities for audit purposes.
+     *
+     * @param array $filters (action, module, user_id, start_date, end_date).
+     * @return \Illuminate\Pagination\LengthAwarePaginator
      */
     public function getAuditTrailReport(array $filters = [])
     {
@@ -89,7 +98,10 @@ class ReportService
     }
 
     /**
-     * Get resource request report
+     * Consolidate metrics regarding resource requests and approval rates.
+     *
+     * @param array $filters (status, start_date, end_date).
+     * @return array Statistics on volume and status breakdown.
      */
     public function getResourceRequestReport(array $filters = [])
     {
@@ -115,7 +127,11 @@ class ReportService
     }
 
     /**
-     * Get user login history
+     * Retrieve the login history for a specific user within a given timeframe.
+     *
+     * @param User $user
+     * @param int $days Number of past days to include.
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getUserLoginHistory(User $user, int $days = 30)
     {
@@ -126,7 +142,9 @@ class ReportService
     }
 
     /**
-     * Get dashboard statistics
+     * Calculate and aggregate high-level dashboard metrics for the administrator view.
+     *
+     * @return array Dictionary containing user, item, and request counts.
      */
     public function getDashboardStats()
     {

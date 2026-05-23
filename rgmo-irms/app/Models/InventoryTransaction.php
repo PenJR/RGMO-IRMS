@@ -22,6 +22,11 @@ class InventoryTransaction extends Model
         'meta' => 'array',
     ];
 
+    /**
+     * Compute a readable detail string based on the transaction type and its source/destination.
+     *
+     * @return string
+     */
     public function getDetailsAttribute(): string
     {
         if ($this->transaction_type === 'stock_in') {
@@ -35,37 +40,81 @@ class InventoryTransaction extends Model
         return $this->meta ? json_encode($this->meta) : 'N/A';
     }
 
+    /**
+     * Get the inventory item involved in this transaction.
+     *
+     * @return BelongsTo
+     */
     public function item(): BelongsTo
     {
         return $this->belongsTo(InventoryItem::class, 'inventory_item_id');
     }
 
+    /**
+     * Get the user who initialized the transaction.
+     *
+     * @return BelongsTo
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     // Scopes
+    /**
+     * Scope a query to only include stock-in transactions.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
     public function scopeStockIn(Builder $query): Builder
     {
         return $query->where('transaction_type', 'stock_in');
     }
 
+    /**
+     * Scope a query to only include stock-out (withdrawals) transactions.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
     public function scopeStockOut(Builder $query): Builder
     {
         return $query->where('transaction_type', 'stock_out');
     }
 
+    /**
+     * Scope a query to only include transactions for a specific user.
+     *
+     * @param Builder $query
+     * @param int $userId
+     * @return Builder
+     */
     public function scopeByUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);
     }
 
+    /**
+     * Scope a query to only include transactions for a specific inventory item.
+     *
+     * @param Builder $query
+     * @param int $itemId
+     * @return Builder
+     */
     public function scopeByItem(Builder $query, int $itemId): Builder
     {
         return $query->where('inventory_item_id', $itemId);
     }
 
+    /**
+     * Scope a query to only include transactions within a specific date range.
+     *
+     * @param Builder $query
+     * @param mixed $startDate
+     * @param mixed $endDate
+     * @return Builder
+     */
     public function scopeDateRange(Builder $query, $startDate, $endDate): Builder
     {
         return $query->whereBetween('created_at', [$startDate, $endDate]);

@@ -17,6 +17,11 @@ class InventoryController extends Controller
     {
     }
 
+    /**
+     * Get the list of standard measurement units used in the system.
+     *
+     * @return array
+     */
     private function units(): array
     {
         return [
@@ -25,7 +30,11 @@ class InventoryController extends Controller
     }
 
     /**
-     * Display a listing of inventory items
+     * Display a paginated listing of inventory items with search and filter capabilities.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(Request $request)
     {
@@ -42,7 +51,10 @@ class InventoryController extends Controller
     }
 
     /**
-     * Show the form for creating a new inventory item
+     * Show the creation form for a new inventory item.
+     *
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function create()
     {
@@ -55,7 +67,11 @@ class InventoryController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage
+     * Store a newly created inventory item in the database.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(Request $request)
     {
@@ -81,7 +97,11 @@ class InventoryController extends Controller
     }
 
     /**
-     * Display the specified inventory item
+     * Display details of a specific inventory item including transaction history.
+     *
+     * @param InventoryItem $inventory
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(InventoryItem $inventory)
     {
@@ -99,7 +119,11 @@ class InventoryController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource
+     * Show the edit form for an existing inventory item.
+     *
+     * @param InventoryItem $inventory
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function edit(InventoryItem $inventory)
     {
@@ -115,7 +139,12 @@ class InventoryController extends Controller
     }
 
     /**
-     * Update the specified resource in storage
+     * Update an existing inventory item in the database.
+     *
+     * @param Request $request
+     * @param InventoryItem $inventory
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(Request $request, InventoryItem $inventory)
     {
@@ -143,7 +172,11 @@ class InventoryController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage
+     * Remove (Deactivate) the specified inventory item from the database.
+     *
+     * @param InventoryItem $inventory
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function destroy(InventoryItem $inventory)
     {
@@ -157,7 +190,11 @@ class InventoryController extends Controller
     }
 
     /**
-     * Restore a soft-deleted item
+     * Restore a previously soft-deleted (deactivated) inventory item.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function restore(int $id)
     {
@@ -170,7 +207,11 @@ class InventoryController extends Controller
     }
 
     /**
-     * Import inventory from spreadsheet
+     * Import inventory data from a spreadsheet (CSV, XLSX, XLS).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function import(Request $request)
     {
@@ -186,7 +227,10 @@ class InventoryController extends Controller
     }
 
     /**
-     * Export inventory report to CSV
+     * Export the current inventory report to a CSV file.
+     *
+     * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function exportCsv()
     {
@@ -223,7 +267,10 @@ class InventoryController extends Controller
     }
 
     /**
-     * Export inventory report to Excel
+     * Export the current inventory report to an Excel file (.xlsx).
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function exportExcel()
     {
@@ -236,7 +283,12 @@ class InventoryController extends Controller
     }
 
     /**
-     * Record stock in
+     * Record a "stock in" transaction for the specified item.
+     *
+     * @param Request $request
+     * @param InventoryItem $item
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function stockIn(Request $request, InventoryItem $item)
     {
@@ -258,7 +310,12 @@ class InventoryController extends Controller
     }
 
     /**
-     * Record stock out
+     * Record a "stock out" transaction for the specified item.
+     *
+     * @param Request $request
+     * @param InventoryItem $item
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function stockOut(Request $request, InventoryItem $item)
     {
@@ -280,7 +337,12 @@ class InventoryController extends Controller
     }
 
     /**
-     * Adjust item stock from the item details page
+     * Perform an ad-hoc stock adjustment (either addition or deduction).
+     *
+     * @param Request $request
+     * @param InventoryItem $item
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function adjustStock(Request $request, InventoryItem $item)
     {
@@ -312,7 +374,9 @@ class InventoryController extends Controller
     }
 
     /**
-     * Get low stock items
+     * View a list of inventory items that are currently below their minimum stock levels.
+     *
+     * @return \Illuminate\View\View
      */
     public function lowStock()
     {

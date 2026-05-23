@@ -12,6 +12,12 @@ class TwoFactorController extends Controller
 {
     public function __construct(private readonly TwoFactorService $twoFactor) {}
 
+    /**
+     * Show the 2FA enablement details, generating a secret if needed.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function showEnable(Request $request)
     {
         $user = $request->user();
@@ -31,6 +37,12 @@ class TwoFactorController extends Controller
         return response()->json(['secret' => $secret, 'otpauth_url' => $uri]);
     }
 
+    /**
+     * Confirm 2FA setup by verifying a code provided by the user.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function confirm(Request $request)
     {
         $request->validate(['code' => 'required|string']);
@@ -46,6 +58,12 @@ class TwoFactorController extends Controller
         return response()->json(['message' => 'Two-factor authentication enabled']);
     }
 
+    /**
+     * Disable 2FA for the authenticated user, requires password validation.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function disable(Request $request)
     {
         $request->validate(['password' => 'required|string']);
@@ -60,6 +78,12 @@ class TwoFactorController extends Controller
         return response()->json(['message' => 'Two-factor authentication disabled']);
     }
 
+    /**
+     * Show the 2FA verification challenge during login.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     */
     public function showVerify(Request $request)
     {
         if ($request->wantsJson()) {
@@ -69,6 +93,12 @@ class TwoFactorController extends Controller
         return view('auth.2fa-verify');
     }
 
+    /**
+     * Verify the 2FA code during a login attempt and authenticate the user.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
     public function verify(Request $request)
     {
         $request->validate(['code' => 'required|string']);

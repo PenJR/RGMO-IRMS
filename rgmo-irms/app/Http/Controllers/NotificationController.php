@@ -13,7 +13,10 @@ class NotificationController extends Controller
     }
 
     /**
-     * Get all notifications for the current user
+     * Display a listing of the authenticated user's notifications.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
@@ -28,7 +31,9 @@ class NotificationController extends Controller
     }
 
     /**
-     * Get unread notifications count
+     * Retrieve the count of unread notifications for the authenticated user.
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
     public function unreadCount()
     {
@@ -38,7 +43,11 @@ class NotificationController extends Controller
     }
 
     /**
-     * Mark a notification as read
+     * Mark a specific notification as read.
+     *
+     * @param Request $request
+     * @param Notification $notification
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function markAsRead(Request $request, Notification $notification)
     {
@@ -56,7 +65,10 @@ class NotificationController extends Controller
     }
 
     /**
-     * Mark all notifications as read
+     * Mark all notifications for the authenticated user as read.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function markAllAsRead(Request $request)
     {
@@ -70,7 +82,11 @@ class NotificationController extends Controller
     }
 
     /**
-     * Delete a notification
+     * Remove the specified notification from the database.
+     *
+     * @param Request $request
+     * @param Notification $notification
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function destroy(Request $request, Notification $notification)
     {
@@ -88,7 +104,10 @@ class NotificationController extends Controller
     }
 
     /**
-     * Delete all read notifications
+     * Remove all notifications that have already been read.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function deleteReadNotifications(Request $request)
     {

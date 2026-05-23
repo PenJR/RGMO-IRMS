@@ -18,7 +18,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Display inventory report
+     * Display a comprehensive inventory report with optional category and stock level filtering.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
      */
     public function inventory(Request $request)
     {
@@ -32,7 +35,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Display resource usage report
+     * Display a resource usage report allowing analysis of item consumption over time.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
      */
     public function resourceUsage(Request $request)
     {
@@ -46,7 +52,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Display audit trail report
+     * Display an audit trail report tracking system activities and configuration changes.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
      */
     public function auditTrail(Request $request)
     {
@@ -60,7 +69,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Display resource request report
+     * Display a report on resource requests including status-based analytics.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
      */
     public function requests(Request $request)
     {
@@ -74,7 +86,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Export inventory report to CSV
+     * Export the current inventory report data to a CSV file.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
      */
     public function exportInventoryCsv(Request $request)
     {
@@ -110,7 +125,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Export inventory report to PDF
+     * Export the current inventory report data to a PDF document.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
      */
     public function exportInventoryPdf(Request $request)
     {
@@ -123,7 +141,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Export audit trail report to CSV
+     * Export the filtered audit trail logs to a CSV file.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
      */
     public function exportAuditTrailCsv(Request $request)
     {
@@ -158,7 +179,9 @@ class ReportController extends Controller
     }
 
     /**
-     * Get dashboard statistics
+     * Display the main reporting dashboard with high-level performance metrics.
+     *
+     * @return \Illuminate\View\View
      */
     public function dashboard()
     {

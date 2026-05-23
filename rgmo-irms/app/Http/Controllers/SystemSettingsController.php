@@ -11,6 +11,11 @@ class SystemSettingsController extends Controller
     {
     }
 
+    /**
+     * Display the system settings management overview for administrators.
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
@@ -20,6 +25,12 @@ class SystemSettingsController extends Controller
         ]);
     }
 
+    /**
+     * Persist updated system settings to the database.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function update(Request $request)
     {
         abort_unless($request->user()?->isAdmin(), 403);

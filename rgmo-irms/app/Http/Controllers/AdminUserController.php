@@ -10,7 +10,11 @@ use Illuminate\Validation\Rules\Password;
 class AdminUserController extends Controller
 {
     /**
-     * Display a listing of users
+     * Display a paginated listing of users with search, role, and status filtering.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(Request $request)
     {
@@ -38,7 +42,11 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Display login logs for all users.
+     * Display a paginated listing of system-wide login logs with user and date filtering.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function loginLogs(Request $request)
     {
@@ -74,7 +82,10 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Show the form for creating a new user
+     * Show the creation form for a new user account.
+     *
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function create()
     {
@@ -84,7 +95,11 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Store a newly created user in storage
+     * Store a newly created user account in the database.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(Request $request)
     {
@@ -110,7 +125,11 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Display the specified user
+     * Display details of a specific user including their recent activities and audit logs.
+     *
+     * @param User $user
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(User $user)
     {
@@ -127,7 +146,11 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Show the form for editing the specified user
+     * Show the edit form for an existing user account.
+     *
+     * @param User $user
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function edit(User $user)
     {
@@ -137,7 +160,12 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Update the specified user in storage
+     * Update an existing user account's profile information and status.
+     *
+     * @param Request $request
+     * @param User $user
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(Request $request, User $user)
     {
@@ -156,7 +184,11 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Delete the specified user
+     * Delete a specific user account from the system.
+     *
+     * @param User $user
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function destroy(User $user)
     {
@@ -168,7 +200,12 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Reset user password
+     * Administrative override to reset a specific user's login password.
+     *
+     * @param Request $request
+     * @param User $user
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function resetPassword(Request $request, User $user)
     {
@@ -184,7 +221,11 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Impersonate a user (admin login as user)
+     * Start a session impersonating another user for troubleshooting or support purposes.
+     *
+     * @param User $user
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function impersonate(User $user)
     {
@@ -196,7 +237,9 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Stop impersonating
+     * End the current impersonation session and return to the original administrator account.
+     *
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function stopImpersonate()
     {
@@ -207,7 +250,11 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Get user's login history
+     * Retrieve the specific login history for a single user account.
+     *
+     * @param User $user
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function loginHistory(User $user)
     {

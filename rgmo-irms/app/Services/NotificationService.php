@@ -9,7 +9,10 @@ use App\Models\User;
 class NotificationService
 {
     /**
-     * Get unread notifications for a user
+     * Retrieve all unread notifications for a specified user, sorted by recency.
+     *
+     * @param User $user
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getUnreadNotifications(User $user)
     {
@@ -17,7 +20,11 @@ class NotificationService
     }
 
     /**
-     * Get all notifications for a user
+     * Retrieve a paginated list of all notifications for a specified user.
+     *
+     * @param User $user
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function getAllNotifications(User $user, int $perPage = 15)
     {
@@ -25,7 +32,10 @@ class NotificationService
     }
 
     /**
-     * Get unread count
+     * Get the total number of unread notifications for a specified user.
+     *
+     * @param User $user
+     * @return int
      */
     public function getUnreadCount(User $user): int
     {
@@ -33,7 +43,12 @@ class NotificationService
     }
 
     /**
-     * Create a notification
+     * Create a new notification record and dispatch a creation event.
+     *
+     * @param int $userId ID of the recipient user.
+     * @param string $type The category of notification (e.g., 'system', 'request').
+     * @param string $message The notification content.
+     * @return Notification
      */
     public function createNotification(int $userId, string $type, string $message): Notification
     {
@@ -49,7 +64,12 @@ class NotificationService
     }
 
     /**
-     * Create notification for multiple users
+     * Dispatch notifications to multiple users simultaneously.
+     *
+     * @param array $userIds
+     * @param string $type
+     * @param string $message
+     * @return void
      */
     public function createBulkNotification(array $userIds, string $type, string $message): void
     {
@@ -59,7 +79,10 @@ class NotificationService
     }
 
     /**
-     * Mark notification as read
+     * Mark a specific notification as read.
+     *
+     * @param Notification $notification
+     * @return void
      */
     public function markAsRead(Notification $notification): void
     {
@@ -67,7 +90,10 @@ class NotificationService
     }
 
     /**
-     * Mark all notifications as read for a user
+     * Mark all unread notifications for a specific user as read.
+     *
+     * @param User $user
+     * @return void
      */
     public function markAllAsRead(User $user): void
     {
@@ -75,7 +101,10 @@ class NotificationService
     }
 
     /**
-     * Delete notification
+     * Remove a notification from the database.
+     *
+     * @param Notification $notification
+     * @return void
      */
     public function deleteNotification(Notification $notification): void
     {
@@ -83,7 +112,10 @@ class NotificationService
     }
 
     /**
-     * Delete all read notifications for a user
+     * Delete all notifications that have already been read by the user.
+     *
+     * @param User $user
+     * @return void
      */
     public function deleteReadNotifications(User $user): void
     {
@@ -91,7 +123,11 @@ class NotificationService
     }
 
     /**
-     * Notify admins of low stock
+     * Standard utility to notify all system administrators about low stock events.
+     *
+     * @param string $itemName
+     * @param int $quantity
+     * @return void
      */
     public function notifyLowStock(string $itemName, int $quantity): void
     {
@@ -104,7 +140,10 @@ class NotificationService
     }
 
     /**
-     * Notify admins of failed login attempts
+     * Security utility to notify all system administrators about excessive failed login attempts for a user account.
+     *
+     * @param User $user
+     * @return void
      */
     public function notifyFailedLoginAttempts(User $user): void
     {

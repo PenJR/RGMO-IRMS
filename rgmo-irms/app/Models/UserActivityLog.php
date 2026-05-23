@@ -20,12 +20,24 @@ class UserActivityLog extends Model
         return ['context' => 'array'];
     }
 
+    /**
+     * Get the user associated with this activity log entry.
+     *
+     * @return BelongsTo
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     // Scopes
+    /**
+     * Scope a query to only include activity logs for a specific user.
+     *
+     * @param Builder $query
+     * @param int $userId
+     * @return Builder
+     */
     public function scopeByUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);

@@ -14,7 +14,11 @@ class ResourceRequestController extends Controller
     }
 
     /**
-     * Display a listing of resource requests
+     * Display a listing of resource requests with filtering and pagination.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(Request $request)
     {
@@ -30,7 +34,10 @@ class ResourceRequestController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource request
+     * Show the creation form for a new resource request.
+     *
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function create()
     {
@@ -42,7 +49,11 @@ class ResourceRequestController extends Controller
     }
 
     /**
-     * Store a newly created resource request in storage
+     * Store a newly created resource request in the database.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(Request $request)
     {
@@ -73,7 +84,11 @@ class ResourceRequestController extends Controller
     }
 
     /**
-     * Display the specified resource request
+     * Display details of a specific resource request.
+     *
+     * @param ResourceRequest $request
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(ResourceRequest $request)
     {
@@ -85,7 +100,11 @@ class ResourceRequestController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource request
+     * Show the edit form for a specific resource request.
+     *
+     * @param ResourceRequest $request
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function edit(ResourceRequest $request)
     {
@@ -98,7 +117,12 @@ class ResourceRequestController extends Controller
     }
 
     /**
-     * Update the specified resource request in storage
+     * Update an existing resource request in the database.
+     *
+     * @param Request $request
+     * @param ResourceRequest $resourceRequest
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(Request $request, ResourceRequest $resourceRequest)
     {
@@ -116,7 +140,12 @@ class ResourceRequestController extends Controller
     }
 
     /**
-     * Approve a resource request
+     * Approve a pending resource request.
+     *
+     * @param Request $request
+     * @param ResourceRequest $resourceRequest
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function approve(Request $request, ResourceRequest $resourceRequest)
     {
@@ -132,7 +161,12 @@ class ResourceRequestController extends Controller
     }
 
     /**
-     * Reject a resource request
+     * Reject a pending resource request.
+     *
+     * @param Request $request
+     * @param ResourceRequest $resourceRequest
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function reject(Request $request, ResourceRequest $resourceRequest)
     {
@@ -148,7 +182,10 @@ class ResourceRequestController extends Controller
     }
 
     /**
-     * Get pending requests for admin
+     * Get a listing of all pending resource requests for administrative review.
+     *
+     * @return \Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function pending()
     {

@@ -11,7 +11,11 @@ use App\Models\Notification;
 class ResourceRequestService
 {
     /**
-     * Get all resource requests with pagination
+     * Get a paginated list of all resource requests with optional filtering.
+     *
+     * @param int $perPage
+     * @param array $filters Associative array (status, user_id, start_date, end_date).
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function getAllRequests(int $perPage = 15, array $filters = [])
     {
@@ -36,7 +40,11 @@ class ResourceRequestService
     }
 
     /**
-     * Create a new resource request
+     * Submit a new resource request along with its requested items.
+     *
+     * @param array $data Basic request info (user_id, purpose, etc.).
+     * @param array $items Array of items (inventory_item_id, quantity).
+     * @return ResourceRequest
      */
     public function createRequest(array $data, array $items = []): ResourceRequest
     {
@@ -66,7 +74,12 @@ class ResourceRequestService
     }
 
     /**
-     * Approve a resource request
+     * Mark a request as approved, log the step, and notify the requester.
+     *
+     * @param ResourceRequest $request
+     * @param int $approverId ID of the admin/staff approving.
+     * @param string|null $remarks Optional approval comments.
+     * @return void
      */
     public function approveRequest(ResourceRequest $request, int $approverId, ?string $remarks = null): void
     {
@@ -92,7 +105,11 @@ class ResourceRequestService
     }
 
     /**
-     * Reject a resource request
+     * Mark a request as rejected and log the decision.
+     *
+     * @param ResourceRequest $request
+     * @param string|null $remarks Reason for rejection.
+     * @return void
      */
     public function rejectRequest(ResourceRequest $request, ?string $remarks = null): void
     {
@@ -118,7 +135,10 @@ class ResourceRequestService
     }
 
     /**
-     * Cancel a resource request
+     * Cancel an existing resource request and log the cancellation.
+     *
+     * @param ResourceRequest $request
+     * @return void
      */
     public function cancelRequest(ResourceRequest $request): void
     {
@@ -137,7 +157,9 @@ class ResourceRequestService
     }
 
     /**
-     * Get pending requests for admin
+     * Retrieve a collection of all pending resource requests for administrative review.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getPendingRequests()
     {
@@ -145,7 +167,11 @@ class ResourceRequestService
     }
 
     /**
-     * Get requests for a specific user
+     * Get a paginated list of resource requests for a specific user.
+     *
+     * @param int $userId
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function getUserRequests(int $userId, int $perPage = 10)
     {
@@ -156,7 +182,10 @@ class ResourceRequestService
     }
 
     /**
-     * Check if request can be fulfilled
+     * Verify if all items in the resource request are currently in stock and can be fulfilled.
+     *
+     * @param ResourceRequest $request
+     * @return bool
      */
     public function canFulfillRequest(ResourceRequest $request): bool
     {
@@ -169,7 +198,10 @@ class ResourceRequestService
     }
 
     /**
-     * Fulfill a request - deduct from inventory
+     * Fulfill a resource request by deducting the requested quantities from inventory stock.
+     *
+     * @param ResourceRequest $request
+     * @return void
      */
     public function fulfillRequest(ResourceRequest $request): void
     {

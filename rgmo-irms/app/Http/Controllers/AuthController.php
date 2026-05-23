@@ -12,6 +12,13 @@ class AuthController extends Controller
 {
     public function __construct(private readonly RmsService $service) {}
 
+    /**
+     * Handle an incoming authentication request for the application.
+     * Supports standard email/password login and handles 2FA redirection if enabled.
+     *
+     * @param LoginRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function loginUser(LoginRequest $request)
     {
         $request->ensureIsNotRateLimited();
@@ -44,6 +51,12 @@ class AuthController extends Controller
         return response()->json($this->service->getAuthenticatedUser());
     }
 
+    /**
+     * Log the current user out of the application and invalidate their session.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function logoutUser(Request $request)
     {
         $this->service->logoutUser();
@@ -52,6 +65,12 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out']);
     }
 
+    /**
+     * Create a new user account (restricted to Administrators).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function registerUser(Request $request)
     {
         abort_unless(Auth::user()?->role === 'admin', 403);
@@ -60,12 +79,24 @@ class AuthController extends Controller
         return response()->json($user, 201);
     }
 
+    /**
+     * Initiate a password reset process for the given email address.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function resetPassword(Request $request)
     {
         $request->validate(['email' => 'required|email']);
         return response()->json(['status' => $this->service->resetPassword($request->all())]);
     }
 
+    /**
+     * Change the password of the currently authenticated user.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function changePassword(Request $request)
     {
         $data = $request->validate(['current_password' => 'required|string', 'new_password' => 'required|string|min:8|confirmed']);
@@ -73,6 +104,11 @@ class AuthController extends Controller
         return response()->json(['message' => 'Password changed']);
     }
 
+    /**
+     * Get the details of the currently authenticated user.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getAuthenticatedUser()
     {
         return response()->json($this->service->getAuthenticatedUser());

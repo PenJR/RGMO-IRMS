@@ -16,7 +16,9 @@ class DashboardController extends Controller
     }
 
     /**
-     * Display the admin dashboard
+     * Display the main administrator dashboard with system-wide statistics.
+     *
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -34,7 +36,9 @@ class DashboardController extends Controller
     }
 
     /**
-     * Display staff dashboard
+     * Display the staff-specific dashboard focusing on personal requests.
+     *
+     * @return \Illuminate\View\View
      */
     public function staff()
     {
@@ -53,7 +57,9 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get dashboard data as JSON (for AJAX updates)
+     * Retrieve the latest dashboard statistics as a JSON response.
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
     public function data()
     {

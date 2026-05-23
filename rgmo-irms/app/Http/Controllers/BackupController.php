@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Artisan;
 
 class BackupController extends Controller
 {
+    /**
+     * Display a listing of system backups.
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
@@ -19,6 +24,12 @@ class BackupController extends Controller
         ]);
     }
 
+    /**
+     * Trigger a manual system backup.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function run(Request $request)
     {
         abort_unless($request->user()?->isAdmin(), 403);
