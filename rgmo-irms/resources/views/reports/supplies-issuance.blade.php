@@ -6,6 +6,7 @@
                 <p class="text-muted mb-0">Month of {{ DateTime::createFromFormat('!m', $month)->format('F') }} {{ $year }}</p>
             </div>
             <div class="d-flex gap-2">
+                <a href="{{ route('reports.supplies-issuance.export-pdf', request()->query()) }}" class="btn btn-cmu d-print-none">Export PDF</a>
                 <button onclick="window.print()" class="btn btn-outline-secondary d-print-none">Print Report</button>
             </div>
         </div>

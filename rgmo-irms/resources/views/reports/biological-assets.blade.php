@@ -6,6 +6,7 @@
                 <p class="text-muted mb-0">Period: {{ $startDate->format('M d, Y') }} - {{ $endDate->format('M d, Y') }}</p>
             </div>
             <div class="d-flex gap-2">
+                <a href="{{ route('reports.biological-assets.export-pdf', request()->query()) }}" class="btn btn-cmu d-print-none">Export PDF</a>
                 <button onclick="window.print()" class="btn btn-outline-secondary d-print-none">Print Report</button>
             </div>
         </div>

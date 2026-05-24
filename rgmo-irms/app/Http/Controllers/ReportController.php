@@ -186,9 +186,70 @@ class ReportController extends Controller
         $filters = $request->only(['category_id', 'low_stock']);
         $report = $this->reportService->getInventoryReport($filters);
 
-        $pdf = Pdf::loadView('reports.inventory-pdf', ['report' => $report]);
+        $pdf = Pdf::loadView('reports.inventory-pdf', [
+            'report' => $report,
+            'currencyCode' => SystemSetting::currencyCode(),
+            'currencySymbol' => SystemSetting::currencySymbol(),
+        ]);
 
         return $pdf->download('inventory_' . now()->format('Y-m-d_H-i-s') . '.pdf');
+    }
+
+    /**
+     * Export Biological Assets Report to PDF.
+     */
+    public function exportBiologicalAssetsPdf(Request $request)
+    {
+        $startDate = $request->has('start_date') ? \Illuminate\Support\Carbon::parse($request->start_date) : now()->startOfWeek();
+        $endDate = $request->has('end_date') ? \Illuminate\Support\Carbon::parse($request->end_date) : now()->endOfWeek();
+
+        $report = $this->reportService->getBiologicalAssetsReport($startDate, $endDate);
+
+        $pdf = Pdf::loadView('reports.biological-assets-pdf', [
+            'report' => $report,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('biological_assets_' . $startDate->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Export Supplies Issuance Report to PDF.
+     */
+    public function exportSuppliesIssuancePdf(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
+
+        $report = $this->reportService->getSuppliesIssuanceReport($month, $year);
+
+        $pdf = Pdf::loadView('reports.supplies-issuance-pdf', [
+            'report' => $report,
+            'month' => $month,
+            'year' => $year,
+        ]);
+
+        return $pdf->stream('supplies_issuance_' . $year . '_' . $month . '.pdf');
+    }
+
+    /**
+     * Export Monthly Inventory Report to PDF.
+     */
+    public function exportMonthlyInventoryPdf(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
+
+        $report = $this->reportService->getMonthlyInventoryReport($month, $year);
+
+        $pdf = Pdf::loadView('reports.monthly-inventory-pdf', [
+            'report' => $report,
+            'month' => $month,
+            'year' => $year,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('monthly_inventory_' . $year . '_' . $month . '.pdf');
     }
 
     /**
