@@ -86,6 +86,57 @@ class ReportController extends Controller
     }
 
     /**
+     * Weekly Report of Biological Assets and Agricultural Produce.
+     */
+    public function biologicalAssets(Request $request)
+    {
+        $startDate = $request->has('start_date') ? \Illuminate\Support\Carbon::parse($request->start_date) : now()->startOfWeek();
+        $endDate = $request->has('end_date') ? \Illuminate\Support\Carbon::parse($request->end_date) : now()->endOfWeek();
+
+        $report = $this->reportService->getBiologicalAssetsReport($startDate, $endDate);
+
+        return view('reports.biological-assets', [
+            'report' => $report,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ]);
+    }
+
+    /**
+     * Monthly Report of Agricultural and Marine Supplies Issuance.
+     */
+    public function suppliesIssuance(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
+
+        $report = $this->reportService->getSuppliesIssuanceReport($month, $year);
+
+        return view('reports.supplies-issuance', [
+            'report' => $report,
+            'month' => $month,
+            'year' => $year,
+        ]);
+    }
+
+    /**
+     * Monthly Inventory of Agricultural Materials and Other Supplies.
+     */
+    public function monthlyInventory(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
+
+        $report = $this->reportService->getMonthlyInventoryReport($month, $year);
+
+        return view('reports.monthly-inventory', [
+            'report' => $report,
+            'month' => $month,
+            'year' => $year,
+        ]);
+    }
+
+    /**
      * Export the current inventory report data to a CSV file.
      *
      * @param Request $request

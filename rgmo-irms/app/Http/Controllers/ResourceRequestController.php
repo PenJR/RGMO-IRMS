@@ -62,6 +62,8 @@ class ResourceRequestController extends Controller
         $validated = $request->validate([
             'purpose' => 'required|string',
             'remarks' => 'nullable|string',
+            'ris_no' => 'nullable|string|max:50',
+            'responsible_center' => 'nullable|string|max:255',
             'requested_date' => 'nullable|date',
             'needed_date' => 'nullable|date',
             'items' => 'required|array|min:1',
@@ -72,6 +74,8 @@ class ResourceRequestController extends Controller
         $requestData = [
             'user_id' => auth()->id(),
             'status' => ResourceRequest::STATUS_PENDING,
+            'ris_no' => $validated['ris_no'] ?? null,
+            'responsible_center' => $validated['responsible_center'] ?? null,
             'purpose' => $validated['purpose'],
             'remarks' => $validated['remarks'] ?? null,
             'requested_date' => $validated['requested_date'] ?? now(),

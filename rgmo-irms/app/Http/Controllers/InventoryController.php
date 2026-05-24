@@ -89,6 +89,7 @@ class InventoryController extends Controller
             'reorder_level' => 'nullable|integer|min:0',
             'price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
+            'planting_date' => 'nullable|date',
         ]);
 
         $item = $this->inventoryService->createItem($validated, auth()->id());
@@ -164,6 +165,7 @@ class InventoryController extends Controller
             'reorder_level' => 'nullable|integer|min:0',
             'price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
+            'planting_date' => 'nullable|date',
         ]);
 
         $this->inventoryService->updateItem($item, $validated, auth()->id());
@@ -297,13 +299,15 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'quantity' => 'required|integer|min:1',
             'source' => 'required|string|max:255',
+            'funding_source' => 'nullable|string|max:255',
         ]);
 
         $this->inventoryService->recordStockIn(
             $item,
             $validated['quantity'],
             $validated['source'],
-            auth()->id()
+            auth()->id(),
+            $validated['funding_source'] ?? null
         );
 
         return redirect()->route('inventory.show', $item)->with('success', 'Stock in recorded successfully.');
@@ -324,13 +328,15 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'quantity' => 'required|integer|min:1',
             'destination' => 'required|string|max:255',
+            'funding_source' => 'nullable|string|max:255',
         ]);
 
         $this->inventoryService->recordStockOut(
             $item,
             $validated['quantity'],
             $validated['destination'],
-            auth()->id()
+            auth()->id(),
+            $validated['funding_source'] ?? null
         );
 
         return redirect()->route('inventory.show', $item)->with('success', 'Stock out recorded successfully.');

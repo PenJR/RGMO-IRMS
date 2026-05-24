@@ -73,6 +73,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/audit-trail', [ReportController::class, 'auditTrail'])->name('reports.audit-trail');
         Route::get('/reports/requests', [ReportController::class, 'requests'])->name('reports.requests');
 
+        // Special Agricultural Reports
+        Route::get('/reports/biological-assets', [ReportController::class, 'biologicalAssets'])->name('reports.biological-assets');
+        Route::get('/reports/supplies-issuance', [ReportController::class, 'suppliesIssuance'])->name('reports.supplies-issuance');
+        Route::get('/reports/monthly-inventory', [ReportController::class, 'monthlyInventory'])->name('reports.monthly-inventory');
+
         // Export reports
         Route::get('/reports/inventory/export-csv', [ReportController::class, 'exportInventoryCsv'])->name('reports.inventory.export-csv');
         Route::get('/reports/inventory/export-pdf', [ReportController::class, 'exportInventoryPdf'])->name('reports.inventory.export-pdf');

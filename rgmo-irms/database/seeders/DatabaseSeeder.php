@@ -71,14 +71,15 @@ class DatabaseSeeder extends Seeder
 
             // Categories and inventory
             $categories = [
-                'Consumables' => 'Disposable consumable items such as gloves, tapes, and cleaners.',
-                'Electronics' => 'Electronic devices and components.',
-                'Tools' => 'Hand and power tools used in the field.',
-                'Safety Equipment' => 'PPE and safety-related items.',
+                'Rice Seeds' => 'Biological assets for rice production.',
+                'Fertilizers' => 'Agricultural fertilizers.',
+                'Chemicals' => 'Agricultural chemicals.',
+                'Biological Assets' => 'General biological assets.',
                 'Office Supplies' => 'General office consumables and stationery.',
             ];
 
-            $units = config('inventory.units', ['pcs']);
+            $units = ['bag', 'bottle', 'kg', 'hectare', 'head'];
+            $fundingSources = ['RGMO', 'DA Grant', 'DA Hybrid'];
 
             foreach ($categories as $name => $desc) {
                 $category = Category::firstOrCreate([
@@ -88,8 +89,11 @@ class DatabaseSeeder extends Seeder
                 ]);
 
                 // create a few items per category
-                for ($i = 1; $i <= 3; $i++) {
+                for ($i = 1; $i <= 5; $i++) {
                     $itemName = "$name Item $i";
+                    if ($name === 'Rice Seeds') {
+                        $itemName = ["G3 - RC 226", "GVF 2A - A - RC 222", "NSIC Rc 222", "F3 - RC 440"][$i-1] ?? "$name Item $i";
+                    }
                     $sku = Str::upper(Str::slug($name)) . '-' . strtoupper(Str::random(6));
 
                     $item = InventoryItem::firstOrCreate([
@@ -98,23 +102,20 @@ class DatabaseSeeder extends Seeder
                         'category_id' => $category->id,
                         'name' => $itemName,
                         'sku' => $sku,
-                        'stock' => rand(10, 200),
+                        'stock' => 0, // start with 0 and add via transactions
                         'unit' => Arr::random($units),
                         'min_stock' => rand(2, 20),
                         'reorder_level' => rand(1, 10),
-                        'price' => rand(100, 5000) / 100,
+                        'price' => rand(500, 5000) / 10,
                         'description' => "Seeded $itemName for category $name",
+                        'planting_date' => $name === 'Biological Assets' || $name === 'Rice Seeds' ? now()->subMonths(rand(1,6)) : null,
                     ]);
 
-                    // initial stock-in transaction
-                    InventoryTransaction::firstOrCreate([
-                        'inventory_item_id' => $item->id,
-                        'transaction_type' => 'stock_in',
-                    ], [
-                        'user_id' => User::where('email', 'admin@example.com')->value('id'),
-                        'quantity' => $item->stock,
-                        'source' => 'Initial seed',
-                    ]);
+                    // initial stock-in transaction per funding source
+                    foreach ($fundingSources as $fs) {
+                        $qty = rand(10, 50);
+                        $item->recordStockIn($qty, 'Initial seed', User::where('email', 'admin@example.com')->value('id'), $fs);
+                    }
                 }
             }
         

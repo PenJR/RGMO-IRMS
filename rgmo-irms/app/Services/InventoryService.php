@@ -173,11 +173,12 @@ class InventoryService
      * @param int $quantity
      * @param string $source
      * @param int $userId
+     * @param string|null $fundingSource
      * @return InventoryTransaction
      */
-    public function recordStockIn(InventoryItem $item, int $quantity, string $source, int $userId): InventoryTransaction
+    public function recordStockIn(InventoryItem $item, int $quantity, string $source, int $userId, ?string $fundingSource = null): InventoryTransaction
     {
-        $item->recordStockIn($quantity, $source, $userId);
+        $item->recordStockIn($quantity, $source, $userId, $fundingSource);
 
         AuditLog::log(
             $userId,
@@ -186,7 +187,7 @@ class InventoryService
             InventoryTransaction::class,
             null,
             null,
-            ['item_id' => $item->id, 'quantity' => $quantity, 'source' => $source]
+            ['item_id' => $item->id, 'quantity' => $quantity, 'source' => $source, 'funding_source' => $fundingSource]
         );
 
         return $item->transactions()->latest()->first();
@@ -200,16 +201,17 @@ class InventoryService
      * @param int $quantity
      * @param string $destination
      * @param int $userId
+     * @param string|null $fundingSource
      * @return InventoryTransaction
      * @throws ValidationException
      */
-    public function recordStockOut(InventoryItem $item, int $quantity, string $destination, int $userId): InventoryTransaction
+    public function recordStockOut(InventoryItem $item, int $quantity, string $destination, int $userId, ?string $fundingSource = null): InventoryTransaction
     {
         if ($item->stock < $quantity) {
             throw ValidationException::withMessages(['quantity' => 'Insufficient stock to complete this transaction.']);
         }
 
-        $item->recordStockOut($quantity, $destination, $userId);
+        $item->recordStockOut($quantity, $destination, $userId, $fundingSource);
 
         AuditLog::log(
             $userId,
@@ -218,7 +220,7 @@ class InventoryService
             InventoryTransaction::class,
             null,
             null,
-            ['item_id' => $item->id, 'quantity' => $quantity, 'destination' => $destination]
+            ['item_id' => $item->id, 'quantity' => $quantity, 'destination' => $destination, 'funding_source' => $fundingSource]
         );
 
         if ($item->isLowStock()) {

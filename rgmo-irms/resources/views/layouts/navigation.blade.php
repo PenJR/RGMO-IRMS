@@ -70,9 +70,13 @@
                     </span>
                 </summary>
                 <div class="nav-submenu">
-                    <a href="{{ route('reports.inventory') }}" class="nav-link {{ request()->routeIs('reports.inventory') ? 'active' : '' }}">Inventory</a>
+                    <a href="{{ route('reports.inventory') }}" class="nav-link {{ request()->routeIs('reports.inventory') ? 'active' : '' }}">Inventory Summary</a>
+                    <a href="{{ route('reports.biological-assets') }}" class="nav-link {{ request()->routeIs('reports.biological-assets') ? 'active' : '' }}">Biological Assets (Weekly)</a>
+                    <a href="{{ route('reports.supplies-issuance') }}" class="nav-link {{ request()->routeIs('reports.supplies-issuance') ? 'active' : '' }}">Supplies Issuance (Monthly)</a>
+                    <a href="{{ route('reports.monthly-inventory') }}" class="nav-link {{ request()->routeIs('reports.monthly-inventory') ? 'active' : '' }}">Materials Inventory (Monthly)</a>
+                    <hr class="dropdown-divider bg-white opacity-25 mx-3">
                     <a href="{{ route('reports.resource-usage') }}" class="nav-link {{ request()->routeIs('reports.resource-usage') ? 'active' : '' }}">Resource Usage</a>
-                    <a href="{{ route('reports.requests') }}" class="nav-link {{ request()->routeIs('reports.requests') ? 'active' : '' }}">Requests</a>
+                    <a href="{{ route('reports.requests') }}" class="nav-link {{ request()->routeIs('reports.requests') ? 'active' : '' }}">Request Analytics</a>
                     <a href="{{ route('reports.audit-trail') }}" class="nav-link {{ request()->routeIs('reports.audit-trail') ? 'active' : '' }}">Audit Trail</a>
                 </div>
             </details>

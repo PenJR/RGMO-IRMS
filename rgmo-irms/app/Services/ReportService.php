@@ -142,6 +142,132 @@ class ReportService
     }
 
     /**
+     * Generate the Weekly Report of Biological Assets and Agricultural Produce.
+     *
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return \Illuminate\Support\Collection
+     */
+    public function getBiologicalAssetsReport(Carbon $startDate, Carbon $endDate)
+    {
+        $items = InventoryItem::whereHas('category', function($q) {
+            $q->where('name', 'like', '%Biological Assets%');
+        })->with(['transactions'])->get();
+
+        return $items->map(function($item) use ($startDate, $endDate) {
+            // Previous balance = stock before startDate
+            $stockInBefore = $item->transactions()->where('transaction_type', 'stock_in')->where('created_at', '<', $startDate)->sum('quantity');
+            $stockOutBefore = $item->transactions()->where('transaction_type', 'stock_out')->where('created_at', '<', $startDate)->sum('quantity');
+            $previousStock = $stockInBefore - $stockOutBefore;
+
+            // Changes this month
+            $additions = $item->transactions()->where('transaction_type', 'stock_in')->whereBetween('created_at', [$startDate, $endDate])->sum('quantity');
+            $deductions = $item->transactions()->where('transaction_type', 'stock_out')->whereBetween('created_at', [$startDate, $endDate])->sum('quantity');
+
+            return (object) [
+                'particulars' => $item->name,
+                'planting_date' => $item->planting_date,
+                'unit' => $item->unit,
+                'previous_balance_qty' => $previousStock,
+                'previous_balance_value' => $previousStock * $item->price,
+                'addition_qty' => $additions,
+                'addition_value' => $additions * $item->price,
+                'deduction_qty' => $deductions,
+                'deduction_value' => $deductions * $item->price,
+                'ending_balance_qty' => $previousStock + $additions - $deductions,
+                'ending_balance_value' => ($previousStock + $additions - $deductions) * $item->price,
+                'remarks' => $item->description,
+            ];
+        });
+    }
+
+    /**
+     * Generate the Monthly Report of Agricultural and Marine Supplies Issuance.
+     *
+     * @param int $month
+     * @param int $year
+     * @return array
+     */
+    public function getSuppliesIssuanceReport(int $month, int $year)
+    {
+        $requests = ResourceRequest::whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->where('status', ResourceRequest::STATUS_APPROVED)
+            ->with(['user', 'items.item'])
+            ->get();
+
+        $data = [];
+        foreach ($requests as $request) {
+            foreach ($request->items as $requestItem) {
+                $data[] = (object) [
+                    'ris_no' => $request->ris_no ?? $request->id,
+                    'responsible_center' => $request->responsible_center ?? ($request->user->department ?? 'N/A'),
+                    'stock_no' => $requestItem->item->sku,
+                    'item_name' => $requestItem->item->name,
+                    'unit_cost' => $requestItem->item->price,
+                    'quantity' => $requestItem->quantity,
+                    'amount' => $requestItem->item->price * $requestItem->quantity,
+                ];
+            }
+        }
+        
+        return $data;
+    }
+
+    /**
+     * Generate the Monthly Inventory of Agricultural Materials and Other Supplies.
+     *
+     * @param int $month
+     * @param int $year
+     * @return \Illuminate\Support\Collection
+     */
+    public function getMonthlyInventoryReport(int $month, int $year)
+    {
+        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+        $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+
+        $items = InventoryItem::with(['transactions'])->get();
+
+        return $items->map(function($item) use ($startDate, $endDate) {
+            // Previous Balance breakdown by source
+            $sources = ['RGMO', 'DA Grant', 'DA Hybrid'];
+            $beginningBalances = [];
+            foreach ($sources as $source) {
+                $stockInBefore = $item->transactions()->where('transaction_type', 'stock_in')->where('funding_source', $source)->where('created_at', '<', $startDate)->sum('quantity');
+                $stockOutBefore = $item->transactions()->where('transaction_type', 'stock_out')->where('funding_source', $source)->where('created_at', '<', $startDate)->sum('quantity');
+                $beginningBalances[$source] = (object) [
+                    'qty' => $stockInBefore - $stockOutBefore,
+                    'value' => ($stockInBefore - $stockOutBefore) * $item->price
+                ];
+            }
+
+            $delivered = $item->transactions()->where('transaction_type', 'stock_in')->whereBetween('created_at', [$startDate, $endDate])->sum('quantity');
+            $withdrawals = $item->transactions()->where('transaction_type', 'stock_out')->whereBetween('created_at', [$startDate, $endDate])->sum('quantity');
+
+            $totalBeginningQty = 0;
+            foreach ($beginningBalances as $bb) {
+                $totalBeginningQty += $bb->qty;
+            }
+            
+            return (object) [
+                'particulars' => $item->name,
+                'unit' => $item->unit,
+                'value' => $item->price,
+                'beginning_balances' => $beginningBalances,
+                'total_beginning_balance_qty' => $totalBeginningQty,
+                'total_beginning_balance_value' => $totalBeginningQty * $item->price,
+                'delivered_qty' => $delivered,
+                'delivered_value' => $delivered * $item->price,
+                'withdrawals_qty' => $withdrawals,
+                'withdrawals_value' => $withdrawals * $item->price,
+                'ending_balance_qty' => $totalBeginningQty + $delivered - $withdrawals,
+                'ending_balance_value' => ($totalBeginningQty + $delivered - $withdrawals) * $item->price,
+                'remarks' => $item->description,
+            ];
+        });
+    }
+
+    /**
      * Calculate and aggregate high-level dashboard metrics for the administrator view.
      *
      * @return array Dictionary containing user, item, and request counts.

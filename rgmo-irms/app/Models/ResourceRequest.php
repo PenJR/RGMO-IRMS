@@ -20,6 +20,8 @@ class ResourceRequest extends Model
 
     protected $fillable = [
         'user_id',
+        'ris_no',
+        'responsible_center',
         'status',
         'purpose',
         'remarks',

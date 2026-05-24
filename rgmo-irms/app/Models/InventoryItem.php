@@ -22,11 +22,14 @@ class InventoryItem extends Model
         'reorder_level',
         'price',
         'description',
+        'planting_date',
+        'funding_source',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'reorder_level' => 'integer',
+        'planting_date' => 'datetime',
     ];
 
     /**
@@ -173,9 +176,10 @@ class InventoryItem extends Model
      * @param int $quantity
      * @param string $source
      * @param int|null $userId
+     * @param string|null $fundingSource
      * @return void
      */
-    public function recordStockIn(int $quantity, string $source, ?int $userId = null): void
+    public function recordStockIn(int $quantity, string $source, ?int $userId = null, ?string $fundingSource = null): void
     {
         $this->increment('stock', $quantity);
         $this->transactions()->create([
@@ -183,6 +187,7 @@ class InventoryItem extends Model
             'transaction_type' => 'stock_in',
             'quantity' => $quantity,
             'source' => $source,
+            'funding_source' => $fundingSource,
         ]);
     }
 
@@ -192,9 +197,10 @@ class InventoryItem extends Model
      * @param int $quantity
      * @param string $destination
      * @param int|null $userId
+     * @param string|null $fundingSource
      * @return void
      */
-    public function recordStockOut(int $quantity, string $destination, ?int $userId = null): void
+    public function recordStockOut(int $quantity, string $destination, ?int $userId = null, ?string $fundingSource = null): void
     {
         $this->decrement('stock', $quantity);
         $this->transactions()->create([
@@ -202,6 +208,7 @@ class InventoryItem extends Model
             'transaction_type' => 'stock_out',
             'quantity' => $quantity,
             'destination' => $destination,
+            'funding_source' => $fundingSource,
         ]);
     }
 }

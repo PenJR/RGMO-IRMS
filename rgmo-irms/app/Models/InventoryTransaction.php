@@ -13,6 +13,7 @@ class InventoryTransaction extends Model
         'user_id',
         'transaction_type',
         'quantity',
+        'funding_source',
         'source',
         'destination',
         'meta',
