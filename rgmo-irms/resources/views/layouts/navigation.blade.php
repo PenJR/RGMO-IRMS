@@ -1,7 +1,7 @@
 <nav id="sidebar">
     <div class="p-4 border-bottom border-dark-subtle mb-3">
         <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; background: var(--cmu-gold); color: var(--cmu-green); font-size: 1.25rem;">U</div>
+            <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS Logo" style="width: 40px; height: 40px; filter: drop-shadow(0 0 2px rgba(255, 204, 0, 0.3));" class="rounded-circle">
             <div>
                 <h1 class="text-sm fw-bold mb-0" style="font-size: 0.875rem; letter-spacing: -0.01em;">RGMO-IRMS</h1>
                 <p class="text-uppercase mb-0 opacity-50" style="font-size: 10px; letter-spacing: 0.1em;">Central Mindanao</p>
