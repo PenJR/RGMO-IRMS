@@ -10,6 +10,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\AIForecastingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -27,6 +28,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // AI Forecasting (Mockup)
+    Route::get('/ai-forecasting', [AIForecastingController::class, 'index'])->name('ai-forecasting.index');
 
     // Inventory Module
     Route::middleware(['role:admin,staff'])->group(function () {

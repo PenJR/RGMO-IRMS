@@ -75,6 +75,34 @@
             </div>
         </div>
 
+        <!-- AI Forecasting Button Card -->
+        <div class="row g-4 mt-1">
+            <div class="col-12">
+                <a href="{{ route('ai-forecasting.index') }}" class="text-decoration-none">
+                    <div class="card shadow-sm border-0 bg-dark text-white overflow-hidden card-stat" style="background: linear-gradient(135deg, #006837 0%, #004d29 100%) !important;">
+                        <div class="card-body py-4 px-4 position-relative">
+                            <div class="d-flex align-items-center justify-content-between position-relative" style="z-index: 2;">
+                                <div class="d-flex align-items-center gap-4">
+                                    <div class="rounded-circle bg-white bg-opacity-20 p-3">
+                                        <i data-lucide="sparkles" class="text-warning" style="width: 32px; height: 32px;"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="mb-1 fw-bold">Explore AI Forecasting</h4>
+                                        <p class="mb-0 text-white text-opacity-75">Predict stock demand and optimize inventory levels using intelligent analytics.</p>
+                                    </div>
+                                </div>
+                                <div class="d-none d-md-block text-end">
+                                    <span class="btn btn-warning fw-bold px-4 rounded-pill">VIEW INSIGHTS</span>
+                                </div>
+                            </div>
+                            <!-- Background pattern/icon -->
+                            <i data-lucide="trending-up" class="position-absolute text-white opacity-10" style="width: 150px; height: 150px; bottom: -30px; right: 20px; transform: rotate(-15deg); z-index: 1;"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
         <div class="row g-4 mt-1">
             <div class="col-12 col-xl-5">
                 <div class="card shadow-sm border-0 h-100">

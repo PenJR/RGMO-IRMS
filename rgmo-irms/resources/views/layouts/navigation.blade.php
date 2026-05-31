@@ -82,6 +82,12 @@
             </details>
         @endif
 
+        <a href="{{ route('ai-forecasting.index') }}" class="nav-link {{ request()->routeIs('ai-forecasting.*') ? 'active' : '' }}">
+            <i data-lucide="sparkles" class="me-3" style="width: 18px"></i>
+            AI Forecasting
+            <span class="badge rounded-pill bg-info text-white ms-auto" style="font-size: 9px;">PREVIEW</span>
+        </a>
+
         @can('viewAny', App\Models\User::class)
             <details class="nav-group {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'active' : '' }}" {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'open' : '' }}>
                 <summary>
