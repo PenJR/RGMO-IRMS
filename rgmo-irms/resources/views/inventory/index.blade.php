@@ -15,6 +15,8 @@
     </x-slot>
 
     <div class="container-fluid py-4">
+            <x-breadcrumb :items="['Inventory' => route('inventory.index')]" />
+
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
                     <form method="GET" action="{{ route('inventory.index') }}" class="row g-3">
@@ -74,12 +76,12 @@
             @endcan
 
             <!-- Inventory Items Table -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
+            <div class="card border-0 shadow-sm bg-transparent shadow-none">
+                <div class="card-body p-0">
                     @if($items->count() > 0)
                         <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead class="table-light">
+                            <table class="table table-modern align-middle">
+                                <thead>
                                     <tr>
                                         <th>Item</th>
                                         <th>SKU</th>

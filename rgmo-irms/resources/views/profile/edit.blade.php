@@ -7,6 +7,8 @@
     <div class="container-fluid py-4">
         <div class="row g-4 justify-content-center">
             <div class="col-lg-10">
+                <x-breadcrumb :items="['Profile' => route('profile.edit')]" />
+                
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-4">
                         @include('profile.partials.update-profile-information-form')

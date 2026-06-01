@@ -24,7 +24,7 @@
             }
 
             body {
-                background-color: #f9fafb;
+                background-color: #f3f4f6;
                 font-family: 'Inter', system-ui, sans-serif;
                 color: #1f2937;
             }
@@ -144,8 +144,9 @@
             .top-nav {
                 min-height: 72px;
                 height: auto;
-                background: white;
-                border-bottom: 1px solid #e5e7eb;
+                background: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(10px);
+                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
                 padding: 0.5rem 2rem;
                 position: sticky;
                 top: 0;

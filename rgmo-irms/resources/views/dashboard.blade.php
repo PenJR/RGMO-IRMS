@@ -11,14 +11,14 @@
     <div class="container-fluid py-4">
         <div class="row g-4">
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100 card-stat">
+                <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #0d6efd !important;">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <i data-lucide="users" style="width: 24px;"></i>
+                            <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                <i data-lucide="users" style="width: 26px; height: 26px;"></i>
                             </div>
                             <div>
-                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.05em;">Total Users</p>
+                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Total Users</p>
                                 <h3 class="mb-0 fw-bold">{{ $stats['total_users'] }}</h3>
                             </div>
                         </div>
@@ -27,14 +27,14 @@
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100 card-stat">
+                <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #198754 !important;">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle bg-success bg-opacity-10 text-success p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <i data-lucide="package" style="width: 24px;"></i>
+                            <div class="rounded-3 bg-success bg-opacity-10 text-success p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                <i data-lucide="package" style="width: 26px; height: 26px;"></i>
                             </div>
                             <div>
-                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.05em;">Inventory Items</p>
+                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Inventory Items</p>
                                 <h3 class="mb-0 fw-bold">{{ $stats['total_items'] }}</h3>
                             </div>
                         </div>
@@ -43,14 +43,14 @@
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100 card-stat">
+                <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #dc3545 !important;">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle bg-danger bg-opacity-10 text-danger p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <i data-lucide="alert-triangle" style="width: 24px;"></i>
+                            <div class="rounded-3 bg-danger bg-opacity-10 text-danger p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                <i data-lucide="alert-triangle" style="width: 26px; height: 26px;"></i>
                             </div>
                             <div>
-                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.05em;">Low Stock Alerts</p>
+                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Low Stock Alerts</p>
                                 <h3 class="mb-0 fw-bold text-danger">{{ $stats['low_stock_count'] }}</h3>
                             </div>
                         </div>
@@ -59,14 +59,14 @@
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100 card-stat">
+                <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #ffc107 !important;">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle bg-warning bg-opacity-10 text-warning p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <i data-lucide="clipboard-check" style="width: 24px;"></i>
+                            <div class="rounded-3 bg-warning bg-opacity-10 text-warning p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                <i data-lucide="clipboard-check" style="width: 26px; height: 26px;"></i>
                             </div>
                             <div>
-                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.05em;">Pending Requests</p>
+                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Pending Requests</p>
                                 <h3 class="mb-0 fw-bold text-warning">{{ $stats['pending_requests'] }}</h3>
                             </div>
                         </div>
@@ -76,12 +76,12 @@
         </div>
 
         <!-- AI Forecasting Button Card -->
-        <div class="row g-4 mt-1">
+        <div class="row g-4 mt-2">
             <div class="col-12">
                 <a href="{{ route('ai-forecasting.index') }}" class="text-decoration-none">
-                    <div class="card shadow-sm border-0 bg-dark text-white overflow-hidden card-stat" style="background: linear-gradient(135deg, #006837 0%, #004d29 100%) !important;">
-                        <div class="card-body py-4 px-4 position-relative">
-                            <div class="d-flex align-items-center justify-content-between position-relative" style="z-index: 2;">
+                    <div class="card shadow-sm border-0 bg-dark text-white overflow-hidden card-stat" style="background: linear-gradient(135deg, #006837 0%, #004d29 100%) !important; min-height: 160px; display: flex; justify-content: center;">
+                        <div class="card-body py-0 px-4 position-relative d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-between w-100 position-relative" style="z-index: 2;">
                                 <div class="d-flex align-items-center gap-4">
                                     <div class="rounded-circle bg-white bg-opacity-20 p-3">
                                         <i data-lucide="sparkles" class="text-warning" style="width: 32px; height: 32px;"></i>

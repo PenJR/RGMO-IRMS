@@ -9,3 +9,80 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Custom UI Refinements */
+.card {
+    border-radius: 12px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-stat {
+    border: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+.card-stat:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.table-modern {
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.table-modern thead th {
+    background: transparent;
+    border: none;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #6b7280;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.5rem;
+}
+
+.table-modern tbody tr {
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.table-modern tbody tr:hover {
+    background: #fdfdfd;
+    transform: scale(1.002);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.table-modern tbody td {
+    border: none;
+    padding: 1rem 1.5rem;
+}
+
+.table-modern tbody td:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.table-modern tbody td:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+/* Brand Buttons */
+.btn-cmu {
+    box-shadow: 0 4px 6px -1px rgba(0, 104, 55, 0.2);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-cmu:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(0, 104, 55, 0.3);
+}
+
+/* Glass Effect */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}

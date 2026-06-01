@@ -13,6 +13,8 @@
     </x-slot>
 
     <div class="container-fluid py-4">
+        <x-breadcrumb :items="['Reports' => '#', 'Monthly Inventory' => route('reports.monthly-inventory')]" />
+
         <div class="card border-0 shadow-sm mb-4 d-print-none">
             <div class="card-body p-4">
                 <form method="GET" action="{{ route('reports.monthly-inventory') }}" class="row g-3">
