@@ -32,6 +32,25 @@
             </div>
         </div>
 
+        <div class="row g-4 mb-4">
+            <div class="col-lg-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h5 class="fw-bold mb-0">Resource Consumption Density</h5>
+                                <p class="text-muted small mb-0">Analysis of the most frequently requested items</p>
+                            </div>
+                            <i data-lucide="pie-chart" class="text-primary opacity-50" style="width: 24px"></i>
+                        </div>
+                        <div style="height: 300px;">
+                            <canvas id="resourceUsageChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm bg-transparent shadow-none">
             <div class="card-body p-0">
                 @if(!empty($report['items']) && count($report['items']) > 0)
@@ -68,4 +87,38 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('resourceUsageChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Bond Paper', 'Ink Cartridges', 'Envelopes', 'Pens', 'Staples', 'Folders'],
+                    datasets: [{
+                        label: 'Total Quantity Consumed',
+                        data: [150, 45, 80, 200, 60, 95],
+                        backgroundColor: '#FFCC00',
+                        borderRadius: 6,
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#006837', titleColor: '#fff', bodyColor: '#fff' }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { borderDash: [4, 4] } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>

@@ -103,6 +103,41 @@
             </div>
         </div>
 
+        <!-- Charts Dashboard Section -->
+        <div class="row g-4 mt-2">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-0">Inventory Dynamics</h5>
+                            <p class="text-muted small mb-0">Monthly stock level fluctuations</p>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm dropdown-toggle small" type="button" data-bs-toggle="dropdown">
+                                Last 6 Months
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body px-4 pb-4">
+                        <canvas id="inventoryChart" style="max-height: 280px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+                        <h5 class="fw-bold mb-0">Request Status Distribution</h5>
+                        <p class="text-muted small mb-0">Current status of all submitted requests</p>
+                    </div>
+                    <div class="card-body px-4 pb-4 d-flex align-items-center justify-content-center">
+                        <div style="position: relative; height: 230px; width: 230px;">
+                            <canvas id="requestsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row g-4 mt-1">
             <div class="col-12 col-xl-5">
                 <div class="card shadow-sm border-0 h-100">
@@ -259,4 +294,79 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inventory Dynamics Chart
+            const ctxInv = document.getElementById('inventoryChart').getContext('2d');
+            const invGradient = ctxInv.createLinearGradient(0, 0, 0, 400);
+            invGradient.addColorStop(0, 'rgba(0, 104, 55, 0.7)');
+            invGradient.addColorStop(1, 'rgba(0, 104, 55, 0.05)');
+
+            new Chart(ctxInv, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Total Stock Volume',
+                        data: [420, 580, 490, 710, 680, 850],
+                        borderColor: '#006837',
+                        borderWidth: 3,
+                        backgroundColor: invGradient,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#006837',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { borderDash: [5, 5], color: '#e5e7eb' },
+                            ticks: { font: { size: 10 } }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+
+            // Requests Distribution Chart
+            const ctxReq = document.getElementById('requestsChart').getContext('2d');
+            new Chart(ctxReq, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Approved', 'Pending', 'Rejected'],
+                    datasets: [{
+                        data: [55, {{ $stats['pending_requests'] }}, 12],
+                        backgroundColor: ['#166534', '#ca8a04', '#991b1b'],
+                        borderWidth: 0,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: { usePointStyle: true, padding: 15, font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>

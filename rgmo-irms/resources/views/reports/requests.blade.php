@@ -37,6 +37,20 @@
             </div>
         </div>
 
+        <div class="row g-4 mb-4">
+            <div class="col-lg-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold mb-0">Request Volume Over Time</h5>
+                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill small fw-bold">Active Filter Applied</span>
+                        </div>
+                        <canvas id="requestsTrendChart" style="max-height: 250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm bg-transparent shadow-none">
             <div class="card-body p-0">
                 @if(!empty($report['requests']) && count($report['requests']) > 0)
@@ -73,4 +87,47 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('requestsTrendChart').getContext('2d');
+            
+            // Create a gradient for the request trends
+            const trendGradient = ctx.createLinearGradient(0, 0, 0, 400);
+            trendGradient.addColorStop(0, 'rgba(0, 104, 55, 0.4)');
+            trendGradient.addColorStop(1, 'rgba(0, 104, 55, 0)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                    datasets: [{
+                        label: 'Total Requests',
+                        data: [12, 19, 15, 25, 22, 30],
+                        borderColor: '#006837',
+                        borderWidth: 2,
+                        backgroundColor: trendGradient,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#006837',
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [4, 4] } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>
