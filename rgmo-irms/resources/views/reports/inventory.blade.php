@@ -62,9 +62,10 @@
                                         <td>{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
                                         <td>
                                             <span class="badge rounded-pill
-                                                @if($item->stock <= $item->min_stock) bg-danger text-white
+                                                @if($item->getStockStatus() === 'low') bg-danger text-white
+                                                @elseif($item->getStockStatus() === 'warning') bg-warning text-dark
                                                 @else bg-success text-white @endif">
-                                                {{ $item->stock <= $item->min_stock ? 'Low' : 'OK' }}
+                                                {{ ucfirst($item->getStockStatus()) }}
                                             </span>
                                         </td>
                                     </tr>

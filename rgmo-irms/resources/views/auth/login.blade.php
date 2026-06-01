@@ -1,4 +1,9 @@
 <x-guest-layout>
+    <div class="mb-4">
+        <h3 class="fw-bold text-dark mb-1">Login</h3>
+        <p class="text-muted small">Access your account to manage resources.</p>
+    </div>
+
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 

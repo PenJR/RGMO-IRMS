@@ -154,7 +154,7 @@
 
             .main-content {
                 flex: 1;
-                padding: 2rem;
+                padding: 0;
                 overflow-y: auto;
             }
 
@@ -297,20 +297,24 @@
 
                 <div class="main-content">
                     @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
-                            <div class="d-flex align-items-center">
-                                <i data-lucide="check-circle" class="me-2" style="width: 18px"></i>
-                                <span>{{ session('success') }}</span>
+                        <div class="container-fluid mt-4">
+                            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i data-lucide="check-circle" class="me-2" style="width: 18px"></i>
+                                    <span>{{ session('success') }}</span>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
 
                     {{ $slot }}
 
-                    <footer class="mt-5 pt-4 text-center border-top">
-                        <p class="text-muted" style="font-size: 10px; color: #9ca3af !important;">© {{ date('Y') }} Central Mindanao University - RGMO-IRMS • System v1.0</p>
-                    </footer>
+                    <div class="container-fluid">
+                        <footer class="mt-5 pt-4 text-center border-top mb-4">
+                            <p class="text-muted" style="font-size: 10px; color: #9ca3af !important;">© {{ date('Y') }} Central Mindanao University - RGMO-IRMS • System v1.0</p>
+                        </footer>
+                    </div>
                 </div>
             </main>
         </div>
