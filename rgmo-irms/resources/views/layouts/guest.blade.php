@@ -18,20 +18,20 @@
 
         <style>
             :root {
-                --cmu-green: #006837;
-                --cmu-dark-green: #004d29;
-                --cmu-gold: #FFCC00;
+                --cmu-yellow: #FFC600;
+                --cmu-yellow-hover: #E6B300;
+                --cmu-green: #00491E;
+                --cmu-green-2: #02681E;
+                --cmu-accent: #919F02;
             }
 
             body {
-                background-color: #004d29;
+                background:
+                    radial-gradient(circle at top left, rgba(255, 198, 0, 0.14), transparent 24%),
+                    radial-gradient(circle at bottom right, rgba(2, 104, 30, 0.12), transparent 28%),
+                    linear-gradient(180deg, #f7faf6 0%, #eef4ef 100%);
                 font-family: 'Inter', system-ui, sans-serif;
-                color: #1f2937;
-                background-image: 
-                    radial-gradient(at 0% 0%, rgba(0, 104, 55, 0.8) 0, transparent 50%), 
-                    radial-gradient(at 100% 100%, rgba(255, 204, 0, 0.15) 0, transparent 50%),
-                    linear-gradient(135deg, #004d29 0%, #002b17 100%);
-                background-attachment: fixed;
+                color: #163024;
                 min-height: 100vh;
                 display: flex;
                 align-items: center;
@@ -47,7 +47,7 @@
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+                background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2300491e' fill-opacity='0.035'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
                 pointer-events: none;
                 z-index: 0;
             }
@@ -67,9 +67,9 @@
                 position: absolute;
                 width: 500px;
                 height: 500px;
-                background: var(--cmu-gold);
+                background: var(--cmu-yellow);
                 filter: blur(100px);
-                opacity: 0.05;
+                opacity: 0.08;
                 border-radius: 50%;
                 animation: float 20s infinite alternate;
             }
@@ -84,20 +84,27 @@
             }
 
             .feature-card:hover {
-                background: rgba(255, 255, 255, 0.08) !important;
+                background: rgba(2, 104, 30, 0.05) !important;
                 transform: translateX(10px);
-                border-color: rgba(255, 204, 0, 0.3) !important;
+                border-color: rgba(255, 198, 0, 0.45) !important;
             }
 
             .login-card {
-                background: rgba(255, 255, 255, 0.98);
+                background: rgba(255, 255, 255, 0.95);
                 backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(0, 73, 30, 0.08);
                 border-radius: 20px;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                box-shadow: 0 24px 50px -18px rgba(0, 73, 30, 0.18);
                 width: 100%;
                 max-width: 480px;
                 padding: 3rem;
+            }
+
+            .login-card .brand-mark {
+                width: 64px;
+                height: 64px;
+                background: linear-gradient(135deg, rgba(255, 198, 0, 0.22), rgba(2, 104, 30, 0.08));
+                border: 1px solid rgba(0, 73, 30, 0.08);
             }
 
             .input-group-text {
@@ -108,63 +115,73 @@
             .form-control {
                 border-radius: 8px;
                 padding: 0.75rem 1rem;
+                border-color: rgba(0, 73, 30, 0.16);
             }
 
             .form-control:focus {
-                box-shadow: 0 0 0 4px rgba(0, 104, 55, 0.15);
+                box-shadow: 0 0 0 4px rgba(255, 198, 0, 0.2);
+                border-color: var(--cmu-green-2);
+            }
+
+            .auth-shell-copy {
+                color: var(--cmu-green);
+            }
+
+            .auth-shell-copy p,
+            .auth-shell-copy .small {
+                color: #4f6458;
             }
         </style>
     </head>
     <body class="antialiased">
         <div class="floating-blobs">
-            <div class="blob" style="top: -10%; left: -10%; background: var(--cmu-gold); animation-delay: 0s;"></div>
+            <div class="blob" style="top: -10%; left: -10%; background: var(--cmu-yellow); animation-delay: 0s;"></div>
             <div class="blob" style="bottom: -10%; right: -10%; background: var(--cmu-green); animation-delay: -5s; opacity: 0.1;"></div>
         </div>
 
         <div class="container py-5">
             <div class="row align-items-center justify-content-center g-5 min-vh-100">
                 <!-- Info Column (Visible on Desktop) -->
-                <div class="col-lg-6 d-none d-lg-block text-white">
+                <div class="col-lg-6 d-none d-lg-block auth-shell-copy">
                     <div class="pe-lg-5">
-                        <img src="{{ asset('images/logo.png') }}" alt="CMU Logo" style="width: 120px; height: 120px; margin-bottom: 2.5rem; filter: drop-shadow(0 0 20px rgba(255, 204, 0, 0.3)); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <h1 class="display-3 fw-bold mb-2" style="color: var(--cmu-gold); letter-spacing: -0.04em; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">RGMO-IRMS</h1>
-                        <p class="lead fw-medium mb-5 opacity-90" style="font-size: 1.25rem; border-left: 3px solid var(--cmu-gold); padding-left: 1.5rem;">Resource Generation Management Office<br><span class="opacity-75" style="font-size: 1.1rem;">Inventory & Resource Management System</span></p>
+                        <img src="{{ asset('images/logo.png') }}" alt="CMU Logo" style="width: 120px; height: 120px; margin-bottom: 2.5rem; filter: drop-shadow(0 0 18px rgba(255, 198, 0, 0.24)); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <h1 class="display-3 fw-bold mb-2" style="color: var(--cmu-green); letter-spacing: -0.04em;">RGMO-IRMS</h1>
+                        <p class="lead fw-medium mb-5" style="font-size: 1.25rem; border-left: 3px solid var(--cmu-yellow); padding-left: 1.5rem;">Resource Generation Management Office<br><span class="opacity-75" style="font-size: 1.1rem;">Inventory & Resource Management System</span></p>
                         
                         <div class="space-y-4">
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                                <div class="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 60px; height: 60px; min-width: 60px;">
-                                    <i data-lucide="package" class="text-warning" style="width: 28px; height: 28px;"></i>
+                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 1px solid rgba(0,73,30,0.08);">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
+                                    <i data-lucide="package" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
                                 <div>
-                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-gold)">Asset Tracking</h5>
+                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-green)">Asset Tracking</h5>
                                     <p class="small mb-0 opacity-75">Precision monitoring of agricultural stocks and nursery equipment.</p>
                                 </div>
                             </div>
-                            <!-- New: Environmental Impact -->
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                                <div class="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 60px; height: 60px; min-width: 60px;">
-                                    <i data-lucide="leaf" class="text-warning" style="width: 28px; height: 28px;"></i>
+                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 1px solid rgba(0,73,30,0.08);">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
+                                    <i data-lucide="leaf" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
                                 <div>
-                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-gold)">Sustainability Focus</h5>
+                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-green)">Sustainability Focus</h5>
                                     <p class="small mb-0 opacity-75">Promoting green initiatives through digital resource optimization.</p>
                                 </div>
                             </div>
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                                <div class="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 60px; height: 60px; min-width: 60px;">
-                                    <i data-lucide="file-check" class="text-warning" style="width: 28px; height: 28px;"></i>
+                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 1px solid rgba(0,73,30,0.08);">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
+                                    <i data-lucide="file-check" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
                                 <div>
-                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-gold)">Resource Allocation</h5>
+                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-green)">Resource Allocation</h5>
                                     <p class="small mb-0 opacity-75">Optimized workflow for supplies issuance and project distribution.</p>
                                 </div>
                             </div>
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                                <div class="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 60px; height: 60px; min-width: 60px;">
-                                    <i data-lucide="sparkles" class="text-warning" style="width: 28px; height: 28px;"></i>
+                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 1px solid rgba(0,73,30,0.08);">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
+                                    <i data-lucide="sparkles" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
                                 <div>
-                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-gold)">AI Insights</h5>
+                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-green)">AI Insights</h5>
                                     <p class="small mb-0 opacity-75">Data-driven forecasting to minimize wastage and predict demand.</p>
                                 </div>
                             </div>
@@ -176,13 +193,13 @@
                 <div class="col-lg-5 col-md-8">
                     <div class="login-card mx-auto">
                         <div class="brand-logo d-lg-none">
-                            <img src="{{ asset('images/logo.png') }}" alt="Logo" style="width: 50px; height: 50px;">
+                            <img src="{{ asset('images/logo.png') }}" alt="Logo" style="width: 54px; height: 54px;">
                         </div>
                         
                         {{ $slot }}
                     </div>
                     
-                    <div class="text-center mt-4 text-white opacity-50 d-lg-none">
+                    <div class="text-center mt-4 opacity-50 d-lg-none" style="color: #4f6458;">
                         <p class="small">© {{ date('Y') }} Central Mindanao University</p>
                     </div>
                 </div>

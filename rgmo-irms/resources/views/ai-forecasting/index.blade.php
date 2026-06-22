@@ -75,15 +75,15 @@
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
-                            <i data-lucide="zap" class="text-warning" style="width: 20px;"></i>
+                            <i data-lucide="zap" style="width: 20px; color: var(--cmu-green);"></i>
                             Smart Insights
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="d-flex gap-3 mb-4">
                             <div class="flex-shrink-0">
-                                <div class="rounded bg-warning bg-opacity-10 p-2">
-                                    <i data-lucide="alert-triangle" class="text-warning" style="width: 18px;"></i>
+                                <div class="rounded bg-opacity-10 p-2" style="background: rgba(255, 198, 0, 0.18); color: var(--cmu-green);">
+                                    <i data-lucide="alert-triangle" style="width: 18px; color: var(--cmu-green);"></i>
                                 </div>
                             </div>
                             <div>
@@ -94,8 +94,8 @@
 
                         <div class="d-flex gap-3 mb-4">
                             <div class="flex-shrink-0">
-                                <div class="rounded bg-success bg-opacity-10 p-2">
-                                    <i data-lucide="shopping-cart" class="text-success" style="width: 18px;"></i>
+                                <div class="rounded bg-opacity-10 p-2" style="background: rgba(2, 104, 30, 0.12); color: var(--cmu-green-2);">
+                                    <i data-lucide="shopping-cart" style="width: 18px; color: var(--cmu-green-2);"></i>
                                 </div>
                             </div>
                             <div>
@@ -106,8 +106,8 @@
 
                         <div class="d-flex gap-3">
                             <div class="flex-shrink-0">
-                                <div class="rounded bg-info bg-opacity-10 p-2">
-                                    <i data-lucide="calendar" class="text-info" style="width: 18px;"></i>
+                                <div class="rounded bg-opacity-10 p-2" style="background: rgba(145, 159, 2, 0.16); color: var(--cmu-green);">
+                                    <i data-lucide="calendar" style="width: 18px; color: var(--cmu-green);"></i>
                                 </div>
                             </div>
                             <div>

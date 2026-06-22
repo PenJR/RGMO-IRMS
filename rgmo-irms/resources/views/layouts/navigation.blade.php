@@ -1,7 +1,7 @@
 <nav id="sidebar">
-    <div class="p-4 border-bottom border-dark-subtle mb-3">
+    <div class="p-4 border-bottom border-white border-opacity-10 mb-3">
         <div class="d-flex align-items-center gap-3">
-            <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS Logo" style="width: 40px; height: 40px; filter: drop-shadow(0 0 2px rgba(255, 204, 0, 0.3));" class="rounded-circle">
+            <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS Logo" class="rounded-circle brand-logo">
             <div>
                 <h1 class="text-sm fw-bold mb-0" style="font-size: 0.875rem; letter-spacing: -0.01em;">RGMO-IRMS</h1>
                 <p class="text-uppercase mb-0 opacity-50" style="font-size: 10px; letter-spacing: 0.1em;">Central Mindanao</p>
@@ -85,7 +85,7 @@
         <a href="{{ route('ai-forecasting.index') }}" class="nav-link {{ request()->routeIs('ai-forecasting.*') ? 'active' : '' }}">
             <i data-lucide="sparkles" class="me-3" style="width: 18px"></i>
             AI Forecasting
-            <span class="badge rounded-pill bg-info text-white ms-auto" style="font-size: 9px;">PREVIEW</span>
+            <span class="badge rounded-pill ms-auto" style="background: rgba(145, 159, 2, 0.2); color: #f6ffd0; border: 1px solid rgba(145, 159, 2, 0.26); font-size: 9px;">PREVIEW</span>
         </a>
 
         @can('viewAny', App\Models\User::class)

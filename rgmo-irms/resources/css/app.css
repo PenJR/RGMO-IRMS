@@ -10,6 +10,61 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+:root {
+    --cmu-yellow: #ffc600;
+    --cmu-yellow-hover: #e6b300;
+    --cmu-green: #00491e;
+    --cmu-green-2: #02681e;
+    --cmu-accent: #919f02;
+    --cmu-surface: #f8faf8;
+    --cmu-border: #dbe5dc;
+    --cmu-text: #163024;
+    --cmu-muted: #617068;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background:
+        radial-gradient(circle at top left, rgba(255, 198, 0, 0.08), transparent 28%),
+        radial-gradient(circle at top right, rgba(2, 104, 30, 0.08), transparent 26%),
+        linear-gradient(180deg, #ffffff 0%, #f5f8f5 100%);
+    color: var(--cmu-text);
+}
+
+.card,
+.form-control,
+.form-select,
+.table,
+.modal-content,
+.dropdown-menu,
+.alert,
+.badge,
+.btn {
+    border-radius: 0.75rem;
+}
+
+.card,
+.form-control,
+.form-select,
+.dropdown-menu,
+.modal-content,
+.alert,
+.table-modern tbody tr {
+    box-shadow: 0 8px 24px rgba(0, 73, 30, 0.06);
+}
+
+.card {
+    border: 1px solid rgba(0, 73, 30, 0.08);
+}
+
+.card-header {
+    background: linear-gradient(90deg, rgba(2, 104, 30, 0.06), rgba(255, 198, 0, 0.06));
+    border-bottom: 1px solid rgba(0, 73, 30, 0.08);
+}
+
 /* Custom UI Refinements */
 .card {
     border-radius: 12px !important;
@@ -31,27 +86,27 @@
 }
 
 .table-modern thead th {
-    background: transparent;
+    background: var(--cmu-green);
     border: none;
     text-transform: uppercase;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    color: #6b7280;
+    color: #ffffff;
     letter-spacing: 0.05em;
     padding: 1rem 1.5rem;
 }
 
 .table-modern tbody tr {
-    background: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 73, 30, 0.04);
     border-radius: 10px;
     transition: all 0.2s;
 }
 
 .table-modern tbody tr:hover {
-    background: #fdfdfd;
+    background: #fbfdf9;
     transform: scale(1.002);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 8px 16px rgba(0, 73, 30, 0.08);
 }
 
 .table-modern tbody td {
@@ -71,31 +126,80 @@
 
 /* Brand Buttons */
 .btn-cmu {
-    box-shadow: 0 4px 6px -1px rgba(0, 104, 55, 0.2);
+    background: var(--cmu-yellow);
+    color: var(--cmu-green);
+    border: 1px solid var(--cmu-yellow);
+    font-weight: 700;
+    box-shadow: 0 4px 12px -2px rgba(0, 73, 30, 0.2);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-cmu:hover {
     transform: translateY(-1px);
-    box-shadow: 0 10px 15px -3px rgba(0, 104, 55, 0.3);
+    background: var(--cmu-yellow-hover);
+    border-color: var(--cmu-yellow-hover);
+    color: var(--cmu-green);
+    box-shadow: 0 10px 18px -3px rgba(0, 73, 30, 0.24);
+}
+
+.btn-cmu:focus,
+.btn-cmu:active {
+    background: var(--cmu-yellow-hover);
+    color: var(--cmu-green);
+    border-color: var(--cmu-yellow-hover);
+    box-shadow: 0 0 0 0.2rem rgba(255, 198, 0, 0.28);
+}
+
+.btn-secondary,
+.btn-outline-secondary:hover,
+.btn-success,
+.btn-outline-success:hover {
+    background-color: var(--cmu-green-2);
+    border-color: var(--cmu-green-2);
+    color: #ffffff;
+}
+
+.btn-outline-secondary {
+    border-color: rgba(0, 73, 30, 0.22);
+    color: var(--cmu-green);
+}
+
+.btn-primary,
+.btn-outline-primary:hover {
+    background-color: var(--cmu-yellow);
+    border-color: var(--cmu-yellow);
+    color: var(--cmu-green);
+}
+
+.btn-outline-primary {
+    border-color: var(--cmu-green-2);
+    color: var(--cmu-green-2);
+}
+
+.btn-primary:hover,
+.btn-outline-primary:hover,
+.btn-warning:hover {
+    background-color: var(--cmu-yellow-hover);
+    border-color: var(--cmu-yellow-hover);
+    color: var(--cmu-green);
 }
 
 /* Glass Effect */
 .glass-panel {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(0, 73, 30, 0.08);
 }
 
 .form-glass {
-    background: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.92) !important;
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    border: 1px solid rgba(0, 73, 30, 0.08) !important;
+    box-shadow: 0 12px 30px 0 rgba(0, 73, 30, 0.08);
 }
 
 .form-control, .form-select {
-    border-color: #e5e7eb;
+    border-color: var(--cmu-border);
     padding: 0.6rem 1rem;
     font-size: 0.9rem;
     border-radius: 8px;
@@ -103,13 +207,86 @@
 }
 
 .form-control:focus, .form-select:focus {
-    border-color: #006837;
-    box-shadow: 0 0 0 0.25rem rgba(0, 104, 55, 0.1);
+    border-color: var(--cmu-green-2);
+    box-shadow: 0 0 0 0.25rem rgba(2, 104, 30, 0.14);
 }
 
 .form-label {
     font-weight: 600;
     font-size: 0.85rem;
-    color: #4b5563;
+    color: var(--cmu-muted);
     margin-bottom: 0.5rem;
+}
+
+.table thead th {
+    color: var(--cmu-green);
+}
+
+.table > :not(caption) > * > * {
+    border-color: rgba(0, 73, 30, 0.08);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-bg-type: rgba(145, 159, 2, 0.035);
+}
+
+.badge.bg-success,
+.badge.text-bg-success,
+.alert-success {
+    background-color: rgba(2, 104, 30, 0.12) !important;
+    color: var(--cmu-green) !important;
+    border: 1px solid rgba(2, 104, 30, 0.2);
+}
+
+.badge.bg-warning,
+.badge.text-bg-warning,
+.alert-warning {
+    background-color: rgba(255, 198, 0, 0.16) !important;
+    color: var(--cmu-green) !important;
+    border: 1px solid rgba(255, 198, 0, 0.3);
+}
+
+.badge.bg-info,
+.badge.text-bg-info,
+.alert-info {
+    background-color: rgba(145, 159, 2, 0.14) !important;
+    color: var(--cmu-green) !important;
+    border: 1px solid rgba(145, 159, 2, 0.24);
+}
+
+.text-success {
+    color: var(--cmu-green-2) !important;
+}
+
+.text-warning {
+    color: #b38b00 !important;
+}
+
+.text-info {
+    color: var(--cmu-accent) !important;
+}
+
+.auth-label {
+    color: var(--cmu-green);
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.forgot-link {
+    color: var(--cmu-green-2);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.forgot-link:hover {
+    color: var(--cmu-green);
+    text-decoration: underline;
+}
+
+.progress-bar {
+    background-color: var(--cmu-accent);
+}
+
+.text-primary {
+    color: var(--cmu-green) !important;
 }

@@ -14,8 +14,8 @@
                 <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #0d6efd !important;">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                                <i data-lucide="users" style="width: 26px; height: 26px;"></i>
+                            <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(0, 73, 30, 0.1); color: var(--cmu-green);">
+                                <i data-lucide="users" style="width: 26px; height: 26px; color: var(--cmu-green);"></i>
                             </div>
                             <div>
                                 <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Total Users</p>
@@ -30,8 +30,8 @@
                 <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #198754 !important;">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-3 bg-success bg-opacity-10 text-success p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                                <i data-lucide="package" style="width: 26px; height: 26px;"></i>
+                            <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(2, 104, 30, 0.1); color: var(--cmu-green-2);">
+                                <i data-lucide="package" style="width: 26px; height: 26px; color: var(--cmu-green-2);"></i>
                             </div>
                             <div>
                                 <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Inventory Items</p>
@@ -46,8 +46,8 @@
                 <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #dc3545 !important;">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-3 bg-danger bg-opacity-10 text-danger p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                                <i data-lucide="alert-triangle" style="width: 26px; height: 26px;"></i>
+                            <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(255, 198, 0, 0.18); color: var(--cmu-green);">
+                                <i data-lucide="alert-triangle" style="width: 26px; height: 26px; color: var(--cmu-green);"></i>
                             </div>
                             <div>
                                 <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Low Stock Alerts</p>
@@ -62,8 +62,8 @@
                 <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #ffc107 !important;">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-3 bg-warning bg-opacity-10 text-warning p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                                <i data-lucide="clipboard-check" style="width: 26px; height: 26px;"></i>
+                            <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(145, 159, 2, 0.16); color: var(--cmu-green);">
+                                <i data-lucide="clipboard-check" style="width: 26px; height: 26px; color: var(--cmu-green);"></i>
                             </div>
                             <div>
                                 <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Pending Requests</p>
@@ -83,8 +83,8 @@
                         <div class="card-body py-0 px-4 position-relative d-flex align-items-center">
                             <div class="d-flex align-items-center justify-content-between w-100 position-relative" style="z-index: 2;">
                                 <div class="d-flex align-items-center gap-4">
-                                    <div class="rounded-circle bg-white bg-opacity-20 p-3">
-                                        <i data-lucide="sparkles" class="text-warning" style="width: 32px; height: 32px;"></i>
+                                    <div class="rounded-circle bg-white bg-opacity-20 p-3" style="color: #ffffff;">
+                                        <i data-lucide="sparkles" style="width: 32px; height: 32px; color: #ffffff;"></i>
                                     </div>
                                     <div>
                                         <h4 class="mb-1 fw-bold">Explore AI Forecasting</h4>
@@ -96,7 +96,7 @@
                                 </div>
                             </div>
                             <!-- Background pattern/icon -->
-                            <i data-lucide="trending-up" class="position-absolute text-white opacity-10" style="width: 150px; height: 150px; bottom: -30px; right: 20px; transform: rotate(-15deg); z-index: 1;"></i>
+                            <i data-lucide="trending-up" class="position-absolute opacity-10" style="width: 150px; height: 150px; bottom: -30px; right: 20px; transform: rotate(-15deg); z-index: 1; color: rgba(255, 255, 255, 0.9);"></i>
                         </div>
                     </div>
                 </a>
