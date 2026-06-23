@@ -232,7 +232,7 @@ class RmsService
     public function sendLowStockAlert(int $itemId): Notification
     {
         $item = InventoryItem::findOrFail($itemId);
-        $admin = User::where('role', 'admin')->firstOrFail();
+        $admin = User::admin()->firstOrFail();
         return $this->sendNotification($admin->id, "Low stock: {$item->name} ({$item->stock})", 'low_stock');
     }
     public function sendRequestStatusNotification(int $requestId): Notification

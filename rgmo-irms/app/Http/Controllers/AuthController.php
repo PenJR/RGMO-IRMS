@@ -73,8 +73,8 @@ class AuthController extends Controller
      */
     public function registerUser(Request $request)
     {
-        abort_unless(Auth::user()?->role === 'admin', 403);
-        $data = $request->validate(['name' => 'required|string|max:255', 'email' => 'required|email|unique:users,email', 'password' => 'required|string|min:8', 'role' => 'required|in:admin,staff,field_personnel']);
+        abort_unless(Auth::user()?->hasPermission('manage-users'), 403);
+        $data = $request->validate(['name' => 'required|string|max:255', 'email' => 'required|email|unique:users,email', 'password' => 'required|string|min:8', 'role' => 'required|in:admin,staff,project_manager,rgmo_head,field_personnel']);
         $user = $this->service->registerUser($data);
         return response()->json($user, 201);
     }

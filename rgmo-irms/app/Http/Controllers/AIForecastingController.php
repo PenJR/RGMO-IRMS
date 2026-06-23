@@ -13,6 +13,8 @@ class AIForecastingController extends Controller
      */
     public function index()
     {
+        abort_unless(auth()->user()?->hasPermission('view-forecasts'), 403);
+
         return view('ai-forecasting.index');
     }
 }

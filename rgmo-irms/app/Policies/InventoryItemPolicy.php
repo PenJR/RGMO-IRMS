@@ -12,7 +12,7 @@ class InventoryItemPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, ['admin', 'staff']);
+        return $user->hasPermission('view-inventory');
     }
 
     /**
@@ -20,7 +20,7 @@ class InventoryItemPolicy
      */
     public function view(User $user, InventoryItem $item): bool
     {
-        return in_array($user->role, ['admin', 'staff']);
+        return $user->hasPermission('view-inventory');
     }
 
     /**
@@ -28,7 +28,7 @@ class InventoryItemPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, ['admin', 'staff']);
+        return $user->hasPermission('manage-inventory');
     }
 
     /**
@@ -36,7 +36,7 @@ class InventoryItemPolicy
      */
     public function update(User $user, InventoryItem $item): bool
     {
-        return in_array($user->role, ['admin', 'staff']);
+        return $user->hasPermission('manage-inventory');
     }
 
     /**
@@ -44,7 +44,7 @@ class InventoryItemPolicy
      */
     public function delete(User $user, InventoryItem $item): bool
     {
-        return $user->role === 'admin';
+        return $user->hasPermission('manage-inventory');
     }
 
     /**
@@ -52,7 +52,7 @@ class InventoryItemPolicy
      */
     public function restore(User $user, InventoryItem $item): bool
     {
-        return $user->role === 'admin';
+        return $user->hasPermission('manage-inventory');
     }
 
     /**
@@ -60,7 +60,7 @@ class InventoryItemPolicy
      */
     public function forceDelete(User $user, InventoryItem $item): bool
     {
-        return $user->role === 'admin';
+        return $user->hasPermission('manage-inventory');
     }
 
     /**
@@ -68,7 +68,7 @@ class InventoryItemPolicy
      */
     public function export(User $user): bool
     {
-        return in_array($user->role, ['admin', 'staff']);
+        return $user->hasPermission('view-inventory') || $user->hasPermission('generate-reports');
     }
 
     /**
@@ -76,6 +76,6 @@ class InventoryItemPolicy
      */
     public function import(User $user): bool
     {
-        return $user->role === 'admin';
+        return $user->hasPermission('manage-inventory');
     }
 }

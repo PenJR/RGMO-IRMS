@@ -16,6 +16,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     const ROLE_ADMIN = 'admin';
     const ROLE_STAFF = 'staff';
+    const ROLE_PROJECT_MANAGER = 'project_manager';
+    const ROLE_RGMO_HEAD = 'rgmo_head';
     const ROLE_FIELD_PERSONNEL = 'field_personnel';
 
     const STATUS_ACTIVE = 'active';
@@ -41,6 +43,67 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'remember_token',
     ];
+
+    /**
+     * Roles supported by the application, including the legacy alias used by older records.
+     *
+     * @return array<int, string>
+     */
+    public static function availableRoles(): array
+    {
+        return [
+            self::ROLE_ADMIN,
+            self::ROLE_STAFF,
+            self::ROLE_PROJECT_MANAGER,
+            self::ROLE_RGMO_HEAD,
+            self::ROLE_FIELD_PERSONNEL,
+        ];
+    }
+
+    /**
+     * Resolve the stored role into its canonical RBAC role name.
+     *
+     * @return string
+     */
+    public function normalizedRole(): string
+    {
+        if (! is_string($this->role) || $this->role === '') {
+            return self::ROLE_STAFF;
+        }
+
+        return $this->role === self::ROLE_FIELD_PERSONNEL ? self::ROLE_PROJECT_MANAGER : $this->role;
+    }
+
+    /**
+     * Determine whether the user has one of the given roles.
+     *
+     * @param  string|array<int, string>  $roles
+     * @return bool
+     */
+    public function hasRole(string|array $roles): bool
+    {
+        $roles = (array) $roles;
+
+        return in_array($this->normalizedRole(), array_map(fn ($role) => $role === self::ROLE_FIELD_PERSONNEL ? self::ROLE_PROJECT_MANAGER : $role, $roles), true);
+    }
+
+    /**
+     * Determine whether the user can perform a named permission.
+     *
+     * @param  string|array<int, string>  $permissions
+     * @return bool
+     */
+    public function hasPermission(string|array $permissions): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        $permissions = (array) $permissions;
+        $rolePermissions = config('rbac.roles.' . $this->normalizedRole() . '.permissions', []);
+
+        return count(array_intersect($permissions, $rolePermissions)) > 0;
+    }
 
     protected function casts(): array
     {
@@ -161,6 +224,28 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Scope a query to only include project manager users.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeProjectManager(Builder $query): Builder
+    {
+        return $query->whereIn('role', [self::ROLE_PROJECT_MANAGER, self::ROLE_FIELD_PERSONNEL]);
+    }
+
+    /**
+     * Scope a query to only include RGMO Head users.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeRgmoHead(Builder $query): Builder
+    {
+        return $query->where('role', self::ROLE_RGMO_HEAD);
+    }
+
+    /**
      * Scope a query to only include field personnel users.
      *
      * @param Builder $query
@@ -190,6 +275,26 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isStaff(): bool
     {
         return $this->role === self::ROLE_STAFF;
+    }
+
+    /**
+     * Check if the user has the project manager role.
+     *
+     * @return bool
+     */
+    public function isProjectManager(): bool
+    {
+        return $this->normalizedRole() === self::ROLE_PROJECT_MANAGER;
+    }
+
+    /**
+     * Check if the user has the RGMO head role.
+     *
+     * @return bool
+     */
+    public function isRgmoHead(): bool
+    {
+        return $this->role === self::ROLE_RGMO_HEAD;
     }
 
     /**

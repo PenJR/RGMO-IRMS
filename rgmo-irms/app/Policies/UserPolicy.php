@@ -11,7 +11,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role === 'admin';
+        return $user->hasPermission('manage-users');
     }
 
     /**
@@ -19,7 +19,7 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        return $user->id === $model->id || $user->role === 'admin';
+        return $user->id === $model->id || $user->hasPermission('manage-users');
     }
 
     /**
@@ -27,7 +27,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === 'admin';
+        return $user->hasPermission('manage-users');
     }
 
     /**
@@ -35,7 +35,7 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        return $user->id === $model->id || $user->role === 'admin';
+        return $user->id === $model->id || $user->hasPermission('manage-users');
     }
 
     /**
@@ -43,7 +43,7 @@ class UserPolicy
      */
     public function delete(User $user, User $model): bool
     {
-        return $user->role === 'admin' && $user->id !== $model->id;
+        return $user->hasPermission('manage-users') && $user->id !== $model->id;
     }
 
     /**
@@ -51,7 +51,7 @@ class UserPolicy
      */
     public function assignRole(User $user): bool
     {
-        return $user->role === 'admin';
+        return $user->hasPermission('assign-roles');
     }
 
     /**
@@ -59,6 +59,6 @@ class UserPolicy
      */
     public function impersonate(User $user, User $model): bool
     {
-        return $user->role === 'admin' && $user->id !== $model->id;
+        return $user->hasPermission('manage-users') && $user->id !== $model->id;
     }
 }

@@ -12,7 +12,7 @@ class ResourceRequestPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, ['admin', 'staff']);
+        return $user->hasPermission('review-request') || $user->hasPermission('approve-request');
     }
 
     /**
@@ -20,7 +20,7 @@ class ResourceRequestPolicy
      */
     public function view(User $user, ResourceRequest $request): bool
     {
-        return $user->id === $request->user_id || in_array($user->role, ['admin', 'staff']);
+        return $user->id === $request->user_id || $user->hasPermission('review-request') || $user->hasPermission('approve-request');
     }
 
     /**
@@ -28,7 +28,7 @@ class ResourceRequestPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, ['admin', 'staff', 'field_personnel']);
+        return $user->hasPermission('submit-request');
     }
 
     /**
@@ -36,12 +36,11 @@ class ResourceRequestPolicy
      */
     public function update(User $user, ResourceRequest $request): bool
     {
-        if ($user->role === 'admin') {
+        if ($user->hasPermission('manage-users')) {
             return true;
         }
-        
-        // Staff can only update pending requests they created
-        if ($user->role === 'staff' && $user->id === $request->user_id && $request->isPending()) {
+
+        if ($user->id === $request->user_id && $request->isPending() && $user->hasPermission('update-pending-request')) {
             return true;
         }
 
@@ -53,7 +52,7 @@ class ResourceRequestPolicy
      */
     public function delete(User $user, ResourceRequest $request): bool
     {
-        return $user->role === 'admin' && $request->isPending();
+        return $user->hasPermission('manage-users') && $request->isPending();
     }
 
     /**
@@ -61,7 +60,7 @@ class ResourceRequestPolicy
      */
     public function approve(User $user, ResourceRequest $request): bool
     {
-        return $user->role === 'admin' && $request->isPending();
+        return $user->hasPermission('approve-request') && $request->isPending();
     }
 
     /**
@@ -69,6 +68,14 @@ class ResourceRequestPolicy
      */
     public function reject(User $user, ResourceRequest $request): bool
     {
-        return $user->role === 'admin' && $request->isPending();
+        return $user->hasPermission('approve-request') && $request->isPending();
+    }
+
+    /**
+     * Determine if the user can review resource requests.
+     */
+    public function review(User $user): bool
+    {
+        return $user->hasPermission('review-request');
     }
 }

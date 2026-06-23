@@ -18,7 +18,7 @@ class SystemSettingsController extends Controller
      */
     public function index()
     {
-        abort_unless(auth()->user()?->isAdmin(), 403);
+        abort_unless(auth()->user()?->hasPermission('manage-forecasting-settings'), 403);
 
         return view('admin.settings', [
             'settings' => $this->service->getSystemSettings(),
@@ -33,7 +33,7 @@ class SystemSettingsController extends Controller
      */
     public function update(Request $request)
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        abort_unless($request->user()?->hasPermission('manage-forecasting-settings'), 403);
 
         $validated = $request->validate([
             'settings.low_stock_threshold' => 'nullable|integer|min:1',

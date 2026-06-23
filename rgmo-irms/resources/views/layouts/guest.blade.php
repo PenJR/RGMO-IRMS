@@ -19,19 +19,19 @@
         <style>
             :root {
                 --cmu-yellow: #FFC600;
-                --cmu-yellow-hover: #E6B300;
                 --cmu-green: #00491E;
                 --cmu-green-2: #02681E;
                 --cmu-accent: #919F02;
+                --cmu-yellow-hover: #E5B700;
             }
 
             body {
                 background:
-                    radial-gradient(circle at top left, rgba(255, 198, 0, 0.14), transparent 24%),
-                    radial-gradient(circle at bottom right, rgba(2, 104, 30, 0.12), transparent 28%),
-                    linear-gradient(180deg, #f7faf6 0%, #eef4ef 100%);
+                    radial-gradient(circle at top left, rgba(255, 198, 0, 0.26), transparent 22%),
+                    radial-gradient(circle at bottom right, rgba(145, 159, 2, 0.22), transparent 30%),
+                    linear-gradient(135deg, #00491E 0%, #02681E 55%, #919F02 100%);
                 font-family: 'Inter', system-ui, sans-serif;
-                color: #163024;
+                color: #f4fff6;
                 min-height: 100vh;
                 display: flex;
                 align-items: center;
@@ -47,7 +47,7 @@
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2300491e' fill-opacity='0.035'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+                background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
                 pointer-events: none;
                 z-index: 0;
             }
@@ -84,17 +84,30 @@
             }
 
             .feature-card:hover {
-                background: rgba(2, 104, 30, 0.05) !important;
+                background: rgba(244, 255, 246, 0.96) !important;
                 transform: translateX(10px);
-                border-color: rgba(255, 198, 0, 0.45) !important;
+                border-color: var(--cmu-yellow) !important;
+                box-shadow: 0 12px 26px rgba(0, 73, 30, 0.18);
+            }
+
+            .feature-card:hover h5 {
+                color: var(--cmu-green) !important;
+            }
+
+            .feature-card:hover p {
+                color: #4f6458 !important;
+            }
+
+            .feature-card {
+                border: 2px solid var(--cmu-yellow);
             }
 
             .login-card {
-                background: rgba(255, 255, 255, 0.95);
+                background: rgba(243, 250, 244, 0.96);
                 backdrop-filter: blur(10px);
-                border: 1px solid rgba(0, 73, 30, 0.08);
+                border: 2px solid var(--cmu-yellow);
                 border-radius: 20px;
-                box-shadow: 0 24px 50px -18px rgba(0, 73, 30, 0.18);
+                box-shadow: 0 24px 50px -18px rgba(0, 73, 30, 0.32);
                 width: 100%;
                 max-width: 480px;
                 padding: 3rem;
@@ -103,8 +116,8 @@
             .login-card .brand-mark {
                 width: 64px;
                 height: 64px;
-                background: linear-gradient(135deg, rgba(255, 198, 0, 0.22), rgba(2, 104, 30, 0.08));
-                border: 1px solid rgba(0, 73, 30, 0.08);
+                background: linear-gradient(135deg, rgba(255, 198, 0, 0.28), rgba(2, 104, 30, 0.12));
+                border: 1px solid rgba(255, 198, 0, 0.22);
             }
 
             .input-group-text {
@@ -115,28 +128,50 @@
             .form-control {
                 border-radius: 8px;
                 padding: 0.75rem 1rem;
-                border-color: rgba(0, 73, 30, 0.16);
+                border-color: rgba(0, 73, 30, 0.28);
             }
 
             .form-control:focus {
-                box-shadow: 0 0 0 4px rgba(255, 198, 0, 0.2);
-                border-color: var(--cmu-green-2);
+                box-shadow: 0 0 0 4px rgba(255, 198, 0, 0.22);
+                border-color: var(--cmu-yellow);
+            }
+
+            .form-check-input:checked {
+                background-color: var(--cmu-green);
+                border-color: var(--cmu-green);
             }
 
             .auth-shell-copy {
-                color: var(--cmu-green);
+                color: #f4fff6;
             }
 
             .auth-shell-copy p,
             .auth-shell-copy .small {
-                color: #4f6458;
+                color: rgba(244, 255, 246, 0.95);
+            }
+
+            .feature-card h5 {
+                color: var(--cmu-green) !important;
+            }
+
+            .feature-card p {
+                color: #4f6458 !important;
+                opacity: 1 !important;
+            }
+
+            .cmu-logo {
+                filter:
+                    drop-shadow(0 0 1px rgba(255, 255, 255, 0.85))
+                    drop-shadow(0 0 3px rgba(255, 255, 255, 0.55))
+                    drop-shadow(0 0 12px rgba(255, 198, 0, 0.18));
+                transition: transform 0.3s ease;
             }
         </style>
     </head>
     <body class="antialiased">
         <div class="floating-blobs">
-            <div class="blob" style="top: -10%; left: -10%; background: var(--cmu-yellow); animation-delay: 0s;"></div>
-            <div class="blob" style="bottom: -10%; right: -10%; background: var(--cmu-green); animation-delay: -5s; opacity: 0.1;"></div>
+            <div class="blob" style="top: -10%; left: -10%; background: var(--cmu-yellow); animation-delay: 0s; opacity: 0.16;"></div>
+            <div class="blob" style="bottom: -10%; right: -10%; background: var(--cmu-accent); animation-delay: -5s; opacity: 0.16;"></div>
         </div>
 
         <div class="container py-5">
@@ -144,12 +179,12 @@
                 <!-- Info Column (Visible on Desktop) -->
                 <div class="col-lg-6 d-none d-lg-block auth-shell-copy">
                     <div class="pe-lg-5">
-                        <img src="{{ asset('images/logo.png') }}" alt="CMU Logo" style="width: 120px; height: 120px; margin-bottom: 2.5rem; filter: drop-shadow(0 0 18px rgba(255, 198, 0, 0.24)); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <h1 class="display-3 fw-bold mb-2" style="color: var(--cmu-green); letter-spacing: -0.04em;">RGMO-IRMS</h1>
+                        <img src="{{ asset('images/logo.png') }}" alt="CMU Logo" class="cmu-logo" style="width: 120px; height: 120px; margin-bottom: 2.5rem;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <h1 class="display-3 fw-bold mb-2" style="color: #ffffff; letter-spacing: -0.04em;">RGMO-IRMS</h1>
                         <p class="lead fw-medium mb-5" style="font-size: 1.25rem; border-left: 3px solid var(--cmu-yellow); padding-left: 1.5rem;">Resource Generation Management Office<br><span class="opacity-75" style="font-size: 1.1rem;">Inventory & Resource Management System</span></p>
                         
                         <div class="space-y-4">
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 1px solid rgba(0,73,30,0.08);">
+                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 2px solid var(--cmu-green);">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
                                     <i data-lucide="package" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
@@ -158,7 +193,7 @@
                                     <p class="small mb-0 opacity-75">Precision monitoring of agricultural stocks and nursery equipment.</p>
                                 </div>
                             </div>
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 1px solid rgba(0,73,30,0.08);">
+                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 2px solid var(--cmu-green);">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
                                     <i data-lucide="leaf" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
@@ -167,7 +202,7 @@
                                     <p class="small mb-0 opacity-75">Promoting green initiatives through digital resource optimization.</p>
                                 </div>
                             </div>
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 1px solid rgba(0,73,30,0.08);">
+                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 2px solid var(--cmu-green);">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
                                     <i data-lucide="file-check" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
@@ -176,7 +211,7 @@
                                     <p class="small mb-0 opacity-75">Optimized workflow for supplies issuance and project distribution.</p>
                                 </div>
                             </div>
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 1px solid rgba(0,73,30,0.08);">
+                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 2px solid var(--cmu-green);">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
                                     <i data-lucide="sparkles" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
@@ -193,7 +228,7 @@
                 <div class="col-lg-5 col-md-8">
                     <div class="login-card mx-auto">
                         <div class="brand-logo d-lg-none">
-                            <img src="{{ asset('images/logo.png') }}" alt="Logo" style="width: 54px; height: 54px;">
+                            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="cmu-logo" style="width: 54px; height: 54px;">
                         </div>
                         
                         {{ $slot }}

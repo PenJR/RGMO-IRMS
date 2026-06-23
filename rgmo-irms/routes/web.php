@@ -30,10 +30,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // AI Forecasting (Mockup)
-    Route::get('/ai-forecasting', [AIForecastingController::class, 'index'])->name('ai-forecasting.index');
+    Route::middleware(['permission:view-forecasts'])->group(function () {
+        Route::get('/ai-forecasting', [AIForecastingController::class, 'index'])->name('ai-forecasting.index');
+    });
 
     // Inventory Module
-    Route::middleware(['role:admin,staff'])->group(function () {
+    Route::middleware(['permission:view-inventory,manage-inventory'])->group(function () {
         Route::get('/inventory/low-stock', [InventoryController::class, 'lowStock'])->name('inventory.low-stock');
         Route::get('/inventory/export-csv', [InventoryController::class, 'exportCsv'])->name('inventory.export-csv');
         Route::get('/inventory/export-excel', [InventoryController::class, 'exportExcel'])->name('inventory.export-excel');
@@ -46,24 +48,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Resource Request Module
-    Route::middleware(['role:admin,staff,field_personnel'])->group(function () {
+    Route::middleware(['permission:submit-request,update-pending-request,review-request,approve-request'])->group(function () {
         Route::get('/requests/pending/list', [ResourceRequestController::class, 'pending'])->name('requests.pending');
         Route::resource('requests', ResourceRequestController::class);
     });
 
     // Admin - Approve/Reject Requests
-    Route::middleware(['role:admin'])->group(function () {
+    Route::middleware(['permission:approve-request'])->group(function () {
         Route::post('/requests/{request}/approve', [ResourceRequestController::class, 'approve'])->name('requests.approve');
         Route::post('/requests/{request}/reject', [ResourceRequestController::class, 'reject'])->name('requests.reject');
     });
 
     // Notifications
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
-    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
-    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-    Route::delete('/notifications/delete-read', [NotificationController::class, 'deleteReadNotifications'])->name('notifications.delete-read');
+    Route::middleware(['permission:receive-notifications'])->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unread-count'])->name('notifications.unread-count');
+        Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+        Route::delete('/notifications/delete-read', [NotificationController::class, 'deleteReadNotifications'])->name('notifications.delete-read');
+    });
 
     // Two-Factor Authentication
     Route::get('/2fa/enable', [TwoFactorController::class, 'showEnable'])->name('2fa.enable');
@@ -71,7 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/2fa/disable', [TwoFactorController::class, 'disable'])->name('2fa.disable');
 
     // Reports
-    Route::middleware(['role:admin,staff'])->group(function () {
+    Route::middleware(['permission:generate-reports,view-audit-trail'])->group(function () {
         Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
         Route::get('/reports/resource-usage', [ReportController::class, 'resourceUsage'])->name('reports.resource-usage');
         Route::get('/reports/audit-trail', [ReportController::class, 'auditTrail'])->name('reports.audit-trail');
@@ -92,7 +96,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Admin Panel
-    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(['permission:manage-users,assign-roles,manage-forecasting-settings'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/login-logs', [AdminUserController::class, 'loginLogs'])->name('login-logs.index');
         Route::resource('users', AdminUserController::class);
         Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');

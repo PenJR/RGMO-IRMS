@@ -12,7 +12,7 @@
 
 :root {
     --cmu-yellow: #ffc600;
-    --cmu-yellow-hover: #e6b300;
+    --cmu-yellow-hover: #e5b700;
     --cmu-green: #00491e;
     --cmu-green-2: #02681e;
     --cmu-accent: #919f02;
@@ -28,9 +28,9 @@ html {
 
 body {
     background:
-        radial-gradient(circle at top left, rgba(255, 198, 0, 0.08), transparent 28%),
-        radial-gradient(circle at top right, rgba(2, 104, 30, 0.08), transparent 26%),
-        linear-gradient(180deg, #ffffff 0%, #f5f8f5 100%);
+        radial-gradient(circle at top left, rgba(255, 198, 0, 0.10), transparent 28%),
+        radial-gradient(circle at top right, rgba(145, 159, 2, 0.08), transparent 26%),
+        linear-gradient(180deg, #f4fff6 0%, #edf8ef 100%);
     color: var(--cmu-text);
 }
 
@@ -214,8 +214,14 @@ body {
 .form-label {
     font-weight: 600;
     font-size: 0.85rem;
-    color: var(--cmu-muted);
+    color: var(--cmu-green);
     margin-bottom: 0.5rem;
+}
+
+.auth-label,
+.forgot-link,
+.form-check-label {
+    color: var(--cmu-green) !important;
 }
 
 .table thead th {

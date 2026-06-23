@@ -131,7 +131,7 @@ class NotificationService
      */
     public function notifyLowStock(string $itemName, int $quantity): void
     {
-        $admins = User::where('role', 'admin')->get();
+        $admins = User::admin()->get();
         $message = "Item '$itemName' is low in stock (Current: $quantity)";
 
         foreach ($admins as $admin) {
@@ -147,7 +147,7 @@ class NotificationService
      */
     public function notifyFailedLoginAttempts(User $user): void
     {
-        $admins = User::where('role', 'admin')->get();
+        $admins = User::admin()->get();
         $message = "User '{$user->name}' ({$user->email}) has {$user->login_attempts} failed login attempts.";
 
         foreach ($admins as $admin) {

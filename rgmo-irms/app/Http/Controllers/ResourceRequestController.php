@@ -193,7 +193,7 @@ class ResourceRequestController extends Controller
      */
     public function pending()
     {
-        $this->authorize('viewAny', ResourceRequest::class);
+        $this->authorize('review', ResourceRequest::class);
 
         $requests = $this->requestService->getPendingRequests();
 
