@@ -26,10 +26,7 @@
             }
 
             body {
-                background:
-                    radial-gradient(circle at top left, rgba(255, 198, 0, 0.26), transparent 22%),
-                    radial-gradient(circle at bottom right, rgba(145, 159, 2, 0.22), transparent 30%),
-                    linear-gradient(135deg, #00491E 0%, #02681E 55%, #919F02 100%);
+                background: var(--cmu-green);
                 font-family: 'Inter', system-ui, sans-serif;
                 color: #f4fff6;
                 min-height: 100vh;
@@ -47,31 +44,16 @@
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
                 pointer-events: none;
                 z-index: 0;
             }
 
             .floating-blobs {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-                z-index: -1;
-                pointer-events: none;
+                display: none;
             }
 
             .blob {
-                position: absolute;
-                width: 500px;
-                height: 500px;
-                background: var(--cmu-yellow);
-                filter: blur(100px);
-                opacity: 0.08;
-                border-radius: 50%;
-                animation: float 20s infinite alternate;
+                display: none;
             }
 
             @keyframes float {
@@ -116,8 +98,8 @@
             .login-card .brand-mark {
                 width: 64px;
                 height: 64px;
-                background: linear-gradient(135deg, rgba(255, 198, 0, 0.28), rgba(2, 104, 30, 0.12));
-                border: 1px solid rgba(255, 198, 0, 0.22);
+                background: var(--cmu-green);
+                border: 1px solid rgba(255, 255, 255, 0.14);
             }
 
             .input-group-text {

@@ -83,8 +83,8 @@
                         <div class="card-body py-0 px-4 position-relative d-flex align-items-center">
                             <div class="d-flex align-items-center justify-content-between w-100 position-relative" style="z-index: 2;">
                                 <div class="d-flex align-items-center gap-4">
-                                    <div class="rounded-circle bg-white bg-opacity-20 p-3" style="color: #ffffff;">
-                                        <i data-lucide="sparkles" style="width: 32px; height: 32px; color: #ffffff;"></i>
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: var(--cmu-yellow); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);">
+                                        <i data-lucide="sparkles" style="width: 32px; height: 32px; color: var(--cmu-green);"></i>
                                     </div>
                                     <div>
                                         <h4 class="mb-1 fw-bold">Explore AI Forecasting</h4>

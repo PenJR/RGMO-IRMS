@@ -333,9 +333,6 @@
                             <h2 class="h5 fw-bold mb-0 text-dark">Dashboard</h2>
                         @endif
                     </div>
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="badge rounded-pill" style="background: rgba(255, 198, 0, 0.18); color: #173323; border: 1px solid rgba(255, 198, 0, 0.28); font-weight: 600; padding: 0.55rem 0.85rem;">RGMO-IRMS</span>
-                    </div>
                 </header>
 
                 <div class="main-content">
