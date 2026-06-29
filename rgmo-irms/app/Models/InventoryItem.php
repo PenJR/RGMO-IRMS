@@ -23,6 +23,8 @@ class InventoryItem extends Model
         'price',
         'description',
         'planting_date',
+        'has_expiry',
+        'expiry_date',
         'funding_source',
     ];
 
@@ -30,6 +32,8 @@ class InventoryItem extends Model
         'price' => 'decimal:2',
         'reorder_level' => 'integer',
         'planting_date' => 'datetime',
+        'has_expiry' => 'boolean',
+        'expiry_date' => 'date',
     ];
 
     /**
@@ -168,6 +172,11 @@ class InventoryItem extends Model
             return 'warning';
         }
         return 'good';
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->has_expiry && $this->expiry_date?->lt(today());
     }
 
     /**

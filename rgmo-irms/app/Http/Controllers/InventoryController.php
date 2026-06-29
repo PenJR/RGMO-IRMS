@@ -90,7 +90,12 @@ class InventoryController extends Controller
             'price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
             'planting_date' => 'nullable|date',
+            'has_expiry' => 'sometimes|boolean',
+            'expiry_date' => 'nullable|required_if:has_expiry,1|date',
         ]);
+
+        $validated['has_expiry'] = $request->boolean('has_expiry');
+        $validated['expiry_date'] = $validated['has_expiry'] ? ($validated['expiry_date'] ?? null) : null;
 
         $item = $this->inventoryService->createItem($validated, auth()->id());
 
@@ -166,7 +171,12 @@ class InventoryController extends Controller
             'price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
             'planting_date' => 'nullable|date',
+            'has_expiry' => 'sometimes|boolean',
+            'expiry_date' => 'nullable|required_if:has_expiry,1|date',
         ]);
+
+        $validated['has_expiry'] = $request->boolean('has_expiry');
+        $validated['expiry_date'] = $validated['has_expiry'] ? ($validated['expiry_date'] ?? null) : null;
 
         $this->inventoryService->updateItem($item, $validated, auth()->id());
 

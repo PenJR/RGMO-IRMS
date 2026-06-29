@@ -116,9 +116,9 @@ class DatabaseSeeder extends Seeder
                 ['sku' => 'FERT-14-14', 'name' => 'NPK 14-14-14', 'unit' => 'bag', 'price' => 1740, 'min_stock' => 10],
             ],
             'Chemicals' => [
-                ['sku' => 'CHEM-HERB', 'name' => 'Selective Herbicide', 'unit' => 'bottle', 'price' => 620, 'min_stock' => 8],
-                ['sku' => 'CHEM-FUNG', 'name' => 'Systemic Fungicide', 'unit' => 'bottle', 'price' => 710, 'min_stock' => 8],
-                ['sku' => 'CHEM-INSECT', 'name' => 'Insecticide EC', 'unit' => 'bottle', 'price' => 560, 'min_stock' => 6],
+                ['sku' => 'CHEM-HERB', 'name' => 'Selective Herbicide', 'unit' => 'bottle', 'price' => 620, 'min_stock' => 8, 'expires_in_months' => 10],
+                ['sku' => 'CHEM-FUNG', 'name' => 'Systemic Fungicide', 'unit' => 'bottle', 'price' => 710, 'min_stock' => 8, 'expires_in_months' => 6],
+                ['sku' => 'CHEM-INSECT', 'name' => 'Insecticide EC', 'unit' => 'bottle', 'price' => 560, 'min_stock' => 6, 'expires_in_months' => 4],
             ],
             'Office Supplies' => [
                 ['sku' => 'OFF-A4', 'name' => 'A4 Bond Paper', 'unit' => 'ream', 'price' => 210, 'min_stock' => 10],
@@ -146,6 +146,8 @@ class DatabaseSeeder extends Seeder
                         'reorder_level' => max(1, $product['min_stock'] - 4),
                         'description' => "Seeded item {$product['name']} for visualization and reports.",
                         'planting_date' => $categoryName === 'Rice Seeds' ? now()->subMonths(3) : null,
+                        'has_expiry' => isset($product['expires_in_months']),
+                        'expiry_date' => isset($product['expires_in_months']) ? now()->addMonths($product['expires_in_months'])->toDateString() : null,
                     ]
                 );
 

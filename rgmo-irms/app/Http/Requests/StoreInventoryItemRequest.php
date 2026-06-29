@@ -29,6 +29,8 @@ class StoreInventoryItemRequest extends FormRequest
             'reorder_level' => 'nullable|integer|min:0',
             'price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
+            'has_expiry' => 'sometimes|boolean',
+            'expiry_date' => 'nullable|required_if:has_expiry,1|date',
         ];
     }
 }

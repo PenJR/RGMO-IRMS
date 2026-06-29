@@ -84,6 +84,20 @@
                             <input type="number" name="price" value="{{ old('price', $item->price) }}" step="0.01" min="0" class="form-control @error('price') is-invalid @enderror" required>
                             @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
+
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input type="hidden" name="has_expiry" value="0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="has_expiry" name="has_expiry" value="1" {{ old('has_expiry', $item->has_expiry) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-semibold" for="has_expiry">This item expires</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6" id="expiry_date_group">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" name="expiry_date" id="expiry_date" value="{{ old('expiry_date', $item->expiry_date?->format('Y-m-d')) }}" class="form-control @error('expiry_date') is-invalid @enderror">
+                            @error('expiry_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                     </div>
 
                     <div class="mt-5 d-flex gap-2">
@@ -94,4 +108,23 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('has_expiry');
+            const group = document.getElementById('expiry_date_group');
+            const input = document.getElementById('expiry_date');
+
+            const syncExpiry = () => {
+                group.classList.toggle('d-none', !toggle.checked);
+                input.required = toggle.checked;
+                if (!toggle.checked) {
+                    input.value = '';
+                }
+            };
+
+            toggle.addEventListener('change', syncExpiry);
+            syncExpiry();
+        });
+    </script>
 </x-app-layout>

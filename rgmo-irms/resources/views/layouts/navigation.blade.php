@@ -1,27 +1,27 @@
 <nav id="sidebar">
-    <div class="p-4 border-bottom border-white border-opacity-10 mb-3">
+    <div class="sidebar-brand">
         <div class="d-flex align-items-center gap-3">
             <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS Logo" class="rounded-circle brand-logo">
-            <div>
-                <h1 class="text-sm fw-bold mb-0" style="font-size: 0.875rem; letter-spacing: -0.01em;">RGMO-IRMS</h1>
-                <p class="text-uppercase mb-0 opacity-50" style="font-size: 10px; letter-spacing: 0.1em;">Central Mindanao</p>
+            <div class="min-w-0">
+                <h1 class="sidebar-title">RGMO-IRMS</h1>
+                <p class="sidebar-kicker">Central Mindanao</p>
             </div>
         </div>
     </div>
 
     @php $unreadCount = auth()->user()->notifications()->unread()->count(); @endphp
-    <div class="nav flex-column flex-grow-1">
+    <div class="sidebar-menu nav flex-column flex-grow-1">
         <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-            <i data-lucide="layout-dashboard" class="me-3" style="width: 18px"></i>
-            Dashboard
+            <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
+            <span class="nav-label">Dashboard</span>
         </a>
 
         @if(in_array(auth()->user()->role, ['admin', 'staff']))
             <details class="nav-group {{ request()->routeIs('inventory.*') ? 'active' : '' }}" {{ request()->routeIs('inventory.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle">
-                        <i data-lucide="package" class="me-3" style="width: 18px"></i>
-                        Inventory
+                        <span class="nav-icon"><i data-lucide="package"></i></span>
+                        <span class="nav-label">Inventory</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
@@ -37,16 +37,16 @@
 
         @can('viewAny', App\Models\Project::class)
             <a href="{{ route('projects.index') }}" class="nav-link {{ request()->routeIs('projects.*') ? 'active' : '' }}">
-                <i data-lucide="folder-kanban" class="me-3" style="width: 18px"></i>
-                Projects
+                <span class="nav-icon"><i data-lucide="folder-kanban"></i></span>
+                <span class="nav-label">Projects</span>
             </a>
         @endcan
 
         <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
-            <i data-lucide="bell" class="me-3" style="width: 18px"></i>
-            Notifications
+            <span class="nav-icon"><i data-lucide="bell"></i></span>
+            <span class="nav-label">Notifications</span>
             @if($unreadCount > 0)
-                <span class="badge rounded-pill bg-warning text-dark ms-auto">{{ $unreadCount }}</span>
+                <span class="nav-badge ms-auto">{{ $unreadCount }}</span>
             @endif
         </a>
 
@@ -54,8 +54,8 @@
             <details class="nav-group {{ request()->routeIs('requests.*') ? 'active' : '' }}" {{ request()->routeIs('requests.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle">
-                        <i data-lucide="clipboard-list" class="me-3" style="width: 18px"></i>
-                        Requests
+                        <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
+                        <span class="nav-label">Requests</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
@@ -71,8 +71,8 @@
             <details class="nav-group {{ request()->routeIs('reports.*') ? 'active' : '' }}" {{ request()->routeIs('reports.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle">
-                        <i data-lucide="bar-chart-3" class="me-3" style="width: 18px"></i>
-                        Reports
+                        <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span>
+                        <span class="nav-label">Reports</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
@@ -90,17 +90,17 @@
         @endif
 
         <a href="{{ route('ai-forecasting.index') }}" class="nav-link {{ request()->routeIs('ai-forecasting.*') ? 'active' : '' }}">
-            <i data-lucide="sparkles" class="me-3" style="width: 18px"></i>
-            AI Forecasting
-            <span class="badge rounded-pill ms-auto" style="background: rgba(145, 159, 2, 0.2); color: #f6ffd0; border: 1px solid rgba(145, 159, 2, 0.26); font-size: 9px;">PREVIEW</span>
+            <span class="nav-icon"><i data-lucide="sparkles"></i></span>
+            <span class="nav-label">AI Forecasting</span>
+            <span class="nav-badge nav-badge-soft ms-auto">Preview</span>
         </a>
 
         @can('viewAny', App\Models\User::class)
             <details class="nav-group {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'active' : '' }}" {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle">
-                        <i data-lucide="users" class="me-3" style="width: 18px"></i>
-                        User Management
+                        <span class="nav-icon"><i data-lucide="users"></i></span>
+                        <span class="nav-label">User Management</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
@@ -117,8 +117,8 @@
             <details class="nav-group {{ request()->routeIs('admin.backup.*') || request()->routeIs('admin.settings.*') ? 'active' : '' }}" {{ request()->routeIs('admin.backup.*') || request()->routeIs('admin.settings.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle">
-                        <i data-lucide="settings" class="me-3" style="width: 18px"></i>
-                        System
+                        <span class="nav-icon"><i data-lucide="settings"></i></span>
+                        <span class="nav-label">System</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
@@ -130,19 +130,19 @@
         @endif
     </div>
 
-    <div class="sidebar-footer mt-auto sidebar-footer">
-        <div class="d-flex align-items-center gap-2">
-            <div class="rounded bg-white bg-opacity-25 d-flex align-items-center justify-content-center user-pill">{{ strtoupper(substr(Auth::user()->name, 0, 2)) }}</div>
+    <div class="sidebar-footer mt-auto">
+        <div class="sidebar-user d-flex align-items-center gap-3">
+            <div class="rounded d-flex align-items-center justify-content-center user-pill">{{ strtoupper(substr(Auth::user()->name, 0, 2)) }}</div>
             <div class="overflow-hidden">
-                <p class="mb-0 fw-bold text-truncate" style="font-size: 0.75rem;">{{ Auth::user()->name }}</p>
-                <p class="mb-0 opacity-50 text-truncate" style="font-size: 10px;">{{ Auth::user()->email }}</p>
+                <p class="sidebar-user-name">{{ Auth::user()->name }}</p>
+                <p class="sidebar-user-email">{{ Auth::user()->email }}</p>
             </div>
         </div>
         <div class="mt-3 d-flex gap-2">
-            <a href="{{ route('profile.edit') }}" class="btn btn-light w-100 text-uppercase fw-bold" style="font-size: 10px; padding: 0.55rem 0.75rem;">Profile</a>
+            <a href="{{ route('profile.edit') }}" class="btn btn-light w-100 text-uppercase fw-bold">Profile</a>
             <form method="POST" action="{{ route('logout') }}" class="w-100">
                 @csrf
-                <button type="submit" class="btn btn-outline-light w-100 text-uppercase fw-bold" style="font-size: 10px; padding: 0.55rem 0.75rem; color: white; border-color: rgba(255,255,255,0.35);">Logout</button>
+                <button type="submit" class="btn btn-outline-light w-100 text-uppercase fw-bold">Logout</button>
             </form>
         </div>
     </div>

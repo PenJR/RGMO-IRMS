@@ -89,6 +89,7 @@
                                         <th>Stock</th>
                                         <th>Price</th>
                                         <th>Status</th>
+                                        <th>Expiry</th>
                                         <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
@@ -126,6 +127,16 @@
                                                     @else bg-success text-white @endif">
                                                     {{ ucfirst($item->getStockStatus()) }}
                                                 </span>
+                                            </td>
+                                            <td>
+                                                @if($item->has_expiry)
+                                                    <div class="small">{{ $item->expiry_date?->format('M d, Y') ?? 'No date' }}</div>
+                                                    @if($item->isExpired())
+                                                        <span class="badge rounded-pill bg-danger text-white">Expired</span>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted small">No expiry</span>
+                                                @endif
                                             </td>
                                             <td class="text-end">
                                                 <div class="d-inline-flex gap-2">
