@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Models\InventoryItem;
+use App\Models\Project;
 use App\Models\ResourceRequest;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Models\User;
 use App\Policies\UserPolicy;
 use App\Policies\InventoryItemPolicy;
+use App\Policies\ProjectPolicy;
 use App\Policies\ResourceRequestPolicy;
 use Illuminate\Support\Facades\Gate;
 
@@ -22,6 +24,7 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         InventoryItem::class => InventoryItemPolicy::class,
         ResourceRequest::class => ResourceRequestPolicy::class,
+        Project::class => ProjectPolicy::class,
     ];
 
     /**

@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ResourceRequestController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\SystemSettingsController;
@@ -51,6 +52,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['permission:submit-request,update-pending-request,review-request,approve-request'])->group(function () {
         Route::get('/requests/pending/list', [ResourceRequestController::class, 'pending'])->name('requests.pending');
         Route::resource('requests', ResourceRequestController::class);
+    });
+
+    // Project Management
+    Route::middleware(['permission:view-projects,manage-projects'])->group(function () {
+        Route::resource('projects', ProjectController::class);
     });
 
     // Admin - Approve/Reject Requests

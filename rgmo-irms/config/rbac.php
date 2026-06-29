@@ -8,6 +8,8 @@ return [
                 'manage-users',
                 'assign-roles',
                 'manage-inventory',
+                'manage-projects',
+                'view-projects',
                 'view-inventory',
                 'submit-request',
                 'update-pending-request',
@@ -28,6 +30,7 @@ return [
             'label' => 'Staff',
             'permissions' => [
                 'view-inventory',
+                'view-projects',
                 'submit-request',
                 'update-pending-request',
                 'record-utilization',
@@ -40,6 +43,7 @@ return [
             'label' => 'Project Manager',
             'permissions' => [
                 'view-inventory',
+                'view-projects',
                 'submit-request',
                 'update-pending-request',
                 'review-request',
@@ -56,6 +60,8 @@ return [
             'label' => 'RGMO Head',
             'permissions' => [
                 'manage-inventory',
+                'manage-projects',
+                'view-projects',
                 'view-inventory',
                 'review-request',
                 'approve-request',
@@ -73,6 +79,7 @@ return [
             'alias_of' => 'project_manager',
             'permissions' => [
                 'view-inventory',
+                'view-projects',
                 'submit-request',
                 'update-pending-request',
                 'review-request',
@@ -91,6 +98,8 @@ return [
         'manage-users' => 'Manage users',
         'assign-roles' => 'Assign roles and permissions',
         'manage-inventory' => 'Manage inventory records',
+        'manage-projects' => 'Manage project records and assignments',
+        'view-projects' => 'View project records and resource usage',
         'view-inventory' => 'View inventory availability',
         'submit-request' => 'Submit resource requests',
         'update-pending-request' => 'Update or cancel pending requests',

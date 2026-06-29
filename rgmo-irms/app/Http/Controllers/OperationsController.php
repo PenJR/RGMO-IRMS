@@ -343,7 +343,14 @@ class OperationsController extends Controller
      */
     public function logResourceUsage(Request $request)
     {
-        return response()->json($this->service->logResourceUsage($request->validate(['inventory_item_id' => 'required|exists:inventory_items,id', 'user_id' => 'nullable|exists:users,id', 'field_id' => 'nullable|string|max:255', 'quantity' => 'required|integer|min:1', 'notes' => 'nullable|string'])), 201);
+        return response()->json($this->service->logResourceUsage($request->validate([
+            'inventory_item_id' => 'required|exists:inventory_items,id',
+            'user_id' => 'nullable|exists:users,id',
+            'project_id' => 'nullable|exists:projects,id',
+            'field_id' => 'nullable|string|max:255',
+            'quantity' => 'required|integer|min:1',
+            'notes' => 'nullable|string',
+        ])), 201);
     }
 
     /**

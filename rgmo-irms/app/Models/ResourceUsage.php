@@ -11,6 +11,7 @@ class ResourceUsage extends Model
     protected $fillable = [
         'inventory_item_id',
         'user_id',
+        'project_id',
         'field_id',
         'quantity',
         'notes',
@@ -24,6 +25,11 @@ class ResourceUsage extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     // Scopes

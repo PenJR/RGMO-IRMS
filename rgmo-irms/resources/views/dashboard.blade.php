@@ -110,16 +110,12 @@
                     <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="fw-bold mb-0">Inventory Dynamics</h5>
-                            <p class="text-muted small mb-0">Monthly stock level fluctuations</p>
+                            <p class="text-muted small mb-0">Active stock volume across recent months</p>
                         </div>
-                        <div class="dropdown">
-                            <button class="btn btn-light btn-sm dropdown-toggle small" type="button" data-bs-toggle="dropdown">
-                                Last 6 Months
-                            </button>
-                        </div>
+                        <span class="badge bg-light text-dark border fw-semibold">Last 6 Months</span>
                     </div>
-                    <div class="card-body px-4 pb-4">
-                        <canvas id="inventoryChart" style="max-height: 280px;"></canvas>
+                    <div class="card-body px-4 pb-4" style="height: 320px;">
+                        <canvas id="inventoryChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -133,6 +129,72 @@
                         <div style="position: relative; height: 230px; width: 230px;">
                             <canvas id="requestsChart"></canvas>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-12 col-xl-8">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-0">Request Activity Trend</h5>
+                            <p class="text-muted small mb-0">Submitted, approved, and rejected requests by month</p>
+                        </div>
+                        <i data-lucide="line-chart" class="text-muted" style="width: 20px; height: 20px;"></i>
+                    </div>
+                    <div class="card-body px-4 pb-4" style="height: 320px;">
+                        <canvas id="requestTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+                        <h5 class="fw-bold mb-0">Stock Health</h5>
+                        <p class="text-muted small mb-0">Healthy, warning, and low stock inventory counts</p>
+                    </div>
+                    <div class="card-body px-4 pb-4 d-flex align-items-center justify-content-center">
+                        <div style="position: relative; height: 245px; width: 245px;">
+                            <canvas id="stockHealthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-12 col-xl-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+                        <h5 class="fw-bold mb-0">Inventory Value by Category</h5>
+                        <p class="text-muted small mb-0">Top categories by current stock value</p>
+                    </div>
+                    <div class="card-body px-4 pb-4" style="height: 320px;">
+                        <canvas id="categoryValueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+                        <h5 class="fw-bold mb-0">Inventory Movement</h5>
+                        <p class="text-muted small mb-0">Monthly stock-in and stock-out quantities</p>
+                    </div>
+                    <div class="card-body px-4 pb-4" style="height: 320px;">
+                        <canvas id="inventoryMovementChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+                        <h5 class="fw-bold mb-0">Top Requested Items</h5>
+                        <p class="text-muted small mb-0">Highest total requested quantities</p>
+                    </div>
+                    <div class="card-body px-4 pb-4" style="height: 320px;">
+                        <canvas id="topRequestedItemsChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -298,6 +360,18 @@
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const chartData = @json($stats['charts']);
+            const hasData = (values) => Array.isArray(values) && values.some(value => Number(value) > 0);
+            const fallbackData = (values) => hasData(values) ? values : values.map(() => 0);
+            const commonGrid = { color: '#e5e7eb', borderDash: [5, 5] };
+            const commonTooltip = {
+                backgroundColor: '#111827',
+                padding: 12,
+                titleFont: { size: 12, weight: 'bold' },
+                bodyFont: { size: 12 },
+                cornerRadius: 6
+            };
+
             // Inventory Dynamics Chart
             const ctxInv = document.getElementById('inventoryChart').getContext('2d');
             const invGradient = ctxInv.createLinearGradient(0, 0, 0, 400);
@@ -307,10 +381,10 @@
             new Chart(ctxInv, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    labels: chartData.inventory_levels.labels,
                     datasets: [{
                         label: 'Total Stock Volume',
-                        data: [420, 580, 490, 710, 680, 850],
+                        data: chartData.inventory_levels.data,
                         borderColor: '#006837',
                         borderWidth: 3,
                         backgroundColor: invGradient,
@@ -326,11 +400,14 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: commonTooltip
+                    },
                     scales: {
                         y: { 
                             beginAtZero: true,
-                            grid: { borderDash: [5, 5], color: '#e5e7eb' },
+                            grid: commonGrid,
                             ticks: { font: { size: 10 } }
                         },
                         x: { 
@@ -346,10 +423,10 @@
             new Chart(ctxReq, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Approved', 'Pending', 'Rejected'],
+                    labels: chartData.request_statuses.labels,
                     datasets: [{
-                        data: [55, {{ $stats['pending_requests'] }}, 12],
-                        backgroundColor: ['#166534', '#ca8a04', '#991b1b'],
+                        data: fallbackData(chartData.request_statuses.data),
+                        backgroundColor: ['#166534', '#ca8a04', '#991b1b', '#0f766e', '#6b7280'],
                         borderWidth: 0,
                         hoverOffset: 8
                     }]
@@ -359,10 +436,175 @@
                     maintainAspectRatio: false,
                     cutout: '75%',
                     plugins: {
+                        tooltip: commonTooltip,
                         legend: { 
                             position: 'bottom',
                             labels: { usePointStyle: true, padding: 15, font: { size: 11 } }
                         }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('requestTrendChart'), {
+                type: 'line',
+                data: {
+                    labels: chartData.request_trends.labels,
+                    datasets: [
+                        {
+                            label: 'Submitted',
+                            data: chartData.request_trends.submitted,
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Approved',
+                            data: chartData.request_trends.approved,
+                            borderColor: '#166534',
+                            borderWidth: 3,
+                            tension: 0.35,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Rejected',
+                            data: chartData.request_trends.rejected,
+                            borderColor: '#991b1b',
+                            borderWidth: 3,
+                            tension: 0.35,
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: commonTooltip,
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, font: { size: 11 } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: commonGrid, ticks: { precision: 0, font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('stockHealthChart'), {
+                type: 'polarArea',
+                data: {
+                    labels: chartData.stock_health.labels,
+                    datasets: [{
+                        data: fallbackData(chartData.stock_health.data),
+                        backgroundColor: ['rgba(22, 101, 52, 0.82)', 'rgba(202, 138, 4, 0.82)', 'rgba(153, 27, 27, 0.82)'],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: commonTooltip,
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, font: { size: 11 } } }
+                    },
+                    scales: {
+                        r: { ticks: { display: false, precision: 0 }, grid: { color: '#e5e7eb' } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('categoryValueChart'), {
+                type: 'bar',
+                data: {
+                    labels: chartData.category_values.labels,
+                    datasets: [{
+                        label: 'Inventory Value',
+                        data: chartData.category_values.data,
+                        backgroundColor: '#0f766e',
+                        borderRadius: 6,
+                        maxBarThickness: 36
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            ...commonTooltip,
+                            callbacks: {
+                                label: (context) => `Value: ₱${Number(context.raw || 0).toLocaleString()}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: commonGrid, ticks: { font: { size: 10 } } },
+                        y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('inventoryMovementChart'), {
+                type: 'bar',
+                data: {
+                    labels: chartData.inventory_movements.labels,
+                    datasets: [
+                        {
+                            label: 'Stock In',
+                            data: chartData.inventory_movements.stock_in,
+                            backgroundColor: '#166534',
+                            borderRadius: 5,
+                            maxBarThickness: 28
+                        },
+                        {
+                            label: 'Stock Out',
+                            data: chartData.inventory_movements.stock_out,
+                            backgroundColor: '#dc2626',
+                            borderRadius: 5,
+                            maxBarThickness: 28
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: commonTooltip,
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, font: { size: 11 } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: commonGrid, ticks: { precision: 0, font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('topRequestedItemsChart'), {
+                type: 'bar',
+                data: {
+                    labels: chartData.top_requested_items.labels,
+                    datasets: [{
+                        label: 'Requested Quantity',
+                        data: chartData.top_requested_items.data,
+                        backgroundColor: '#7c3aed',
+                        borderRadius: 6,
+                        maxBarThickness: 32
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: commonTooltip
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: commonGrid, ticks: { precision: 0, font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 0 } }
                     }
                 }
             });

@@ -35,6 +35,13 @@
             </details>
         @endif
 
+        @can('viewAny', App\Models\Project::class)
+            <a href="{{ route('projects.index') }}" class="nav-link {{ request()->routeIs('projects.*') ? 'active' : '' }}">
+                <i data-lucide="folder-kanban" class="me-3" style="width: 18px"></i>
+                Projects
+            </a>
+        @endcan
+
         <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
             <i data-lucide="bell" class="me-3" style="width: 18px"></i>
             Notifications

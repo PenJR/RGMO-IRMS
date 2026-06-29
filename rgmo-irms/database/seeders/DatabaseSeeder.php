@@ -8,6 +8,7 @@ use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use App\Models\LoginHistory;
 use App\Models\Notification;
+use App\Models\Project;
 use App\Models\RequestItem;
 use App\Models\ResourceRequest;
 use App\Models\ResourceUsage;
@@ -58,6 +59,17 @@ class DatabaseSeeder extends Seeder
                     'name' => 'Project Manager',
                     'role' => 'project_manager',
                     'department' => 'Operations',
+                    'status' => 'active',
+                    'email_verified_at' => now(),
+                    'password' => Hash::make('password'),
+                ]
+            ),
+            'field' => User::firstOrCreate(
+                ['email' => 'field.manager@example.com'],
+                [
+                    'name' => 'Field Project Lead',
+                    'role' => 'field_personnel',
+                    'department' => 'Field Operations',
                     'status' => 'active',
                     'email_verified_at' => now(),
                     'password' => Hash::make('password'),
@@ -189,6 +201,111 @@ class DatabaseSeeder extends Seeder
             $item->update(['stock' => $runningStock]);
         }
 
+        $projects = collect([
+            Project::updateOrCreate(
+                ['code' => 'PRJ-RICE-2026'],
+                [
+                    'name' => 'Rice Seed Production Program',
+                    'status' => Project::STATUS_ACTIVE,
+                    'start_date' => now()->subMonths(4)->toDateString(),
+                    'end_date' => now()->addMonths(3)->toDateString(),
+                    'description' => 'Tracks seed, fertilizer, and field inputs used by the rice production program.',
+                ]
+            ),
+            Project::updateOrCreate(
+                ['code' => 'PRJ-FIELD-OPS'],
+                [
+                    'name' => 'Field Operations Support',
+                    'status' => Project::STATUS_ACTIVE,
+                    'start_date' => now()->subMonths(2)->toDateString(),
+                    'end_date' => null,
+                    'description' => 'Operational support project for supplies distributed to field teams.',
+                ]
+            ),
+            Project::updateOrCreate(
+                ['code' => 'PRJ-NURSERY-2026'],
+                [
+                    'name' => 'Nursery Propagation Expansion',
+                    'status' => Project::STATUS_ON_HOLD,
+                    'start_date' => now()->subMonth()->toDateString(),
+                    'end_date' => now()->addMonths(5)->toDateString(),
+                    'description' => 'Demo nursery expansion project for tracking seeds, chemicals, and staff utilization.',
+                ]
+            ),
+            Project::updateOrCreate(
+                ['code' => 'PRJ-DEMO-CLOSE'],
+                [
+                    'name' => 'Closed Demonstration Plot',
+                    'status' => Project::STATUS_COMPLETED,
+                    'start_date' => now()->subMonths(8)->toDateString(),
+                    'end_date' => now()->subMonth()->toDateString(),
+                    'description' => 'Completed sample project with historical resource usage records.',
+                ]
+            ),
+        ]);
+
+        $projects->each(function (Project $project, int $index) use ($users) {
+            $managerIds = $index % 2 === 0
+                ? [$users['pm']->id, $users['field']->id]
+                : [$users['field']->id];
+
+            $project->managers()->syncWithoutDetaching($managerIds);
+        });
+
+        $projectUsagePlan = [
+            'PRJ-RICE-2026' => [
+                ['sku' => 'SEED-RC226', 'quantity' => 18, 'field' => 'RICE-FIELD-01', 'days_ago' => 21],
+                ['sku' => 'FERT-UREA', 'quantity' => 10, 'field' => 'RICE-FIELD-01', 'days_ago' => 14],
+                ['sku' => 'CHEM-HERB', 'quantity' => 6, 'field' => 'RICE-FIELD-02', 'days_ago' => 7],
+            ],
+            'PRJ-FIELD-OPS' => [
+                ['sku' => 'OFF-A4', 'quantity' => 5, 'field' => 'OPS-STATION-01', 'days_ago' => 18],
+                ['sku' => 'FERT-16-20', 'quantity' => 8, 'field' => 'FIELD-OPS-03', 'days_ago' => 11],
+                ['sku' => 'CHEM-INSECT', 'quantity' => 4, 'field' => 'FIELD-OPS-04', 'days_ago' => 5],
+            ],
+            'PRJ-NURSERY-2026' => [
+                ['sku' => 'SEED-RC440', 'quantity' => 12, 'field' => 'NURSERY-BED-02', 'days_ago' => 16],
+                ['sku' => 'FERT-14-14', 'quantity' => 7, 'field' => 'NURSERY-BED-03', 'days_ago' => 8],
+            ],
+            'PRJ-DEMO-CLOSE' => [
+                ['sku' => 'SEED-NSIC222', 'quantity' => 20, 'field' => 'DEMO-PLOT-01', 'days_ago' => 74],
+                ['sku' => 'FERT-UREA', 'quantity' => 9, 'field' => 'DEMO-PLOT-01', 'days_ago' => 62],
+                ['sku' => 'CHEM-FUNG', 'quantity' => 3, 'field' => 'DEMO-PLOT-01', 'days_ago' => 45],
+            ],
+        ];
+
+        $itemsBySku = $items->keyBy('sku');
+        $projectsByCode = $projects->keyBy('code');
+
+        foreach ($projectUsagePlan as $projectCode => $usageRows) {
+            $project = $projectsByCode->get($projectCode);
+
+            if (! $project || $project->resourceUsages()->where('notes', 'like', 'Seeded project dummy usage:%')->exists()) {
+                continue;
+            }
+
+            foreach ($usageRows as $offset => $usageRow) {
+                $item = $itemsBySku->get($usageRow['sku']);
+
+                if (! $item) {
+                    continue;
+                }
+
+                $usedAt = now()->subDays($usageRow['days_ago'])->setHour(10 + $offset);
+
+                ResourceUsage::create([
+                    'inventory_item_id' => $item->id,
+                    'user_id' => $offset % 2 === 0 ? $users['pm']->id : $users['field']->id,
+                    'project_id' => $project->id,
+                    'field_id' => $usageRow['field'],
+                    'quantity' => $usageRow['quantity'],
+                    'notes' => 'Seeded project dummy usage: ' . $projectCode,
+                    'created_at' => $usedAt,
+                    'updated_at' => $usedAt,
+                ]);
+            }
+        }
+
         if (ResourceRequest::count() < 16) {
             for ($i = 1; $i <= 16; $i++) {
                 $requestedAt = now()->subDays(48 - ($i * 2));
@@ -236,6 +353,7 @@ class DatabaseSeeder extends Seeder
                         ResourceUsage::create([
                             'inventory_item_id' => $lineItem->id,
                             'user_id' => $requestUser->id,
+                            'project_id' => $projects->random()->id,
                             'field_id' => 'FIELD-' . str_pad((string) rand(1, 8), 2, '0', STR_PAD_LEFT),
                             'quantity' => rand(1, 8),
                             'notes' => 'Seeded usage from completed request #' . $request->id,

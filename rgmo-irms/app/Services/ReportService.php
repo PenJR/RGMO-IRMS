@@ -3,11 +3,14 @@
 namespace App\Services;
 
 use App\Models\InventoryItem;
+use App\Models\InventoryTransaction;
+use App\Models\RequestItem;
 use App\Models\ResourceRequest;
 use App\Models\ResourceUsage;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ReportService
 {
@@ -48,7 +51,7 @@ class ReportService
     public function getResourceUsageReport(array $filters = [])
     {
         $query = ResourceUsage::query()
-            ->with('item', 'user');
+            ->with('item', 'user', 'project');
 
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
             $query->dateRange($filters['start_date'], $filters['end_date']);
@@ -274,6 +277,11 @@ class ReportService
      */
     public function getDashboardStats()
     {
+        $requestStatusCounts = ResourceRequest::query()
+            ->select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         return [
             'total_users' => User::count(),
             'total_items' => InventoryItem::active()->count(),
@@ -281,6 +289,154 @@ class ReportService
             'pending_requests' => ResourceRequest::pending()->count(),
             'total_inventory_value' => InventoryItem::active()->sum(\DB::raw('stock * price')),
             'recent_transactions' => AuditLog::recent(7)->count(),
+            'charts' => [
+                'inventory_levels' => $this->getInventoryLevelChartData(),
+                'request_statuses' => [
+                    'labels' => ['Approved', 'Pending', 'Rejected', 'Completed', 'Cancelled'],
+                    'data' => [
+                        (int) ($requestStatusCounts[ResourceRequest::STATUS_APPROVED] ?? 0),
+                        (int) ($requestStatusCounts[ResourceRequest::STATUS_PENDING] ?? 0),
+                        (int) ($requestStatusCounts[ResourceRequest::STATUS_REJECTED] ?? 0),
+                        (int) ($requestStatusCounts[ResourceRequest::STATUS_COMPLETED] ?? 0),
+                        (int) ($requestStatusCounts[ResourceRequest::STATUS_CANCELLED] ?? 0),
+                    ],
+                ],
+                'request_trends' => $this->getRequestTrendChartData(),
+                'stock_health' => $this->getStockHealthChartData(),
+                'category_values' => $this->getCategoryValueChartData(),
+                'inventory_movements' => $this->getInventoryMovementChartData(),
+                'top_requested_items' => $this->getTopRequestedItemChartData(),
+            ],
+        ];
+    }
+
+    private function getRecentMonthBuckets(int $months = 6): array
+    {
+        $start = now()->startOfMonth()->subMonths($months - 1);
+
+        return collect(range(0, $months - 1))
+            ->mapWithKeys(function ($offset) use ($start) {
+                $date = $start->copy()->addMonths($offset);
+
+                return [$date->format('Y-m') => $date->format('M')];
+            })
+            ->all();
+    }
+
+    private function getInventoryLevelChartData(): array
+    {
+        $labels = [];
+        $activeItems = InventoryItem::active()->get(['stock', 'created_at']);
+
+        foreach ($this->getRecentMonthBuckets() as $month => $label) {
+            $labels[] = $label;
+            $data[] = (int) $activeItems
+                ->filter(fn ($item) => $item->created_at->format('Y-m') <= $month)
+                ->sum('stock');
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data ?? [],
+        ];
+    }
+
+    private function getRequestTrendChartData(): array
+    {
+        $labels = [];
+        $requests = ResourceRequest::query()
+            ->where('created_at', '>=', now()->startOfMonth()->subMonths(5))
+            ->get(['status', 'created_at']);
+
+        $datasets = [
+            'submitted' => [],
+            'approved' => [],
+            'rejected' => [],
+        ];
+
+        foreach ($this->getRecentMonthBuckets() as $month => $label) {
+            $labels[] = $label;
+            $monthRequests = $requests->filter(fn ($request) => $request->created_at->format('Y-m') === $month);
+            $datasets['submitted'][] = $monthRequests->count();
+            $datasets['approved'][] = $monthRequests->where('status', ResourceRequest::STATUS_APPROVED)->count();
+            $datasets['rejected'][] = $monthRequests->where('status', ResourceRequest::STATUS_REJECTED)->count();
+        }
+
+        return [
+            'labels' => $labels,
+            'submitted' => $datasets['submitted'],
+            'approved' => $datasets['approved'],
+            'rejected' => $datasets['rejected'],
+        ];
+    }
+
+    private function getStockHealthChartData(): array
+    {
+        return [
+            'labels' => ['Healthy', 'Warning', 'Low Stock'],
+            'data' => [
+                InventoryItem::goodStock()->count(),
+                InventoryItem::warningStock()->count(),
+                InventoryItem::lowStock()->count(),
+            ],
+        ];
+    }
+
+    private function getCategoryValueChartData(): array
+    {
+        $categories = InventoryItem::query()
+            ->join('categories', 'inventory_items.category_id', '=', 'categories.id')
+            ->whereNull('inventory_items.deleted_at')
+            ->whereNull('categories.deleted_at')
+            ->select('categories.name', DB::raw('SUM(inventory_items.stock * COALESCE(inventory_items.price, 0)) as total_value'))
+            ->groupBy('categories.id', 'categories.name')
+            ->orderByDesc('total_value')
+            ->limit(6)
+            ->get();
+
+        return [
+            'labels' => $categories->pluck('name')->all(),
+            'data' => $categories->pluck('total_value')->map(fn ($value) => round((float) $value, 2))->all(),
+        ];
+    }
+
+    private function getInventoryMovementChartData(): array
+    {
+        $labels = [];
+        $transactions = InventoryTransaction::query()
+            ->where('created_at', '>=', now()->startOfMonth()->subMonths(5))
+            ->get(['transaction_type', 'quantity', 'created_at']);
+
+        $stockIn = [];
+        $stockOut = [];
+
+        foreach ($this->getRecentMonthBuckets() as $month => $label) {
+            $labels[] = $label;
+            $monthTransactions = $transactions->filter(fn ($transaction) => $transaction->created_at->format('Y-m') === $month);
+            $stockIn[] = (int) $monthTransactions->where('transaction_type', 'stock_in')->sum('quantity');
+            $stockOut[] = (int) $monthTransactions->where('transaction_type', 'stock_out')->sum('quantity');
+        }
+
+        return [
+            'labels' => $labels,
+            'stock_in' => $stockIn,
+            'stock_out' => $stockOut,
+        ];
+    }
+
+    private function getTopRequestedItemChartData(): array
+    {
+        $items = RequestItem::query()
+            ->join('inventory_items', 'request_items.inventory_item_id', '=', 'inventory_items.id')
+            ->select('inventory_items.name', DB::raw('SUM(request_items.quantity) as total_quantity'))
+            ->groupBy('inventory_items.id', 'inventory_items.name')
+            ->orderByDesc('total_quantity')
+            ->limit(6)
+            ->get();
+
+        return [
+            'labels' => $items->pluck('name')->all(),
+            'data' => $items->pluck('total_quantity')->map(fn ($value) => (int) $value)->all(),
         ];
     }
 
