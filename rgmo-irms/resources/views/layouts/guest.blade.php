@@ -26,7 +26,8 @@
             }
 
             body {
-                background: var(--cmu-green);
+                background:
+                    linear-gradient(135deg, #003c19 0%, #005323 48%, #17451f 100%);
                 font-family: 'Inter', system-ui, sans-serif;
                 color: #f4fff6;
                 min-height: 100vh;
@@ -66,10 +67,10 @@
             }
 
             .feature-card:hover {
-                background: rgba(244, 255, 246, 0.96) !important;
-                transform: translateX(10px);
+                background: rgba(244, 255, 246, 0.98) !important;
+                transform: translateY(-2px);
                 border-color: var(--cmu-yellow) !important;
-                box-shadow: 0 12px 26px rgba(0, 73, 30, 0.18);
+                box-shadow: 0 14px 30px rgba(0, 30, 12, 0.18);
             }
 
             .feature-card:hover h5 {
@@ -81,15 +82,15 @@
             }
 
             .feature-card {
-                border: 2px solid var(--cmu-yellow);
+                border: 1px solid rgba(255, 198, 0, 0.36);
             }
 
             .login-card {
-                background: rgba(243, 250, 244, 0.96);
-                backdrop-filter: blur(10px);
-                border: 2px solid var(--cmu-yellow);
-                border-radius: 20px;
-                box-shadow: 0 24px 50px -18px rgba(0, 73, 30, 0.32);
+                background: rgba(250, 253, 249, 0.98);
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 198, 0, 0.45);
+                border-radius: 12px;
+                box-shadow: 0 26px 60px rgba(0, 28, 12, 0.28);
                 width: 100%;
                 max-width: 480px;
                 padding: 3rem;
@@ -165,8 +166,8 @@
                         <h1 class="display-3 fw-bold mb-2" style="color: #ffffff; letter-spacing: -0.04em;">RGMO-IRMS</h1>
                         <p class="lead fw-medium mb-5" style="font-size: 1.25rem; border-left: 3px solid var(--cmu-yellow); padding-left: 1.5rem;">Resource Generation Management Office<br><span class="opacity-75" style="font-size: 1.1rem;">Inventory & Resource Management System</span></p>
                         
-                        <div class="space-y-4">
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 2px solid var(--cmu-green);">
+                        <div class="auth-panel">
+                            <div class="feature-card auth-feature-card d-flex align-items-center gap-4 p-3 transition-all">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
                                     <i data-lucide="package" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
@@ -175,7 +176,7 @@
                                     <p class="small mb-0 opacity-75">Precision monitoring of agricultural stocks and nursery equipment.</p>
                                 </div>
                             </div>
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 2px solid var(--cmu-green);">
+                            <div class="feature-card auth-feature-card d-flex align-items-center gap-4 p-3 transition-all">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
                                     <i data-lucide="leaf" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
@@ -184,7 +185,7 @@
                                     <p class="small mb-0 opacity-75">Promoting green initiatives through digital resource optimization.</p>
                                 </div>
                             </div>
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 2px solid var(--cmu-green);">
+                            <div class="feature-card auth-feature-card d-flex align-items-center gap-4 p-3 transition-all">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
                                     <i data-lucide="file-check" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>
@@ -193,7 +194,7 @@
                                     <p class="small mb-0 opacity-75">Optimized workflow for supplies issuance and project distribution.</p>
                                 </div>
                             </div>
-                            <div class="feature-card d-flex align-items-center gap-4 mb-4 p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.86); border: 2px solid var(--cmu-green);">
+                            <div class="feature-card auth-feature-card d-flex align-items-center gap-4 p-3 transition-all">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
                                     <i data-lucide="sparkles" class="text-success" style="width: 28px; height: 28px;"></i>
                                 </div>

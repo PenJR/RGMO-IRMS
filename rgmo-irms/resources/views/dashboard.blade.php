@@ -11,7 +11,7 @@
     <div class="container-fluid py-4">
         <div class="row g-4">
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #0d6efd !important;">
+                    <div class="card shadow-sm border-0 h-100 card-stat">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(0, 73, 30, 0.1); color: var(--cmu-green);">
@@ -27,7 +27,7 @@
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #198754 !important;">
+                    <div class="card shadow-sm border-0 h-100 card-stat">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(2, 104, 30, 0.1); color: var(--cmu-green-2);">
@@ -43,7 +43,7 @@
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #dc3545 !important;">
+                    <div class="card shadow-sm border-0 h-100 card-stat">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(255, 198, 0, 0.18); color: var(--cmu-green);">
@@ -59,7 +59,7 @@
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100 card-stat" style="border-bottom: 3px solid #ffc107 !important;">
+                    <div class="card shadow-sm border-0 h-100 card-stat">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(145, 159, 2, 0.16); color: var(--cmu-green);">
@@ -426,7 +426,7 @@
                     labels: chartData.request_statuses.labels,
                     datasets: [{
                         data: fallbackData(chartData.request_statuses.data),
-                        backgroundColor: ['#166534', '#ca8a04', '#991b1b', '#0f766e', '#6b7280'],
+                        backgroundColor: ['#02681e', '#d6a700', '#b42318', '#0f766e', '#667085'],
                         borderWidth: 0,
                         hoverOffset: 8
                     }]
@@ -453,8 +453,8 @@
                         {
                             label: 'Submitted',
                             data: chartData.request_trends.submitted,
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                            borderColor: '#0f766e',
+                            backgroundColor: 'rgba(15, 118, 110, 0.08)',
                             borderWidth: 3,
                             fill: true,
                             tension: 0.35,
@@ -590,7 +590,7 @@
                     datasets: [{
                         label: 'Requested Quantity',
                         data: chartData.top_requested_items.data,
-                        backgroundColor: '#7c3aed',
+                            backgroundColor: '#919f02',
                         borderRadius: 6,
                         maxBarThickness: 32
                     }]
