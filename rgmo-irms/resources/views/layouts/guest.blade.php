@@ -27,7 +27,7 @@
 
             body {
                 background:
-                    linear-gradient(135deg, #003c19 0%, #005323 48%, #17451f 100%);
+                    linear-gradient(135deg, #003c19 0%, #005323 48%, #17451f 100%) !important;
                 font-family: 'Inter', system-ui, sans-serif;
                 color: #f4fff6;
                 min-height: 100vh;
