@@ -27,7 +27,9 @@ class TwoFactorService
         $timeSlice = floor(time() / 30);
         for ($i = -$window; $i <= $window; $i++) {
             $calculated = $this->getCode($secret, $timeSlice + $i);
-            if (hash_equals((string) $calculated, (string) $code)) {
+            $calculated = str_pad((string) $calculated, 6, '0', STR_PAD_LEFT);
+
+            if (hash_equals($calculated, $code)) {
                 return true;
             }
         }

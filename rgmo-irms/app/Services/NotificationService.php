@@ -4,166 +4,218 @@ namespace App\Services;
 
 use App\Events\NotificationCreated;
 use App\Models\Notification;
+use App\Models\ResourceRequest;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 class NotificationService
 {
-    /**
-     * Retrieve all unread notifications for a specified user, sorted by recency.
-     *
-     * @param User $user
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
     public function getUnreadNotifications(User $user)
     {
         return $user->notifications()->unread()->orderBy('created_at', 'desc')->get();
     }
 
-    /**
-     * Retrieve a paginated list of all notifications for a specified user.
-     *
-     * @param User $user
-     * @param int $perPage
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
-     */
     public function getAllNotifications(User $user, int $perPage = 15)
     {
-        return $user->notifications()->orderBy('created_at', 'desc')->paginate($perPage);
+        return $user->notifications()
+            ->with(['sender:id,name,email,role', 'relatedRequest:id,user_id,status,purpose'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 
-    /**
-     * Get the total number of unread notifications for a specified user.
-     *
-     * @param User $user
-     * @return int
-     */
     public function getUnreadCount(User $user): int
     {
         return $user->notifications()->unread()->count();
     }
 
-    /**
-     * Create a new notification record and dispatch a creation event.
-     *
-     * @param int $userId ID of the recipient user.
-     * @param string $type The category of notification (e.g., 'system', 'request').
-     * @param string $message The notification content.
-     * @return Notification
-     */
-    public function createNotification(int $userId, string $type, string $message): Notification
+    public function createNotification(int $userId, string $type, string $message, array $attributes = []): Notification
     {
-        $notification = Notification::create([
+        $notification = Notification::create(array_merge([
             'user_id' => $userId,
+            'title' => $attributes['title'] ?? $this->titleForType($type),
             'type' => $type,
             'message' => $message,
-        ]);
+            'sender_id' => $attributes['sender_id'] ?? null,
+            'recipient_role' => $attributes['recipient_role'] ?? null,
+            'related_request_id' => $attributes['related_request_id'] ?? null,
+            'data' => $attributes['data'] ?? null,
+        ], $attributes));
 
         event(new NotificationCreated($notification));
 
         return $notification;
     }
 
-    /**
-     * Dispatch notifications to multiple users simultaneously.
-     *
-     * @param array $userIds
-     * @param string $type
-     * @param string $message
-     * @return void
-     */
-    public function createBulkNotification(array $userIds, string $type, string $message): void
+    public function createBulkNotification(array $userIds, string $type, string $message, array $attributes = []): void
     {
-        foreach ($userIds as $userId) {
-            $this->createNotification($userId, $type, $message);
+        foreach (array_unique($userIds) as $userId) {
+            $this->createNotification((int) $userId, $type, $message, $attributes);
         }
     }
 
-    /**
-     * Mark a specific notification as read.
-     *
-     * @param Notification $notification
-     * @return void
-     */
-    public function markAsRead(Notification $notification): void
+    public function notifyResourceRequestSubmitted(ResourceRequest $request): void
     {
-        $notification->markAsRead();
+        $request->loadMissing('user', 'items.item');
+        $resourceName = $this->resourceNameForRequest($request);
+        $requesterName = $request->user?->name ?? 'A user';
+        $message = "{$requesterName} submitted a request for {$resourceName}.";
+
+        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_RGMO_HEAD], 'resource_request', $message, [
+            'title' => 'New Resource Request',
+            'sender_id' => $request->user_id,
+            'related_request_id' => $request->id,
+            'data' => [
+                'request_id' => $request->id,
+                'resource_name' => $resourceName,
+                'status' => $request->status,
+            ],
+        ]);
     }
 
-    /**
-     * Mark all unread notifications for a specific user as read.
-     *
-     * @param User $user
-     * @return void
-     */
+    public function notifyResourceRequestApproved(ResourceRequest $request, ?int $senderId = null): Notification
+    {
+        return $this->createNotification($request->user_id, 'resource_request_approved', 'Your resource request has been approved.', [
+            'title' => 'Resource Request Approved',
+            'sender_id' => $senderId,
+            'related_request_id' => $request->id,
+            'data' => [
+                'request_id' => $request->id,
+                'status' => ResourceRequest::STATUS_APPROVED,
+            ],
+        ]);
+    }
+
+    public function notifyResourceRequestRejected(ResourceRequest $request, ?int $senderId = null): Notification
+    {
+        return $this->createNotification($request->user_id, 'resource_request_rejected', 'Your resource request has been rejected.', [
+            'title' => 'Resource Request Rejected',
+            'sender_id' => $senderId,
+            'related_request_id' => $request->id,
+            'data' => [
+                'request_id' => $request->id,
+                'status' => ResourceRequest::STATUS_REJECTED,
+            ],
+        ]);
+    }
+
+    public function notifyAdminLoggedIn(User $admin, array $context = []): void
+    {
+        if (! $admin->isAdmin()) {
+            return;
+        }
+
+        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_RGMO_HEAD], 'admin_login', "Admin {$admin->name} logged in to the system.", [
+            'title' => 'Admin Login',
+            'sender_id' => $admin->id,
+            'data' => [
+                'admin_user_id' => $admin->id,
+                'admin_role' => $admin->role,
+                'ip_address' => $context['ip_address'] ?? null,
+                'user_agent' => $context['user_agent'] ?? null,
+                'login_at' => $context['login_at'] ?? now()->toDateTimeString(),
+            ],
+        ]);
+    }
+
+    public function markAsRead(Notification $notification): void
+    {
+        if (! $notification->isRead()) {
+            $notification->markAsRead();
+        }
+    }
+
     public function markAllAsRead(User $user): void
     {
         $user->notifications()->unread()->update(['read_at' => now()]);
     }
 
-    /**
-     * Remove a notification from the database.
-     *
-     * @param Notification $notification
-     * @return void
-     */
     public function deleteNotification(Notification $notification): void
     {
         $notification->delete();
     }
 
-    /**
-     * Delete all notifications that have already been read by the user.
-     *
-     * @param User $user
-     * @return void
-     */
     public function deleteReadNotifications(User $user): void
     {
         $user->notifications()->read()->delete();
     }
 
-    /**
-     * Standard utility to notify all system administrators about low stock events.
-     *
-     * @param string $itemName
-     * @param int $quantity
-     * @return void
-     */
     public function notifyLowStock(string $itemName, int $quantity): void
     {
-        $admins = User::admin()->get();
-        $message = "Item '$itemName' is low in stock (Current: $quantity)";
+        $message = "Item '{$itemName}' is low in stock (Current: {$quantity}).";
 
-        foreach ($admins as $admin) {
-            $this->createNotification($admin->id, 'low_stock', $message);
-        }
+        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_RGMO_HEAD], 'low_stock', $message, [
+            'title' => 'Low Stock Alert',
+            'data' => [
+                'item_name' => $itemName,
+                'quantity' => $quantity,
+            ],
+        ]);
     }
 
-    /**
-     * Security utility to notify all system administrators about excessive failed login attempts for a user account.
-     *
-     * @param User $user
-     * @return void
-     */
     public function notifyFailedLoginAttempts(User $user): void
     {
-        $admins = User::admin()->get();
         $message = "User '{$user->name}' ({$user->email}) has {$user->login_attempts} failed login attempts.";
 
-        foreach ($admins as $admin) {
-            $this->createNotification($admin->id, 'failed_login', $message);
+        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_RGMO_HEAD], 'failed_login', $message, [
+            'title' => 'Failed Login Attempts',
+            'sender_id' => $user->id,
+        ]);
+    }
+
+    public function notifyAccountLocked(User $user): void
+    {
+        $this->createNotification($user->id, 'account_locked', 'Your account has been locked due to multiple failed login attempts. Please contact the administrator.', [
+            'title' => 'Account Locked',
+            'sender_id' => $user->id,
+        ]);
+    }
+
+    private function notifyRoles(array $roles, string $type, string $message, array $attributes = []): void
+    {
+        foreach ($roles as $role) {
+            $recipients = $this->usersForRole($role);
+
+            foreach ($recipients as $recipient) {
+                $this->createNotification($recipient->id, $type, $message, array_merge($attributes, [
+                    'recipient_role' => $role,
+                ]));
+            }
         }
     }
 
-    /**
-     * Notify user of account lock
-     */
-    public function notifyAccountLocked(User $user): void
+    private function usersForRole(string $role): Collection
     {
-        $this->createNotification(
-            $user->id,
-            'account_locked',
-            'Your account has been locked due to multiple failed login attempts. Please contact the administrator.'
-        );
+        return match ($role) {
+            User::ROLE_ADMIN => User::admin()->active()->get(),
+            User::ROLE_RGMO_HEAD => User::rgmoHead()->active()->get(),
+            User::ROLE_PROJECT_MANAGER => User::projectManager()->active()->get(),
+            User::ROLE_STAFF => User::staff()->active()->get(),
+            default => User::where('role', $role)->active()->get(),
+        };
+    }
+
+    private function resourceNameForRequest(ResourceRequest $request): string
+    {
+        $request->loadMissing('items.item');
+
+        $names = $request->items
+            ->map(fn ($requestItem) => $requestItem->item?->name ?? $requestItem->inventoryItem?->name)
+            ->filter()
+            ->values();
+
+        if ($names->isEmpty()) {
+            return 'requested resources';
+        }
+
+        if ($names->count() === 1) {
+            return $names->first();
+        }
+
+        return $names->first() . ' and ' . ($names->count() - 1) . ' other item(s)';
+    }
+
+    private function titleForType(string $type): string
+    {
+        return str($type)->replace('_', ' ')->title()->toString();
     }
 }

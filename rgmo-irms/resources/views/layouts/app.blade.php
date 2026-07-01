@@ -667,6 +667,25 @@
                     summary.parentElement.classList.remove('hover-active');
                 });
             });
+
+            const notificationBadge = document.getElementById('notification-unread-badge');
+            if (notificationBadge) {
+                fetch('{{ route('notifications.unread-count') }}', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                    .then((response) => response.ok ? response.json() : null)
+                    .then((payload) => {
+                        if (!payload) return;
+
+                        const count = Number(payload.count ?? 0);
+                        notificationBadge.textContent = count;
+                        notificationBadge.classList.toggle('d-none', count <= 0);
+                    })
+                    .catch(() => {});
+            }
         </script>
 
         @stack('scripts')

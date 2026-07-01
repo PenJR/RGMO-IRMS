@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,14 @@ Route::prefix('auth')->group(function () {
     });
     Route::post('/logout', [AuthController::class, 'logoutUser']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+});
+
+
+Route::middleware(['auth', 'permission:receive-notifications'])->prefix('notifications')->group(function () {
+    Route::get('/', [NotificationController::class, 'index']);
+    Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead']);
+    Route::patch('/read-all', [NotificationController::class, 'markAllAsRead']);
 });
 
 Route::middleware(['auth', 'permission:manage-users,assign-roles'])->prefix('users')->group(function () {

@@ -128,19 +128,19 @@ class ResourceRequestController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function update(Request $request, ResourceRequest $resourceRequest)
+    public function update(Request $httpRequest, ResourceRequest $request)
     {
-        $this->authorize('update', $resourceRequest);
+        $this->authorize('update', $request);
 
-        $validated = $request->validate([
+        $validated = $httpRequest->validate([
             'purpose' => 'required|string',
             'remarks' => 'nullable|string',
             'needed_date' => 'nullable|date',
         ]);
 
-        $resourceRequest->update($validated);
+        $request->update($validated);
 
-        return redirect()->route('requests.show', $resourceRequest)->with('success', 'Resource request updated successfully.');
+        return redirect()->route('requests.show', $request)->with('success', 'Resource request updated successfully.');
     }
 
     /**
@@ -151,17 +151,17 @@ class ResourceRequestController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function approve(Request $request, ResourceRequest $resourceRequest)
+    public function approve(Request $httpRequest, ResourceRequest $request)
     {
-        $this->authorize('approve', $resourceRequest);
+        $this->authorize('approve', $request);
 
-        $validated = $request->validate([
+        $validated = $httpRequest->validate([
             'remarks' => 'nullable|string',
         ]);
 
-        $this->requestService->approveRequest($resourceRequest, auth()->id(), $validated['remarks'] ?? null);
+        $this->requestService->approveRequest($request, auth()->id(), $validated['remarks'] ?? null);
 
-        return redirect()->route('requests.show', $resourceRequest)->with('success', 'Resource request approved.');
+        return redirect()->route('requests.show', $request)->with('success', 'Resource request approved.');
     }
 
     /**
@@ -172,17 +172,17 @@ class ResourceRequestController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function reject(Request $request, ResourceRequest $resourceRequest)
+    public function reject(Request $httpRequest, ResourceRequest $request)
     {
-        $this->authorize('reject', $resourceRequest);
+        $this->authorize('reject', $request);
 
-        $validated = $request->validate([
+        $validated = $httpRequest->validate([
             'remarks' => 'required|string',
         ]);
 
-        $this->requestService->rejectRequest($resourceRequest, $validated['remarks']);
+        $this->requestService->rejectRequest($request, $validated['remarks']);
 
-        return redirect()->route('requests.show', $resourceRequest)->with('success', 'Resource request rejected.');
+        return redirect()->route('requests.show', $request)->with('success', 'Resource request rejected.');
     }
 
     /**

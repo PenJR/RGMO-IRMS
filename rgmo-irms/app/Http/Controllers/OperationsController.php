@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Services\RmsService;
 use Illuminate\Http\Request;
 
@@ -464,6 +465,8 @@ class OperationsController extends Controller
      */
     public function sendNotification(Request $request)
     {
+        abort_unless(auth()->user()?->isAdmin() || auth()->user()?->isRgmoHead(), 403);
+
         $data = $request->validate(['user_id' => 'required|exists:users,id', 'message' => 'required|string', 'type' => 'required|string|max:100']);
         return response()->json($this->service->sendNotification($data['user_id'], $data['message'], $data['type']), 201);
     }
@@ -476,6 +479,8 @@ class OperationsController extends Controller
      */
     public function getUserNotifications(int $userId)
     {
+        abort_unless(auth()->id() === $userId, 403);
+
         return response()->json($this->service->getUserNotifications($userId));
     }
 
@@ -487,6 +492,9 @@ class OperationsController extends Controller
      */
     public function markNotificationAsRead(int $notificationId)
     {
+        $notification = Notification::findOrFail($notificationId);
+        abort_unless($notification->user_id === auth()->id(), 403);
+
         return response()->json($this->service->markNotificationAsRead($notificationId));
     }
 
@@ -498,6 +506,8 @@ class OperationsController extends Controller
      */
     public function sendLowStockAlert(int $itemId)
     {
+        abort_unless(auth()->user()?->isAdmin() || auth()->user()?->isRgmoHead(), 403);
+
         return response()->json($this->service->sendLowStockAlert($itemId));
     }
 
@@ -509,6 +519,8 @@ class OperationsController extends Controller
      */
     public function sendRequestStatusNotification(int $requestId)
     {
+        abort_unless(auth()->user()?->isAdmin() || auth()->user()?->isRgmoHead(), 403);
+
         return response()->json($this->service->sendRequestStatusNotification($requestId));
     }
 

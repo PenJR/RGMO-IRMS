@@ -6,10 +6,13 @@ use App\Models\ResourceRequest;
 use App\Models\RequestItem;
 use App\Models\InventoryItem;
 use App\Models\AuditLog;
-use App\Models\Notification;
 
 class ResourceRequestService
 {
+    public function __construct(private NotificationService $notificationService)
+    {
+    }
+
     /**
      * Get a paginated list of all resource requests with optional filtering.
      *
@@ -70,6 +73,8 @@ class ResourceRequestService
             $request->toArray()
         );
 
+        $this->notificationService->notifyResourceRequestSubmitted($request);
+
         return $request;
     }
 
@@ -96,12 +101,7 @@ class ResourceRequestService
             $request->fresh()->toArray()
         );
 
-        // Create notification for requester
-        Notification::create([
-            'user_id' => $request->user_id,
-            'type' => 'request_approved',
-            'message' => 'Your resource request has been approved.',
-        ]);
+        $this->notificationService->notifyResourceRequestApproved($request, $approverId);
     }
 
     /**
@@ -126,12 +126,7 @@ class ResourceRequestService
             $request->fresh()->toArray()
         );
 
-        // Create notification for requester
-        Notification::create([
-            'user_id' => $request->user_id,
-            'type' => 'request_rejected',
-            'message' => 'Your resource request has been rejected.',
-        ]);
+        $this->notificationService->notifyResourceRequestRejected($request, auth()->id());
     }
 
     /**

@@ -4,13 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\LoginHistory;
 use App\Models\User;
+use App\Services\NotificationService;
 use App\Services\TwoFactorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TwoFactorController extends Controller
 {
-    public function __construct(private readonly TwoFactorService $twoFactor) {}
+    public function __construct(
+        private readonly TwoFactorService $twoFactor,
+        private readonly NotificationService $notificationService
+    ) {}
 
     /**
      * Show the 2FA enablement details, generating a secret if needed.
@@ -153,11 +157,21 @@ class TwoFactorController extends Controller
             $request->session()->regenerate();
         }
 
+        $loginAt = now();
+        $user->update(['last_login_at' => $loginAt]);
+
         LoginHistory::create([
             'user_id' => $user->id,
+            'user_role' => $user->role,
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
-            'login_at' => now(),
+            'login_at' => $loginAt,
+        ]);
+
+        $this->notificationService->notifyAdminLoggedIn($user, [
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            'login_at' => $loginAt->toDateTimeString(),
         ]);
 
         if ($request->expectsJson()) {

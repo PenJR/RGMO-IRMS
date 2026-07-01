@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\LoginHistory;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,10 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
+    public function __construct(private NotificationService $notificationService)
+    {
+    }
+
     /**
      * Display the login view.
      */
@@ -38,11 +43,20 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $loginAt = now();
+
         LoginHistory::create([
             'user_id' => $user->id,
+            'user_role' => $user->role,
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
-            'login_at' => now(),
+            'login_at' => $loginAt,
+        ]);
+
+        $this->notificationService->notifyAdminLoggedIn($user, [
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+            'login_at' => $loginAt->toDateTimeString(),
         ]);
 
         return redirect()->intended(route('dashboard', absolute: false));

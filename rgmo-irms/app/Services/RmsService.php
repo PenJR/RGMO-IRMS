@@ -58,13 +58,26 @@ class RmsService
 
         $user = Auth::user();
         $user->resetLoginAttempts();
-        $user->update(['last_login_at' => now()]);
+
+        if ($user->two_factor_enabled) {
+            return true;
+        }
+
+        $loginAt = now();
+        $user->update(['last_login_at' => $loginAt]);
         $this->logActivity($user->id, 'login', 'auth', ['email' => $user->email]);
         LoginHistory::create([
             'user_id' => $user->id,
+            'user_role' => $user->role,
             'ip_address' => request()->ip(),
             'user_agent' => substr((string) request()->userAgent(), 0, 255),
-            'login_at' => now(),
+            'login_at' => $loginAt,
+        ]);
+
+        $this->notificationService->notifyAdminLoggedIn($user, [
+            'ip_address' => request()->ip(),
+            'user_agent' => substr((string) request()->userAgent(), 0, 255),
+            'login_at' => $loginAt->toDateTimeString(),
         ]);
 
         return true;
@@ -157,7 +170,14 @@ class RmsService
     public function deleteCategory(int $id): void { Category::findOrFail($id)->delete(); }
     public function getAllCategories() { return Category::orderBy('name')->get(); }
 
-    public function createRequest(int $userId, array $requestData): ResourceRequest { $requestData['user_id'] = $userId; return ResourceRequest::create($requestData); }
+    public function createRequest(int $userId, array $requestData): ResourceRequest
+    {
+        $requestData['user_id'] = $userId;
+        $resourceRequest = ResourceRequest::create($requestData);
+        $this->notificationService->notifyResourceRequestSubmitted($resourceRequest);
+
+        return $resourceRequest;
+    }
     public function addRequestItem(int $requestId, array $itemData): RequestItem { $itemData['resource_request_id'] = $requestId; return RequestItem::create($itemData); }
     public function updateRequest(int $requestId, array $data): ResourceRequest { $r = ResourceRequest::findOrFail($requestId); $r->update($data); return $r; }
     public function cancelRequest(int $requestId): ResourceRequest { return $this->updateRequest($requestId, ['status' => 'cancelled', 'cancelled_at' => now()]); }
@@ -167,15 +187,32 @@ class RmsService
 
     public function approveRequest(int $requestId, int $approverId, ?string $remarks): ResourceRequest
     {
-        return $this->updateRequest($requestId, ['status' => 'approved', 'approved_by' => $approverId, 'approved_at' => now(), 'remarks' => $remarks]);
+        $request = $this->updateRequest($requestId, ['status' => 'approved', 'approved_by' => $approverId, 'approved_at' => now(), 'remarks' => $remarks]);
+        $this->notificationService->notifyResourceRequestApproved($request, $approverId);
+
+        return $request;
     }
     public function rejectRequest(int $requestId, int $approverId, ?string $remarks): ResourceRequest
     {
-        return $this->updateRequest($requestId, ['status' => 'rejected', 'approved_by' => $approverId, 'remarks' => $remarks]);
+        $request = $this->updateRequest($requestId, ['status' => 'rejected', 'approved_by' => $approverId, 'rejected_at' => now(), 'remarks' => $remarks]);
+        $this->notificationService->notifyResourceRequestRejected($request, $approverId);
+
+        return $request;
     }
     public function getApprovalQueue() { return $this->getPendingRequests(); }
     public function addApprovalRemarks(int $requestId, string $remarks): ResourceRequest { return $this->updateRequest($requestId, ['remarks' => $remarks]); }
-    public function updateRequestStatus(int $requestId, string $status): ResourceRequest { return $this->updateRequest($requestId, ['status' => $status]); }
+    public function updateRequestStatus(int $requestId, string $status): ResourceRequest
+    {
+        $request = $this->updateRequest($requestId, ['status' => $status]);
+
+        if ($status === ResourceRequest::STATUS_APPROVED) {
+            $this->notificationService->notifyResourceRequestApproved($request, Auth::id());
+        } elseif ($status === ResourceRequest::STATUS_REJECTED) {
+            $this->notificationService->notifyResourceRequestRejected($request, Auth::id());
+        }
+
+        return $request;
+    }
 
     public function recordStockIn(int $itemId, int $quantity, ?string $source): InventoryTransaction
     {
@@ -226,7 +263,7 @@ class RmsService
     }
     public function logInventoryChange(int $itemId, string $changeType): AuditLog { return $this->logActivity(Auth::id(), 'inventory_change', 'inventory', ['item_id' => $itemId, 'change_type' => $changeType]); }
 
-    public function sendNotification(int $userId, string $message, string $type): Notification { return Notification::create(['user_id' => $userId, 'message' => $message, 'type' => $type]); }
+    public function sendNotification(int $userId, string $message, string $type): Notification { return $this->notificationService->createNotification($userId, $type, $message); }
     public function getUserNotifications(int $userId) { return Notification::where('user_id', $userId)->latest()->get(); }
     public function markNotificationAsRead(int $notificationId): Notification { $n = Notification::findOrFail($notificationId); $n->update(['read_at' => now()]); return $n; }
     public function sendLowStockAlert(int $itemId): Notification

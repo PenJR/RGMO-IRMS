@@ -45,9 +45,7 @@
         <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
             <span class="nav-icon"><i data-lucide="bell"></i></span>
             <span class="nav-label">Notifications</span>
-            @if($unreadCount > 0)
-                <span class="nav-badge ms-auto">{{ $unreadCount }}</span>
-            @endif
+            <span id="notification-unread-badge" class="nav-badge ms-auto {{ $unreadCount > 0 ? '' : 'd-none' }}">{{ $unreadCount }}</span>
         </a>
 
         @if(auth()->user()->can('create', App\Models\ResourceRequest::class))

@@ -68,11 +68,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Notifications
     Route::middleware(['permission:receive-notifications'])->group(function () {
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-        Route::get('/notifications/unread-count', [NotificationController::class, 'unread-count'])->name('notifications.unread-count');
-        Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
         Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
-        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
         Route::delete('/notifications/delete-read', [NotificationController::class, 'deleteReadNotifications'])->name('notifications.delete-read');
+        Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     });
 
     // Two-Factor Authentication

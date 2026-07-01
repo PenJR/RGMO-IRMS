@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Notification;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class NotificationController extends Controller
 {
@@ -23,8 +24,8 @@ class NotificationController extends Controller
         $user = auth()->user();
         $notifications = $this->notificationService->getAllNotifications($user, 20);
 
-        if ($request->wantsJson()) {
-            return response()->json($notifications);
+        if ($this->shouldReturnJson($request)) {
+            return response()->json($this->notificationPayload($notifications));
         }
 
         return view('notifications.index', ['notifications' => $notifications]);
@@ -57,8 +58,12 @@ class NotificationController extends Controller
 
         $this->notificationService->markAsRead($notification);
 
-        if ($request->wantsJson()) {
-            return response()->json(['success' => true]);
+        if ($this->shouldReturnJson($request)) {
+            return response()->json([
+                'success' => true,
+                'notification' => $this->formatNotification($notification->fresh(['sender', 'relatedRequest'])),
+                'unread_count' => $this->notificationService->getUnreadCount(auth()->user()),
+            ]);
         }
 
         return redirect()->route('notifications.index')->with('success', 'Notification marked as read.');
@@ -74,8 +79,11 @@ class NotificationController extends Controller
     {
         $this->notificationService->markAllAsRead(auth()->user());
 
-        if ($request->wantsJson()) {
-            return response()->json(['success' => true]);
+        if ($this->shouldReturnJson($request)) {
+            return response()->json([
+                'success' => true,
+                'unread_count' => $this->notificationService->getUnreadCount(auth()->user()),
+            ]);
         }
 
         return redirect()->route('notifications.index')->with('success', 'All notifications marked as read.');
@@ -96,7 +104,7 @@ class NotificationController extends Controller
 
         $this->notificationService->deleteNotification($notification);
 
-        if ($request->wantsJson()) {
+        if ($this->shouldReturnJson($request)) {
             return response()->json(['success' => true]);
         }
 
@@ -113,10 +121,56 @@ class NotificationController extends Controller
     {
         $this->notificationService->deleteReadNotifications(auth()->user());
 
-        if ($request->wantsJson()) {
+        if ($this->shouldReturnJson($request)) {
             return response()->json(['success' => true]);
         }
 
         return redirect()->route('notifications.index')->with('success', 'Read notifications deleted.');
+    }
+
+    private function shouldReturnJson(Request $request): bool
+    {
+        return $request->wantsJson() || $request->is('api/*');
+    }
+
+    private function notificationPayload($notifications): array
+    {
+        return [
+            'data' => $notifications->getCollection()
+                ->map(fn (Notification $notification) => $this->formatNotification($notification))
+                ->values(),
+            'meta' => [
+                'current_page' => $notifications->currentPage(),
+                'last_page' => $notifications->lastPage(),
+                'per_page' => $notifications->perPage(),
+                'total' => $notifications->total(),
+                'unread_count' => $this->notificationService->getUnreadCount(auth()->user()),
+            ],
+        ];
+    }
+
+    private function formatNotification(Notification $notification): array
+    {
+        $relatedRequest = $notification->relatedRequest;
+        $canViewRequest = $relatedRequest && Gate::allows('view', $relatedRequest);
+
+        return [
+            'id' => $notification->id,
+            'title' => $notification->title,
+            'type' => $notification->type,
+            'message' => $notification->message,
+            'sender' => $notification->sender ? [
+                'id' => $notification->sender->id,
+                'name' => $notification->sender->name,
+                'role' => $notification->sender->role,
+            ] : null,
+            'recipient_role' => $notification->recipient_role,
+            'related_request_id' => $notification->related_request_id,
+            'related_request_url' => $canViewRequest ? route('requests.show', $relatedRequest) : null,
+            'read_at' => $notification->read_at?->toDateTimeString(),
+            'created_at' => $notification->created_at?->toDateTimeString(),
+            'created_at_human' => $notification->created_at?->format('M d, Y h:i A'),
+            'is_read' => $notification->isRead(),
+        ];
     }
 }

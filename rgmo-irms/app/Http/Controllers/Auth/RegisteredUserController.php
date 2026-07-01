@@ -49,6 +49,7 @@ class RegisteredUserController extends Controller
         Auth::login($user);
         LoginHistory::create([
             'user_id' => $user->id,
+            'user_role' => $user->role,
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
             'login_at' => now(),

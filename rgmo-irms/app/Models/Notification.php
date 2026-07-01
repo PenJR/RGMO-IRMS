@@ -10,14 +10,20 @@ class Notification extends Model
 {
     protected $fillable = [
         'user_id',
+        'title',
         'type',
         'message',
+        'sender_id',
+        'recipient_role',
+        'related_request_id',
+        'data',
         'read_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'data' => 'array',
             'read_at' => 'datetime',
         ];
     }
@@ -31,6 +37,16 @@ class Notification extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function sender(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function relatedRequest(): BelongsTo
+    {
+        return $this->belongsTo(ResourceRequest::class, 'related_request_id');
     }
 
     // Scopes
