@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             // Add new columns if they don't exist
             if (!Schema::hasColumn('users', 'role')) {
-                $table->enum('role', ['admin', 'staff', 'field_personnel'])->default('staff')->after('email');
+                $table->enum('role', ['admin', 'staff', 'project_manager', 'rgmo_head'])->default('staff')->after('email');
             }
             if (!Schema::hasColumn('users', 'status')) {
                 $table->enum('status', ['active', 'inactive', 'suspended'])->default('active')->after('role');

@@ -16,7 +16,7 @@
             <span class="nav-label">Dashboard</span>
         </a>
 
-        @if(in_array(auth()->user()->role, ['admin', 'staff']))
+        @can('viewAny', App\Models\InventoryItem::class)
             <details class="nav-group {{ request()->routeIs('inventory.*') ? 'active' : '' }}" {{ request()->routeIs('inventory.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle">
@@ -33,7 +33,7 @@
                     @endcan
                 </div>
             </details>
-        @endif
+        @endcan
 
         @can('viewAny', App\Models\Project::class)
             <a href="{{ route('projects.index') }}" class="nav-link {{ request()->routeIs('projects.*') ? 'active' : '' }}">
@@ -48,7 +48,7 @@
             <span id="notification-unread-badge" class="nav-badge ms-auto {{ $unreadCount > 0 ? '' : 'd-none' }}">{{ $unreadCount }}</span>
         </a>
 
-        @if(auth()->user()->can('create', App\Models\ResourceRequest::class))
+        @if(auth()->user()->can('viewAny', App\Models\ResourceRequest::class) || auth()->user()->can('create', App\Models\ResourceRequest::class))
             <details class="nav-group {{ request()->routeIs('requests.*') ? 'active' : '' }}" {{ request()->routeIs('requests.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle">
@@ -58,14 +58,20 @@
                     </span>
                 </summary>
                 <div class="nav-submenu">
-                    <a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('requests.index') ? 'active' : '' }}">All Requests</a>
-                    <a href="{{ route('requests.pending') }}" class="nav-link {{ request()->routeIs('requests.pending') ? 'active' : '' }}">Pending List</a>
-                    <a href="{{ route('requests.create') }}" class="nav-link {{ request()->routeIs('requests.create') ? 'active' : '' }}">New Request</a>
+                    @can('viewAny', App\Models\ResourceRequest::class)
+                        <a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('requests.index') ? 'active' : '' }}">All Requests</a>
+                    @endcan
+                    @can('review', App\Models\ResourceRequest::class)
+                        <a href="{{ route('requests.pending') }}" class="nav-link {{ request()->routeIs('requests.pending') ? 'active' : '' }}">Pending List</a>
+                    @endcan
+                    @can('create', App\Models\ResourceRequest::class)
+                        <a href="{{ route('requests.create') }}" class="nav-link {{ request()->routeIs('requests.create') ? 'active' : '' }}">New Request</a>
+                    @endcan
                 </div>
             </details>
         @endif
 
-        @if(in_array(auth()->user()->role, ['admin', 'staff']))
+        @if(auth()->user()->hasPermission(['generate-reports', 'view-audit-trail']))
             <details class="nav-group {{ request()->routeIs('reports.*') ? 'active' : '' }}" {{ request()->routeIs('reports.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle">
@@ -87,11 +93,13 @@
             </details>
         @endif
 
-        <a href="{{ route('ai-forecasting.index') }}" class="nav-link {{ request()->routeIs('ai-forecasting.*') ? 'active' : '' }}">
-            <span class="nav-icon"><i data-lucide="sparkles"></i></span>
-            <span class="nav-label">AI Forecasting</span>
-            <span class="nav-badge nav-badge-soft ms-auto">Preview</span>
-        </a>
+        @if(auth()->user()->hasPermission('view-forecasts'))
+            <a href="{{ route('ai-forecasting.index') }}" class="nav-link {{ request()->routeIs('ai-forecasting.*') ? 'active' : '' }}">
+                <span class="nav-icon"><i data-lucide="sparkles"></i></span>
+                <span class="nav-label">AI Forecasting</span>
+                <span class="nav-badge nav-badge-soft ms-auto">Preview</span>
+            </a>
+        @endif
 
         @can('viewAny', App\Models\User::class)
             <details class="nav-group {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'active' : '' }}" {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'open' : '' }}>

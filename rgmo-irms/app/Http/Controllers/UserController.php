@@ -21,7 +21,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,staff,project_manager,rgmo_head,field_personnel'
+            'role' => 'required|in:admin,staff,project_manager,rgmo_head'
         ]);
 
         return response()->json($this->service->createUser($validated), 201);
@@ -39,7 +39,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $id,
-            'role' => 'sometimes|in:admin,staff,project_manager,rgmo_head,field_personnel',
+            'role' => 'sometimes|in:admin,staff,project_manager,rgmo_head',
             'is_active' => 'sometimes|boolean'
         ]);
 
@@ -89,7 +89,7 @@ class UserController extends Controller
     public function assignRole(Request $request, int $userId)
     {
         $validated = $request->validate([
-            'role' => 'required|in:admin,staff,project_manager,rgmo_head,field_personnel'
+            'role' => 'required|in:admin,staff,project_manager,rgmo_head'
         ]);
 
         return response()->json($this->service->assignRole($userId, $validated['role']));

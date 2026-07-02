@@ -64,17 +64,6 @@ class DatabaseSeeder extends Seeder
                     'password' => Hash::make('password'),
                 ]
             ),
-            'field' => User::firstOrCreate(
-                ['email' => 'field.manager@example.com'],
-                [
-                    'name' => 'Field Project Lead',
-                    'role' => 'field_personnel',
-                    'department' => 'Field Operations',
-                    'status' => 'active',
-                    'email_verified_at' => now(),
-                    'password' => Hash::make('password'),
-                ]
-            ),
             'head' => User::firstOrCreate(
                 ['email' => 'head@example.com'],
                 [
@@ -247,11 +236,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $projects->each(function (Project $project, int $index) use ($users) {
-            $managerIds = $index % 2 === 0
-                ? [$users['pm']->id, $users['field']->id]
-                : [$users['field']->id];
-
-            $project->managers()->syncWithoutDetaching($managerIds);
+            $project->managers()->syncWithoutDetaching([$users['pm']->id]);
         });
 
         $projectUsagePlan = [
@@ -297,7 +282,7 @@ class DatabaseSeeder extends Seeder
 
                 ResourceUsage::create([
                     'inventory_item_id' => $item->id,
-                    'user_id' => $offset % 2 === 0 ? $users['pm']->id : $users['field']->id,
+                    'user_id' => $users['pm']->id,
                     'project_id' => $project->id,
                     'field_id' => $usageRow['field'],
                     'quantity' => $usageRow['quantity'],

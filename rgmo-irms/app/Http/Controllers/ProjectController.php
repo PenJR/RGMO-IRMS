@@ -134,7 +134,7 @@ class ProjectController extends Controller
             'manager_ids.*' => [
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->whereIn('role', [User::ROLE_PROJECT_MANAGER, User::ROLE_FIELD_PERSONNEL])
+                    $query->where('role', User::ROLE_PROJECT_MANAGER)
                         ->where('status', User::STATUS_ACTIVE);
                 }),
             ],
@@ -144,7 +144,7 @@ class ProjectController extends Controller
     private function managerOptions()
     {
         return User::query()
-            ->whereIn('role', [User::ROLE_PROJECT_MANAGER, User::ROLE_FIELD_PERSONNEL])
+            ->where('role', User::ROLE_PROJECT_MANAGER)
             ->where('status', User::STATUS_ACTIVE)
             ->orderBy('name')
             ->get();

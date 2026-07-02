@@ -75,33 +75,35 @@
             </div>
         </div>
 
-        <!-- AI Forecasting Button Card -->
-        <div class="row g-4 mt-2">
-            <div class="col-12">
-                <a href="{{ route('ai-forecasting.index') }}" class="text-decoration-none">
-                    <div class="card shadow-sm border-0 bg-dark text-white overflow-hidden card-stat" style="background: linear-gradient(135deg, #006837 0%, #004d29 100%) !important; min-height: 160px; display: flex; justify-content: center;">
-                        <div class="card-body py-0 px-4 position-relative d-flex align-items-center">
-                            <div class="d-flex align-items-center justify-content-between w-100 position-relative" style="z-index: 2;">
-                                <div class="d-flex align-items-center gap-4">
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: var(--cmu-yellow); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);">
-                                        <i data-lucide="sparkles" style="width: 32px; height: 32px; color: var(--cmu-green);"></i>
+        @if(auth()->user()->hasPermission('view-forecasts'))
+            <!-- AI Forecasting Button Card -->
+            <div class="row g-4 mt-2">
+                <div class="col-12">
+                    <a href="{{ route('ai-forecasting.index') }}" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 bg-dark text-white overflow-hidden card-stat" style="background: linear-gradient(135deg, #006837 0%, #004d29 100%) !important; min-height: 160px; display: flex; justify-content: center;">
+                            <div class="card-body py-0 px-4 position-relative d-flex align-items-center">
+                                <div class="d-flex align-items-center justify-content-between w-100 position-relative" style="z-index: 2;">
+                                    <div class="d-flex align-items-center gap-4">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: var(--cmu-yellow); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);">
+                                            <i data-lucide="sparkles" style="width: 32px; height: 32px; color: var(--cmu-green);"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="mb-1 fw-bold">Explore AI Forecasting</h4>
+                                            <p class="mb-0 text-white text-opacity-75">Predict stock demand and optimize inventory levels using intelligent analytics.</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 class="mb-1 fw-bold">Explore AI Forecasting</h4>
-                                        <p class="mb-0 text-white text-opacity-75">Predict stock demand and optimize inventory levels using intelligent analytics.</p>
+                                    <div class="d-none d-md-block text-end">
+                                        <span class="btn btn-warning fw-bold px-4 rounded-pill">VIEW INSIGHTS</span>
                                     </div>
                                 </div>
-                                <div class="d-none d-md-block text-end">
-                                    <span class="btn btn-warning fw-bold px-4 rounded-pill">VIEW INSIGHTS</span>
-                                </div>
+                                <!-- Background pattern/icon -->
+                                <i data-lucide="trending-up" class="position-absolute opacity-10" style="width: 150px; height: 150px; bottom: -30px; right: 20px; transform: rotate(-15deg); z-index: 1; color: rgba(255, 255, 255, 0.9);"></i>
                             </div>
-                            <!-- Background pattern/icon -->
-                            <i data-lucide="trending-up" class="position-absolute opacity-10" style="width: 150px; height: 150px; bottom: -30px; right: 20px; transform: rotate(-15deg); z-index: 1; color: rgba(255, 255, 255, 0.9);"></i>
                         </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
             </div>
-        </div>
+        @endif
 
         <!-- Charts Dashboard Section -->
         <div class="row g-4 mt-2">

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Models\User;
 use App\Services\RmsService;
 use Illuminate\Http\Request;
 
@@ -331,7 +332,7 @@ class OperationsController extends Controller
      */
     public function getDashboardSummary(Request $request)
     {
-        $data = $request->validate(['role' => 'required|in:admin,staff,field_personnel']);
+        $data = $request->validate(['role' => 'required|in:' . implode(',', User::availableRoles())]);
         return response()->json($this->service->getDashboardSummary($data['role']));
     }
 

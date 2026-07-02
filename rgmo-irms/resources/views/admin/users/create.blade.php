@@ -32,9 +32,9 @@
                             <label class="form-label">Role</label>
                             <select name="role" class="form-select" required>
                                 <option value="">Choose role</option>
-                                <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                                <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Staff</option>
-                                <option value="field_personnel" {{ old('role') === 'field_personnel' ? 'selected' : '' }}>Field Personnel</option>
+                                @foreach(App\Models\User::availableRoles() as $role)
+                                    <option value="{{ $role }}" {{ old('role') === $role ? 'selected' : '' }}>{{ Str::of($role)->replace('_', ' ')->title() }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-6">

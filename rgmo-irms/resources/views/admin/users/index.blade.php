@@ -23,9 +23,9 @@
                         <label class="form-label">Role</label>
                         <select name="role" class="form-select">
                             <option value="">All</option>
-                            <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="staff" {{ request('role') === 'staff' ? 'selected' : '' }}>Staff</option>
-                            <option value="field_personnel" {{ request('role') === 'field_personnel' ? 'selected' : '' }}>Field Personnel</option>
+                            @foreach(App\Models\User::availableRoles() as $role)
+                                <option value="{{ $role }}" {{ request('role') === $role ? 'selected' : '' }}>{{ Str::of($role)->replace('_', ' ')->title() }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="col-md-3">

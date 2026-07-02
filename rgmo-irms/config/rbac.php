@@ -74,24 +74,6 @@ return [
                 'receive-notifications',
             ],
         ],
-        'field_personnel' => [
-            'label' => 'Project Manager',
-            'alias_of' => 'project_manager',
-            'permissions' => [
-                'view-inventory',
-                'view-projects',
-                'submit-request',
-                'update-pending-request',
-                'review-request',
-                'record-withdrawal',
-                'record-utilization',
-                'monitor-status',
-                'view-history',
-                'generate-reports',
-                'view-forecasts',
-                'receive-notifications',
-            ],
-        ],
     ],
 
     'permissions' => [

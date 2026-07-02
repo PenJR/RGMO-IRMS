@@ -19,7 +19,6 @@ class User extends Authenticatable implements MustVerifyEmail
     const ROLE_STAFF = 'staff';
     const ROLE_PROJECT_MANAGER = 'project_manager';
     const ROLE_RGMO_HEAD = 'rgmo_head';
-    const ROLE_FIELD_PERSONNEL = 'field_personnel';
 
     const STATUS_ACTIVE = 'active';
     const STATUS_INACTIVE = 'inactive';
@@ -46,7 +45,7 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
-     * Roles supported by the application, including the legacy alias used by older records.
+     * Roles supported by the application.
      *
      * @return array<int, string>
      */
@@ -57,7 +56,6 @@ class User extends Authenticatable implements MustVerifyEmail
             self::ROLE_STAFF,
             self::ROLE_PROJECT_MANAGER,
             self::ROLE_RGMO_HEAD,
-            self::ROLE_FIELD_PERSONNEL,
         ];
     }
 
@@ -72,7 +70,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return self::ROLE_STAFF;
         }
 
-        return $this->role === self::ROLE_FIELD_PERSONNEL ? self::ROLE_PROJECT_MANAGER : $this->role;
+        return $this->role;
     }
 
     /**
@@ -85,7 +83,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $roles = (array) $roles;
 
-        return in_array($this->normalizedRole(), array_map(fn ($role) => $role === self::ROLE_FIELD_PERSONNEL ? self::ROLE_PROJECT_MANAGER : $role, $roles), true);
+        return in_array($this->normalizedRole(), $roles, true);
     }
 
     /**
@@ -237,7 +235,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function scopeProjectManager(Builder $query): Builder
     {
-        return $query->whereIn('role', [self::ROLE_PROJECT_MANAGER, self::ROLE_FIELD_PERSONNEL]);
+        return $query->where('role', self::ROLE_PROJECT_MANAGER);
     }
 
     /**
@@ -249,17 +247,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function scopeRgmoHead(Builder $query): Builder
     {
         return $query->where('role', self::ROLE_RGMO_HEAD);
-    }
-
-    /**
-     * Scope a query to only include field personnel users.
-     *
-     * @param Builder $query
-     * @return Builder
-     */
-    public function scopeFieldPersonnel(Builder $query): Builder
-    {
-        return $query->where('role', self::ROLE_FIELD_PERSONNEL);
     }
 
     // Methods
@@ -290,7 +277,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isProjectManager(): bool
     {
-        return $this->normalizedRole() === self::ROLE_PROJECT_MANAGER;
+        return $this->role === self::ROLE_PROJECT_MANAGER;
     }
 
     /**
@@ -301,16 +288,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isRgmoHead(): bool
     {
         return $this->role === self::ROLE_RGMO_HEAD;
-    }
-
-    /**
-     * Check if the user has the field personnel role.
-     *
-     * @return bool
-     */
-    public function isFieldPersonnel(): bool
-    {
-        return $this->role === self::ROLE_FIELD_PERSONNEL;
     }
 
     /**
