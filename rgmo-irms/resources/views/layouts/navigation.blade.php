@@ -7,6 +7,10 @@
                 <p class="sidebar-kicker">Central Mindanao</p>
             </div>
         </div>
+        <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Minimize sidebar" aria-expanded="true" title="Minimize sidebar">
+            <i data-lucide="panel-left-close" class="sidebar-toggle-icon sidebar-toggle-collapse"></i>
+            <i data-lucide="panel-left-open" class="sidebar-toggle-icon sidebar-toggle-expand"></i>
+        </button>
     </div>
 
     @php $unreadCount = auth()->user()->notifications()->unread()->count(); @endphp

@@ -400,4 +400,148 @@ class InventoryController extends Controller
 
         return view('inventory.low-stock', ['items' => $items]);
     }
+
+    public function getAllInventoryItems(Request $request)
+    {
+        $filters = $request->only(['category_id', 'search', 'status']);
+        $perPage = (int) $request->input('per_page', 15);
+
+        return response()->json($this->inventoryService->getAllItems($perPage, $filters));
+    }
+
+    public function createInventoryItem(Request $request)
+    {
+        $units = config('inventory.units', $this->units());
+
+        $validated = $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|unique:inventory_items,sku',
+            'stock' => 'required|integer|min:0',
+            'unit' => 'required|in:'.implode(',', $units),
+            'min_stock' => 'required|integer|min:0',
+            'reorder_level' => 'nullable|integer|min:0',
+            'price' => 'nullable|numeric|min:0',
+            'description' => 'nullable|string',
+            'planting_date' => 'nullable|date',
+            'has_expiry' => 'sometimes|boolean',
+            'expiry_date' => 'nullable|required_if:has_expiry,1|date',
+        ]);
+
+        $validated['has_expiry'] = $request->boolean('has_expiry');
+        $validated['expiry_date'] = $validated['has_expiry'] ? ($validated['expiry_date'] ?? null) : null;
+
+        $item = $this->inventoryService->createItem($validated, auth()->id())->load('category');
+
+        return response()->json($item, 201);
+    }
+
+    public function getInventoryItemById(int $id)
+    {
+        $item = InventoryItem::with('category', 'transactions.user')->findOrFail($id);
+
+        return response()->json($item);
+    }
+
+    public function updateInventoryItem(Request $request, int $id)
+    {
+        $item = InventoryItem::findOrFail($id);
+        $units = config('inventory.units', $this->units());
+
+        $validated = $request->validate([
+            'category_id' => 'sometimes|required|exists:categories,id',
+            'name' => 'sometimes|required|string|max:255',
+            'sku' => 'sometimes|required|string|unique:inventory_items,sku,' . $item->id,
+            'stock' => 'sometimes|required|integer|min:0',
+            'unit' => 'sometimes|required|in:'.implode(',', $units),
+            'min_stock' => 'sometimes|required|integer|min:0',
+            'reorder_level' => 'nullable|integer|min:0',
+            'price' => 'nullable|numeric|min:0',
+            'description' => 'nullable|string',
+            'planting_date' => 'nullable|date',
+            'has_expiry' => 'sometimes|boolean',
+            'expiry_date' => 'nullable|required_if:has_expiry,1|date',
+        ]);
+
+        if ($request->has('has_expiry')) {
+            $validated['has_expiry'] = $request->boolean('has_expiry');
+            $validated['expiry_date'] = $validated['has_expiry'] ? ($validated['expiry_date'] ?? null) : null;
+        }
+
+        $updated = $this->inventoryService->updateItem($item, $validated, auth()->id())->load('category');
+
+        return response()->json($updated);
+    }
+
+    public function deleteInventoryItem(int $id)
+    {
+        $item = InventoryItem::findOrFail($id);
+        $this->inventoryService->deleteItem($item, auth()->id());
+
+        return response()->json(['message' => 'Inventory item deleted successfully.']);
+    }
+
+    public function searchInventoryItems(Request $request)
+    {
+        $validated = $request->validate([
+            'q' => 'nullable|string|max:255',
+            'search' => 'nullable|string|max:255',
+        ]);
+
+        $search = $validated['q'] ?? $validated['search'] ?? '';
+
+        return response()->json($this->inventoryService->getAllItems(15, ['search' => $search]));
+    }
+
+    public function filterInventoryByCategory(int $categoryId)
+    {
+        return response()->json($this->inventoryService->getAllItems(15, ['category_id' => $categoryId]));
+    }
+
+    public function increaseStock(Request $request, int $itemId)
+    {
+        $item = InventoryItem::findOrFail($itemId);
+
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'source' => 'nullable|string|max:255',
+            'funding_source' => 'nullable|string|max:255',
+        ]);
+
+        $this->inventoryService->recordStockIn(
+            $item,
+            $validated['quantity'],
+            $validated['source'] ?? 'API stock increase',
+            auth()->id(),
+            $validated['funding_source'] ?? null
+        );
+
+        return response()->json($item->fresh(['category', 'transactions']));
+    }
+
+    public function decreaseStock(Request $request, int $itemId)
+    {
+        $item = InventoryItem::findOrFail($itemId);
+
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'destination' => 'nullable|string|max:255',
+            'funding_source' => 'nullable|string|max:255',
+        ]);
+
+        $this->inventoryService->recordStockOut(
+            $item,
+            $validated['quantity'],
+            $validated['destination'] ?? 'API stock decrease',
+            auth()->id(),
+            $validated['funding_source'] ?? null
+        );
+
+        return response()->json($item->fresh(['category', 'transactions']));
+    }
+
+    public function getLowStockItems()
+    {
+        return response()->json($this->inventoryService->getLowStockItems()->load('category'));
+    }
 }

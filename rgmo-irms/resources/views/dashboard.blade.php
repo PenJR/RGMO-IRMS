@@ -112,9 +112,15 @@
                     <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="fw-bold mb-0">Inventory Dynamics</h5>
-                            <p class="text-muted small mb-0">Active stock volume across recent months</p>
+                            <p class="text-muted small mb-0" id="inventoryChartSubtitle">Active stock volume across recent months</p>
                         </div>
-                        <span class="badge bg-light text-dark border fw-semibold">Last 6 Months</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Inventory chart period">
+                                <button type="button" class="btn btn-success fw-semibold" data-inventory-period="monthly">Month</button>
+                                <button type="button" class="btn btn-outline-success fw-semibold" data-inventory-period="weekly">Week</button>
+                            </div>
+                            <span class="badge bg-light text-dark border fw-semibold" id="inventoryChartRange">Last 6 Months</span>
+                        </div>
                     </div>
                     <div class="card-body px-4 pb-4" style="height: 320px;">
                         <canvas id="inventoryChart"></canvas>
@@ -380,13 +386,31 @@
             invGradient.addColorStop(0, 'rgba(0, 104, 55, 0.7)');
             invGradient.addColorStop(1, 'rgba(0, 104, 55, 0.05)');
 
-            new Chart(ctxInv, {
+            const inventoryPeriods = {
+                monthly: chartData.inventory_levels.monthly ?? {
+                    labels: chartData.inventory_levels.labels,
+                    data: chartData.inventory_levels.data,
+                    range_label: 'Last 6 Months',
+                    subtitle: 'Active stock volume across recent months'
+                },
+                weekly: chartData.inventory_levels.weekly ?? {
+                    labels: chartData.inventory_levels.labels,
+                    data: chartData.inventory_levels.data,
+                    range_label: 'Last 6 Weeks',
+                    subtitle: 'Active stock volume across recent weeks'
+                }
+            };
+            const inventoryRange = document.getElementById('inventoryChartRange');
+            const inventorySubtitle = document.getElementById('inventoryChartSubtitle');
+            const inventoryPeriodButtons = document.querySelectorAll('[data-inventory-period]');
+
+            const inventoryChart = new Chart(ctxInv, {
                 type: 'line',
                 data: {
-                    labels: chartData.inventory_levels.labels,
+                    labels: inventoryPeriods.monthly.labels,
                     datasets: [{
                         label: 'Total Stock Volume',
-                        data: chartData.inventory_levels.data,
+                        data: inventoryPeriods.monthly.data,
                         borderColor: '#006837',
                         borderWidth: 3,
                         backgroundColor: invGradient,
@@ -418,6 +442,25 @@
                         }
                     }
                 }
+            });
+
+            inventoryPeriodButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    const period = button.dataset.inventoryPeriod;
+                    const periodData = inventoryPeriods[period] ?? inventoryPeriods.monthly;
+
+                    inventoryChart.data.labels = periodData.labels;
+                    inventoryChart.data.datasets[0].data = periodData.data;
+                    inventoryChart.update();
+
+                    inventoryRange.textContent = periodData.range_label;
+                    inventorySubtitle.textContent = periodData.subtitle;
+
+                    inventoryPeriodButtons.forEach((periodButton) => {
+                        periodButton.classList.toggle('btn-success', periodButton === button);
+                        periodButton.classList.toggle('btn-outline-success', periodButton !== button);
+                    });
+                });
             });
 
             // Requests Distribution Chart

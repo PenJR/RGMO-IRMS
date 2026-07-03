@@ -24,6 +24,7 @@
                 --cmu-green-2: #02681E;
                 --cmu-accent: #919F02;
                 --sidebar-width: 260px;
+                --sidebar-collapsed-width: 86px;
             }
 
             body {
@@ -44,6 +45,7 @@
                 display: flex;
                 flex-direction: column;
                 box-shadow: 8px 0 30px rgba(0, 73, 30, 0.14);
+                transition: width 0.22s ease, min-width 0.22s ease;
             }
 
             #sidebar .nav-link {
@@ -308,6 +310,15 @@
                 padding: 1.4rem 1.25rem 1.15rem;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.08);
                 background: rgba(0, 0, 0, 0.08);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+            }
+
+            .sidebar-brand > .d-flex {
+                min-width: 0;
+                flex: 1 1 auto;
             }
 
             #sidebar .brand-logo {
@@ -336,6 +347,39 @@
                 letter-spacing: 0.12em;
                 text-transform: uppercase;
                 white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .sidebar-toggle {
+                width: 34px;
+                height: 34px;
+                flex: 0 0 34px;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.08);
+                color: rgba(255, 255, 255, 0.88);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                line-height: 1;
+                transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+            }
+
+            .sidebar-toggle:hover {
+                background: rgba(255, 198, 0, 0.16);
+                border-color: rgba(255, 198, 0, 0.34);
+                color: #ffffff;
+            }
+
+            .sidebar-toggle-icon {
+                width: 18px;
+                height: 18px;
+            }
+
+            .sidebar-toggle-expand {
+                display: none;
             }
 
             .min-w-0 {
@@ -577,12 +621,141 @@
                 letter-spacing: 0.06em;
             }
 
+            @media (min-width: 993px) {
+                body.sidebar-collapsed #sidebar {
+                    width: var(--sidebar-collapsed-width);
+                    min-width: var(--sidebar-collapsed-width);
+                }
+
+                body.sidebar-collapsed .sidebar-brand {
+                    padding: 1rem 0.65rem;
+                    justify-content: center;
+                    flex-direction: column;
+                    gap: 0.7rem;
+                }
+
+                body.sidebar-collapsed .sidebar-brand > .d-flex {
+                    flex: 0 0 auto;
+                    justify-content: center;
+                    gap: 0 !important;
+                    width: 100%;
+                }
+
+                body.sidebar-collapsed .sidebar-brand .min-w-0 {
+                    display: none;
+                }
+
+                body.sidebar-collapsed #sidebar .brand-logo {
+                    width: 38px;
+                    height: 38px;
+                }
+
+                body.sidebar-collapsed .sidebar-title,
+                body.sidebar-collapsed .sidebar-kicker,
+                body.sidebar-collapsed #sidebar .nav-label,
+                body.sidebar-collapsed #sidebar .chevron,
+                body.sidebar-collapsed #sidebar .nav-submenu,
+                body.sidebar-collapsed .sidebar-user-name,
+                body.sidebar-collapsed .sidebar-user-email,
+                body.sidebar-collapsed .sidebar-footer .mt-3,
+                body.sidebar-collapsed .nav-badge-soft {
+                    display: none !important;
+                }
+
+                body.sidebar-collapsed .sidebar-toggle {
+                    width: 36px;
+                    height: 36px;
+                }
+
+                body.sidebar-collapsed .sidebar-toggle-collapse {
+                    display: none;
+                }
+
+                body.sidebar-collapsed .sidebar-toggle-expand {
+                    display: block;
+                }
+
+                body.sidebar-collapsed .sidebar-menu {
+                    padding: 0.85rem 0.65rem 1rem;
+                    align-items: center;
+                    overflow-x: hidden;
+                }
+
+                body.sidebar-collapsed #sidebar .nav-group {
+                    width: 48px;
+                }
+
+                body.sidebar-collapsed #sidebar .nav-link,
+                body.sidebar-collapsed #sidebar .nav-group-toggle {
+                    width: 48px;
+                    min-height: 48px;
+                    justify-content: center;
+                    padding: 0;
+                    gap: 0;
+                    border-radius: 12px;
+                    margin-inline: auto;
+                }
+
+                body.sidebar-collapsed #sidebar .nav-link:hover,
+                body.sidebar-collapsed #sidebar .nav-link.active,
+                body.sidebar-collapsed #sidebar .nav-group-toggle:hover,
+                body.sidebar-collapsed #sidebar .nav-group[open] > summary .nav-group-toggle {
+                    padding-left: 0;
+                }
+
+                body.sidebar-collapsed #sidebar .nav-link.active::before,
+                body.sidebar-collapsed #sidebar .nav-group.active > summary .nav-group-toggle::before {
+                    left: -0.65rem;
+                    height: 24px;
+                }
+
+                body.sidebar-collapsed #sidebar .nav-icon {
+                    margin: 0;
+                    width: 32px;
+                    height: 32px;
+                    flex-basis: 32px;
+                }
+
+                body.sidebar-collapsed #sidebar .nav-badge:not(.nav-badge-soft) {
+                    position: absolute;
+                    top: 4px;
+                    right: 2px;
+                    min-width: 1rem;
+                    height: 1rem;
+                    padding: 0 0.28rem;
+                    font-size: 0.54rem;
+                }
+
+                body.sidebar-collapsed .sidebar-footer {
+                    margin: 0 0.65rem 0.9rem;
+                    padding: 0.55rem;
+                    display: flex;
+                    justify-content: center;
+                }
+
+                body.sidebar-collapsed .sidebar-user {
+                    justify-content: center;
+                    gap: 0 !important;
+                }
+
+                body.sidebar-collapsed .sidebar-footer .user-pill {
+                    width: 34px;
+                    height: 34px;
+                    flex-basis: 34px;
+                    font-size: 0.68rem;
+                }
+            }
+
             @media (max-width: 992px) {
                 #sidebar {
                     position: relative;
                     width: 100%;
                     min-width: 100%;
                     min-height: auto;
+                }
+
+                .sidebar-toggle {
+                    display: none;
                 }
 
                 .layout-wrapper {
@@ -643,6 +816,26 @@
 
         <script>
             lucide.createIcons();
+
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarStorageKey = 'rgmoSidebarCollapsed';
+            const applySidebarState = (collapsed) => {
+                document.body.classList.toggle('sidebar-collapsed', collapsed);
+
+                if (sidebarToggle) {
+                    sidebarToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                    sidebarToggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Minimize sidebar');
+                    sidebarToggle.setAttribute('title', collapsed ? 'Expand sidebar' : 'Minimize sidebar');
+                }
+            };
+
+            applySidebarState(localStorage.getItem(sidebarStorageKey) === 'true');
+
+            sidebarToggle?.addEventListener('click', () => {
+                const collapsed = !document.body.classList.contains('sidebar-collapsed');
+                localStorage.setItem(sidebarStorageKey, String(collapsed));
+                applySidebarState(collapsed);
+            });
 
             // Interactivity for Sidebar Dropdowns
             document.querySelectorAll('#sidebar details').forEach((details) => {

@@ -323,21 +323,61 @@ class ReportService
             ->all();
     }
 
+    private function getRecentWeekBuckets(int $weeks = 6): array
+    {
+        $start = now()->startOfWeek()->subWeeks($weeks - 1);
+
+        return collect(range(0, $weeks - 1))
+            ->map(function ($offset) use ($start) {
+                $date = $start->copy()->addWeeks($offset);
+
+                return [
+                    'key' => $date->format('o-W'),
+                    'label' => $date->format('M j'),
+                    'ends_at' => $date->copy()->endOfWeek(),
+                ];
+            })
+            ->all();
+    }
+
     private function getInventoryLevelChartData(): array
     {
-        $labels = [];
         $activeItems = InventoryItem::active()->get(['stock', 'created_at']);
+        $monthlyLabels = [];
+        $monthlyData = [];
 
         foreach ($this->getRecentMonthBuckets() as $month => $label) {
-            $labels[] = $label;
-            $data[] = (int) $activeItems
+            $monthlyLabels[] = $label;
+            $monthlyData[] = (int) $activeItems
                 ->filter(fn ($item) => $item->created_at->format('Y-m') <= $month)
                 ->sum('stock');
         }
 
+        $weeklyLabels = [];
+        $weeklyData = [];
+
+        foreach ($this->getRecentWeekBuckets() as $week) {
+            $weeklyLabels[] = $week['label'];
+            $weeklyData[] = (int) $activeItems
+                ->filter(fn ($item) => $item->created_at->lessThanOrEqualTo($week['ends_at']))
+                ->sum('stock');
+        }
+
         return [
-            'labels' => $labels,
-            'data' => $data ?? [],
+            'labels' => $monthlyLabels,
+            'data' => $monthlyData,
+            'monthly' => [
+                'labels' => $monthlyLabels,
+                'data' => $monthlyData,
+                'range_label' => 'Last 6 Months',
+                'subtitle' => 'Active stock volume across recent months',
+            ],
+            'weekly' => [
+                'labels' => $weeklyLabels,
+                'data' => $weeklyData,
+                'range_label' => 'Last 6 Weeks',
+                'subtitle' => 'Active stock volume across recent weeks',
+            ],
         ];
     }
 

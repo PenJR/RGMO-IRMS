@@ -289,6 +289,14 @@ class RmsService
 
     public function setLowStockThreshold(int $value): SystemSetting { return $this->updateSetting('low_stock_threshold', $value); }
     public function updateSystemSettings(array $data): array { foreach ($data as $k => $v) { $this->updateSetting($k, $v); } return $this->getSystemSettings(); }
+    public function manageRolesPermissions(): array
+    {
+        return [
+            'roles' => config('rbac.roles', []),
+            'permissions' => config('rbac.permissions', []),
+        ];
+    }
+
     /**
      * Retrieve all system settings from the database and return them as a key-value collection.
      *
