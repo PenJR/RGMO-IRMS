@@ -10,6 +10,9 @@ class ApiModuleSmokeTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Verify that main api module endpoints respond for admin.
+     */
     public function test_main_api_module_endpoints_respond_for_admin(): void
     {
         $admin = User::factory()->create([

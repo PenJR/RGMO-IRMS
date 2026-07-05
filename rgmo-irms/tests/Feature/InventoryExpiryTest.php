@@ -12,6 +12,9 @@ class InventoryExpiryTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Verify that inventory item can be created with expiry enabled.
+     */
     public function test_inventory_item_can_be_created_with_expiry_enabled(): void
     {
         $admin = User::factory()->create([
@@ -40,6 +43,9 @@ class InventoryExpiryTest extends TestCase
         $this->assertSame('2026-12-31', $item->expiry_date->format('Y-m-d'));
     }
 
+    /**
+     * Verify that disabling expiry clears existing expiry date.
+     */
     public function test_disabling_expiry_clears_existing_expiry_date(): void
     {
         $admin = User::factory()->create([

@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the database migration.
+     */
     public function up(): void
     {
         Schema::table('resource_requests', function (Blueprint $table) {
@@ -15,6 +18,9 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the database migration.
+     */
     public function down(): void
     {
         Schema::table('resource_requests', function (Blueprint $table) {

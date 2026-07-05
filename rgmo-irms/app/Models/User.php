@@ -104,6 +104,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return count(array_intersect($permissions, $rolePermissions)) > 0;
     }
 
+    /**
+     * Get the attributes that should be cast.
+     */
     protected function casts(): array
     {
         return [
@@ -166,6 +169,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Notification::class);
     }
 
+    /**
+     * Handle managed projects.
+     */
     public function managedProjects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class)->withTimestamps();

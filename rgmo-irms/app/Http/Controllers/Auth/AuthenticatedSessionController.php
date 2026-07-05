@@ -13,6 +13,9 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private NotificationService $notificationService)
     {
     }

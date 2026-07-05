@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Auth;
 
 class TwoFactorController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(
         private readonly TwoFactorService $twoFactor,
         private readonly NotificationService $notificationService

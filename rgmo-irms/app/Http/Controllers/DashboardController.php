@@ -11,6 +11,9 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private ReportService $reportService)
     {
     }

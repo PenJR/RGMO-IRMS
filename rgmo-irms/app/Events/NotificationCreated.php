@@ -13,15 +13,24 @@ class NotificationCreated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    /**
+     * Create a new instance.
+     */
     public function __construct(public Notification $notification)
     {
     }
 
+    /**
+     * Handle broadcast on.
+     */
     public function broadcastOn(): PrivateChannel
     {
         return new PrivateChannel('user.' . $this->notification->user_id);
     }
 
+    /**
+     * Handle broadcast with.
+     */
     public function broadcastWith(): array
     {
         return [

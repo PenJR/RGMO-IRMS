@@ -20,6 +20,9 @@ class AuditLog extends Model
         'new_values',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     */
     protected function casts(): array
     {
         return [

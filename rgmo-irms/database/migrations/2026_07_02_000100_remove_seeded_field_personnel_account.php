@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    /**
+     * Run the database migration.
+     */
     public function up(): void
     {
         DB::table('users')
@@ -12,6 +15,9 @@ return new class extends Migration
             ->delete();
     }
 
+    /**
+     * Reverse the database migration.
+     */
     public function down(): void
     {
         //

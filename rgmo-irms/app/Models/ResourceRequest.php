@@ -206,6 +206,9 @@ class ResourceRequest extends Model
         ]);
     }
 
+    /**
+     * Determine whether cancel.
+     */
     public function cancel(): void
     {
         $this->update([
@@ -214,6 +217,9 @@ class ResourceRequest extends Model
         ]);
     }
 
+    /**
+     * Get total items.
+     */
     public function getTotalItems(): int
     {
         return $this->items->sum('quantity');

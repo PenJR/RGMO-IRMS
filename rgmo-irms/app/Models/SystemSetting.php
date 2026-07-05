@@ -12,6 +12,9 @@ class SystemSetting extends Model
         'value',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     */
     protected function casts(): array
     {
         return [
@@ -78,6 +81,9 @@ class SystemSetting extends Model
         return static::currency()['symbol'] ?? '₱';
     }
 
+    /**
+     * Handle set.
+     */
     public static function set(string $key, $value): void
     {
         static::updateOrCreate(

@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Gate;
 
 class NotificationController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private NotificationService $notificationService)
     {
     }
@@ -128,11 +131,17 @@ class NotificationController extends Controller
         return redirect()->route('notifications.index')->with('success', 'Read notifications deleted.');
     }
 
+    /**
+     * Handle should return json.
+     */
     private function shouldReturnJson(Request $request): bool
     {
         return $request->wantsJson() || $request->is('api/*');
     }
 
+    /**
+     * Handle notification payload.
+     */
     private function notificationPayload($notifications): array
     {
         return [
@@ -149,6 +158,9 @@ class NotificationController extends Controller
         ];
     }
 
+    /**
+     * Handle format notification.
+     */
     private function formatNotification(Notification $notification): array
     {
         $relatedRequest = $notification->relatedRequest;

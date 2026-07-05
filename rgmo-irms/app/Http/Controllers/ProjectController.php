@@ -9,6 +9,9 @@ use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index(Request $request)
     {
         $this->authorize('viewAny', Project::class);
@@ -30,6 +33,9 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
         $this->authorize('create', Project::class);
@@ -42,6 +48,9 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Store a newly created resource.
+     */
     public function store(Request $request)
     {
         $this->authorize('create', Project::class);
@@ -56,6 +65,9 @@ class ProjectController extends Controller
         return redirect()->route('projects.show', $project)->with('success', 'Project created successfully.');
     }
 
+    /**
+     * Display the specified resource.
+     */
     public function show(Project $project)
     {
         $this->authorize('view', $project);
@@ -86,6 +98,9 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(Project $project)
     {
         $this->authorize('update', $project);
@@ -98,6 +113,9 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Update the specified resource.
+     */
     public function update(Request $request, Project $project)
     {
         $this->authorize('update', $project);
@@ -112,6 +130,9 @@ class ProjectController extends Controller
         return redirect()->route('projects.show', $project)->with('success', 'Project updated successfully.');
     }
 
+    /**
+     * Remove the specified resource.
+     */
     public function destroy(Project $project)
     {
         $this->authorize('delete', $project);
@@ -121,6 +142,9 @@ class ProjectController extends Controller
         return redirect()->route('projects.index')->with('success', 'Project archived successfully.');
     }
 
+    /**
+     * Handle validated project.
+     */
     private function validatedProject(Request $request, ?Project $project = null): array
     {
         return $request->validate([
@@ -141,6 +165,9 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Handle manager options.
+     */
     private function managerOptions()
     {
         return User::query()

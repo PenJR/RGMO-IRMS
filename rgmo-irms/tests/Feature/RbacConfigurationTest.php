@@ -10,6 +10,9 @@ class RbacConfigurationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Verify that every available role has rbac configuration.
+     */
     public function test_every_available_role_has_rbac_configuration(): void
     {
         $configuredRoles = array_keys(config('rbac.roles'));
@@ -18,6 +21,9 @@ class RbacConfigurationTest extends TestCase
         $this->assertEmpty(array_diff($configuredRoles, User::availableRoles()));
     }
 
+    /**
+     * Verify that role permissions are defined permissions.
+     */
     public function test_role_permissions_are_defined_permissions(): void
     {
         $definedPermissions = array_keys(config('rbac.permissions'));
@@ -29,6 +35,9 @@ class RbacConfigurationTest extends TestCase
         }
     }
 
+    /**
+     * Verify that admin user forms include all available roles.
+     */
     public function test_admin_user_forms_include_all_available_roles(): void
     {
         $admin = $this->activeUser(User::ROLE_ADMIN);
@@ -45,6 +54,9 @@ class RbacConfigurationTest extends TestCase
         }
     }
 
+    /**
+     * Verify that sidebar uses permissions for role specific links.
+     */
     public function test_sidebar_uses_permissions_for_role_specific_links(): void
     {
         $staff = $this->activeUser(User::ROLE_STAFF);
@@ -66,6 +78,9 @@ class RbacConfigurationTest extends TestCase
             ->assertSee('href="' . route('ai-forecasting.index') . '"', false);
     }
 
+    /**
+     * Handle active user.
+     */
     private function activeUser(string $role): User
     {
         return User::factory()->create([

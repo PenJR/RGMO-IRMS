@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 
 class ResourceRequestController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private ResourceRequestService $requestService)
     {
     }

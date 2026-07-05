@@ -11,6 +11,9 @@ class TwoFactorTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Verify that user can enable two factor authentication.
+     */
     public function test_user_can_enable_two_factor_authentication(): void
     {
         $user = User::factory()->create();
@@ -27,6 +30,9 @@ class TwoFactorTest extends TestCase
         $this->assertStringStartsWith('otpauth://', $response->json('otpauth_url'));
     }
 
+    /**
+     * Verify that user can confirm two factor authentication.
+     */
     public function test_user_can_confirm_two_factor_authentication(): void
     {
         $user = User::factory()->create();
@@ -47,6 +53,9 @@ class TwoFactorTest extends TestCase
         $this->assertSame($secret, $user->two_factor_secret);
     }
 
+    /**
+     * Verify that login requires two factor verification.
+     */
     public function test_login_requires_two_factor_verification(): void
     {
         $secret = app(TwoFactorService::class)->generateSecret();
@@ -75,6 +84,9 @@ class TwoFactorTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    /**
+     * Verify that api login requires two factor verification and can verify.
+     */
     public function test_api_login_requires_two_factor_verification_and_can_verify(): void
     {
         $secret = app(TwoFactorService::class)->generateSecret();
@@ -99,6 +111,9 @@ class TwoFactorTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    /**
+     * Handle current totp.
+     */
     private function currentTotp(string $secret): string
     {
         $service = app(TwoFactorService::class);
@@ -108,6 +123,9 @@ class TwoFactorTest extends TestCase
         return str_pad((string) $value, 6, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Handle invoke private method.
+     */
     private function invokePrivateMethod($object, string $method, array $parameters = [])
     {
         $reflection = new \ReflectionClass($object);

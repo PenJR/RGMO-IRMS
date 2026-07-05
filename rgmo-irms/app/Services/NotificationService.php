@@ -10,11 +10,17 @@ use Illuminate\Support\Collection;
 
 class NotificationService
 {
+    /**
+     * Get unread notifications.
+     */
     public function getUnreadNotifications(User $user)
     {
         return $user->notifications()->unread()->orderBy('created_at', 'desc')->get();
     }
 
+    /**
+     * Get all notifications.
+     */
     public function getAllNotifications(User $user, int $perPage = 15)
     {
         return $user->notifications()
@@ -23,11 +29,17 @@ class NotificationService
             ->paginate($perPage);
     }
 
+    /**
+     * Get unread count.
+     */
     public function getUnreadCount(User $user): int
     {
         return $user->notifications()->unread()->count();
     }
 
+    /**
+     * Create notification.
+     */
     public function createNotification(int $userId, string $type, string $message, array $attributes = []): Notification
     {
         $notification = Notification::create(array_merge([
@@ -46,6 +58,9 @@ class NotificationService
         return $notification;
     }
 
+    /**
+     * Create bulk notification.
+     */
     public function createBulkNotification(array $userIds, string $type, string $message, array $attributes = []): void
     {
         foreach (array_unique($userIds) as $userId) {
@@ -53,6 +68,9 @@ class NotificationService
         }
     }
 
+    /**
+     * Send a notification for resource request submitted.
+     */
     public function notifyResourceRequestSubmitted(ResourceRequest $request): void
     {
         $request->loadMissing('user', 'items.item');
@@ -72,6 +90,9 @@ class NotificationService
         ]);
     }
 
+    /**
+     * Send a notification for resource request approved.
+     */
     public function notifyResourceRequestApproved(ResourceRequest $request, ?int $senderId = null): Notification
     {
         return $this->createNotification($request->user_id, 'resource_request_approved', 'Your resource request has been approved.', [
@@ -85,6 +106,9 @@ class NotificationService
         ]);
     }
 
+    /**
+     * Send a notification for resource request rejected.
+     */
     public function notifyResourceRequestRejected(ResourceRequest $request, ?int $senderId = null): Notification
     {
         return $this->createNotification($request->user_id, 'resource_request_rejected', 'Your resource request has been rejected.', [
@@ -98,6 +122,9 @@ class NotificationService
         ]);
     }
 
+    /**
+     * Send a notification for admin logged in.
+     */
     public function notifyAdminLoggedIn(User $admin, array $context = []): void
     {
         if (! $admin->isAdmin()) {
@@ -117,6 +144,9 @@ class NotificationService
         ]);
     }
 
+    /**
+     * Mark as read.
+     */
     public function markAsRead(Notification $notification): void
     {
         if (! $notification->isRead()) {
@@ -124,21 +154,33 @@ class NotificationService
         }
     }
 
+    /**
+     * Mark all as read.
+     */
     public function markAllAsRead(User $user): void
     {
         $user->notifications()->unread()->update(['read_at' => now()]);
     }
 
+    /**
+     * Delete notification.
+     */
     public function deleteNotification(Notification $notification): void
     {
         $notification->delete();
     }
 
+    /**
+     * Delete read notifications.
+     */
     public function deleteReadNotifications(User $user): void
     {
         $user->notifications()->read()->delete();
     }
 
+    /**
+     * Send a notification for low stock.
+     */
     public function notifyLowStock(string $itemName, int $quantity): void
     {
         $message = "Item '{$itemName}' is low in stock (Current: {$quantity}).";
@@ -152,6 +194,9 @@ class NotificationService
         ]);
     }
 
+    /**
+     * Send a notification for failed login attempts.
+     */
     public function notifyFailedLoginAttempts(User $user): void
     {
         $message = "User '{$user->name}' ({$user->email}) has {$user->login_attempts} failed login attempts.";
@@ -162,6 +207,9 @@ class NotificationService
         ]);
     }
 
+    /**
+     * Send a notification for account locked.
+     */
     public function notifyAccountLocked(User $user): void
     {
         $this->createNotification($user->id, 'account_locked', 'Your account has been locked due to multiple failed login attempts. Please contact the administrator.', [
@@ -170,6 +218,9 @@ class NotificationService
         ]);
     }
 
+    /**
+     * Send a notification for roles.
+     */
     private function notifyRoles(array $roles, string $type, string $message, array $attributes = []): void
     {
         foreach ($roles as $role) {
@@ -183,6 +234,9 @@ class NotificationService
         }
     }
 
+    /**
+     * Handle users for role.
+     */
     private function usersForRole(string $role): Collection
     {
         return match ($role) {
@@ -194,6 +248,9 @@ class NotificationService
         };
     }
 
+    /**
+     * Handle resource name for request.
+     */
     private function resourceNameForRequest(ResourceRequest $request): string
     {
         $request->loadMissing('items.item');
@@ -214,6 +271,9 @@ class NotificationService
         return $names->first() . ' and ' . ($names->count() - 1) . ' other item(s)';
     }
 
+    /**
+     * Handle title for type.
+     */
     private function titleForType(string $type): string
     {
         return str($type)->replace('_', ' ')->title()->toString();

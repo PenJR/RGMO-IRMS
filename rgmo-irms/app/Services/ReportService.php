@@ -310,6 +310,9 @@ class ReportService
         ];
     }
 
+    /**
+     * Get recent month buckets.
+     */
     private function getRecentMonthBuckets(int $months = 6): array
     {
         $start = now()->startOfMonth()->subMonths($months - 1);
@@ -323,6 +326,9 @@ class ReportService
             ->all();
     }
 
+    /**
+     * Get recent week buckets.
+     */
     private function getRecentWeekBuckets(int $weeks = 6): array
     {
         $start = now()->startOfWeek()->subWeeks($weeks - 1);
@@ -340,6 +346,9 @@ class ReportService
             ->all();
     }
 
+    /**
+     * Get inventory level chart data.
+     */
     private function getInventoryLevelChartData(): array
     {
         $activeItems = InventoryItem::active()->get(['stock', 'created_at']);
@@ -381,6 +390,9 @@ class ReportService
         ];
     }
 
+    /**
+     * Get request trend chart data.
+     */
     private function getRequestTrendChartData(): array
     {
         $labels = [];
@@ -410,6 +422,9 @@ class ReportService
         ];
     }
 
+    /**
+     * Get stock health chart data.
+     */
     private function getStockHealthChartData(): array
     {
         return [
@@ -422,6 +437,9 @@ class ReportService
         ];
     }
 
+    /**
+     * Get category value chart data.
+     */
     private function getCategoryValueChartData(): array
     {
         $categories = InventoryItem::query()
@@ -440,6 +458,9 @@ class ReportService
         ];
     }
 
+    /**
+     * Get inventory movement chart data.
+     */
     private function getInventoryMovementChartData(): array
     {
         $labels = [];
@@ -464,6 +485,9 @@ class ReportService
         ];
     }
 
+    /**
+     * Get top requested item chart data.
+     */
     private function getTopRequestedItemChartData(): array
     {
         $items = RequestItem::query()

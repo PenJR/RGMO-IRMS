@@ -20,6 +20,9 @@ class Notification extends Model
         'read_at',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     */
     protected function casts(): array
     {
         return [
@@ -39,11 +42,17 @@ class Notification extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Send er.
+     */
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
     }
 
+    /**
+     * Handle related request.
+     */
     public function relatedRequest(): BelongsTo
     {
         return $this->belongsTo(ResourceRequest::class, 'related_request_id');
@@ -95,11 +104,17 @@ class Notification extends Model
         $this->update(['read_at' => now()]);
     }
 
+    /**
+     * Mark as unread.
+     */
     public function markAsUnread(): void
     {
         $this->update(['read_at' => null]);
     }
 
+    /**
+     * Determine whether is read.
+     */
     public function isRead(): bool
     {
         return $this->read_at !== null;

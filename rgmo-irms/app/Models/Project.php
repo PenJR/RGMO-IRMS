@@ -26,6 +26,9 @@ class Project extends Model
         'description',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     */
     protected function casts(): array
     {
         return [
@@ -34,6 +37,9 @@ class Project extends Model
         ];
     }
 
+    /**
+     * Handle statuses.
+     */
     public static function statuses(): array
     {
         return [
@@ -44,16 +50,25 @@ class Project extends Model
         ];
     }
 
+    /**
+     * Handle managers.
+     */
     public function managers(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();
     }
 
+    /**
+     * Handle resource usages.
+     */
     public function resourceUsages(): HasMany
     {
         return $this->hasMany(ResourceUsage::class);
     }
 
+    /**
+     * Apply the search query scope.
+     */
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
         if (! $search) {
@@ -67,6 +82,9 @@ class Project extends Model
         });
     }
 
+    /**
+     * Get status label attribute.
+     */
     public function getStatusLabelAttribute(): string
     {
         return str($this->status)->replace('_', ' ')->title()->toString();

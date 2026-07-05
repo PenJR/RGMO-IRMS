@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 
 class OperationsController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private readonly RmsService $service) {}
 
     // Category Management

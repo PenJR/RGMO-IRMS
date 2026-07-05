@@ -12,6 +12,9 @@ use Illuminate\Validation\ValidationException;
 
 class InventoryService
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private NotificationService $notificationService)
     {
     }

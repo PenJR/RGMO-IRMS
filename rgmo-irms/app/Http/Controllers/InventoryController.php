@@ -13,6 +13,9 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class InventoryController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private InventoryService $inventoryService)
     {
     }
@@ -401,6 +404,9 @@ class InventoryController extends Controller
         return view('inventory.low-stock', ['items' => $items]);
     }
 
+    /**
+     * Get all inventory items.
+     */
     public function getAllInventoryItems(Request $request)
     {
         $filters = $request->only(['category_id', 'search', 'status']);
@@ -409,6 +415,9 @@ class InventoryController extends Controller
         return response()->json($this->inventoryService->getAllItems($perPage, $filters));
     }
 
+    /**
+     * Create inventory item.
+     */
     public function createInventoryItem(Request $request)
     {
         $units = config('inventory.units', $this->units());
@@ -436,6 +445,9 @@ class InventoryController extends Controller
         return response()->json($item, 201);
     }
 
+    /**
+     * Get inventory item by id.
+     */
     public function getInventoryItemById(int $id)
     {
         $item = InventoryItem::with('category', 'transactions.user')->findOrFail($id);
@@ -443,6 +455,9 @@ class InventoryController extends Controller
         return response()->json($item);
     }
 
+    /**
+     * Update inventory item.
+     */
     public function updateInventoryItem(Request $request, int $id)
     {
         $item = InventoryItem::findOrFail($id);
@@ -473,6 +488,9 @@ class InventoryController extends Controller
         return response()->json($updated);
     }
 
+    /**
+     * Delete inventory item.
+     */
     public function deleteInventoryItem(int $id)
     {
         $item = InventoryItem::findOrFail($id);
@@ -481,6 +499,9 @@ class InventoryController extends Controller
         return response()->json(['message' => 'Inventory item deleted successfully.']);
     }
 
+    /**
+     * Search inventory items.
+     */
     public function searchInventoryItems(Request $request)
     {
         $validated = $request->validate([
@@ -493,11 +514,17 @@ class InventoryController extends Controller
         return response()->json($this->inventoryService->getAllItems(15, ['search' => $search]));
     }
 
+    /**
+     * Filter inventory by category.
+     */
     public function filterInventoryByCategory(int $categoryId)
     {
         return response()->json($this->inventoryService->getAllItems(15, ['category_id' => $categoryId]));
     }
 
+    /**
+     * Increase stock.
+     */
     public function increaseStock(Request $request, int $itemId)
     {
         $item = InventoryItem::findOrFail($itemId);
@@ -519,6 +546,9 @@ class InventoryController extends Controller
         return response()->json($item->fresh(['category', 'transactions']));
     }
 
+    /**
+     * Decrease stock.
+     */
     public function decreaseStock(Request $request, int $itemId)
     {
         $item = InventoryItem::findOrFail($itemId);
@@ -540,6 +570,9 @@ class InventoryController extends Controller
         return response()->json($item->fresh(['category', 'transactions']));
     }
 
+    /**
+     * Get low stock items.
+     */
     public function getLowStockItems()
     {
         return response()->json($this->inventoryService->getLowStockItems()->load('category'));

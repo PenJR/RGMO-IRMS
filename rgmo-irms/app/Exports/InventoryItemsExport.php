@@ -9,10 +9,16 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class InventoryItemsExport implements FromCollection, WithHeadings, ShouldAutoSize
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(protected Collection $items, protected string $currencyCode = 'PHP')
     {
     }
 
+    /**
+     * Handle collection.
+     */
     public function collection(): Collection
     {
         return $this->items->map(static function ($item) {
@@ -31,6 +37,9 @@ class InventoryItemsExport implements FromCollection, WithHeadings, ShouldAutoSi
         });
     }
 
+    /**
+     * Handle headings.
+     */
     public function headings(): array
     {
         return [

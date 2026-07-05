@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 
 class SystemSettingsController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private readonly RmsService $service)
     {
     }

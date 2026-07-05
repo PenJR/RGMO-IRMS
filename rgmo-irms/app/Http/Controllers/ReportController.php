@@ -13,6 +13,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private ReportService $reportService)
     {
     }

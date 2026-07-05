@@ -4,12 +4,18 @@ namespace App\Services;
 
 class TwoFactorService
 {
+    /**
+     * Generate secret.
+     */
     public function generateSecret(int $length = 16): string
     {
         $bytes = random_bytes($length);
         return $this->base32Encode($bytes);
     }
 
+    /**
+     * Get provisioning uri.
+     */
     public function getProvisioningUri(string $label, string $secret, string $issuer = 'RGMO-IRMS'): string
     {
         $label = rawurlencode($label);
@@ -17,6 +23,9 @@ class TwoFactorService
         return "otpauth://totp/{$issuer}:{$label}?secret={$secret}&issuer={$issuer}&algorithm=SHA1&digits=6&period=30";
     }
 
+    /**
+     * Verify code.
+     */
     public function verifyCode(string $secret, string $code, int $window = 1): bool
     {
         $code = trim($code);
@@ -37,6 +46,9 @@ class TwoFactorService
         return false;
     }
 
+    /**
+     * Get code.
+     */
     private function getCode(string $secret, int $timeSlice): int
     {
         $key = $this->base32Decode($secret);
@@ -52,6 +64,9 @@ class TwoFactorService
         return $binary % 1000000;
     }
 
+    /**
+     * Handle base32 encode.
+     */
     private function base32Encode(string $data): string
     {
         $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -70,6 +85,9 @@ class TwoFactorService
         return $output;
     }
 
+    /**
+     * Handle base32 decode.
+     */
     private function base32Decode(string $b32): string
     {
         $b32 = strtoupper($b32);

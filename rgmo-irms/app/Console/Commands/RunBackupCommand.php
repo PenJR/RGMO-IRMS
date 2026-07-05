@@ -11,6 +11,9 @@ class RunBackupCommand extends Command
     protected $signature = 'app:backup';
     protected $description = 'Run scheduled application backups and record the activity.';
 
+    /**
+     * Execute the command or middleware action.
+     */
     public function handle(): int
     {
         $this->info('Starting application backup...');

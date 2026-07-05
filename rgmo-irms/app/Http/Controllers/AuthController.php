@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private readonly RmsService $service) {}
 
     /**

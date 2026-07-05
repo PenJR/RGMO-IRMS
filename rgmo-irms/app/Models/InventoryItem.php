@@ -174,6 +174,9 @@ class InventoryItem extends Model
         return 'good';
     }
 
+    /**
+     * Determine whether is expired.
+     */
     public function isExpired(): bool
     {
         return $this->has_expiry && $this->expiry_date?->lt(today());

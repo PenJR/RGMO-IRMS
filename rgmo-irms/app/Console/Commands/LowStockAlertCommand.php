@@ -12,6 +12,9 @@ class LowStockAlertCommand extends Command
     protected $signature = 'app:low-stock-alert';
     protected $description = 'Generate low-stock notifications for items below reorder threshold.';
 
+    /**
+     * Execute the command or middleware action.
+     */
     public function handle(NotificationService $notificationService): int
     {
         $items = InventoryItem::lowStock()->active()->get();

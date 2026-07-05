@@ -18,6 +18,9 @@ class InventoryItemsImport implements ToModel, WithHeadingRow, WithValidation, S
 {
     use Importable, SkipsFailures;
 
+    /**
+     * Handle model.
+     */
     public function model(array $row)
     {
         $sku = trim($row['sku'] ?? '');
@@ -69,6 +72,9 @@ class InventoryItemsImport implements ToModel, WithHeadingRow, WithValidation, S
         return $item;
     }
 
+    /**
+     * Get the validation rules that apply to the request.
+     */
     public function rules(): array
     {
         return [

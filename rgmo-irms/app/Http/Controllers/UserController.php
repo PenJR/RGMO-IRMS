@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    /**
+     * Create a new instance.
+     */
     public function __construct(private readonly RmsService $service) {}
 
     /**

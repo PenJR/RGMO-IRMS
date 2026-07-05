@@ -625,6 +625,7 @@
                 body.sidebar-collapsed #sidebar {
                     width: var(--sidebar-collapsed-width);
                     min-width: var(--sidebar-collapsed-width);
+                    overflow: visible;
                 }
 
                 body.sidebar-collapsed .sidebar-brand {
@@ -678,7 +679,7 @@
                 body.sidebar-collapsed .sidebar-menu {
                     padding: 0.85rem 0.65rem 1rem;
                     align-items: center;
-                    overflow-x: hidden;
+                    overflow: visible;
                 }
 
                 body.sidebar-collapsed #sidebar .nav-group {
@@ -724,6 +725,55 @@
                     height: 1rem;
                     padding: 0 0.28rem;
                     font-size: 0.54rem;
+                }
+
+
+                body.sidebar-collapsed #sidebar [data-sidebar-tooltip]::after {
+                    content: attr(data-sidebar-tooltip);
+                    position: absolute;
+                    left: calc(100% + 0.65rem);
+                    top: 50%;
+                    transform: translateY(-50%) translateX(-4px);
+                    z-index: 1080;
+                    min-width: max-content;
+                    max-width: 220px;
+                    padding: 0.48rem 0.65rem;
+                    border-radius: 8px;
+                    background: #163024;
+                    color: #ffffff;
+                    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+                    font-size: 0.76rem;
+                    font-weight: 700;
+                    line-height: 1.15;
+                    opacity: 0;
+                    pointer-events: none;
+                    transition: opacity 0.14s ease, transform 0.14s ease;
+                    white-space: nowrap;
+                }
+
+                body.sidebar-collapsed #sidebar [data-sidebar-tooltip]::before {
+                    content: "";
+                    position: absolute;
+                    left: calc(100% + 0.25rem);
+                    top: 50%;
+                    transform: translateY(-50%);
+                    z-index: 1081;
+                    border: 6px solid transparent;
+                    border-right-color: #163024;
+                    opacity: 0;
+                    pointer-events: none;
+                    transition: opacity 0.14s ease;
+                }
+
+                body.sidebar-collapsed #sidebar [data-sidebar-tooltip]:hover::after,
+                body.sidebar-collapsed #sidebar [data-sidebar-tooltip]:focus-visible::after {
+                    opacity: 1;
+                    transform: translateY(-50%) translateX(0);
+                }
+
+                body.sidebar-collapsed #sidebar [data-sidebar-tooltip]:hover::before,
+                body.sidebar-collapsed #sidebar [data-sidebar-tooltip]:focus-visible::before {
+                    opacity: 1;
                 }
 
                 body.sidebar-collapsed .sidebar-footer {

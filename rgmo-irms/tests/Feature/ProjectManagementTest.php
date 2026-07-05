@@ -14,6 +14,9 @@ class ProjectManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Verify that staff can view projects but not create them.
+     */
     public function test_staff_can_view_projects_but_not_create_them(): void
     {
         $staff = User::factory()->create([
@@ -38,6 +41,9 @@ class ProjectManagementTest extends TestCase
             ->assertForbidden();
     }
 
+    /**
+     * Verify that rgmo head can create project with project manager assignment.
+     */
     public function test_rgmo_head_can_create_project_with_project_manager_assignment(): void
     {
         $head = User::factory()->create([
@@ -65,6 +71,9 @@ class ProjectManagementTest extends TestCase
         $this->assertTrue($project->managers()->whereKey($manager->id)->exists());
     }
 
+    /**
+     * Verify that project show lists linked resource usage.
+     */
     public function test_project_show_lists_linked_resource_usage(): void
     {
         $admin = User::factory()->create([

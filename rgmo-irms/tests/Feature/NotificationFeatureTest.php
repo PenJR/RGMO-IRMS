@@ -16,6 +16,9 @@ class NotificationFeatureTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Verify that resource request submission notifies admin and rgmo head.
+     */
     public function test_resource_request_submission_notifies_admin_and_rgmo_head(): void
     {
         $staff = $this->activeUser(User::ROLE_STAFF, ['name' => 'Maria Staff']);
@@ -46,6 +49,9 @@ class NotificationFeatureTest extends TestCase
         }
     }
 
+    /**
+     * Verify that request approval and rejection notify requester.
+     */
     public function test_request_approval_and_rejection_notify_requester(): void
     {
         $requester = $this->activeUser(User::ROLE_STAFF);
@@ -80,6 +86,9 @@ class NotificationFeatureTest extends TestCase
         ]);
     }
 
+    /**
+     * Verify that admin login creates login history and authorized notifications.
+     */
     public function test_admin_login_creates_login_history_and_authorized_notifications(): void
     {
         $admin = $this->activeUser(User::ROLE_ADMIN, [
@@ -117,6 +126,9 @@ class NotificationFeatureTest extends TestCase
         ]);
     }
 
+    /**
+     * Verify that notification api lists and marks notifications read.
+     */
     public function test_notification_api_lists_and_marks_notifications_read(): void
     {
         $staff = $this->activeUser(User::ROLE_STAFF);
@@ -154,6 +166,9 @@ class NotificationFeatureTest extends TestCase
         $this->assertSame(0, $staff->notifications()->unread()->count());
     }
 
+    /**
+     * Handle active user.
+     */
     private function activeUser(string $role, array $attributes = []): User
     {
         return User::factory()->create(array_merge([
@@ -163,6 +178,9 @@ class NotificationFeatureTest extends TestCase
         ], $attributes));
     }
 
+    /**
+     * Handle inventory item.
+     */
     private function inventoryItem(string $name = 'Rice Seeds'): InventoryItem
     {
         $category = Category::firstOrCreate(['name' => 'Seeds']);
@@ -177,6 +195,9 @@ class NotificationFeatureTest extends TestCase
         ]);
     }
 
+    /**
+     * Handle resource request for.
+     */
     private function resourceRequestFor(User $user): ResourceRequest
     {
         $request = ResourceRequest::create([
