@@ -42,6 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/inventory/export-excel', [InventoryController::class, 'exportExcel'])->name('inventory.export-excel');
         Route::post('/inventory/import', [InventoryController::class, 'import'])->name('inventory.import');
         Route::resource('inventory', InventoryController::class);
+        Route::patch('/inventory/{item}/low-stock-threshold', [InventoryController::class, 'updateLowStockThreshold'])->name('inventory.update-low-stock-threshold');
         Route::post('/inventory/{item}/stock-in', [InventoryController::class, 'stockIn'])->name('inventory.stock-in');
         Route::post('/inventory/{item}/stock-out', [InventoryController::class, 'stockOut'])->name('inventory.stock-out');
         Route::post('/inventory/{item}/adjust-stock', [InventoryController::class, 'adjustStock'])->name('inventory.adjust-stock');

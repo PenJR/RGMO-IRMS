@@ -37,9 +37,14 @@ class NewPasswordController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        // Here we will attempt to reset the user's password. If it is successful we
-        // will update the password on an actual user model and persist it to the
-        // database. Otherwise we will parse the error and return the response.
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user || ! $user->isAdmin()) {
+            throw ValidationException::withMessages([
+                'email' => 'Only administrator accounts can reset passwords through this form.',
+            ]);
+        }
+
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user) use ($request) {

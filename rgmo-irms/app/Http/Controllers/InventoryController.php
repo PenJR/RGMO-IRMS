@@ -400,8 +400,33 @@ class InventoryController extends Controller
     public function lowStock()
     {
         $items = $this->inventoryService->getLowStockItems();
+        $thresholdItems = InventoryItem::active()
+            ->with('category')
+            ->orderBy('name')
+            ->get();
 
-        return view('inventory.low-stock', ['items' => $items]);
+        return view('inventory.low-stock', [
+            'items' => $items,
+            'thresholdItems' => $thresholdItems,
+        ]);
+    }
+
+    /**
+     * Update the per-resource low stock threshold.
+     */
+    public function updateLowStockThreshold(Request $request, InventoryItem $item)
+    {
+        $this->authorize('update', $item);
+
+        $validated = $request->validate([
+            'min_stock' => 'required|integer|min:0',
+        ]);
+
+        $this->inventoryService->updateItem($item, [
+            'min_stock' => $validated['min_stock'],
+        ], auth()->id());
+
+        return back()->with('success', "{$item->name} low stock threshold updated.");
     }
 
     /**

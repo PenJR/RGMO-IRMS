@@ -68,8 +68,9 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Minimum Stock</label>
+                            <label class="form-label">Low Stock Threshold</label>
                             <input type="number" name="min_stock" value="{{ old('min_stock', $item->min_stock) }}" min="0" class="form-control @error('min_stock') is-invalid @enderror" required>
+                            <div class="form-text">This resource is flagged low when stock is at or below this value.</div>
                             @error('min_stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 

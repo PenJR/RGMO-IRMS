@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\Category;
+use App\Models\InventoryItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -76,6 +78,32 @@ class RbacConfigurationTest extends TestCase
             ->assertSee('href="' . route('inventory.index') . '"', false)
             ->assertSee('href="' . route('reports.inventory') . '"', false)
             ->assertSee('href="' . route('ai-forecasting.index') . '"', false);
+    }
+
+    /**
+     * Verify that admin settings can update scalar setting values.
+     */
+    public function test_admin_can_update_resource_low_stock_threshold_setting(): void
+    {
+        $admin = $this->activeUser(User::ROLE_ADMIN);
+        $category = Category::create(['name' => 'Supplies']);
+        $item = InventoryItem::create([
+            'category_id' => $category->id,
+            'name' => 'Bond Paper',
+            'sku' => 'OFF-PAPER-SETTINGS',
+            'stock' => 8,
+            'unit' => 'ream',
+            'min_stock' => 5,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.settings.update'), [
+                'inventory_item_id' => $item->id,
+                'min_stock' => 12,
+            ])
+            ->assertRedirect(route('admin.settings.index'));
+
+        $this->assertSame(12, $item->fresh()->min_stock);
     }
 
     /**

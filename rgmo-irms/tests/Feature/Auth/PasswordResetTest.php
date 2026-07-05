@@ -29,7 +29,10 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
@@ -43,7 +46,10 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
@@ -63,7 +69,10 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
@@ -81,5 +90,23 @@ class PasswordResetTest extends TestCase
 
             return true;
         });
+    }
+
+    /**
+     * Verify that non-admin users cannot request self-service reset links.
+     */
+    public function test_non_admin_password_reset_link_must_be_requested_by_admin(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'role' => User::ROLE_STAFF,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $this->post('/forgot-password', ['email' => $user->email])
+            ->assertSessionHasErrors('email');
+
+        Notification::assertNothingSent();
     }
 }

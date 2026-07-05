@@ -9,22 +9,65 @@
     </x-slot>
 
     <div class="container-fluid py-4">
+        @php
+            $selectedInventoryItem = $inventoryItems->firstWhere('id', (int) old('inventory_item_id', $inventoryItems->first()?->id));
+        @endphp
+
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
                 <form method="POST" action="{{ route('admin.settings.update') }}">
                     @csrf
-                    <div class="mb-3">
-                        <label class="form-label">Low Stock Threshold</label>
-                        <input
-                            type="number"
-                            name="settings[low_stock_threshold]"
-                            min="1"
-                            value="{{ old('settings.low_stock_threshold', $settings['low_stock_threshold'] ?? 5) }}"
-                            class="form-control"
-                        >
-                        <div class="form-text">The minimum stock quantity before an item is flagged as low.</div>
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label for="inventory_item_id" class="form-label">Resource</label>
+                            <select
+                                id="inventory_item_id"
+                                name="inventory_item_id"
+                                class="form-select @error('inventory_item_id') is-invalid @enderror"
+                                required
+                                {{ $inventoryItems->isEmpty() ? 'disabled' : '' }}
+                            >
+                                <option value="">Choose resource</option>
+                                @foreach($inventoryItems as $item)
+                                    <option
+                                        value="{{ $item->id }}"
+                                        data-threshold="{{ $item->min_stock }}"
+                                        data-unit="{{ $item->unit }}"
+                                        {{ (string) old('inventory_item_id', $inventoryItems->first()?->id) === (string) $item->id ? 'selected' : '' }}
+                                    >
+                                        {{ $item->name }} ({{ $item->sku }} • {{ $item->category->name ?? 'N/A' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('inventory_item_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="col-md-5">
+                            <label for="min_stock" class="form-label">Low Stock Threshold</label>
+                            <div class="input-group">
+                                <input
+                                    type="number"
+                                    id="min_stock"
+                                    name="min_stock"
+                                    min="0"
+                                    value="{{ old('min_stock', $selectedInventoryItem?->min_stock ?? 0) }}"
+                                    class="form-control @error('min_stock') is-invalid @enderror"
+                                    required
+                                    {{ $inventoryItems->isEmpty() ? 'disabled' : '' }}
+                                >
+                                <span class="input-group-text" id="threshold_unit">{{ $selectedInventoryItem?->unit ?? 'unit' }}</span>
+                                @error('min_stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="form-text">Only the selected resource is updated.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-cmu" {{ $inventoryItems->isEmpty() ? 'disabled' : '' }}>Save Threshold</button>
+                            @if($inventoryItems->isEmpty())
+                                <span class="text-muted small ms-2">Add inventory resources before setting thresholds.</span>
+                            @endif
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-cmu">Save Settings</button>
                 </form>
             </div>
         </div>
@@ -57,4 +100,25 @@
             </div>
         @endif
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const itemSelect = document.getElementById('inventory_item_id');
+            const thresholdInput = document.getElementById('min_stock');
+            const thresholdUnit = document.getElementById('threshold_unit');
+
+            const syncThreshold = () => {
+                const selected = itemSelect?.selectedOptions[0];
+
+                if (!selected || !thresholdInput || !thresholdUnit) {
+                    return;
+                }
+
+                thresholdInput.value = selected.dataset.threshold ?? thresholdInput.value;
+                thresholdUnit.textContent = selected.dataset.unit || 'unit';
+            };
+
+            itemSelect?.addEventListener('change', syncThreshold);
+        });
+    </script>
 </x-app-layout>

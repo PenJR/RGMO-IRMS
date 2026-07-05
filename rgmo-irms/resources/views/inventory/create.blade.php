@@ -38,7 +38,7 @@
                                         </li>
                                         <li class="mb-3 d-flex gap-2">
                                             <i data-lucide="alert-circle" class="text-success" style="width:14px"></i> 
-                                            <span>Set **minimum stock** to get low stock alerts.</span>
+                                            <span>Set a custom low stock threshold for each resource.</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -91,8 +91,9 @@
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Minimum Level</label>
+                                            <label class="form-label">Low Stock Threshold</label>
                                             <input type="number" name="min_stock" value="{{ old('min_stock', 5) }}" class="form-control @error('min_stock') is-invalid @enderror" required min="0">
+                                            <div class="form-text">This resource is flagged low when stock is at or below this value.</div>
                                             @error('min_stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 

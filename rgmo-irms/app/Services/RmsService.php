@@ -507,7 +507,7 @@ class RmsService
     /**
      * Update system settings.
      */
-    public function updateSystemSettings(array $data): array { foreach ($data as $k => $v) { $this->updateSetting($k, $v); } return $this->getSystemSettings(); }
+    public function updateSystemSettings(array $data): array { foreach ($data as $k => $v) { $this->updateSetting($k, $v); } return $this->getSystemSettings()->all(); }
     /**
      * Handle manage roles permissions.
      */

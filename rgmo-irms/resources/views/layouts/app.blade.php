@@ -5,7 +5,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'RGMO-IRMS') }} - {{ isset($header) ? strip_tags($header) : 'Dashboard' }}</title>
+        <title>{{ config('app.name', 'RGMO-IRMS') }}</title>
+        <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+        <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -826,6 +828,14 @@
         </style>
     </head>
     <body class="font-sans antialiased">
+        <div class="rgmo-loader" data-rgmo-loader role="status" aria-live="polite" aria-busy="true">
+            <div class="rgmo-loader__mark" aria-hidden="true">
+                <img src="{{ asset('images/logo.png') }}" alt="" class="rgmo-loader__logo">
+                <span class="rgmo-loader__track"></span>
+            </div>
+            <span class="visually-hidden">Loading</span>
+        </div>
+
         <div class="layout-wrapper d-flex flex-column flex-lg-row overflow-hidden min-vh-100">
             @include('layouts.navigation')
 
@@ -890,6 +900,21 @@
             // Interactivity for Sidebar Dropdowns
             document.querySelectorAll('#sidebar details').forEach((details) => {
                 details.addEventListener('click', (e) => {
+                    if (document.body.classList.contains('sidebar-collapsed')) {
+                        const target = e.target.closest('summary');
+
+                        if (target) {
+                            e.preventDefault();
+                            const firstLink = details.querySelector('.nav-submenu a[href]');
+
+                            if (firstLink) {
+                                window.location.href = firstLink.href;
+                            }
+
+                            return;
+                        }
+                    }
+
                     // Close other open details if we're opening a new one
                     if (!details.open) {
                         document.querySelectorAll('#sidebar details[open]').forEach((other) => {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class SystemSetting extends Model
@@ -12,14 +13,20 @@ class SystemSetting extends Model
         'value',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     */
-    protected function casts(): array
+    protected function value(): Attribute
     {
-        return [
-            'value' => 'array',
-        ];
+        return Attribute::make(
+            get: function ($value) {
+                if (! is_string($value)) {
+                    return $value;
+                }
+
+                $decoded = json_decode($value, true);
+
+                return json_last_error() === JSON_ERROR_NONE ? $decoded : $value;
+            },
+            set: fn ($value) => is_array($value) ? json_encode($value) : $value,
+        );
     }
 
     // Scopes

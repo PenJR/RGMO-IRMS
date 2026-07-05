@@ -87,6 +87,7 @@
                                         <th>SKU</th>
                                         <th>Category</th>
                                         <th>Stock</th>
+                                        <th>Low Threshold</th>
                                         <th>Price</th>
                                         <th>Status</th>
                                         <th>Expiry</th>
@@ -119,6 +120,7 @@
                                                     </span>
                                                 @endif
                                             </td>
+                                            <td>{{ $item->min_stock }} {{ $item->unit }}</td>
                                             <td>{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
                                             <td>
                                                 <span class="badge rounded-pill

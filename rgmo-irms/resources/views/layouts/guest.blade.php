@@ -6,6 +6,8 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'RGMO-IRMS') }}</title>
+        <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+        <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -152,6 +154,14 @@
         </style>
     </head>
     <body class="antialiased">
+        <div class="rgmo-loader" data-rgmo-loader role="status" aria-live="polite" aria-busy="true">
+            <div class="rgmo-loader__mark" aria-hidden="true">
+                <img src="{{ asset('images/logo.png') }}" alt="" class="rgmo-loader__logo">
+                <span class="rgmo-loader__track"></span>
+            </div>
+            <span class="visually-hidden">Loading</span>
+        </div>
+
         <div class="floating-blobs">
             <div class="blob" style="top: -10%; left: -10%; background: var(--cmu-yellow); animation-delay: 0s; opacity: 0.16;"></div>
             <div class="blob" style="bottom: -10%; right: -10%; background: var(--cmu-accent); animation-delay: -5s; opacity: 0.16;"></div>
