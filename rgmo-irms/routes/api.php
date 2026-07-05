@@ -47,14 +47,14 @@ Route::middleware(['auth', 'permission:manage-users,assign-roles'])->prefix('use
 Route::middleware(['auth', 'permission:view-inventory,manage-inventory'])->prefix('inventory')->group(function () {
     Route::get('/', [InventoryController::class, 'getAllInventoryItems']);
     Route::post('/', [InventoryController::class, 'createInventoryItem']);
+    Route::get('/search/query', [InventoryController::class, 'searchInventoryItems']);
+    Route::get('/category/{categoryId}', [InventoryController::class, 'filterInventoryByCategory']);
+    Route::get('/alerts/low-stock', [InventoryController::class, 'getLowStockItems']);
     Route::get('/{id}', [InventoryController::class, 'getInventoryItemById']);
     Route::put('/{id}', [InventoryController::class, 'updateInventoryItem']);
     Route::delete('/{id}', [InventoryController::class, 'deleteInventoryItem']);
-    Route::get('/search/query', [InventoryController::class, 'searchInventoryItems']);
-    Route::get('/category/{categoryId}', [InventoryController::class, 'filterInventoryByCategory']);
     Route::patch('/{itemId}/increase', [InventoryController::class, 'increaseStock']);
     Route::patch('/{itemId}/decrease', [InventoryController::class, 'decreaseStock']);
-    Route::get('/alerts/low-stock', [InventoryController::class, 'getLowStockItems']);
 });
 
 Route::middleware('auth')->prefix('ops')->group(function () {
