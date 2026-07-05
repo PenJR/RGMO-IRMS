@@ -53,4 +53,53 @@ class ApiModuleSmokeTest extends TestCase
                 ->assertOk("Path [{$path}] failed to respond.");
         }
     }
+
+    /**
+     * Verify API permission denials return JSON instead of the web 403 page.
+     */
+    public function test_api_permission_denial_returns_json(): void
+    {
+        $staff = User::factory()->create([
+            'role' => User::ROLE_STAFF,
+            'status' => User::STATUS_ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($staff)
+            ->getJson('/api/users')
+            ->assertForbidden()
+            ->assertJson(['message' => 'Forbidden.']);
+    }
+
+    /**
+     * Verify framework-rendered API authorization errors are JSON.
+     */
+    public function test_api_abort_forbidden_returns_json(): void
+    {
+        $staff = User::factory()->create([
+            'role' => User::ROLE_STAFF,
+            'status' => User::STATUS_ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+        $otherUser = User::factory()->create([
+            'role' => User::ROLE_STAFF,
+            'status' => User::STATUS_ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($staff)
+            ->getJson("/api/ops/notifications/users/{$otherUser->id}")
+            ->assertForbidden()
+            ->assertJson(['message' => 'Forbidden']);
+    }
+
+    /**
+     * Verify unauthenticated API requests return JSON instead of redirects.
+     */
+    public function test_unauthenticated_api_request_returns_json(): void
+    {
+        $this->getJson('/api/users')
+            ->assertUnauthorized()
+            ->assertJson(['message' => 'Unauthenticated.']);
+    }
 }

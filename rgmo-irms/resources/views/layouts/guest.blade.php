@@ -29,7 +29,10 @@
 
             body {
                 background:
-                    linear-gradient(135deg, #003c19 0%, #005323 48%, #17451f 100%) !important;
+                    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+                    linear-gradient(135deg, #003414 0%, #005323 54%, #113f23 100%) !important;
+                background-size: 44px 44px, 44px 44px, auto;
                 font-family: 'Inter', system-ui, sans-serif;
                 color: #f4fff6;
                 min-height: 100vh;
@@ -49,6 +52,9 @@
                 bottom: 0;
                 pointer-events: none;
                 z-index: 0;
+                background:
+                    linear-gradient(90deg, rgba(255, 198, 0, 0.12), transparent 32%),
+                    linear-gradient(180deg, transparent 0%, rgba(0, 22, 9, 0.26) 100%);
             }
 
             .floating-blobs {
@@ -69,10 +75,10 @@
             }
 
             .feature-card:hover {
-                background: rgba(244, 255, 246, 0.98) !important;
+                background: rgba(253, 255, 250, 0.98) !important;
                 transform: translateY(-2px);
                 border-color: var(--cmu-yellow) !important;
-                box-shadow: 0 14px 30px rgba(0, 30, 12, 0.18);
+                box-shadow: 0 18px 36px rgba(0, 30, 12, 0.2);
             }
 
             .feature-card:hover h5 {
@@ -88,14 +94,24 @@
             }
 
             .login-card {
-                background: rgba(250, 253, 249, 0.98);
+                background: #fbfdf9;
                 backdrop-filter: blur(12px);
-                border: 1px solid rgba(255, 198, 0, 0.45);
-                border-radius: 12px;
-                box-shadow: 0 26px 60px rgba(0, 28, 12, 0.28);
+                border: 1px solid rgba(255, 198, 0, 0.58);
+                border-radius: 10px;
+                box-shadow: 0 30px 70px rgba(0, 24, 10, 0.34);
                 width: 100%;
-                max-width: 480px;
-                padding: 3rem;
+                max-width: 500px;
+                padding: 2.75rem;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .login-card::before {
+                content: "";
+                position: absolute;
+                inset: 0 0 auto 0;
+                height: 5px;
+                background: linear-gradient(90deg, var(--cmu-yellow), var(--cmu-green-2), var(--cmu-accent));
             }
 
             .login-card .brand-mark {
@@ -151,6 +167,285 @@
                     drop-shadow(0 0 12px rgba(255, 198, 0, 0.18));
                 transition: transform 0.3s ease;
             }
+
+            .auth-brand-lockup {
+                display: flex;
+                align-items: center;
+                gap: 1.25rem;
+                margin-bottom: 2.25rem;
+            }
+
+            .auth-brand-lockup img {
+                width: 104px;
+                height: 104px;
+                object-fit: contain;
+            }
+
+            .auth-brand-lockup .office-name {
+                color: rgba(244, 255, 246, 0.86);
+                font-size: 0.76rem;
+                font-weight: 800;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                margin-bottom: 0.35rem;
+            }
+
+            .auth-title {
+                color: #ffffff;
+                font-size: clamp(3rem, 6vw, 5.2rem);
+                line-height: 0.92;
+                font-weight: 800;
+                letter-spacing: 0;
+                margin: 0;
+            }
+
+            .auth-subtitle {
+                max-width: 560px;
+                color: rgba(244, 255, 246, 0.9);
+                font-size: 1.08rem;
+                line-height: 1.7;
+                margin: 0 0 2rem;
+                border-left: 3px solid var(--cmu-yellow);
+                padding-left: 1.25rem;
+            }
+
+            .auth-status-strip {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.75rem;
+                margin-bottom: 1.4rem;
+                max-width: 620px;
+            }
+
+            .auth-status-item {
+                background: rgba(255, 255, 255, 0.09);
+                border: 1px solid rgba(255, 255, 255, 0.16);
+                border-radius: 8px;
+                padding: 0.85rem 1rem;
+            }
+
+            .auth-status-item strong {
+                display: block;
+                color: #ffffff;
+                font-size: 1.05rem;
+                line-height: 1.1;
+            }
+
+            .auth-status-item span {
+                display: block;
+                margin-top: 0.25rem;
+                color: rgba(244, 255, 246, 0.72);
+                font-size: 0.76rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+            }
+
+            .auth-panel-title {
+                color: rgba(244, 255, 246, 0.78);
+                font-size: 0.78rem;
+                font-weight: 800;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                margin: 1.75rem 0 0.85rem;
+            }
+
+            .auth-card-heading {
+                margin-bottom: 1.4rem;
+            }
+
+            .auth-kicker {
+                display: inline-flex;
+                align-items: center;
+                color: var(--cmu-green-2);
+                font-size: 0.74rem;
+                font-weight: 800;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                margin-bottom: 0.65rem;
+            }
+
+            .auth-card-heading h2 {
+                color: #1f2d27;
+                font-size: 2rem;
+                font-weight: 800;
+                line-height: 1.1;
+                margin: 0 0 0.45rem;
+            }
+
+            .auth-card-heading p {
+                color: #65736b;
+                line-height: 1.55;
+                margin: 0;
+            }
+
+            .auth-notice {
+                display: flex;
+                align-items: center;
+                gap: 0.65rem;
+                color: #244335;
+                background: rgba(2, 104, 30, 0.08);
+                border: 1px solid rgba(2, 104, 30, 0.18);
+                border-radius: 8px;
+                padding: 0.75rem 0.9rem;
+                font-size: 0.84rem;
+                font-weight: 700;
+            }
+
+            .auth-notice svg {
+                width: 18px;
+                height: 18px;
+                color: var(--cmu-green-2);
+                flex: 0 0 auto;
+            }
+
+            .auth-form {
+                display: grid;
+                gap: 1rem;
+            }
+
+            .auth-field {
+                display: grid;
+                gap: 0.45rem;
+            }
+
+            .auth-input-wrap,
+            .auth-password-group {
+                position: relative;
+            }
+
+            .auth-input-wrap svg,
+            .auth-password-icon svg {
+                width: 18px;
+                height: 18px;
+                color: #6d7a72;
+            }
+
+            .auth-input-wrap > svg,
+            .auth-password-icon {
+                position: absolute;
+                left: 0.9rem;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 4;
+            }
+
+            .auth-input-wrap .form-control,
+            .auth-password-group .form-control {
+                padding-left: 2.65rem;
+                min-height: 48px;
+            }
+
+            .auth-password-group .form-control {
+                border-top-right-radius: 0 !important;
+                border-bottom-right-radius: 0 !important;
+            }
+
+            .auth-icon-button {
+                width: 48px;
+                min-height: 48px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid rgba(0, 73, 30, 0.28);
+                border-left: 0;
+                color: #53645b;
+                background: #ffffff;
+                border-top-right-radius: 8px !important;
+                border-bottom-right-radius: 8px !important;
+            }
+
+            .auth-icon-button:hover,
+            .auth-icon-button:focus {
+                color: var(--cmu-green);
+                background: #f4faf3;
+                border-color: rgba(0, 73, 30, 0.34);
+            }
+
+            .auth-icon-button svg,
+            .btn-cmu svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .auth-options {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 0.15rem;
+            }
+
+            .auth-options .form-check {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin: 0;
+                min-height: 24px;
+            }
+
+            .auth-options .form-check-input {
+                margin: 0;
+                box-shadow: none;
+            }
+
+            .auth-options .form-check-label {
+                color: #52645a !important;
+                font-size: 0.86rem;
+            }
+
+            .btn-cmu {
+                min-height: 48px;
+                border-radius: 8px;
+            }
+
+            .auth-card-footer {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.35rem;
+                margin-top: 1.4rem;
+                padding-top: 1.2rem;
+                border-top: 1px solid rgba(0, 73, 30, 0.1);
+                color: #69776f;
+                font-size: 0.84rem;
+                text-align: center;
+                flex-wrap: wrap;
+            }
+
+            .auth-card-footer strong {
+                color: var(--cmu-green);
+            }
+
+            .auth-footnote {
+                color: rgba(244, 255, 246, 0.58);
+                font-size: 0.78rem;
+                margin-top: 1.25rem;
+            }
+
+            @media (max-width: 991.98px) {
+                body {
+                    align-items: flex-start;
+                }
+
+                .login-card {
+                    padding: 2rem;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .container {
+                    padding-left: 1rem;
+                    padding-right: 1rem;
+                }
+
+                .login-card {
+                    padding: 1.5rem;
+                }
+
+                .auth-card-heading h2 {
+                    font-size: 1.7rem;
+                }
+            }
         </style>
     </head>
     <body class="antialiased">
@@ -172,10 +467,31 @@
                 <!-- Info Column (Visible on Desktop) -->
                 <div class="col-lg-6 d-none d-lg-block auth-shell-copy">
                     <div class="pe-lg-5">
-                        <img src="{{ asset('images/logo.png') }}" alt="CMU Logo" class="cmu-logo" style="width: 120px; height: 120px; margin-bottom: 2.5rem;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <h1 class="display-3 fw-bold mb-2" style="color: #ffffff; letter-spacing: -0.04em;">RGMO-IRMS</h1>
-                        <p class="lead fw-medium mb-5" style="font-size: 1.25rem; border-left: 3px solid var(--cmu-yellow); padding-left: 1.5rem;">Resource Generation Management Office<br><span class="opacity-75" style="font-size: 1.1rem;">Inventory & Resource Management System</span></p>
+                        <div class="auth-brand-lockup">
+                            <img src="{{ asset('images/logo.png') }}" alt="CMU Logo" class="cmu-logo" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+                            <div>
+                                <div class="office-name">Resource Generation Management Office</div>
+                                <h1 class="auth-title">RGMO-IRMS</h1>
+                            </div>
+                        </div>
+                        <p class="auth-subtitle">Inventory and resource operations for agricultural assets, supplies issuance, project distribution, monitoring, and reporting.</p>
+
+                        <div class="auth-status-strip">
+                            <div class="auth-status-item">
+                                <strong>24/7</strong>
+                                <span>Records</span>
+                            </div>
+                            <div class="auth-status-item">
+                                <strong>RBAC</strong>
+                                <span>Access</span>
+                            </div>
+                            <div class="auth-status-item">
+                                <strong>2FA</strong>
+                                <span>Ready</span>
+                            </div>
+                        </div>
                         
+                        <div class="auth-panel-title">Core Workflows</div>
                         <div class="auth-panel">
                             <div class="feature-card auth-feature-card d-flex align-items-center gap-4 p-3 transition-all">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
@@ -214,6 +530,7 @@
                                 </div>
                             </div>
                         </div>
+                        <p class="auth-footnote">© {{ date('Y') }} Central Mindanao University · RGMO-IRMS</p>
                     </div>
                 </div>
 

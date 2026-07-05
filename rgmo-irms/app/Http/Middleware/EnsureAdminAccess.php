@@ -16,6 +16,12 @@ class EnsureAdminAccess
     public function handle(Request $request, Closure $next): Response
     {
         if (!auth()->check() || !auth()->user()->isAdmin()) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'message' => auth()->check() ? 'Forbidden.' : 'Unauthenticated.',
+                ], auth()->check() ? 403 : 401);
+            }
+
             return response()->view('errors.403', [], 403);
         }
 

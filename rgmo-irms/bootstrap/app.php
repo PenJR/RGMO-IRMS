@@ -3,6 +3,9 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 if (! class_exists('ZipArchive')) {
     class ZipArchive
@@ -42,5 +45,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\LogUserActivity::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $e): bool {
+            return $request->is('api/*') || $request->expectsJson();
+        });
+
+        $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
+                return null;
+            }
+
+            $status = $e->getStatusCode();
+            $message = $e->getMessage() ?: SymfonyResponse::$statusTexts[$status] ?? 'Error';
+
+            return response()->json(['message' => $message], $status, $e->getHeaders());
+        });
     })->create();
