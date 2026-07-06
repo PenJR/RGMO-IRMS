@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\RmsService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -22,9 +24,9 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,staff,project_manager,rgmo_head'
+            'email' => 'required|string|lowercase|email|max:255|unique:users,email',
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
+            'role' => 'required|in:' . implode(',', User::availableRoles()),
         ]);
 
         return response()->json($this->service->createUser($validated), 201);
@@ -41,9 +43,10 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $id,
-            'role' => 'sometimes|in:admin,staff,project_manager,rgmo_head',
-            'is_active' => 'sometimes|boolean'
+            'email' => 'sometimes|string|lowercase|email|max:255|unique:users,email,' . $id,
+            'role' => 'sometimes|in:' . implode(',', User::availableRoles()),
+            'status' => 'sometimes|in:active,inactive,suspended',
+            'is_active' => 'sometimes|boolean',
         ]);
 
         return response()->json($this->service->updateUser($id, $validated));
@@ -92,7 +95,7 @@ class UserController extends Controller
     public function assignRole(Request $request, int $userId)
     {
         $validated = $request->validate([
-            'role' => 'required|in:admin,staff,project_manager,rgmo_head'
+            'role' => 'required|in:' . implode(',', User::availableRoles()),
         ]);
 
         return response()->json($this->service->assignRole($userId, $validated['role']));

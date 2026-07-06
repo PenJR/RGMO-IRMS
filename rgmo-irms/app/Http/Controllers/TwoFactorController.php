@@ -8,6 +8,7 @@ use App\Services\NotificationService;
 use App\Services\TwoFactorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class TwoFactorController extends Controller
 {
@@ -115,32 +116,21 @@ class TwoFactorController extends Controller
             $pendingUserId = $request->session()->get('2fa:user_id');
         }
 
-        // fallback to provided user_id for API flows
-        if (! $pendingUserId && $request->input('user_id')) {
-            $pendingUserId = (int) $request->input('user_id');
+        if (! $pendingUserId && $request->input('two_factor_challenge')) {
+            $challengeKey = '2fa:challenge:' . hash('sha256', (string) $request->input('two_factor_challenge'));
+            $pendingUserId = Cache::pull($challengeKey);
         }
 
         $user = null;
         if ($pendingUserId) {
             $user = User::find($pendingUserId);
         }
-
-            // If no pending user found, for API flows try to identify the user by the provided code
-            if (! $user && $request->expectsJson()) {
-                $code = $request->input('code');
-                $candidates = User::whereNotNull('two_factor_secret')->where('two_factor_enabled', true)->get();
-                foreach ($candidates as $candidate) {
-                    $ok = $this->twoFactor->verifyCode($candidate->two_factor_secret, $code);
-                    if ($ok) {
-                        $user = $candidate;
-                        break;
-                    }
-                }
+        if (! $user) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Invalid or expired two-factor challenge.'], 422);
             }
-
-            if (! $user) {
-                return redirect()->route('login')->withErrors(['message' => 'Invalid user.']);
-            }
+            return redirect()->route('login')->withErrors(['message' => 'Invalid user.']);
+        }
 
         $code = $request->input('code');
         if (! $this->twoFactor->verifyCode($user->two_factor_secret, $code)) {

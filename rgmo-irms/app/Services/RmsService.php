@@ -137,7 +137,7 @@ class RmsService
         if (! Hash::check($currentPassword, $user->password)) {
             throw ValidationException::withMessages(['current_password' => 'Current password is invalid.']);
         }
-        $user->update(['password' => Hash::make($newPassword)]);
+        $user->update(['password' => $newPassword]);
     }
 
     /**

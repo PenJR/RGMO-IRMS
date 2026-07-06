@@ -6,6 +6,7 @@ use App\Models\SystemSetting;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Password::defaults(fn () => Password::min(10)->letters()->mixedCase()->numbers()->symbols());
+
         View::composer('*', function ($view) {
             $currency = ['code' => 'PHP', 'symbol' => '₱'];
 

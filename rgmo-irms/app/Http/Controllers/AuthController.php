@@ -6,7 +6,10 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Services\RmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
@@ -44,7 +47,14 @@ class AuthController extends Controller
             if ($request->hasSession()) {
                 $request->session()->put('2fa:user_id', $user->id);
             }
-            return response()->json(['2fa_required' => true, 'user_id' => $user->id], 202);
+
+            $challenge = Str::random(64);
+            Cache::put('2fa:challenge:' . hash('sha256', $challenge), $user->id, now()->addMinutes(5));
+
+            return response()->json([
+                '2fa_required' => true,
+                'two_factor_challenge' => $challenge,
+            ], 202);
         }
 
         if ($request->hasSession()) {
@@ -63,8 +73,10 @@ class AuthController extends Controller
     public function logoutUser(Request $request)
     {
         $this->service->logoutUser();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
         return response()->json(['message' => 'Logged out']);
     }
 
@@ -77,7 +89,12 @@ class AuthController extends Controller
     public function registerUser(Request $request)
     {
         abort_unless(Auth::user()?->hasPermission('manage-users'), 403);
-        $data = $request->validate(['name' => 'required|string|max:255', 'email' => 'required|email|unique:users,email', 'password' => 'required|string|min:8', 'role' => 'required|in:admin,staff,project_manager,rgmo_head']);
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:users,email',
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
+            'role' => 'required|in:admin,staff,project_manager,rgmo_head',
+        ]);
         $user = $this->service->registerUser($data);
         return response()->json($user, 201);
     }
@@ -102,7 +119,10 @@ class AuthController extends Controller
      */
     public function changePassword(Request $request)
     {
-        $data = $request->validate(['current_password' => 'required|string', 'new_password' => 'required|string|min:8|confirmed']);
+        $data = $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => ['required', 'string', 'confirmed', Password::defaults()],
+        ]);
         $this->service->changePassword(Auth::id(), $data['current_password'], $data['new_password']);
         return response()->json(['message' => 'Password changed']);
     }

@@ -103,8 +103,12 @@ class TwoFactorTest extends TestCase
 
         $response->assertStatus(202);
         $response->assertJson(['2fa_required' => true]);
+        $response->assertJsonStructure(['two_factor_challenge']);
 
-        $verify = $this->postJson('/api/auth/verify', ['code' => $this->currentTotp($secret)]);
+        $verify = $this->postJson('/api/auth/verify', [
+            'code' => $this->currentTotp($secret),
+            'two_factor_challenge' => $response->json('two_factor_challenge'),
+        ]);
         $verify->assertOk();
         $verify->assertJson(['message' => 'Authenticated']);
 

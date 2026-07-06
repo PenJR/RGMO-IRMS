@@ -9,19 +9,19 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TwoFactorController;
 
 Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'loginUser']);
-    // API endpoint for login verification without auth; session holds pending user ID.
-    Route::post('/verify', [TwoFactorController::class, 'verify']);
+    Route::post('/login', [AuthController::class, 'loginUser'])->middleware('throttle:5,1');
+    // API endpoint for login verification without auth; session or challenge token holds pending user ID.
+    Route::post('/verify', [TwoFactorController::class, 'verify'])->middleware('throttle:5,1');
     Route::middleware('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'getAuthenticatedUser']);
-        Route::post('/change-password', [AuthController::class, 'changePassword']);
+        Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('throttle:6,1');
         Route::post('/register', [AuthController::class, 'registerUser'])->middleware('permission:manage-users');
         Route::get('/2fa/enable', [TwoFactorController::class, 'showEnable']);
         Route::post('/2fa/confirm', [TwoFactorController::class, 'confirm']);
         Route::post('/2fa/disable', [TwoFactorController::class, 'disable']);
+        Route::post('/logout', [AuthController::class, 'logoutUser']);
     });
-    Route::post('/logout', [AuthController::class, 'logoutUser']);
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:3,1');
 });
 
 
