@@ -190,6 +190,25 @@
                 overflow-y: auto;
             }
 
+            @media (min-width: 993px) {
+                #sidebar {
+                    position: fixed;
+                    inset: 0 auto 0 0;
+                    z-index: 1030;
+                    height: 100vh;
+                    max-height: 100vh;
+                }
+
+                .layout-wrapper > main {
+                    margin-left: var(--sidebar-width);
+                    transition: margin-left 0.22s ease;
+                }
+
+                body.sidebar-collapsed .layout-wrapper > main {
+                    margin-left: var(--sidebar-collapsed-width);
+                }
+            }
+
             .card {
                 border: 1px solid rgba(0, 73, 30, 0.08);
                 border-radius: 12px;

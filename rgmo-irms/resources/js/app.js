@@ -3,6 +3,8 @@ import './bootstrap';
 const loader = document.querySelector('[data-rgmo-loader]');
 
 if (loader) {
+    let suppressBeforeUnloadUntil = 0;
+
     const hideLoader = () => {
         loader.classList.add('is-hidden');
         loader.setAttribute('aria-busy', 'false');
@@ -13,6 +15,13 @@ if (loader) {
         loader.setAttribute('aria-busy', 'true');
     };
 
+    const isDownloadUrl = (url) => {
+        const pathname = url.pathname.toLowerCase();
+
+        return /\/export-(pdf|csv|excel)(?:\/|$)/.test(pathname)
+            || /\.(pdf|csv|xlsx?|zip)(?:$|\?)/.test(pathname);
+    };
+
     if (document.readyState === 'complete') {
         window.requestAnimationFrame(hideLoader);
     } else {
@@ -20,7 +29,13 @@ if (loader) {
     }
 
     window.addEventListener('pageshow', hideLoader);
-    window.addEventListener('beforeunload', showLoader);
+    window.addEventListener('beforeunload', () => {
+        if (Date.now() < suppressBeforeUnloadUntil) {
+            return;
+        }
+
+        showLoader();
+    });
 
     document.addEventListener('submit', (event) => {
         if (!event.defaultPrevented) {
@@ -46,6 +61,12 @@ if (loader) {
             && url.hash;
 
         if (url.origin === window.location.origin && !isSamePageHash) {
+            if (isDownloadUrl(url)) {
+                suppressBeforeUnloadUntil = Date.now() + 3000;
+                hideLoader();
+                return;
+            }
+
             showLoader();
         }
     });
