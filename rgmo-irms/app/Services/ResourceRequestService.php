@@ -2,43 +2,43 @@
 
 namespace App\Services;
 
-use App\Models\ResourceRequest;
-use App\Models\RequestItem;
-use App\Models\InventoryItem;
 use App\Models\AuditLog;
+use App\Models\RequestItem;
+use App\Models\ResourceRequest;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ResourceRequestService
 {
     /**
      * Create a new instance.
      */
-    public function __construct(private NotificationService $notificationService)
-    {
-    }
+    public function __construct(private NotificationService $notificationService) {}
 
     /**
      * Get a paginated list of all resource requests with optional filtering.
      *
-     * @param int $perPage
-     * @param array $filters Associative array (status, user_id, start_date, end_date).
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @param  array  $filters  Associative array (status, user_id, start_date, end_date).
+     * @return LengthAwarePaginator
      */
     public function getAllRequests(int $perPage = 15, array $filters = [])
     {
         $query = ResourceRequest::query()->with('user', 'approver', 'items.item');
 
         // Filter by status
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         // Filter by user
-        if (!empty($filters['user_id'])) {
+        if (! empty($filters['user_id'])) {
             $query->where('user_id', $filters['user_id']);
         }
 
         // Date range filter
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+        if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
             $query->dateRange($filters['start_date'], $filters['end_date']);
         }
 
@@ -48,9 +48,8 @@ class ResourceRequestService
     /**
      * Submit a new resource request along with its requested items.
      *
-     * @param array $data Basic request info (user_id, purpose, etc.).
-     * @param array $items Array of items (inventory_item_id, quantity).
-     * @return ResourceRequest
+     * @param  array  $data  Basic request info (user_id, purpose, etc.).
+     * @param  array  $items  Array of items (inventory_item_id, quantity).
      */
     public function createRequest(array $data, array $items = []): ResourceRequest
     {
@@ -84,13 +83,19 @@ class ResourceRequestService
     /**
      * Mark a request as approved, log the step, and notify the requester.
      *
-     * @param ResourceRequest $request
-     * @param int $approverId ID of the admin/staff approving.
-     * @param string|null $remarks Optional approval comments.
-     * @return void
+     * @param  int  $approverId  ID of the admin/staff approving.
+     * @param  string|null  $remarks  Optional approval comments.
      */
     public function approveRequest(ResourceRequest $request, int $approverId, ?string $remarks = null): void
     {
+        $request->loadMissing('items.item');
+
+        if (! $this->canFulfillRequest($request)) {
+            throw ValidationException::withMessages([
+                'items' => 'This request cannot be approved because one or more items do not have enough available stock.',
+            ]);
+        }
+
         $oldValues = $request->toArray();
         $request->approve($approverId, $remarks);
 
@@ -110,9 +115,7 @@ class ResourceRequestService
     /**
      * Mark a request as rejected and log the decision.
      *
-     * @param ResourceRequest $request
-     * @param string|null $remarks Reason for rejection.
-     * @return void
+     * @param  string|null  $remarks  Reason for rejection.
      */
     public function rejectRequest(ResourceRequest $request, ?string $remarks = null): void
     {
@@ -134,14 +137,11 @@ class ResourceRequestService
 
     /**
      * Cancel an existing resource request and log the cancellation.
-     *
-     * @param ResourceRequest $request
-     * @return void
      */
-    public function cancelRequest(ResourceRequest $request): void
+    public function cancelRequest(ResourceRequest $request, ?string $remarks = null): void
     {
         $oldValues = $request->toArray();
-        $request->cancel();
+        $request->cancel($remarks);
 
         AuditLog::log(
             auth()->id(),
@@ -157,7 +157,7 @@ class ResourceRequestService
     /**
      * Retrieve a collection of all pending resource requests for administrative review.
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     public function getPendingRequests()
     {
@@ -167,9 +167,7 @@ class ResourceRequestService
     /**
      * Get a paginated list of resource requests for a specific user.
      *
-     * @param int $userId
-     * @param int $perPage
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @return LengthAwarePaginator
      */
     public function getUserRequests(int $userId, int $perPage = 10)
     {
@@ -181,44 +179,61 @@ class ResourceRequestService
 
     /**
      * Verify if all items in the resource request are currently in stock and can be fulfilled.
-     *
-     * @param ResourceRequest $request
-     * @return bool
      */
     public function canFulfillRequest(ResourceRequest $request): bool
     {
+        $request->loadMissing('items.item');
+
         foreach ($request->items as $item) {
-            if ($item->item->stock < $item->quantity) {
+            if (! $item->item || $item->item->stock < $item->quantity) {
                 return false;
             }
         }
+
         return true;
     }
 
     /**
      * Fulfill a resource request by deducting the requested quantities from inventory stock.
-     *
-     * @param ResourceRequest $request
-     * @return void
      */
     public function fulfillRequest(ResourceRequest $request): void
     {
-        foreach ($request->items as $item) {
-            $item->item->recordStockOut(
-                $item->quantity,
-                'resource_request_' . $request->id,
-                auth()->id()
-            );
+        $request->loadMissing('items.item');
+
+        if (! $request->isApproved()) {
+            throw ValidationException::withMessages([
+                'status' => 'Only approved requests can be fulfilled.',
+            ]);
         }
 
-        $request->update(['status' => ResourceRequest::STATUS_COMPLETED]);
+        if (! $this->canFulfillRequest($request)) {
+            throw ValidationException::withMessages([
+                'items' => 'This request cannot be fulfilled because one or more items do not have enough available stock.',
+            ]);
+        }
 
-        AuditLog::log(
-            auth()->id(),
-            'fulfill',
-            'resource_request',
-            ResourceRequest::class,
-            $request->id
-        );
+        DB::transaction(function () use ($request) {
+            $oldValues = $request->toArray();
+
+            foreach ($request->items as $item) {
+                $item->item->recordStockOut(
+                    $item->quantity,
+                    'resource_request_'.$request->id,
+                    auth()->id()
+                );
+            }
+
+            $request->update(['status' => ResourceRequest::STATUS_COMPLETED]);
+
+            AuditLog::log(
+                auth()->id(),
+                'fulfill',
+                'resource_request',
+                ResourceRequest::class,
+                $request->id,
+                $oldValues,
+                $request->fresh()->toArray()
+            );
+        });
     }
 }

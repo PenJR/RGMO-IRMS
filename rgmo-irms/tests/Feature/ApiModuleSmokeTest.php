@@ -23,6 +23,7 @@ class ApiModuleSmokeTest extends TestCase
 
         $paths = [
             '/api/auth/me',
+            '/api/dashboard/health',
             '/api/inventory',
             '/api/inventory/alerts/low-stock',
             '/api/notifications',

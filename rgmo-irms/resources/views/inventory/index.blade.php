@@ -41,11 +41,14 @@
                             <label for="status" class="form-label">Stock Status</label>
                             <select name="status" id="status" class="form-select">
                                 <option value="">All Status</option>
-                                <option value="low" {{ request('status') == 'low' ? 'selected' : '' }}>Low Stock</option>
-                                <option value="warning" {{ request('status') == 'warning' ? 'selected' : '' }}>Warning</option>
-                                <option value="good" {{ request('status') == 'good' ? 'selected' : '' }}>Good</option>
-                            </select>
-                        </div>
+	                                <option value="low" {{ request('status') == 'low' ? 'selected' : '' }}>Low Stock</option>
+	                                <option value="warning" {{ request('status') == 'warning' ? 'selected' : '' }}>Warning</option>
+	                                <option value="good" {{ request('status') == 'good' ? 'selected' : '' }}>Good</option>
+	                                <option value="reorder" {{ request('status') == 'reorder' ? 'selected' : '' }}>Needs Reorder</option>
+	                                <option value="expiring" {{ request('status') == 'expiring' ? 'selected' : '' }}>Expiring Soon</option>
+	                                <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expired</option>
+	                            </select>
+	                        </div>
                         <div class="col-md-4 col-lg-2 d-flex align-items-end gap-2">
                             <button type="submit" class="btn btn-cmu flex-fill">Filter</button>
                             <a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary">Clear</a>
@@ -87,7 +90,7 @@
                                         <th>SKU</th>
                                         <th>Category</th>
                                         <th>Stock</th>
-                                        <th>Low Threshold</th>
+	                                        <th>Low / Reorder Point</th>
                                         <th>Price</th>
                                         <th>Status</th>
                                         <th>Expiry</th>
@@ -120,24 +123,34 @@
                                                     </span>
                                                 @endif
                                             </td>
-                                            <td>{{ $item->min_stock }} {{ $item->unit }}</td>
+	                                            <td>
+	                                                <div class="small">Low: {{ $item->min_stock }} {{ $item->unit }}</div>
+	                                                <div class="small text-muted">Reorder: {{ $item->getReorderPoint() }} {{ $item->unit }}</div>
+	                                            </td>
                                             <td>{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
-                                            <td>
-                                                <span class="badge rounded-pill
-                                                    @if($item->getStockStatus() === 'low') bg-danger text-white
-                                                    @elseif($item->getStockStatus() === 'warning') bg-warning text-dark
-                                                    @else bg-success text-white @endif">
-                                                    {{ ucfirst($item->getStockStatus()) }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                @if($item->has_expiry)
-                                                    <div class="small">{{ $item->expiry_date?->format('M d, Y') ?? 'No date' }}</div>
-                                                    @if($item->isExpired())
-                                                        <span class="badge rounded-pill bg-danger text-white">Expired</span>
-                                                    @endif
-                                                @else
-                                                    <span class="text-muted small">No expiry</span>
+	                                            <td>
+	                                                <span class="badge rounded-pill
+	                                                    @if($item->getStockStatus() === 'low') bg-danger text-white
+	                                                    @elseif($item->getStockStatus() === 'warning') bg-warning text-dark
+	                                                    @else bg-success text-white @endif">
+	                                                    {{ ucfirst($item->getStockStatus()) }}
+	                                                </span>
+	                                                @if($item->needsReorder())
+	                                                    <span class="badge rounded-pill bg-info text-dark ms-1">Reorder</span>
+	                                                @endif
+	                                            </td>
+	                                            <td>
+	                                                @if($item->has_expiry)
+	                                                    <div class="small">{{ $item->expiry_date?->format('M d, Y') ?? 'No date' }}</div>
+	                                                    @if($item->isExpired())
+	                                                        <span class="badge rounded-pill bg-danger text-white">Expired</span>
+	                                                    @elseif($item->isExpiringSoon())
+	                                                        <span class="badge rounded-pill bg-warning text-dark">Expiring soon</span>
+	                                                    @else
+	                                                        <span class="badge rounded-pill bg-success text-white">Active</span>
+	                                                    @endif
+	                                                @else
+	                                                    <span class="text-muted small">No expiry</span>
                                                 @endif
                                             </td>
                                             <td class="text-end">

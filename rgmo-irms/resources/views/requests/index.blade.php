@@ -22,9 +22,11 @@
                         <label class="form-label">Status</label>
                         <select name="status" class="form-select">
                             <option value="">All</option>
-                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
-                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+	                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+	                            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
+	                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+	                            <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+	                            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -63,10 +65,12 @@
                                         <td>#RQ-{{ $request->id }}</td>
                                         <td>{{ $request->user->name ?? 'Unknown' }}</td>
                                         <td>
-                                            <span class="badge rounded-pill
-                                                @if($request->status === 'approved') bg-success text-white
-                                                @elseif($request->status === 'rejected') bg-danger text-white
-                                                @else bg-warning text-dark @endif">
+	                                            <span class="badge rounded-pill
+	                                                @if($request->status === 'approved') bg-success text-white
+	                                                @elseif($request->status === 'rejected') bg-danger text-white
+	                                                @elseif($request->status === 'cancelled') bg-secondary text-white
+	                                                @elseif($request->status === 'completed') bg-primary text-white
+	                                                @else bg-warning text-dark @endif">
                                                 {{ ucfirst($request->status) }}
                                             </span>
                                         </td>

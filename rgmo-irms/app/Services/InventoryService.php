@@ -2,12 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
-use App\Models\Category;
-use App\Models\AuditLog;
-use App\Services\NotificationService;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
 
 class InventoryService
@@ -15,31 +14,29 @@ class InventoryService
     /**
      * Create a new instance.
      */
-    public function __construct(private NotificationService $notificationService)
-    {
-    }
+    public function __construct(private NotificationService $notificationService) {}
 
     /**
      * Get all inventory items with pagination and filters.
      *
-     * @param int $perPage Number of items per page.
-     * @param array $filters Associative array of filters (category_id, search, status).
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @param  int  $perPage  Number of items per page.
+     * @param  array  $filters  Associative array of filters (category_id, search, status).
+     * @return LengthAwarePaginator
      */
     public function getAllItems(int $perPage = 15, array $filters = [])
     {
         $query = InventoryItem::query()->with('category');
 
         // Apply filters
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             if ($filters['status'] === 'low') {
                 $query->lowStock();
             } elseif ($filters['status'] === 'warning') {
@@ -48,6 +45,12 @@ class InventoryService
                 $query->goodStock();
             } elseif ($filters['status'] === 'active') {
                 $query->active();
+            } elseif ($filters['status'] === 'reorder') {
+                $query->needsReorder();
+            } elseif ($filters['status'] === 'expired') {
+                $query->expired();
+            } elseif ($filters['status'] === 'expiring') {
+                $query->expiringSoon();
             }
         }
 
@@ -57,7 +60,7 @@ class InventoryService
     /**
      * Get all items currently flagged as low stock.
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     public function getLowStockItems()
     {
@@ -67,9 +70,8 @@ class InventoryService
     /**
      * Create a new inventory item and log the activity.
      *
-     * @param array $data Item data (name, sku, category_id, etc.).
-     * @param int|null $userId ID of the user performing the creation.
-     * @return InventoryItem
+     * @param  array  $data  Item data (name, sku, category_id, etc.).
+     * @param  int|null  $userId  ID of the user performing the creation.
      */
     public function createItem(array $data, ?int $userId = null): InventoryItem
     {
@@ -94,10 +96,9 @@ class InventoryService
     /**
      * Update an existing inventory item and log the changes.
      *
-     * @param InventoryItem $item The item model to update.
-     * @param array $data The new data to apply.
-     * @param int|null $userId ID of the user performing the update.
-     * @return InventoryItem
+     * @param  InventoryItem  $item  The item model to update.
+     * @param  array  $data  The new data to apply.
+     * @param  int|null  $userId  ID of the user performing the update.
      */
     public function updateItem(InventoryItem $item, array $data, ?int $userId = null): InventoryItem
     {
@@ -122,10 +123,6 @@ class InventoryService
 
     /**
      * Soft-delete (deactivate) an inventory item and log the deletion.
-     *
-     * @param InventoryItem $item
-     * @param int|null $userId
-     * @return void
      */
     public function deleteItem(InventoryItem $item, ?int $userId = null): void
     {
@@ -145,10 +142,6 @@ class InventoryService
 
     /**
      * Restore a previously soft-deleted inventory item.
-     *
-     * @param int $itemId
-     * @param int|null $userId
-     * @return InventoryItem
      */
     public function restoreItem(int $itemId, ?int $userId = null): InventoryItem
     {
@@ -171,13 +164,6 @@ class InventoryService
 
     /**
      * Record a stock-in transaction, update the item's current stock, and log the action.
-     *
-     * @param InventoryItem $item
-     * @param int $quantity
-     * @param string $source
-     * @param int $userId
-     * @param string|null $fundingSource
-     * @return InventoryTransaction
      */
     public function recordStockIn(InventoryItem $item, int $quantity, string $source, int $userId, ?string $fundingSource = null): InventoryTransaction
     {
@@ -200,12 +186,6 @@ class InventoryService
      * Record a stock-out (withdrawal) transaction, update the item's current stock, and log the action.
      * Validates that sufficient stock exists before committing.
      *
-     * @param InventoryItem $item
-     * @param int $quantity
-     * @param string $destination
-     * @param int $userId
-     * @param string|null $fundingSource
-     * @return InventoryTransaction
      * @throws ValidationException
      */
     public function recordStockOut(InventoryItem $item, int $quantity, string $destination, int $userId, ?string $fundingSource = null): InventoryTransaction
@@ -236,7 +216,7 @@ class InventoryService
     /**
      * Get a collection of active inventory items that have reached their reorder level.
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     public function getItemsNeedingReorder()
     {
@@ -250,9 +230,7 @@ class InventoryService
     /**
      * Get a paginated listing of transaction history for a specific inventory item.
      *
-     * @param InventoryItem $item
-     * @param int $perPage
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @return LengthAwarePaginator
      */
     public function getTransactionHistory(InventoryItem $item, int $perPage = 15)
     {

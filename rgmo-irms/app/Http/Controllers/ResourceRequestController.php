@@ -2,26 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ResourceRequest;
+use App\Models\AuditLog;
 use App\Models\InventoryItem;
+use App\Models\ResourceRequest;
 use App\Services\ResourceRequestService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ResourceRequestController extends Controller
 {
     /**
      * Create a new instance.
      */
-    public function __construct(private ResourceRequestService $requestService)
-    {
-    }
+    public function __construct(private ResourceRequestService $requestService) {}
 
     /**
      * Display a listing of resource requests with filtering and pagination.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function index(Request $request)
     {
@@ -39,8 +41,9 @@ class ResourceRequestController extends Controller
     /**
      * Show the creation form for a new resource request.
      *
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function create()
     {
@@ -54,9 +57,9 @@ class ResourceRequestController extends Controller
     /**
      * Store a newly created resource request in the database.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function store(Request $request)
     {
@@ -93,25 +96,34 @@ class ResourceRequestController extends Controller
     /**
      * Display details of a specific resource request.
      *
-     * @param ResourceRequest $request
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function show(ResourceRequest $request)
     {
         $this->authorize('view', $request);
 
         $request->load('user', 'approver', 'items.item');
+        $workflowLogs = AuditLog::with('user:id,name')
+            ->where('model_type', ResourceRequest::class)
+            ->where('model_id', $request->id)
+            ->oldest()
+            ->get();
 
-        return view('requests.show', ['request' => $request]);
+        return view('requests.show', [
+            'request' => $request,
+            'workflowLogs' => $workflowLogs,
+            'canFulfill' => $this->requestService->canFulfillRequest($request),
+        ]);
     }
 
     /**
      * Show the edit form for a specific resource request.
      *
-     * @param ResourceRequest $request
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function edit(ResourceRequest $request)
     {
@@ -126,10 +138,11 @@ class ResourceRequestController extends Controller
     /**
      * Update an existing resource request in the database.
      *
-     * @param Request $request
-     * @param ResourceRequest $resourceRequest
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @param  Request  $request
+     * @param  ResourceRequest  $resourceRequest
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function update(Request $httpRequest, ResourceRequest $request)
     {
@@ -149,10 +162,11 @@ class ResourceRequestController extends Controller
     /**
      * Approve a pending resource request.
      *
-     * @param Request $request
-     * @param ResourceRequest $resourceRequest
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @param  Request  $request
+     * @param  ResourceRequest  $resourceRequest
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function approve(Request $httpRequest, ResourceRequest $request)
     {
@@ -170,10 +184,11 @@ class ResourceRequestController extends Controller
     /**
      * Reject a pending resource request.
      *
-     * @param Request $request
-     * @param ResourceRequest $resourceRequest
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @param  Request  $request
+     * @param  ResourceRequest  $resourceRequest
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function reject(Request $httpRequest, ResourceRequest $request)
     {
@@ -189,10 +204,47 @@ class ResourceRequestController extends Controller
     }
 
     /**
+     * Cancel a pending request and keep the cancellation reason for workflow history.
+     *
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
+     */
+    public function destroy(Request $httpRequest, ResourceRequest $request)
+    {
+        $this->authorize('delete', $request);
+
+        $validated = $httpRequest->validate([
+            'remarks' => 'required|string|max:1000',
+        ]);
+
+        $this->requestService->cancelRequest($request, $validated['remarks']);
+
+        return redirect()->route('requests.show', $request)->with('success', 'Resource request cancelled.');
+    }
+
+    /**
+     * Fulfill an approved request and deduct requested quantities from inventory.
+     *
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
+     */
+    public function fulfill(ResourceRequest $request)
+    {
+        $this->authorize('fulfill', $request);
+
+        $this->requestService->fulfillRequest($request);
+
+        return redirect()->route('requests.show', $request)->with('success', 'Resource request fulfilled and inventory stock deducted.');
+    }
+
+    /**
      * Get a listing of all pending resource requests for administrative review.
      *
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function pending()
     {

@@ -1,4 +1,14 @@
 <x-app-layout>
+    @php
+        $statusBadge = match ($request->status) {
+            'approved' => 'bg-success text-white',
+            'rejected' => 'bg-danger text-white',
+            'cancelled' => 'bg-secondary text-white',
+            'completed' => 'bg-primary text-white',
+            default => 'bg-warning text-dark',
+        };
+    @endphp
+
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center w-100">
             <div>
@@ -23,12 +33,9 @@
                             <span class="text-muted">Requested by</span>
                             <h5 class="mb-0">{{ $request->user->name ?? 'Unknown' }}</h5>
                         </div>
-                        <span class="badge rounded-pill
-                            @if($request->status === 'approved') bg-success text-white
-                            @elseif($request->status === 'rejected') bg-danger text-white
-                            @else bg-warning text-dark @endif">
-                            {{ ucfirst($request->status) }}
-                        </span>
+	                        <span class="badge rounded-pill {{ $statusBadge }}">
+	                            {{ ucfirst($request->status) }}
+	                        </span>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-4 mb-4">
@@ -61,22 +68,28 @@
                                             <th>Item</th>
                                             <th>Quantity</th>
                                             <th>Unit</th>
-                                            <th>Availability</th>
+	                                            <th>Available Stock</th>
+	                                            <th>Availability</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($request->items as $item)
                                             <tr>
                                                 <td>{{ $item->item?->name ?? 'Unknown item' }}</td>
-                                                <td>{{ $item->quantity }}</td>
-                                                <td>{{ $item->item?->unit ?? 'N/A' }}</td>
-                                                <td>
-                                                    @if($item->item && $item->item->stock <= $item->item->min_stock)
-                                                        <span class="badge bg-danger text-white">Low</span>
-                                                    @else
-                                                        <span class="badge bg-success text-white">Available</span>
-                                                    @endif
-                                                </td>
+	                                                <td>{{ $item->quantity }}</td>
+	                                                <td>{{ $item->item?->unit ?? 'N/A' }}</td>
+	                                                <td>{{ $item->item?->stock ?? 0 }} {{ $item->item?->unit ?? '' }}</td>
+	                                                <td>
+	                                                    @if(! $item->item)
+	                                                        <span class="badge bg-secondary text-white">Missing item</span>
+	                                                    @elseif($item->item->stock < $item->quantity)
+	                                                        <span class="badge bg-danger text-white">Insufficient</span>
+	                                                    @elseif($item->item->stock <= $item->item->min_stock)
+	                                                        <span class="badge bg-warning text-dark">Low after release</span>
+	                                                    @else
+	                                                        <span class="badge bg-success text-white">Ready</span>
+	                                                    @endif
+	                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -93,17 +106,23 @@
                         <h5 class="mb-0">Approval Actions</h5>
                     </div>
                     <div class="card-body p-4">
-                        @if($request->status === 'pending')
-                            @can('approve', $request)
-                                <form action="{{ route('requests.approve', $request) }}" method="POST" class="mb-3">
-                                    @csrf
+	                        @if($request->status === 'pending')
+	                            @unless($canFulfill)
+	                                <div class="alert alert-warning small">
+	                                    This request has insufficient stock for one or more items. Approval is blocked until stock is replenished or the request is edited.
+	                                </div>
+	                            @endunless
+
+	                            @can('approve', $request)
+	                                <form action="{{ route('requests.approve', $request) }}" method="POST" class="mb-3">
+	                                    @csrf
                                     <div class="mb-3">
                                         <label class="form-label">Approval Remarks</label>
                                         <textarea name="remarks" class="form-control" rows="3"></textarea>
                                     </div>
-                                    <button type="submit" class="btn btn-cmu w-100">Approve Request</button>
-                                </form>
-                            @endcan
+	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }}>Approve Request</button>
+	                                </form>
+	                            @endcan
 
                             @can('reject', $request)
                                 <form action="{{ route('requests.reject', $request) }}" method="POST">
@@ -112,11 +131,38 @@
                                         <label class="form-label">Rejection Notes</label>
                                         <textarea name="remarks" class="form-control" rows="3" required></textarea>
                                     </div>
-                                    <button type="submit" class="btn btn-outline-danger w-100">Reject Request</button>
-                                </form>
-                            @endcan
-                        @else
-                            <p class="text-muted mb-3">This request has already been {{ $request->status }}.</p>
+	                                    <button type="submit" class="btn btn-outline-danger w-100">Reject Request</button>
+	                                </form>
+	                            @endcan
+	
+	                            @can('delete', $request)
+	                                <hr>
+	                                <form action="{{ route('requests.destroy', $request) }}" method="POST">
+	                                    @csrf
+	                                    @method('DELETE')
+	                                    <div class="mb-3">
+	                                        <label class="form-label">Cancellation Reason</label>
+	                                        <textarea name="remarks" class="form-control" rows="3" required></textarea>
+	                                    </div>
+	                                    <button type="submit" class="btn btn-outline-secondary w-100" onclick="return confirm('Cancel this pending request?')">Cancel Request</button>
+	                                </form>
+	                            @endcan
+	                        @elseif($request->status === 'approved')
+	                            @can('fulfill', $request)
+	                                @unless($canFulfill)
+	                                    <div class="alert alert-warning small">
+	                                        This request was approved, but current stock is no longer enough to fulfill all items.
+	                                    </div>
+	                                @endunless
+	                                <form action="{{ route('requests.fulfill', $request) }}" method="POST">
+	                                    @csrf
+	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }} onclick="return confirm('Fulfill this request and deduct inventory stock?')">Fulfill Request</button>
+	                                </form>
+	                            @else
+	                                <p class="text-muted mb-0">This request is approved and waiting for release.</p>
+	                            @endcan
+	                        @else
+	                            <p class="text-muted mb-3">This request has already been {{ $request->status }}.</p>
                         @endif
                     </div>
                 </div>
@@ -130,7 +176,7 @@
                             <p class="mb-1"><strong>Submitted</strong></p>
                             <p class="text-muted small mb-0">{{ $request->created_at?->format('M d, Y H:i') }}</p>
                         </div>
-                        @if($request->approved_at)
+	                        @if($request->approved_at)
                             <div class="mb-3">
                                 <p class="mb-1"><strong>Approved</strong></p>
                                 <p class="text-muted small mb-0">{{ $request->approved_at?->format('M d, Y H:i') }}</p>
@@ -141,8 +187,34 @@
                                 <p class="mb-1"><strong>Rejected</strong></p>
                                 <p class="text-muted small mb-0">{{ $request->rejected_at?->format('M d, Y H:i') }}</p>
                             </div>
-                        @endif
-                        <div>
+	                        @endif
+	                        @if($request->cancelled_at)
+	                            <div class="mb-3">
+	                                <p class="mb-1"><strong>Cancelled</strong></p>
+	                                <p class="text-muted small mb-0">{{ $request->cancelled_at?->format('M d, Y H:i') }}</p>
+	                            </div>
+	                        @endif
+	                        @if($request->isCompleted())
+	                            <div class="mb-3">
+	                                <p class="mb-1"><strong>Fulfilled</strong></p>
+	                                <p class="text-muted small mb-0">{{ $request->updated_at?->format('M d, Y H:i') }}</p>
+	                            </div>
+	                        @endif
+	                        @if($workflowLogs->count() > 0)
+	                            <hr>
+	                            @foreach($workflowLogs as $log)
+	                                <div class="mb-3">
+	                                    <p class="mb-1"><strong>{{ str($log->action)->replace('_', ' ')->title() }}</strong></p>
+	                                    <p class="text-muted small mb-0">
+	                                        {{ $log->created_at?->format('M d, Y H:i') }}
+	                                        @if($log->user)
+	                                            by {{ $log->user->name }}
+	                                        @endif
+	                                    </p>
+	                                </div>
+	                            @endforeach
+	                        @endif
+	                        <div>
                             <p class="mb-1"><strong>Last Updated</strong></p>
                             <p class="text-muted small mb-0">{{ $request->updated_at?->format('M d, Y H:i') }}</p>
                         </div>
@@ -152,4 +224,3 @@
         </div>
     </div>
 </x-app-layout>
-

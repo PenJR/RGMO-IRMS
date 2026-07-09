@@ -38,8 +38,6 @@ class InventoryItem extends Model
 
     /**
      * Get the category that the inventory item belongs to.
-     *
-     * @return BelongsTo
      */
     public function category(): BelongsTo
     {
@@ -48,8 +46,6 @@ class InventoryItem extends Model
 
     /**
      * Get the history of transactions for this item.
-     *
-     * @return HasMany
      */
     public function transactions(): HasMany
     {
@@ -58,8 +54,6 @@ class InventoryItem extends Model
 
     /**
      * Get all resource usage records for this item.
-     *
-     * @return HasMany
      */
     public function usages(): HasMany
     {
@@ -68,8 +62,6 @@ class InventoryItem extends Model
 
     /**
      * Get the request line items associated with this inventory item.
-     *
-     * @return HasMany
      */
     public function requestItems(): HasMany
     {
@@ -79,9 +71,6 @@ class InventoryItem extends Model
     // Scopes
     /**
      * Scope a query to only include items with stock at or below minimum level.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeLowStock(Builder $query): Builder
     {
@@ -90,9 +79,6 @@ class InventoryItem extends Model
 
     /**
      * Scope a query to only include items that have not been soft-deleted.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeActive(Builder $query): Builder
     {
@@ -101,9 +87,6 @@ class InventoryItem extends Model
 
     /**
      * Scope a query to include items nearing low stock (between 100% and 150% of min_stock).
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeWarningStock(Builder $query): Builder
     {
@@ -112,9 +95,6 @@ class InventoryItem extends Model
 
     /**
      * Scope a query to include items with healthy stock levels.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeGoodStock(Builder $query): Builder
     {
@@ -122,11 +102,35 @@ class InventoryItem extends Model
     }
 
     /**
+     * Scope a query to include items at or below their reorder point.
+     */
+    public function scopeNeedsReorder(Builder $query): Builder
+    {
+        return $query->whereRaw('stock <= COALESCE(reorder_level, min_stock)');
+    }
+
+    /**
+     * Scope a query to include expired inventory items.
+     */
+    public function scopeExpired(Builder $query): Builder
+    {
+        return $query->where('has_expiry', true)
+            ->whereNotNull('expiry_date')
+            ->whereDate('expiry_date', '<', today());
+    }
+
+    /**
+     * Scope a query to include items expiring in the next N days.
+     */
+    public function scopeExpiringSoon(Builder $query, int $days = 30): Builder
+    {
+        return $query->where('has_expiry', true)
+            ->whereNotNull('expiry_date')
+            ->whereBetween('expiry_date', [today(), today()->addDays($days)]);
+    }
+
+    /**
      * Scope a query to filters items by a specific category.
-     *
-     * @param Builder $query
-     * @param int $categoryId
-     * @return Builder
      */
     public function scopeByCategory(Builder $query, int $categoryId): Builder
     {
@@ -135,10 +139,6 @@ class InventoryItem extends Model
 
     /**
      * Scope a query to search for items by name, SKU, or description.
-     *
-     * @param Builder $query
-     * @param string $search
-     * @return Builder
      */
     public function scopeSearch(Builder $query, string $search): Builder
     {
@@ -150,8 +150,6 @@ class InventoryItem extends Model
     // Methods
     /**
      * Check if the current item is in a low stock state.
-     *
-     * @return bool
      */
     public function isLowStock(): bool
     {
@@ -160,8 +158,6 @@ class InventoryItem extends Model
 
     /**
      * Get the current stock status label (low, warning, or good).
-     *
-     * @return string
      */
     public function getStockStatus(): string
     {
@@ -171,6 +167,7 @@ class InventoryItem extends Model
         if ($this->stock <= ($this->min_stock * 1.5)) {
             return 'warning';
         }
+
         return 'good';
     }
 
@@ -183,13 +180,53 @@ class InventoryItem extends Model
     }
 
     /**
+     * Determine whether the item expires within the next N days.
+     */
+    public function isExpiringSoon(int $days = 30): bool
+    {
+        return $this->has_expiry
+            && $this->expiry_date
+            && $this->expiry_date->betweenIncluded(today(), today()->addDays($days));
+    }
+
+    /**
+     * Resolve the item expiry status label.
+     */
+    public function getExpiryStatus(int $days = 30): string
+    {
+        if (! $this->has_expiry) {
+            return 'none';
+        }
+
+        if ($this->isExpired()) {
+            return 'expired';
+        }
+
+        if ($this->isExpiringSoon($days)) {
+            return 'expiring';
+        }
+
+        return 'active';
+    }
+
+    /**
+     * Get the current reorder point for the item.
+     */
+    public function getReorderPoint(): int
+    {
+        return $this->reorder_level ?? $this->min_stock;
+    }
+
+    /**
+     * Determine whether the item should be reordered.
+     */
+    public function needsReorder(): bool
+    {
+        return $this->stock <= $this->getReorderPoint();
+    }
+
+    /**
      * Increase stock levels and record a stock-in transaction.
-     *
-     * @param int $quantity
-     * @param string $source
-     * @param int|null $userId
-     * @param string|null $fundingSource
-     * @return void
      */
     public function recordStockIn(int $quantity, string $source, ?int $userId = null, ?string $fundingSource = null): void
     {
@@ -205,12 +242,6 @@ class InventoryItem extends Model
 
     /**
      * Decrease stock levels and record a stock-out transaction.
-     *
-     * @param int $quantity
-     * @param string $destination
-     * @param int|null $userId
-     * @param string|null $fundingSource
-     * @return void
      */
     public function recordStockOut(int $quantity, string $destination, ?int $userId = null, ?string $fundingSource = null): void
     {

@@ -13,9 +13,13 @@ class ResourceRequest extends Model
     use SoftDeletes;
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_COMPLETED = 'completed';
 
     protected $fillable = [
@@ -43,8 +47,6 @@ class ResourceRequest extends Model
 
     /**
      * Get the user who submitted the resource request.
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -53,8 +55,6 @@ class ResourceRequest extends Model
 
     /**
      * Get the user who approved or rejected the request.
-     *
-     * @return BelongsTo
      */
     public function approver(): BelongsTo
     {
@@ -63,8 +63,6 @@ class ResourceRequest extends Model
 
     /**
      * Get all line items associated with this resource request.
-     *
-     * @return HasMany
      */
     public function items(): HasMany
     {
@@ -74,9 +72,6 @@ class ResourceRequest extends Model
     // Scopes
     /**
      * Scope a query to only include pending requests.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopePending(Builder $query): Builder
     {
@@ -85,9 +80,6 @@ class ResourceRequest extends Model
 
     /**
      * Scope a query to only include approved requests.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeApproved(Builder $query): Builder
     {
@@ -96,9 +88,6 @@ class ResourceRequest extends Model
 
     /**
      * Scope a query to only include rejected requests.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeRejected(Builder $query): Builder
     {
@@ -107,9 +96,6 @@ class ResourceRequest extends Model
 
     /**
      * Scope a query to only include completed requests.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeCompleted(Builder $query): Builder
     {
@@ -118,10 +104,6 @@ class ResourceRequest extends Model
 
     /**
      * Scope a query to only include requests from a specific user.
-     *
-     * @param Builder $query
-     * @param int $userId
-     * @return Builder
      */
     public function scopeByUser(Builder $query, int $userId): Builder
     {
@@ -130,10 +112,6 @@ class ResourceRequest extends Model
 
     /**
      * Scope a query to only include requests with a specific status.
-     *
-     * @param Builder $query
-     * @param string $status
-     * @return Builder
      */
     public function scopeByStatus(Builder $query, string $status): Builder
     {
@@ -143,10 +121,8 @@ class ResourceRequest extends Model
     /**
      * Scope a query to only include requests within a specific creation date range.
      *
-     * @param Builder $query
-     * @param mixed $startDate
-     * @param mixed $endDate
-     * @return Builder
+     * @param  mixed  $startDate
+     * @param  mixed  $endDate
      */
     public function scopeDateRange(Builder $query, $startDate, $endDate): Builder
     {
@@ -156,8 +132,6 @@ class ResourceRequest extends Model
     // Methods
     /**
      * Determine if the request is currently in pending status.
-     *
-     * @return bool
      */
     public function isPending(): bool
     {
@@ -166,8 +140,6 @@ class ResourceRequest extends Model
 
     /**
      * Determine if the request has been approved.
-     *
-     * @return bool
      */
     public function isApproved(): bool
     {
@@ -177,9 +149,8 @@ class ResourceRequest extends Model
     /**
      * Approve the resource request, setting the approver and timestamp.
      *
-     * @param int $approvedBy User ID of the approver.
-     * @param string|null $remarks Optional approval remarks.
-     * @return void
+     * @param  int  $approvedBy  User ID of the approver.
+     * @param  string|null  $remarks  Optional approval remarks.
      */
     public function approve(int $approvedBy, ?string $remarks = null): void
     {
@@ -194,8 +165,7 @@ class ResourceRequest extends Model
     /**
      * Reject the resource request and record the rejection timestamp.
      *
-     * @param string|null $remarks Reason for rejection.
-     * @return void
+     * @param  string|null  $remarks  Reason for rejection.
      */
     public function reject(?string $remarks = null): void
     {
@@ -209,12 +179,21 @@ class ResourceRequest extends Model
     /**
      * Determine whether cancel.
      */
-    public function cancel(): void
+    public function cancel(?string $remarks = null): void
     {
         $this->update([
             'status' => self::STATUS_CANCELLED,
+            'remarks' => $remarks ?? $this->remarks,
             'cancelled_at' => now(),
         ]);
+    }
+
+    /**
+     * Determine whether completed.
+     */
+    public function isCompleted(): bool
+    {
+        return $this->status === self::STATUS_COMPLETED;
     }
 
     /**

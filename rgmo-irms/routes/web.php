@@ -1,17 +1,17 @@
 <?php
 
+use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AIForecastingController;
 use App\Http\Controllers\BackupController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\ResourceRequestController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\ResourceRequestController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\TwoFactorController;
-use App\Http\Controllers\AIForecastingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -24,6 +24,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/data', [DashboardController::class, 'data'])->name('dashboard.data');
     Route::get('/staff/dashboard', [DashboardController::class, 'staff'])->name('dashboard.staff');
+    Route::middleware(['permission:generate-reports,view-audit-trail'])->group(function () {
+        Route::get('/dashboard/health', [DashboardController::class, 'health'])->name('dashboard.health');
+        Route::get('/dashboard/health/data', [DashboardController::class, 'healthData'])->name('dashboard.health.data');
+    });
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -52,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Resource Request Module
     Route::middleware(['permission:submit-request,update-pending-request,review-request,approve-request'])->group(function () {
         Route::get('/requests/pending/list', [ResourceRequestController::class, 'pending'])->name('requests.pending');
+        Route::post('/requests/{request}/fulfill', [ResourceRequestController::class, 'fulfill'])->name('requests.fulfill');
         Route::resource('requests', ResourceRequestController::class);
     });
 

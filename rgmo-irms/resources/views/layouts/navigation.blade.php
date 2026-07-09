@@ -20,6 +20,13 @@
             <span class="nav-label">Dashboard</span>
         </a>
 
+        @if(auth()->user()->hasPermission(['generate-reports', 'view-audit-trail']))
+            <a href="{{ route('dashboard.health') }}" class="nav-link {{ request()->routeIs('dashboard.health*') ? 'active' : '' }}" data-sidebar-tooltip="Module Health" aria-label="Module Health">
+                <span class="nav-icon"><i data-lucide="activity"></i></span>
+                <span class="nav-label">Module Health</span>
+            </a>
+        @endif
+
         @can('viewAny', App\Models\InventoryItem::class)
             <details class="nav-group {{ request()->routeIs('inventory.*') ? 'active' : '' }}" {{ request()->routeIs('inventory.*') ? 'open' : '' }}>
                 <summary>

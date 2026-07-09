@@ -18,19 +18,30 @@
                                 <tr>
                                     <th>Request ID</th>
                                     <th>Requester</th>
-                                    <th>Purpose</th>
-                                    <th>Needed Date</th>
-                                    <th class="text-end">Actions</th>
+	                                    <th>Purpose</th>
+	                                    <th>Needed Date</th>
+	                                    <th>Readiness</th>
+	                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($requests as $request)
                                     <tr>
                                         <td>#RQ-{{ $request->id }}</td>
-                                        <td>{{ $request->user->name ?? 'Unknown' }}</td>
-                                        <td>{{ Str::limit($request->purpose, 60) }}</td>
-                                        <td>{{ $request->needed_date?->format('M d, Y') ?? 'N/A' }}</td>
-                                        <td class="text-end">
+	                                        <td>{{ $request->user->name ?? 'Unknown' }}</td>
+	                                        <td>{{ Str::limit($request->purpose, 60) }}</td>
+	                                        <td>{{ $request->needed_date?->format('M d, Y') ?? 'N/A' }}</td>
+	                                        <td>
+	                                            @php
+	                                                $shortItems = $request->items->filter(fn ($item) => ! $item->item || $item->item->stock < $item->quantity);
+	                                            @endphp
+	                                            @if($shortItems->isEmpty())
+	                                                <span class="badge rounded-pill bg-success text-white">Ready</span>
+	                                            @else
+	                                                <span class="badge rounded-pill bg-danger text-white">{{ $shortItems->count() }} short</span>
+	                                            @endif
+	                                        </td>
+	                                        <td class="text-end">
                                             <a href="{{ route('requests.show', ['request' => $request->id]) }}" class="btn btn-sm btn-outline-primary">Review</a>
                                         </td>
                                     </tr>

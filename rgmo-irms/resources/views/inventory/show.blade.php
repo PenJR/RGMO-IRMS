@@ -62,13 +62,14 @@
                                     <dd class="text-sm text-gray-900">
                                         @if($item->has_expiry)
                                             {{ $item->expiry_date?->format('M d, Y') ?? 'Date not set' }}
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-2
-                                                @if($item->isExpired()) bg-red-100 text-red-800
-                                                @else bg-green-100 text-green-800 @endif">
-                                                {{ $item->isExpired() ? 'Expired' : 'Active' }}
-                                            </span>
-                                        @else
-                                            Does not expire
+	                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-2
+	                                                @if($item->isExpired()) bg-red-100 text-red-800
+	                                                @elseif($item->isExpiringSoon()) bg-yellow-100 text-yellow-800
+	                                                @else bg-green-100 text-green-800 @endif">
+	                                                {{ str($item->getExpiryStatus())->replace('_', ' ')->title() }}
+	                                            </span>
+	                                        @else
+	                                            Does not expire
                                         @endif
                                     </dd>
                                 </div>
@@ -94,10 +95,17 @@
                                     <dt class="text-sm font-medium text-gray-500">Minimum Stock</dt>
                                     <dd class="text-sm text-gray-900">{{ $item->min_stock }} {{ $item->unit }}</dd>
                                 </div>
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500">Reorder Level</dt>
-                                    <dd class="text-sm text-gray-900">{{ $item->reorder_level ?? $item->min_stock }} {{ $item->unit }}</dd>
-                                </div>
+	                                <div>
+	                                    <dt class="text-sm font-medium text-gray-500">Reorder Level</dt>
+	                                    <dd class="text-sm text-gray-900">
+	                                        {{ $item->getReorderPoint() }} {{ $item->unit }}
+	                                        @if($item->needsReorder())
+	                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 ml-2">
+	                                                Reorder Needed
+	                                            </span>
+	                                        @endif
+	                                    </dd>
+	                                </div>
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">Unit Price</dt>
                                     <dd class="text-sm text-gray-900">{{ $currencySymbol }}{{ number_format($item->price, 2) }}</dd>

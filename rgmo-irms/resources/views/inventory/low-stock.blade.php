@@ -16,19 +16,21 @@
                                 <tr>
                                     <th>Item</th>
                                     <th>Category</th>
-                                    <th>Stock</th>
-                                    <th>Low Stock Threshold</th>
-                                    <th class="text-end">Actions</th>
+	                                    <th>Stock</th>
+	                                    <th>Low Stock Threshold</th>
+	                                    <th>Reorder Point</th>
+	                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($items as $item)
                                     <tr>
                                         <td>{{ $item->name }}</td>
-                                        <td>{{ $item->category->name ?? 'N/A' }}</td>
-                                        <td>{{ $item->stock }} {{ $item->unit }}</td>
-                                        <td>{{ $item->min_stock }} {{ $item->unit }}</td>
-                                        <td class="text-end">
+	                                        <td>{{ $item->category->name ?? 'N/A' }}</td>
+	                                        <td>{{ $item->stock }} {{ $item->unit }}</td>
+	                                        <td>{{ $item->min_stock }} {{ $item->unit }}</td>
+	                                        <td>{{ $item->getReorderPoint() }} {{ $item->unit }}</td>
+	                                        <td class="text-end">
                                             <a href="{{ route('inventory.show', ['inventory' => $item->id]) }}" class="btn btn-sm btn-outline-primary">View</a>
                                         </td>
                                     </tr>
@@ -61,9 +63,10 @@
                             <tr>
                                 <th>Resource</th>
                                 <th>Category</th>
-                                <th>Current Stock</th>
-                                <th style="width: 260px;">Low Stock Threshold</th>
-                                <th>Status</th>
+	                                <th>Current Stock</th>
+	                                <th style="width: 260px;">Low Stock Threshold</th>
+	                                <th>Reorder Point</th>
+	                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -74,7 +77,7 @@
                                         <div class="text-muted small">{{ $item->sku }}</div>
                                     </td>
                                     <td>{{ $item->category->name ?? 'N/A' }}</td>
-                                    <td>{{ $item->stock }} {{ $item->unit }}</td>
+	                                    <td>{{ $item->stock }} {{ $item->unit }}</td>
                                     <td>
                                         @can('update', $item)
                                             <form method="POST" action="{{ route('inventory.update-low-stock-threshold', $item) }}" class="d-flex gap-2 align-items-start">
@@ -86,8 +89,14 @@
                                         @else
                                             {{ $item->min_stock }} {{ $item->unit }}
                                         @endcan
-                                    </td>
-                                    <td>
+	                                    </td>
+	                                    <td>
+	                                        {{ $item->getReorderPoint() }} {{ $item->unit }}
+	                                        @if($item->needsReorder())
+	                                            <span class="badge rounded-pill bg-info text-dark ms-1">Reorder</span>
+	                                        @endif
+	                                    </td>
+	                                    <td>
                                         <span class="badge rounded-pill
                                             @if($item->getStockStatus() === 'low') bg-danger text-white
                                             @elseif($item->getStockStatus() === 'warning') bg-warning text-dark

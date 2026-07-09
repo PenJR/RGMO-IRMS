@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\ResourceRequest;
+use App\Models\User;
 
 class ResourceRequestPolicy
 {
@@ -52,7 +52,12 @@ class ResourceRequestPolicy
      */
     public function delete(User $user, ResourceRequest $request): bool
     {
-        return $user->hasPermission('manage-users') && $request->isPending();
+        if (! $request->isPending()) {
+            return false;
+        }
+
+        return $user->hasPermission('manage-users')
+            || ($user->id === $request->user_id && $user->hasPermission('update-pending-request'));
     }
 
     /**
@@ -77,5 +82,13 @@ class ResourceRequestPolicy
     public function review(User $user): bool
     {
         return $user->hasPermission('review-request');
+    }
+
+    /**
+     * Determine if the user can fulfill an approved request.
+     */
+    public function fulfill(User $user, ResourceRequest $request): bool
+    {
+        return $user->hasPermission('record-withdrawal') && $request->isApproved();
     }
 }
