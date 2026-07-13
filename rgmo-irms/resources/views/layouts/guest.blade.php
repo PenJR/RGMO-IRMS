@@ -175,6 +175,10 @@
                 margin-bottom: 2.25rem;
             }
 
+            .auth-brand-lockup > div {
+                min-width: 0;
+            }
+
             .auth-brand-lockup img {
                 width: 104px;
                 height: 104px;
@@ -192,11 +196,12 @@
 
             .auth-title {
                 color: #ffffff;
-                font-size: clamp(3rem, 6vw, 5.2rem);
+                font-size: clamp(3rem, 4.4vw, 4.2rem);
                 line-height: 0.92;
                 font-weight: 800;
                 letter-spacing: 0;
                 margin: 0;
+                white-space: nowrap;
             }
 
             .auth-subtitle {
@@ -207,38 +212,6 @@
                 margin: 0 0 2rem;
                 border-left: 3px solid var(--cmu-yellow);
                 padding-left: 1.25rem;
-            }
-
-            .auth-status-strip {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 0.75rem;
-                margin-bottom: 1.4rem;
-                max-width: 620px;
-            }
-
-            .auth-status-item {
-                background: rgba(255, 255, 255, 0.09);
-                border: 1px solid rgba(255, 255, 255, 0.16);
-                border-radius: 8px;
-                padding: 0.85rem 1rem;
-            }
-
-            .auth-status-item strong {
-                display: block;
-                color: #ffffff;
-                font-size: 1.05rem;
-                line-height: 1.1;
-            }
-
-            .auth-status-item span {
-                display: block;
-                margin-top: 0.25rem;
-                color: rgba(244, 255, 246, 0.72);
-                font-size: 0.76rem;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.08em;
             }
 
             .auth-panel-title {
@@ -476,21 +449,6 @@
                         </div>
                         <p class="auth-subtitle">Inventory and resource operations for agricultural assets, supplies issuance, project distribution, monitoring, and reporting.</p>
 
-                        <div class="auth-status-strip">
-                            <div class="auth-status-item">
-                                <strong>24/7</strong>
-                                <span>Records</span>
-                            </div>
-                            <div class="auth-status-item">
-                                <strong>RBAC</strong>
-                                <span>Access</span>
-                            </div>
-                            <div class="auth-status-item">
-                                <strong>2FA</strong>
-                                <span>Ready</span>
-                            </div>
-                        </div>
-                        
                         <div class="auth-panel-title">Core Workflows</div>
                         <div class="auth-panel">
                             <div class="feature-card auth-feature-card d-flex align-items-center gap-4 p-3 transition-all">
