@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
             <div>
-                <h2 class="h5 fw-bold mb-0">AI Forecasting & Analytics</h2>
+                <h2 class="h5 fw-bold mb-0">Inventory Forecasting & Analytics</h2>
                 <p class="text-muted mb-0 small">
                     Demand forecast from the last {{ $history_days }} days of stock movement
                 </p>
@@ -20,7 +20,9 @@
                     <div class="card-body">
                         <p class="stat-label mb-1">Projected {{ $forecast_days }}-Day Demand</p>
                         <h3 class="fw-bold mb-0">{{ number_format($summary['total_projected_demand']) }}</h3>
-                        <span class="small text-muted">units expected to be issued</span>
+                        <span class="small text-muted">
+                            likely range {{ number_format($summary['total_forecast_lower']) }}–{{ number_format($summary['total_forecast_upper']) }} units
+                        </span>
                     </div>
                 </div>
             </div>
@@ -47,7 +49,7 @@
                     <div class="card-body">
                         <p class="stat-label mb-1">Forecast Confidence</p>
                         <h3 class="fw-bold mb-0 text-primary">{{ $summary['confidence_score'] }}%</h3>
-                        <span class="small text-muted">{{ $summary['demand_change_percent'] }}% demand change vs prior period</span>
+                        <span class="small text-muted">backtested accuracy · {{ $summary['demand_change_percent'] }}% demand change</span>
                     </div>
                 </div>
             </div>
@@ -92,8 +94,16 @@
                                                 <div class="text-muted small">{{ $item->sku }} &middot; {{ $item->category?->name ?? 'Uncategorized' }}</div>
                                             </td>
                                             <td class="text-end">{{ number_format($item->stock) }} {{ $item->unit }}</td>
-                                            <td class="text-end">{{ number_format($forecast['average_daily_usage'], 2) }}</td>
-                                            <td class="text-end">{{ number_format($forecast['projected_demand']) }} {{ $item->unit }}</td>
+                                            <td class="text-end">
+                                                <div>{{ number_format($forecast['average_daily_usage'], 2) }}</div>
+                                                <div class="text-muted small">{{ $forecast['forecast_model'] }}</div>
+                                            </td>
+                                            <td class="text-end">
+                                                <div>{{ number_format($forecast['projected_demand']) }} {{ $item->unit }}</div>
+                                                <div class="text-muted small">
+                                                    {{ number_format($forecast['forecast_lower']) }}–{{ number_format($forecast['forecast_upper']) }} · {{ $forecast['confidence_score'] }}%
+                                                </div>
+                                            </td>
                                             <td class="text-end">
                                                 {{ $forecast['days_until_stockout'] === null ? 'No trend' : $forecast['days_until_stockout'] . ' days' }}
                                             </td>
@@ -119,6 +129,24 @@
             </div>
 
             <div class="col-12 col-xl-4">
+                @if($ai_enabled)
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between gap-2">
+                            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+                                <i data-lucide="sparkles" class="text-primary" style="width: 20px;"></i>
+                                AI Forecast Brief
+                            </h5>
+                            <span class="badge text-bg-primary">Gemini</span>
+                        </div>
+                        <div class="card-body" id="ai-forecast-brief" aria-live="polite">
+                            <div class="d-flex align-items-center gap-2 text-muted small">
+                                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                <span>Generating the AI brief…</span>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
@@ -175,4 +203,78 @@
             </div>
         </div>
     </div>
+
+    @if($ai_enabled)
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const container = document.getElementById('ai-forecast-brief');
+
+                if (!container) return;
+
+                const showMessage = (message) => {
+                    const paragraph = document.createElement('p');
+                    paragraph.className = 'small text-muted mb-0';
+                    paragraph.textContent = message;
+                    container.replaceChildren(paragraph);
+                };
+
+                const addList = (title, items, hasBottomMargin) => {
+                    if (!Array.isArray(items) || items.length === 0) return;
+
+                    const heading = document.createElement('h6');
+                    heading.className = 'small fw-bold mb-2';
+                    heading.textContent = title;
+
+                    const list = document.createElement('ul');
+                    list.className = `small text-muted ps-3 ${hasBottomMargin ? 'mb-3' : 'mb-0'}`;
+
+                    items.forEach((item) => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'mb-1';
+                        listItem.textContent = String(item);
+                        list.appendChild(listItem);
+                    });
+
+                    container.append(heading, list);
+                };
+
+                const controller = new AbortController();
+                const timeout = window.setTimeout(() => controller.abort(), 6000);
+
+                fetch(@json(route('ai-forecasting.explanation')), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    signal: controller.signal,
+                })
+                    .then(async (response) => {
+                        const payload = await response.json().catch(() => ({}));
+
+                        if (!response.ok) {
+                            throw new Error(payload.message || 'The AI brief is temporarily unavailable.');
+                        }
+
+                        return payload;
+                    })
+                    .then((payload) => {
+                        const summary = document.createElement('p');
+                        summary.className = 'small mb-3';
+                        summary.textContent = payload.summary;
+                        container.replaceChildren(summary);
+                        addList('Priorities', payload.priorities, true);
+                        addList('Warnings', payload.warnings, false);
+                    })
+                    .catch((error) => {
+                        const message = error.name === 'AbortError'
+                            ? 'The AI brief timed out. The numerical forecast is still available.'
+                            : error.message;
+                        showMessage(message);
+                    })
+                    .finally(() => window.clearTimeout(timeout));
+            });
+        </script>
+    @endpush
+    @endif
 </x-app-layout>

@@ -9,11 +9,24 @@ use Illuminate\Support\Collection;
 
 class InventoryForecastingService
 {
-    private const HISTORY_DAYS = 90;
+    private const HISTORY_DAYS = 180;
+
+    private const COMPARISON_DAYS = 90;
+
     private const FORECAST_DAYS = 30;
 
+    private const BACKTEST_WINDOWS = 3;
+
+    private const MINIMUM_TRAINING_DAYS = 60;
+
+    private const CROSTON_ALPHA = 0.2;
+
     /**
-     * Build deterministic demand forecasts from recent stock-out transactions.
+     * Build demand forecasts from daily stock-out history.
+     *
+     * Each item is evaluated with a moving average, a recency-weighted average,
+     * and Croston-SBA (for intermittent demand). Rolling historical backtests
+     * select the model with the lowest aggregate error for that item.
      *
      * @return array<string, mixed>
      */
@@ -21,10 +34,7 @@ class InventoryForecastingService
     {
         $asOf = CarbonImmutable::now()->startOfDay();
         $historyStartsAt = $asOf->subDays(self::HISTORY_DAYS - 1);
-        $previousPeriodStartsAt = $historyStartsAt->subDays(self::HISTORY_DAYS);
-
-        $currentUsage = $this->stockOutTotals($historyStartsAt, $asOf->endOfDay());
-        $previousUsage = $this->stockOutTotals($previousPeriodStartsAt, $historyStartsAt->subSecond());
+        $dailyUsage = $this->stockOutDailyTotals($historyStartsAt, $asOf->endOfDay());
 
         $items = InventoryItem::query()
             ->active()
@@ -32,28 +42,46 @@ class InventoryForecastingService
             ->orderBy('name')
             ->get();
 
-        $forecasts = $items->map(function (InventoryItem $item) use ($currentUsage, $previousUsage): array {
-            $usageQuantity = (int) ($currentUsage[$item->id] ?? 0);
-            $previousQuantity = (int) ($previousUsage[$item->id] ?? 0);
-            $averageDailyUsage = $usageQuantity / self::HISTORY_DAYS;
-            $projectedDemand = (int) ceil($averageDailyUsage * self::FORECAST_DAYS);
+        $forecasts = $items->map(function (InventoryItem $item) use ($dailyUsage, $historyStartsAt): array {
+            $series = $this->dailySeries(
+                $dailyUsage->get($item->id, collect()),
+                $historyStartsAt,
+                self::HISTORY_DAYS
+            );
+            $prediction = $this->forecastSeries($series);
+            $currentUsage = (int) array_sum(array_slice($series, -self::COMPARISON_DAYS));
+            $previousUsage = (int) array_sum(array_slice(
+                $series,
+                -(self::COMPARISON_DAYS * 2),
+                self::COMPARISON_DAYS
+            ));
+            $projectedDemand = (int) round($prediction['point']);
+            $forecastLower = (int) floor($prediction['lower']);
+            $forecastUpper = (int) ceil($prediction['upper']);
+            $averageDailyUsage = $prediction['point'] / self::FORECAST_DAYS;
             $daysUntilStockout = $averageDailyUsage > 0
                 ? (int) floor($item->stock / $averageDailyUsage)
                 : null;
             $recommendedOrder = max(0, ($projectedDemand + (int) $item->min_stock) - (int) $item->stock);
-            $demandChangePercent = $previousQuantity > 0
-                ? (($usageQuantity - $previousQuantity) / $previousQuantity) * 100
-                : ($usageQuantity > 0 ? 100.0 : 0.0);
+            $demandChangePercent = $previousUsage > 0
+                ? (($currentUsage - $previousUsage) / $previousUsage) * 100
+                : ($currentUsage > 0 ? 100.0 : 0.0);
 
             return [
                 'item' => $item,
-                'usage_quantity' => $usageQuantity,
+                'usage_quantity' => $currentUsage,
+                'previous_usage_quantity' => $previousUsage,
                 'average_daily_usage' => round($averageDailyUsage, 2),
                 'projected_demand' => $projectedDemand,
+                'forecast_lower' => $forecastLower,
+                'forecast_upper' => $forecastUpper,
                 'days_until_stockout' => $daysUntilStockout,
                 'recommended_order' => $recommendedOrder,
                 'demand_change_percent' => round($demandChangePercent, 1),
-                'risk' => $this->riskLevel($item, $projectedDemand, $daysUntilStockout),
+                'forecast_model' => $prediction['model'],
+                'backtest_error_percent' => $prediction['backtest_error_percent'],
+                'confidence_score' => $prediction['confidence_score'],
+                'risk' => $this->riskLevel($item, $projectedDemand, $forecastUpper, $daysUntilStockout),
             ];
         });
 
@@ -67,84 +95,283 @@ class InventoryForecastingService
             })
             ->values();
 
+        $currentUsage = $rankedForecasts->sum('usage_quantity');
+        $previousUsage = $rankedForecasts->sum('previous_usage_quantity');
+
         return [
             'as_of' => $asOf,
             'history_days' => self::HISTORY_DAYS,
             'forecast_days' => self::FORECAST_DAYS,
             'forecasts' => $rankedForecasts,
-            'summary' => $this->summary($rankedForecasts, $currentUsage->sum(), $previousUsage->sum()),
+            'summary' => $this->summary($rankedForecasts, (int) $currentUsage, (int) round($previousUsage)),
             'category_demand' => $this->categoryDemand($rankedForecasts),
             'insights' => $this->insights($rankedForecasts),
         ];
     }
 
     /**
-     * Handle stock out totals.
+     * Return stock-out totals grouped by item and local calendar date.
+     *
+     * @return Collection<int, Collection<string, int>>
      */
-    private function stockOutTotals(CarbonImmutable $from, CarbonImmutable $to): Collection
+    private function stockOutDailyTotals(CarbonImmutable $from, CarbonImmutable $to): Collection
     {
         return InventoryTransaction::query()
             ->stockOut()
             ->whereBetween('created_at', [$from, $to])
-            ->selectRaw('inventory_item_id, SUM(quantity) as total_quantity')
+            ->get(['inventory_item_id', 'quantity', 'created_at'])
             ->groupBy('inventory_item_id')
-            ->pluck('total_quantity', 'inventory_item_id')
-            ->map(fn ($quantity): int => (int) $quantity);
+            ->map(fn (Collection $transactions): Collection => $transactions
+                ->groupBy(fn (InventoryTransaction $transaction): string => $transaction->created_at->toDateString())
+                ->map(fn (Collection $day): int => (int) $day->sum('quantity')));
     }
 
     /**
-     * Handle risk level.
+     * Fill missing dates with zero demand so models see the complete time series.
+     *
+     * @param  Collection<string, int>  $totals
+     * @return list<float>
      */
-    private function riskLevel(InventoryItem $item, int $projectedDemand, ?int $daysUntilStockout): string
+    private function dailySeries(Collection $totals, CarbonImmutable $startsAt, int $days): array
     {
+        $series = [];
+
+        for ($offset = 0; $offset < $days; $offset++) {
+            $series[] = (float) $totals->get($startsAt->addDays($offset)->toDateString(), 0);
+        }
+
+        return $series;
+    }
+
+    /**
+     * Select and run the most accurate candidate model for one demand series.
+     *
+     * @param  list<float>  $series
+     * @return array{point: float, lower: float, upper: float, model: string, backtest_error_percent: ?float, confidence_score: int}
+     */
+    private function forecastSeries(array $series): array
+    {
+        if (array_sum($series) <= 0) {
+            return [
+                'point' => 0.0,
+                'lower' => 0.0,
+                'upper' => 0.0,
+                'model' => 'No demand history',
+                'backtest_error_percent' => null,
+                'confidence_score' => 0,
+            ];
+        }
+
+        $models = [
+            'Croston-SBA' => fn (array $training): float => $this->crostonSbaDailyRate($training),
+            'Weighted average' => fn (array $training): float => $this->weightedDailyRate($training),
+            '90-day average' => fn (array $training): float => $this->movingAverageDailyRate($training),
+        ];
+        $backtests = $this->backtestModels($series, $models);
+        $selectedModel = collect($backtests)
+            ->sortBy(fn (array $result, string $name): array => [$result['normalized_error'], array_search($name, array_keys($models), true)])
+            ->keys()
+            ->first() ?? '90-day average';
+        $dailyRate = max(0.0, $models[$selectedModel]($series));
+        $point = $dailyRate * self::FORECAST_DAYS;
+        $normalizedError = $backtests[$selectedModel]['normalized_error'] ?? null;
+        $absoluteErrors = $backtests[$selectedModel]['absolute_errors'] ?? [];
+        $intervalMargin = $this->intervalMargin($series, $absoluteErrors);
+        $nonZeroDays = count(array_filter($series, fn (float $value): bool => $value > 0));
+
+        return [
+            'point' => $point,
+            'lower' => max(0.0, $point - $intervalMargin),
+            'upper' => max($point, $point + $intervalMargin),
+            'model' => $selectedModel,
+            'backtest_error_percent' => $normalizedError === null
+                ? null
+                : round(min(999, $normalizedError * 100), 1),
+            'confidence_score' => $this->backtestedConfidence($normalizedError, $nonZeroDays),
+        ];
+    }
+
+    /**
+     * Compare candidate models against up to three completed 30-day periods.
+     *
+     * @param  list<float>  $series
+     * @param  array<string, callable(array): float>  $models
+     * @return array<string, array{normalized_error: float, absolute_errors: list<float>}>
+     */
+    private function backtestModels(array $series, array $models): array
+    {
+        $seriesLength = count($series);
+        $results = [];
+
+        foreach ($models as $name => $model) {
+            $absoluteErrors = [];
+            $actualTotal = 0.0;
+            $predictedTotal = 0.0;
+
+            for ($window = self::BACKTEST_WINDOWS; $window >= 1; $window--) {
+                $cutoff = $seriesLength - ($window * self::FORECAST_DAYS);
+
+                if ($cutoff < self::MINIMUM_TRAINING_DAYS) {
+                    continue;
+                }
+
+                $training = array_slice($series, 0, $cutoff);
+                $actual = array_sum(array_slice($series, $cutoff, self::FORECAST_DAYS));
+                $predicted = max(0.0, $model($training) * self::FORECAST_DAYS);
+                $absoluteErrors[] = abs($actual - $predicted);
+                $actualTotal += $actual;
+                $predictedTotal += $predicted;
+            }
+
+            $results[$name] = [
+                'normalized_error' => array_sum($absoluteErrors) / max(1.0, $actualTotal, $predictedTotal),
+                'absolute_errors' => $absoluteErrors,
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
+     * Croston's method with the Syntetos-Boylan bias correction.
+     *
+     * @param  list<float>  $series
+     */
+    private function crostonSbaDailyRate(array $series): float
+    {
+        $nonZeroIndexes = array_keys(array_filter($series, fn (float $value): bool => $value > 0));
+
+        if ($nonZeroIndexes === []) {
+            return 0.0;
+        }
+
+        $firstIndex = $nonZeroIndexes[0];
+        $demandSize = $series[$firstIndex];
+        $interval = (float) ($firstIndex + 1);
+        $lastIndex = $firstIndex;
+
+        foreach (array_slice($nonZeroIndexes, 1) as $index) {
+            $gap = (float) ($index - $lastIndex);
+            $demandSize += self::CROSTON_ALPHA * ($series[$index] - $demandSize);
+            $interval += self::CROSTON_ALPHA * ($gap - $interval);
+            $lastIndex = $index;
+        }
+
+        return (1 - (self::CROSTON_ALPHA / 2)) * ($demandSize / max(1.0, $interval));
+    }
+
+    /** @param list<float> $series */
+    private function weightedDailyRate(array $series): float
+    {
+        $recent = array_slice($series, -45);
+        $prior = array_slice($series, -90, 45);
+        $recentAverage = array_sum($recent) / max(1, count($recent));
+
+        if ($prior === []) {
+            return $recentAverage;
+        }
+
+        return ($recentAverage * 0.7) + ((array_sum($prior) / count($prior)) * 0.3);
+    }
+
+    /** @param list<float> $series */
+    private function movingAverageDailyRate(array $series): float
+    {
+        $window = array_slice($series, -self::COMPARISON_DAYS);
+
+        return array_sum($window) / max(1, count($window));
+    }
+
+    /**
+     * Estimate an 80% planning interval from monthly history and backtest misses.
+     *
+     * @param  list<float>  $series
+     * @param  list<float>  $absoluteErrors
+     */
+    private function intervalMargin(array $series, array $absoluteErrors): float
+    {
+        $monthlyTotals = [];
+
+        foreach (array_chunk($series, self::FORECAST_DAYS) as $month) {
+            if (count($month) === self::FORECAST_DAYS) {
+                $monthlyTotals[] = array_sum($month);
+            }
+        }
+
+        $standardDeviation = $this->sampleStandardDeviation($monthlyTotals);
+        $meanBacktestError = $absoluteErrors === [] ? 0.0 : array_sum($absoluteErrors) / count($absoluteErrors);
+
+        return max(1.28 * $standardDeviation, $meanBacktestError);
+    }
+
+    /** @param list<float> $values */
+    private function sampleStandardDeviation(array $values): float
+    {
+        if (count($values) < 2) {
+            return 0.0;
+        }
+
+        $mean = array_sum($values) / count($values);
+        $squaredDifferences = array_map(
+            fn (float $value): float => ($value - $mean) ** 2,
+            $values
+        );
+
+        return sqrt(array_sum($squaredDifferences) / (count($values) - 1));
+    }
+
+    private function backtestedConfidence(?float $normalizedError, int $nonZeroDays): int
+    {
+        if ($normalizedError === null || $nonZeroDays === 0) {
+            return 0;
+        }
+
+        $accuracy = max(0.0, 1 - min(1.0, $normalizedError));
+        $historyReliability = min(1.0, $nonZeroDays / 6);
+
+        return (int) round(min(95, 100 * $accuracy * (0.25 + (0.75 * $historyReliability))));
+    }
+
+    private function riskLevel(
+        InventoryItem $item,
+        int $projectedDemand,
+        int $forecastUpper,
+        ?int $daysUntilStockout
+    ): string {
         if ($item->stock <= $item->min_stock || ($daysUntilStockout !== null && $daysUntilStockout <= 14)) {
             return 'critical';
         }
 
-        if ($projectedDemand >= $item->stock || ($daysUntilStockout !== null && $daysUntilStockout <= self::FORECAST_DAYS)) {
+        if ($forecastUpper >= $item->stock || $projectedDemand >= $item->stock
+            || ($daysUntilStockout !== null && $daysUntilStockout <= self::FORECAST_DAYS)) {
             return 'watch';
         }
 
         return 'stable';
     }
 
-    /**
-     * Handle summary.
-     */
     private function summary(Collection $forecasts, int $currentUsage, int $previousUsage): array
     {
         $demandChangePercent = $previousUsage > 0
             ? (($currentUsage - $previousUsage) / $previousUsage) * 100
             : ($currentUsage > 0 ? 100.0 : 0.0);
+        $forecastsWithHistory = $forecasts->where('forecast_model', '!=', 'No demand history');
 
         return [
             'total_projected_demand' => $forecasts->sum('projected_demand'),
+            'total_forecast_lower' => $forecasts->sum('forecast_lower'),
+            'total_forecast_upper' => $forecasts->sum('forecast_upper'),
             'critical_items' => $forecasts->where('risk', 'critical')->count(),
             'watch_items' => $forecasts->where('risk', 'watch')->count(),
             'stable_items' => $forecasts->where('risk', 'stable')->count(),
             'recommended_orders' => $forecasts->where('recommended_order', '>', 0)->count(),
             'demand_change_percent' => round($demandChangePercent, 1),
-            'confidence_score' => $this->confidenceScore($forecasts),
+            'confidence_score' => $forecastsWithHistory->isEmpty()
+                ? 0
+                : (int) round($forecastsWithHistory->average('confidence_score')),
         ];
     }
 
-    /**
-     * Handle confidence score.
-     */
-    private function confidenceScore(Collection $forecasts): int
-    {
-        if ($forecasts->isEmpty()) {
-            return 0;
-        }
-
-        $itemsWithUsage = $forecasts->where('usage_quantity', '>', 0)->count();
-
-        return (int) min(95, max(35, round(($itemsWithUsage / $forecasts->count()) * 100)));
-    }
-
-    /**
-     * Handle category demand.
-     */
     private function categoryDemand(Collection $forecasts): Collection
     {
         return $forecasts
@@ -159,9 +386,6 @@ class InventoryForecastingService
             ->take(6);
     }
 
-    /**
-     * Handle insights.
-     */
     private function insights(Collection $forecasts): Collection
     {
         return $forecasts
@@ -171,7 +395,7 @@ class InventoryForecastingService
                 $item = $forecast['item'];
                 $message = $forecast['days_until_stockout'] === null
                     ? "{$item->name} has no recent stock-out history. Keep minimum stock at {$item->min_stock} {$item->unit}."
-                    : "{$item->name} may last {$forecast['days_until_stockout']} days at current usage.";
+                    : "{$item->name} may last {$forecast['days_until_stockout']} days at forecast demand.";
 
                 if ($forecast['recommended_order'] > 0) {
                     $message .= " Reorder {$forecast['recommended_order']} {$item->unit}.";

@@ -34,9 +34,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // AI Forecasting (Mockup)
+    // Inventory demand forecasting
     Route::middleware(['permission:view-forecasts'])->group(function () {
         Route::get('/ai-forecasting', [AIForecastingController::class, 'index'])->name('ai-forecasting.index');
+        Route::get('/ai-forecasting/explanation', [AIForecastingController::class, 'explanation'])->name('ai-forecasting.explanation');
     });
 
     // Inventory Module
