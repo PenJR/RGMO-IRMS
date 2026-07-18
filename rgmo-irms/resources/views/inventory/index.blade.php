@@ -118,7 +118,7 @@
                                             <td>
                                                 {{ $item->stock }} {{ $item->unit }}
                                                 @if($item->stock <= $item->min_stock)
-                                                    <span class="badge rounded-pill bg-danger-subtle text-danger ms-2">
+                                                    <span class="badge rounded-pill status-badge status-badge--danger ms-2">
                                                         Low
                                                     </span>
                                                 @endif
@@ -129,25 +129,25 @@
 	                                            </td>
                                             <td>{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
 	                                            <td>
-	                                                <span class="badge rounded-pill
-	                                                    @if($item->getStockStatus() === 'low') bg-danger text-white
-	                                                    @elseif($item->getStockStatus() === 'warning') bg-warning text-dark
-	                                                    @else bg-success text-white @endif">
+	                                                <span class="badge rounded-pill status-badge
+	                                                    @if($item->getStockStatus() === 'low') status-badge--danger
+	                                                    @elseif($item->getStockStatus() === 'warning') status-badge--warning
+	                                                    @else status-badge--success @endif">
 	                                                    {{ ucfirst($item->getStockStatus()) }}
 	                                                </span>
 	                                                @if($item->needsReorder())
-	                                                    <span class="badge rounded-pill bg-info text-dark ms-1">Reorder</span>
+	                                                    <span class="badge rounded-pill status-badge status-badge--info ms-1">Reorder</span>
 	                                                @endif
 	                                            </td>
 	                                            <td>
 	                                                @if($item->has_expiry)
 	                                                    <div class="small">{{ $item->expiry_date?->format('M d, Y') ?? 'No date' }}</div>
 	                                                    @if($item->isExpired())
-	                                                        <span class="badge rounded-pill bg-danger text-white">Expired</span>
+	                                                        <span class="badge rounded-pill status-badge status-badge--danger">Expired</span>
 	                                                    @elseif($item->isExpiringSoon())
-	                                                        <span class="badge rounded-pill bg-warning text-dark">Expiring soon</span>
+	                                                        <span class="badge rounded-pill status-badge status-badge--warning">Expiring soon</span>
 	                                                    @else
-	                                                        <span class="badge rounded-pill bg-success text-white">Active</span>
+	                                                        <span class="badge rounded-pill status-badge status-badge--success">Active</span>
 	                                                    @endif
 	                                                @else
 	                                                    <span class="text-muted small">No expiry</span>
@@ -156,16 +156,16 @@
                                             <td class="text-end">
                                                 <div class="d-inline-flex gap-2">
                                                     @can('view', $item)
-                                                        <a href="{{ route('inventory.show', ['inventory' => $item->id]) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                                        <a href="{{ route('inventory.show', ['inventory' => $item->id]) }}" class="btn btn-sm inventory-action inventory-action--view">View</a>
                                                     @endcan
                                                     @can('update', $item)
-                                                        <a href="{{ route('inventory.edit', ['inventory' => $item->id]) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                                        <a href="{{ route('inventory.edit', ['inventory' => $item->id]) }}" class="btn btn-sm inventory-action inventory-action--edit">Edit</a>
                                                     @endcan
                                                     @can('delete', $item)
                                                         <form method="POST" action="{{ route('inventory.destroy', ['inventory' => $item->id]) }}">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                            <button type="submit" class="btn btn-sm inventory-action inventory-action--delete"
                                                                     onclick="return confirm('Are you sure you want to delete this item?')">Delete</button>
                                                         </form>
                                                     @endcan
@@ -177,26 +177,48 @@
                             </table>
                         </div>
 
-                        <div class="mt-3 text-muted small">
-                            Showing {{ $items->count() }} of {{ $items->total() }} inventory items.
-                            @if(request()->filled('search') || request()->filled('category_id') || request()->filled('status'))
-                                Filtered by:
-                                @if(request()->filled('search'))
-                                    <span class="fw-semibold">search "{{ request('search') }}"</span>
-                                @endif
-                                @if(request()->filled('category_id'))
-                                    <span class="fw-semibold">category "{{ $categories->firstWhere('id', request('category_id'))?->name ?? 'selected' }}"</span>
-                                @endif
-                                @if(request()->filled('status'))
-                                    <span class="fw-semibold">status "{{ ucfirst(request('status')) }}"</span>
-                                @endif
-                            @endif
-                        </div>
+                        @if($items->hasPages())
+                            <nav class="d-flex align-items-center justify-content-between gap-3 mt-4" aria-label="Inventory pagination">
+                                <span class="small text-muted">
+                                    Showing {{ $items->firstItem() }}–{{ $items->lastItem() }} of {{ $items->total() }} items
+                                </span>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if($items->onFirstPage())
+                                        <span class="btn btn-sm btn-outline-secondary disabled d-inline-flex align-items-center justify-content-center" aria-disabled="true">
+                                            <i data-lucide="chevron-left" style="width: 16px; height: 16px;" aria-hidden="true"></i>
+                                        </span>
+                                    @else
+                                        <a
+                                            href="{{ $items->previousPageUrl() }}"
+                                            class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center"
+                                            aria-label="Show previous inventory items"
+                                            title="Previous page"
+                                        >
+                                            <i data-lucide="chevron-left" style="width: 16px; height: 16px;" aria-hidden="true"></i>
+                                        </a>
+                                    @endif
 
-                        <!-- Pagination -->
-                        <div class="mt-4">
-                            {{ $items->appends(request()->query())->links() }}
-                        </div>
+                                    <span class="small fw-semibold text-nowrap">
+                                        Page {{ $items->currentPage() }} of {{ $items->lastPage() }}
+                                    </span>
+
+                                    @if($items->hasMorePages())
+                                        <a
+                                            href="{{ $items->nextPageUrl() }}"
+                                            class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center"
+                                            aria-label="Show next inventory items"
+                                            title="Next page"
+                                        >
+                                            <i data-lucide="chevron-right" style="width: 16px; height: 16px;" aria-hidden="true"></i>
+                                        </a>
+                                    @else
+                                        <span class="btn btn-sm btn-outline-secondary disabled d-inline-flex align-items-center justify-content-center" aria-disabled="true">
+                                            <i data-lucide="chevron-right" style="width: 16px; height: 16px;" aria-hidden="true"></i>
+                                        </span>
+                                    @endif
+                                </div>
+                            </nav>
+                        @endif
                     @else
                         <div class="text-center py-5">
                             <i data-lucide="package-search" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>

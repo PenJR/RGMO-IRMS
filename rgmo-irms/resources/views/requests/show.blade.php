@@ -87,7 +87,7 @@
 	                                                    @elseif($item->item->stock <= $item->item->min_stock)
 	                                                        <span class="badge bg-warning text-dark">Low after release</span>
 	                                                    @else
-	                                                        <span class="badge bg-success text-white">Ready</span>
+	                                                        <span class="badge status-badge status-badge--success">Ready</span>
 	                                                    @endif
 	                                                </td>
                                             </tr>

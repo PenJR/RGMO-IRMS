@@ -44,7 +44,9 @@ class InventoryController extends Controller
         $this->authorize('viewAny', InventoryItem::class);
 
         $filters = $request->only(['category_id', 'search', 'status']);
-        $items = $this->inventoryService->getAllItems(15, $filters);
+        $items = $this->inventoryService
+            ->getAllItems(8, $filters)
+            ->withQueryString();
 
         return view('inventory.index', [
             'items' => $items,

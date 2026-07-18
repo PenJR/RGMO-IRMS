@@ -14,8 +14,8 @@
                     <div class="card shadow-sm border-0 h-100 card-stat">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(0, 73, 30, 0.1); color: var(--cmu-green);">
-                                <i data-lucide="users" style="width: 26px; height: 26px; color: var(--cmu-green);"></i>
+                            <div class="stat-icon" aria-hidden="true">
+                                <i data-lucide="users"></i>
                             </div>
                             <div>
                                 <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Total Users</p>
@@ -30,8 +30,8 @@
                     <div class="card shadow-sm border-0 h-100 card-stat">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(2, 104, 30, 0.1); color: var(--cmu-green-2);">
-                                <i data-lucide="package" style="width: 26px; height: 26px; color: var(--cmu-green-2);"></i>
+                            <div class="stat-icon stat-icon--inventory" aria-hidden="true">
+                                <i data-lucide="package"></i>
                             </div>
                             <div>
                                 <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Inventory Items</p>
@@ -46,8 +46,8 @@
                     <div class="card shadow-sm border-0 h-100 card-stat">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(255, 198, 0, 0.18); color: var(--cmu-green);">
-                                <i data-lucide="alert-triangle" style="width: 26px; height: 26px; color: var(--cmu-green);"></i>
+                            <div class="stat-icon stat-icon--danger" aria-hidden="true">
+                                <i data-lucide="alert-triangle"></i>
                             </div>
                             <div>
                                 <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Low Stock Alerts</p>
@@ -62,8 +62,8 @@
                     <div class="card shadow-sm border-0 h-100 card-stat">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-3 bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: rgba(145, 159, 2, 0.16); color: var(--cmu-green);">
-                                <i data-lucide="clipboard-check" style="width: 26px; height: 26px; color: var(--cmu-green);"></i>
+                            <div class="stat-icon stat-icon--warning" aria-hidden="true">
+                                <i data-lucide="clipboard-check"></i>
                             </div>
                             <div>
                                 <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Pending Requests</p>

@@ -36,9 +36,9 @@
 	                                                $shortItems = $request->items->filter(fn ($item) => ! $item->item || $item->item->stock < $item->quantity);
 	                                            @endphp
 	                                            @if($shortItems->isEmpty())
-	                                                <span class="badge rounded-pill bg-success text-white">Ready</span>
+	                                                <span class="badge rounded-pill status-badge status-badge--success">Ready</span>
 	                                            @else
-	                                                <span class="badge rounded-pill bg-danger text-white">{{ $shortItems->count() }} short</span>
+	                                                <span class="badge rounded-pill status-badge status-badge--danger">{{ $shortItems->count() }} short</span>
 	                                            @endif
 	                                        </td>
 	                                        <td class="text-end">

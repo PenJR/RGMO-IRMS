@@ -88,7 +88,7 @@
                                                 'stable' => 'success',
                                             ][$forecast['risk']];
                                         @endphp
-                                        <tr>
+                                        <tr data-forecast-row>
                                             <td>
                                                 <div class="fw-semibold">{{ $item->name }}</div>
                                                 <div class="text-muted small">{{ $item->sku }} &middot; {{ $item->category?->name ?? 'Uncategorized' }}</div>
@@ -111,7 +111,7 @@
                                                 {{ $forecast['recommended_order'] > 0 ? number_format($forecast['recommended_order']) . ' ' . $item->unit : '-' }}
                                             </td>
                                             <td>
-                                                <span class="badge text-bg-{{ $badge }}">{{ ucfirst($forecast['risk']) }}</span>
+                                                <span class="badge status-badge status-badge--{{ $badge }}">{{ ucfirst($forecast['risk']) }}</span>
                                             </td>
                                         </tr>
                                     @empty
@@ -124,6 +124,32 @@
                                 </tbody>
                             </table>
                         </div>
+                        @if($forecasts->count() > 8)
+                            <div class="d-flex align-items-center justify-content-between gap-3 px-3 py-3 border-top">
+                                <span class="small text-muted" id="forecast-page-range" aria-live="polite"></span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center"
+                                        id="forecast-page-previous"
+                                        aria-label="Show previous forecast items"
+                                        title="Previous page"
+                                    >
+                                        <i data-lucide="chevron-left" style="width: 16px; height: 16px;" aria-hidden="true"></i>
+                                    </button>
+                                    <span class="small fw-semibold text-nowrap" id="forecast-page-label" aria-live="polite"></span>
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center"
+                                        id="forecast-page-next"
+                                        aria-label="Show next forecast items"
+                                        title="Next page"
+                                    >
+                                        <i data-lucide="chevron-right" style="width: 16px; height: 16px;" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -203,6 +229,45 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const rows = Array.from(document.querySelectorAll('[data-forecast-row]'));
+                const previousButton = document.getElementById('forecast-page-previous');
+                const nextButton = document.getElementById('forecast-page-next');
+                const pageLabel = document.getElementById('forecast-page-label');
+                const rangeLabel = document.getElementById('forecast-page-range');
+                const pageSize = 8;
+
+                if (rows.length <= pageSize || !previousButton || !nextButton || !pageLabel || !rangeLabel) {
+                    return;
+                }
+
+                const pageCount = Math.ceil(rows.length / pageSize);
+                let currentPage = 0;
+
+                const showPage = (page) => {
+                    currentPage = Math.min(Math.max(page, 0), pageCount - 1);
+                    const firstIndex = currentPage * pageSize;
+                    const lastIndex = Math.min(firstIndex + pageSize, rows.length);
+
+                    rows.forEach((row, index) => {
+                        row.classList.toggle('d-none', index < firstIndex || index >= lastIndex);
+                    });
+
+                    previousButton.disabled = currentPage === 0;
+                    nextButton.disabled = currentPage === pageCount - 1;
+                    pageLabel.textContent = `Page ${currentPage + 1} of ${pageCount}`;
+                    rangeLabel.textContent = `Showing ${firstIndex + 1}–${lastIndex} of ${rows.length} items`;
+                };
+
+                previousButton.addEventListener('click', () => showPage(currentPage - 1));
+                nextButton.addEventListener('click', () => showPage(currentPage + 1));
+                showPage(0);
+            });
+        </script>
+    @endpush
 
     @if($ai_enabled)
     @push('scripts')
