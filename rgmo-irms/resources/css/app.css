@@ -671,3 +671,215 @@ footer {
         background: #ffffff;
     }
 }
+
+/* Color theme setting */
+.theme-setting {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0.3rem 0.4rem 0.3rem 0.7rem;
+    border: 1px solid var(--ui-line-strong);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow-soft);
+}
+
+.theme-setting__icon {
+    width: 17px;
+    height: 17px;
+    color: var(--cmu-green-2);
+}
+
+.theme-setting__icon--dark {
+    display: none;
+}
+
+.theme-setting__label {
+    margin: 0;
+    color: var(--cmu-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.theme-setting__select {
+    min-height: 30px;
+    padding: 0.25rem 1.8rem 0.25rem 0.55rem;
+    border: 0;
+    border-radius: 7px;
+    background-color: var(--ui-surface-soft);
+    color: var(--cmu-text);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.theme-setting__select:focus-visible {
+    outline: 3px solid rgba(255, 198, 0, 0.35);
+    outline-offset: 1px;
+}
+
+/* Dark palette and Bootstrap/Tailwind compatibility for existing screens. */
+html[data-bs-theme="dark"] {
+    --cmu-surface: #111b16;
+    --cmu-border: #304239;
+    --cmu-text: #e8f1eb;
+    --cmu-muted: #aab9b0;
+    --ui-bg: #0b120e;
+    --ui-surface: #141f19;
+    --ui-surface-soft: #1a2820;
+    --ui-line: rgba(205, 226, 213, 0.11);
+    --ui-line-strong: rgba(205, 226, 213, 0.2);
+    --ui-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+    --ui-shadow-soft: 0 7px 18px rgba(0, 0, 0, 0.24);
+    --bs-body-bg: var(--ui-bg);
+    --bs-body-color: var(--cmu-text);
+    --bs-secondary-color: var(--cmu-muted);
+    --bs-border-color: #304239;
+}
+
+html[data-bs-theme="dark"] body {
+    background:
+        radial-gradient(circle at top left, rgba(255, 198, 0, 0.05), transparent 30%),
+        linear-gradient(180deg, #0e1712 0%, #09100c 100%) !important;
+    color: var(--cmu-text);
+}
+
+html[data-bs-theme="dark"] .main-content {
+    background:
+        linear-gradient(180deg, rgba(34, 55, 43, 0.24), rgba(11, 18, 14, 0) 220px),
+        var(--ui-bg);
+}
+
+html[data-bs-theme="dark"] .top-nav,
+html[data-bs-theme="dark"] .card,
+html[data-bs-theme="dark"] .card-header,
+html[data-bs-theme="dark"] .modal-content,
+html[data-bs-theme="dark"] .dropdown-menu,
+html[data-bs-theme="dark"] .list-group-item,
+html[data-bs-theme="dark"] .table-modern tbody tr,
+html[data-bs-theme="dark"] .table-responsive,
+html[data-bs-theme="dark"] .glass-panel,
+html[data-bs-theme="dark"] .form-glass {
+    background: var(--ui-surface) !important;
+    color: var(--cmu-text);
+    border-color: var(--ui-line) !important;
+}
+
+html[data-bs-theme="dark"] .top-nav {
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.26);
+}
+
+html[data-bs-theme="dark"] .top-nav h2,
+html[data-bs-theme="dark"] .top-nav .h5,
+html[data-bs-theme="dark"] .card:not(.text-white):not(.bg-dark) .card-header h3,
+html[data-bs-theme="dark"] .card:not(.text-white):not(.bg-dark) .card-header h4,
+html[data-bs-theme="dark"] .card:not(.text-white):not(.bg-dark) .card-header h5,
+html[data-bs-theme="dark"] .card:not(.text-white):not(.bg-dark) .card-body h3,
+html[data-bs-theme="dark"] .card:not(.text-white):not(.bg-dark) .card-body h4,
+html[data-bs-theme="dark"] .card:not(.text-white):not(.bg-dark) .card-body h5,
+html[data-bs-theme="dark"] .stat-value,
+html[data-bs-theme="dark"] .card-stat h3,
+html[data-bs-theme="dark"] .text-dark {
+    color: #f0f6f2 !important;
+}
+
+html[data-bs-theme="dark"] .text-muted,
+html[data-bs-theme="dark"] .stat-label,
+html[data-bs-theme="dark"] .text-uppercase.text-muted.fw-bold,
+html[data-bs-theme="dark"] .form-text {
+    color: var(--cmu-muted) !important;
+}
+
+html[data-bs-theme="dark"] .form-control,
+html[data-bs-theme="dark"] .form-select,
+html[data-bs-theme="dark"] .input-group-text,
+html[data-bs-theme="dark"] .theme-setting__select {
+    background-color: var(--ui-surface-soft) !important;
+    border-color: var(--ui-line-strong) !important;
+    color: var(--cmu-text) !important;
+}
+
+html[data-bs-theme="dark"] .form-control::placeholder {
+    color: #839188;
+}
+
+html[data-bs-theme="dark"] .form-label,
+html[data-bs-theme="dark"] .auth-label,
+html[data-bs-theme="dark"] .table,
+html[data-bs-theme="dark"] .table > :not(caption) > * > *,
+html[data-bs-theme="dark"] .table tbody td {
+    color: var(--cmu-text) !important;
+}
+
+html[data-bs-theme="dark"] .table thead th,
+html[data-bs-theme="dark"] .table-modern thead th {
+    background: #1c2d23 !important;
+    color: #c6d7cd !important;
+}
+
+html[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-bg-type: rgba(255, 255, 255, 0.025);
+}
+
+html[data-bs-theme="dark"] .table-hover tbody tr:hover {
+    --bs-table-hover-bg: rgba(255, 198, 0, 0.045);
+    --bs-table-hover-color: var(--cmu-text);
+}
+
+html[data-bs-theme="dark"] .bg-white,
+html[data-bs-theme="dark"] .bg-gray-50,
+html[data-bs-theme="dark"] .bg-gray-100 {
+    background-color: var(--ui-surface) !important;
+}
+
+html[data-bs-theme="dark"] .text-gray-900,
+html[data-bs-theme="dark"] .text-gray-800,
+html[data-bs-theme="dark"] .text-gray-700,
+html[data-bs-theme="dark"] .text-gray-600 {
+    color: var(--cmu-text) !important;
+}
+
+html[data-bs-theme="dark"] .text-gray-500,
+html[data-bs-theme="dark"] .text-gray-400 {
+    color: var(--cmu-muted) !important;
+}
+
+html[data-bs-theme="dark"] .divide-gray-200 > :not([hidden]) ~ :not([hidden]),
+html[data-bs-theme="dark"] .border-gray-200,
+html[data-bs-theme="dark"] .border-bottom,
+html[data-bs-theme="dark"] .border-top {
+    border-color: var(--ui-line) !important;
+}
+
+html[data-bs-theme="dark"] .theme-setting__icon--light {
+    display: none;
+}
+
+html[data-bs-theme="dark"] .theme-setting__icon--dark {
+    display: block;
+    color: var(--cmu-yellow);
+}
+
+html[data-bs-theme="dark"] .rgmo-loader {
+    background:
+        radial-gradient(circle at 50% 45%, rgba(255, 198, 0, 0.08), transparent 24rem),
+        linear-gradient(180deg, rgba(14, 23, 18, 0.98), rgba(9, 16, 12, 0.98));
+}
+
+@media (max-width: 576px) {
+    .theme-setting {
+        padding-left: 0.55rem;
+    }
+
+    .theme-setting__label {
+        display: none;
+    }
+
+    .theme-setting__select {
+        max-width: 86px;
+    }
+}

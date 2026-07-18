@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "run_dir": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/debug-boss",
+  "spritesheet": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/debug-boss/final/spritesheet.webp",
+  "validation": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/debug-boss/final/validation.json",
+  "contact_sheet": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/debug-boss/qa/contact-sheet.png",
+  "review": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/debug-boss/qa/review.json",
+  "package": "/home/rhimar-clifford-capunong/.codex/pets/debug-boss",
+  "visual_qa": "pass"
+}

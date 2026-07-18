@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "run_dir": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte",
+  "spritesheet": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/final/spritesheet.webp",
+  "validation": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/final/validation.json",
+  "contact_sheet": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/qa/contact-sheet.png",
+  "review": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/qa/review.json",
+  "package": "/home/rhimar-clifford-capunong/.codex/pets/sunnybyte",
+  "visual_qa": "not_completed_view_image_sandbox_loopback_error"
+}

@@ -1,0 +1,125 @@
+{
+  "ok": true,
+  "chroma_key": {
+    "hex": "#FF00FF",
+    "rgb": [
+      255,
+      0,
+      255
+    ],
+    "threshold": 96.0
+  },
+  "rows": [
+    {
+      "state": "idle",
+      "frames": [
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/00.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/01.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/02.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/03.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/04.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/05.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "running-right",
+      "frames": [
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/00.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/01.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/02.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/03.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/04.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/05.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/06.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/07.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "running-left",
+      "frames": [
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/00.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/01.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/02.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/03.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/04.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/05.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/06.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/07.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "waving",
+      "frames": [
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waving/00.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waving/01.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waving/02.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waving/03.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "jumping",
+      "frames": [
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/jumping/00.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/jumping/01.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/jumping/02.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/jumping/03.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/jumping/04.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "failed",
+      "frames": [
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/00.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/01.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/02.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/03.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/04.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/05.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/06.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/07.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "waiting",
+      "frames": [
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/00.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/01.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/02.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/03.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/04.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/05.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "running",
+      "frames": [
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/00.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/01.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/02.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/03.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/04.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/05.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "review",
+      "frames": [
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/00.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/01.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/02.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/03.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/04.png",
+        "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/05.png"
+      ],
+      "method": "components"
+    }
+  ]
+}

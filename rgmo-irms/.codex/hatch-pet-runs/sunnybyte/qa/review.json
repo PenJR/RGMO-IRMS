@@ -1,0 +1,962 @@
+{
+  "ok": true,
+  "frames_root": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames",
+  "errors": [],
+  "warnings": [],
+  "rows": [
+    {
+      "state": "idle",
+      "expected_frames": 6,
+      "actual_frames": 6,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21051,
+          "bbox": [
+            24,
+            5,
+            167,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 208
+        },
+        {
+          "index": 1,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 20652,
+          "bbox": [
+            25,
+            5,
+            166,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 244
+        },
+        {
+          "index": 2,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21807,
+          "bbox": [
+            22,
+            5,
+            169,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 244
+        },
+        {
+          "index": 3,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21256,
+          "bbox": [
+            23,
+            5,
+            168,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 246
+        },
+        {
+          "index": 4,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21045,
+          "bbox": [
+            24,
+            5,
+            168,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 219
+        },
+        {
+          "index": 5,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/idle/05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21076,
+          "bbox": [
+            24,
+            5,
+            168,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 231
+        }
+      ]
+    },
+    {
+      "state": "running-right",
+      "expected_frames": 8,
+      "actual_frames": 8,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 20292,
+          "bbox": [
+            16,
+            5,
+            175,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 431
+        },
+        {
+          "index": 1,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 22349,
+          "bbox": [
+            5,
+            6,
+            187,
+            202
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 500
+        },
+        {
+          "index": 2,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19044,
+          "bbox": [
+            14,
+            5,
+            178,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 414
+        },
+        {
+          "index": 3,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18146,
+          "bbox": [
+            5,
+            19,
+            187,
+            189
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 352
+        },
+        {
+          "index": 4,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19635,
+          "bbox": [
+            14,
+            5,
+            178,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 383
+        },
+        {
+          "index": 5,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 22026,
+          "bbox": [
+            5,
+            7,
+            187,
+            201
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 429
+        },
+        {
+          "index": 6,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/06.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18378,
+          "bbox": [
+            15,
+            5,
+            176,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 402
+        },
+        {
+          "index": 7,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-right/07.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19783,
+          "bbox": [
+            20,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 421
+        }
+      ]
+    },
+    {
+      "state": "running-left",
+      "expected_frames": 8,
+      "actual_frames": 8,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 20292,
+          "bbox": [
+            16,
+            5,
+            175,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 431
+        },
+        {
+          "index": 1,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 22349,
+          "bbox": [
+            5,
+            6,
+            187,
+            202
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 500
+        },
+        {
+          "index": 2,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19044,
+          "bbox": [
+            14,
+            5,
+            178,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 414
+        },
+        {
+          "index": 3,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19243,
+          "bbox": [
+            5,
+            16,
+            187,
+            192
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 370
+        },
+        {
+          "index": 4,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19285,
+          "bbox": [
+            19,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 364
+        },
+        {
+          "index": 5,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 22421,
+          "bbox": [
+            5,
+            6,
+            187,
+            202
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 459
+        },
+        {
+          "index": 6,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/06.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 15564,
+          "bbox": [
+            5,
+            15,
+            187,
+            193
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 375
+        },
+        {
+          "index": 7,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running-left/07.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19783,
+          "bbox": [
+            20,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 421
+        }
+      ]
+    },
+    {
+      "state": "waving",
+      "expected_frames": 4,
+      "actual_frames": 4,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waving/00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18778,
+          "bbox": [
+            33,
+            5,
+            159,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 155
+        },
+        {
+          "index": 1,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waving/01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19122,
+          "bbox": [
+            27,
+            5,
+            165,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 206
+        },
+        {
+          "index": 2,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waving/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18777,
+          "bbox": [
+            22,
+            5,
+            170,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 150
+        },
+        {
+          "index": 3,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waving/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18819,
+          "bbox": [
+            33,
+            5,
+            158,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 160
+        }
+      ]
+    },
+    {
+      "state": "jumping",
+      "expected_frames": 5,
+      "actual_frames": 5,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/jumping/00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 22045,
+          "bbox": [
+            5,
+            15,
+            187,
+            192
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 370
+        },
+        {
+          "index": 1,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/jumping/01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 16780,
+          "bbox": [
+            16,
+            5,
+            175,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 276
+        },
+        {
+          "index": 2,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/jumping/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17747,
+          "bbox": [
+            16,
+            5,
+            175,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 314
+        },
+        {
+          "index": 3,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/jumping/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 20960,
+          "bbox": [
+            11,
+            5,
+            180,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 373
+        },
+        {
+          "index": 4,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/jumping/04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 22478,
+          "bbox": [
+            14,
+            5,
+            178,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 339
+        }
+      ]
+    },
+    {
+      "state": "failed",
+      "expected_frames": 8,
+      "actual_frames": 8,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17939,
+          "bbox": [
+            35,
+            5,
+            156,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 269
+        },
+        {
+          "index": 1,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18899,
+          "bbox": [
+            28,
+            5,
+            163,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 298
+        },
+        {
+          "index": 2,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21082,
+          "bbox": [
+            23,
+            5,
+            169,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 316
+        },
+        {
+          "index": 3,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 22531,
+          "bbox": [
+            5,
+            12,
+            187,
+            196
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 337
+        },
+        {
+          "index": 4,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 20763,
+          "bbox": [
+            28,
+            5,
+            163,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 299
+        },
+        {
+          "index": 5,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 23373,
+          "bbox": [
+            22,
+            5,
+            170,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 321
+        },
+        {
+          "index": 6,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/06.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 22622,
+          "bbox": [
+            23,
+            5,
+            169,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 329
+        },
+        {
+          "index": 7,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/failed/07.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18995,
+          "bbox": [
+            30,
+            5,
+            162,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 310
+        }
+      ]
+    },
+    {
+      "state": "waiting",
+      "expected_frames": 6,
+      "actual_frames": 6,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18809,
+          "bbox": [
+            30,
+            5,
+            162,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 239
+        },
+        {
+          "index": 1,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17947,
+          "bbox": [
+            35,
+            5,
+            156,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 226
+        },
+        {
+          "index": 2,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18170,
+          "bbox": [
+            32,
+            5,
+            159,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 261
+        },
+        {
+          "index": 3,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17962,
+          "bbox": [
+            33,
+            5,
+            159,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 199
+        },
+        {
+          "index": 4,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17659,
+          "bbox": [
+            25,
+            5,
+            167,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 262
+        },
+        {
+          "index": 5,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/waiting/05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18247,
+          "bbox": [
+            34,
+            5,
+            158,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 286
+        }
+      ]
+    },
+    {
+      "state": "running",
+      "expected_frames": 6,
+      "actual_frames": 6,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21773,
+          "bbox": [
+            12,
+            5,
+            179,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 396
+        },
+        {
+          "index": 1,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21274,
+          "bbox": [
+            15,
+            5,
+            176,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 355
+        },
+        {
+          "index": 2,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21621,
+          "bbox": [
+            17,
+            5,
+            175,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 375
+        },
+        {
+          "index": 3,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21725,
+          "bbox": [
+            15,
+            5,
+            177,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 337
+        },
+        {
+          "index": 4,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21028,
+          "bbox": [
+            13,
+            5,
+            178,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 337
+        },
+        {
+          "index": 5,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/running/05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21647,
+          "bbox": [
+            13,
+            5,
+            179,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 415
+        }
+      ]
+    },
+    {
+      "state": "review",
+      "expected_frames": 6,
+      "actual_frames": 6,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18022,
+          "bbox": [
+            33,
+            5,
+            159,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 223
+        },
+        {
+          "index": 1,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17747,
+          "bbox": [
+            37,
+            5,
+            155,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 252
+        },
+        {
+          "index": 2,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18420,
+          "bbox": [
+            32,
+            5,
+            160,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 235
+        },
+        {
+          "index": 3,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17391,
+          "bbox": [
+            38,
+            5,
+            153,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 225
+        },
+        {
+          "index": 4,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18094,
+          "bbox": [
+            35,
+            5,
+            156,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 220
+        },
+        {
+          "index": 5,
+          "file": "/home/rhimar-clifford-capunong/RGMO/RGMO-IRMS/rgmo-irms/.codex/hatch-pet-runs/sunnybyte/frames/review/05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17658,
+          "bbox": [
+            34,
+            5,
+            157,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 226
+        }
+      ]
+    }
+  ]
+}

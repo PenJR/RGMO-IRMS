@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-bs-theme="light">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,6 +8,21 @@
         <title>{{ config('app.name', 'RGMO-IRMS') }}</title>
         <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
         <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
+
+        <script>
+            (() => {
+                const storageKey = 'rgmoColorTheme';
+                const storedTheme = localStorage.getItem(storageKey);
+                const preference = ['light', 'dark', 'system'].includes(storedTheme) ? storedTheme : 'system';
+                const resolvedTheme = preference === 'system'
+                    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                    : preference;
+
+                document.documentElement.dataset.themePreference = preference;
+                document.documentElement.dataset.bsTheme = resolvedTheme;
+                document.documentElement.style.colorScheme = resolvedTheme;
+            })();
+        </script>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -859,13 +874,23 @@
             @include('layouts.navigation')
 
             <main class="d-flex flex-column flex-grow-1" style="min-width: 0;">
-                <header class="top-nav d-flex justify-content-between align-items-center">
+                <header class="top-nav d-flex justify-content-between align-items-center gap-3">
                     <div class="flex-grow-1" style="min-width: 0;">
                         @if(isset($header))
                             {{ $header }}
                         @else
                             <h2 class="h5 fw-bold mb-0 text-dark">Dashboard</h2>
                         @endif
+                    </div>
+                    <div class="theme-setting">
+                        <i data-lucide="sun" class="theme-setting__icon theme-setting__icon--light" aria-hidden="true"></i>
+                        <i data-lucide="moon" class="theme-setting__icon theme-setting__icon--dark" aria-hidden="true"></i>
+                        <label for="colorTheme" class="theme-setting__label">Theme</label>
+                        <select id="colorTheme" class="theme-setting__select" aria-label="Color theme">
+                            <option value="system">System</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
                     </div>
                 </header>
 
@@ -914,6 +939,42 @@
                 const collapsed = !document.body.classList.contains('sidebar-collapsed');
                 localStorage.setItem(sidebarStorageKey, String(collapsed));
                 applySidebarState(collapsed);
+            });
+
+            const themeStorageKey = 'rgmoColorTheme';
+            const themeSelect = document.getElementById('colorTheme');
+            const colorSchemePreference = window.matchMedia('(prefers-color-scheme: dark)');
+            const validThemes = ['light', 'dark', 'system'];
+            const getThemePreference = () => {
+                const savedTheme = localStorage.getItem(themeStorageKey);
+                return validThemes.includes(savedTheme) ? savedTheme : 'system';
+            };
+            const applyTheme = (preference) => {
+                const resolvedTheme = preference === 'system'
+                    ? (colorSchemePreference.matches ? 'dark' : 'light')
+                    : preference;
+
+                document.documentElement.dataset.themePreference = preference;
+                document.documentElement.dataset.bsTheme = resolvedTheme;
+                document.documentElement.style.colorScheme = resolvedTheme;
+
+                if (themeSelect) {
+                    themeSelect.value = preference;
+                }
+            };
+
+            applyTheme(getThemePreference());
+
+            themeSelect?.addEventListener('change', (event) => {
+                const preference = validThemes.includes(event.target.value) ? event.target.value : 'system';
+                localStorage.setItem(themeStorageKey, preference);
+                applyTheme(preference);
+            });
+
+            colorSchemePreference.addEventListener('change', () => {
+                if (getThemePreference() === 'system') {
+                    applyTheme('system');
+                }
             });
 
             // Interactivity for Sidebar Dropdowns
