@@ -123,20 +123,25 @@ class NotificationService
     }
 
     /**
-     * Send a notification for admin logged in.
+     * Notify privileged users when an account signs in.
      */
-    public function notifyAdminLoggedIn(User $admin, array $context = []): void
+    public function notifyUserLoggedIn(User $user, array $context = []): void
     {
-        if (! $admin->isAdmin()) {
-            return;
-        }
+        $roleLabel = match ($user->normalizedRole()) {
+            User::ROLE_ADMIN => 'Admin',
+            User::ROLE_RGMO_HEAD => 'RGMO Head',
+            User::ROLE_PROJECT_MANAGER => 'Project Manager',
+            default => 'Staff',
+        };
 
-        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_RGMO_HEAD], 'admin_login', "Admin {$admin->name} logged in to the system.", [
-            'title' => 'Admin Login',
-            'sender_id' => $admin->id,
+        $notificationType = $user->normalizedRole() . '_login';
+
+        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_RGMO_HEAD], $notificationType, "{$roleLabel} {$user->name} logged in to the system.", [
+            'title' => "{$roleLabel} Login",
+            'sender_id' => $user->id,
             'data' => [
-                'admin_user_id' => $admin->id,
-                'admin_role' => $admin->role,
+                'user_id' => $user->id,
+                'user_role' => $user->normalizedRole(),
                 'ip_address' => $context['ip_address'] ?? null,
                 'user_agent' => $context['user_agent'] ?? null,
                 'login_at' => $context['login_at'] ?? now()->toDateTimeString(),

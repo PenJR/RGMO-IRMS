@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Middleware\EnsureAdminAccess;
+use App\Http\Middleware\LogUserActivity;
+use App\Http\Middleware\PermissionMiddleware;
+use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SecurityHeaders;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,10 +17,15 @@ if (! class_exists('ZipArchive')) {
     class ZipArchive
     {
         public const CM_STORE = 0;
+
         public const CM_DEFAULT = -1;
+
         public const CM_DEFLATE = 8;
+
         public const CM_BZIP2 = 12;
+
         public const CM_XZ = 95;
+
         public const EM_AES_256 = 257;
     }
 }
@@ -33,17 +44,21 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withSchedule(function (Schedule $schedule): void {
+        $schedule->command('app:backup')->dailyAt('02:00');
+        $schedule->command('app:low-stock-alert')->daily();
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
-            'admin' => \App\Http\Middleware\EnsureAdminAccess::class,
-            'log.activity' => \App\Http\Middleware\LogUserActivity::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'admin' => EnsureAdminAccess::class,
+            'log.activity' => LogUserActivity::class,
         ]);
 
         // Global middleware
-        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
-        $middleware->append(\App\Http\Middleware\LogUserActivity::class);
+        $middleware->append(SecurityHeaders::class);
+        $middleware->append(LogUserActivity::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $e): bool {

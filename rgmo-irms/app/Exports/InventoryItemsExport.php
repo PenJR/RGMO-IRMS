@@ -7,21 +7,19 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class InventoryItemsExport implements FromCollection, WithHeadings, ShouldAutoSize
+class InventoryItemsExport implements FromCollection, ShouldAutoSize, WithHeadings
 {
     /**
      * Create a new instance.
      */
-    public function __construct(protected Collection $items, protected string $currencyCode = 'PHP')
-    {
-    }
+    public function __construct(protected Collection $items, protected string $currencyCode = 'PHP') {}
 
     /**
      * Handle collection.
      */
     public function collection(): Collection
     {
-        return $this->items->map(static function ($item) {
+        return $this->items->map(function ($item) {
             return [
                 'Category' => $item->category->name ?? 'Uncategorized',
                 'Name' => $item->name,

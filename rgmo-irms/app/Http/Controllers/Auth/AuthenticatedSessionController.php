@@ -56,7 +56,7 @@ class AuthenticatedSessionController extends Controller
             'login_at' => $loginAt,
         ]);
 
-        $this->notificationService->notifyAdminLoggedIn($user, [
+        $this->notificationService->notifyUserLoggedIn($user, [
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
             'login_at' => $loginAt->toDateTimeString(),

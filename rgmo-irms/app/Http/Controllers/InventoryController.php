@@ -4,26 +4,27 @@ namespace App\Http\Controllers;
 
 use App\Exports\InventoryItemsExport;
 use App\Imports\InventoryItemsImport;
-use App\Models\InventoryItem;
 use App\Models\Category;
+use App\Models\InventoryItem;
 use App\Models\SystemSetting;
 use App\Services\InventoryService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class InventoryController extends Controller
 {
     /**
      * Create a new instance.
      */
-    public function __construct(private InventoryService $inventoryService)
-    {
-    }
+    public function __construct(private InventoryService $inventoryService) {}
 
     /**
      * Get the list of standard measurement units used in the system.
-     *
-     * @return array
      */
     private function units(): array
     {
@@ -35,9 +36,9 @@ class InventoryController extends Controller
     /**
      * Display a paginated listing of inventory items with search and filter capabilities.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function index(Request $request)
     {
@@ -58,8 +59,9 @@ class InventoryController extends Controller
     /**
      * Show the creation form for a new inventory item.
      *
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function create()
     {
@@ -74,9 +76,9 @@ class InventoryController extends Controller
     /**
      * Store a newly created inventory item in the database.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function store(Request $request)
     {
@@ -110,9 +112,9 @@ class InventoryController extends Controller
     /**
      * Display details of a specific inventory item including transaction history.
      *
-     * @param InventoryItem $inventory
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function show(InventoryItem $inventory)
     {
@@ -132,9 +134,9 @@ class InventoryController extends Controller
     /**
      * Show the edit form for an existing inventory item.
      *
-     * @param InventoryItem $inventory
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function edit(InventoryItem $inventory)
     {
@@ -152,10 +154,9 @@ class InventoryController extends Controller
     /**
      * Update an existing inventory item in the database.
      *
-     * @param Request $request
-     * @param InventoryItem $inventory
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function update(Request $request, InventoryItem $inventory)
     {
@@ -168,7 +169,7 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:inventory_items,sku,' . $item->id,
+            'sku' => 'required|string|unique:inventory_items,sku,'.$item->id,
             'stock' => 'required|integer|min:0',
             'unit' => 'required|in:'.implode(',', $units),
             'min_stock' => 'required|integer|min:0',
@@ -191,9 +192,9 @@ class InventoryController extends Controller
     /**
      * Remove (Deactivate) the specified inventory item from the database.
      *
-     * @param InventoryItem $inventory
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function destroy(InventoryItem $inventory)
     {
@@ -209,9 +210,9 @@ class InventoryController extends Controller
     /**
      * Restore a previously soft-deleted (deactivated) inventory item.
      *
-     * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function restore(int $id)
     {
@@ -226,9 +227,9 @@ class InventoryController extends Controller
     /**
      * Import inventory data from a spreadsheet (CSV, XLSX, XLS).
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function import(Request $request)
     {
@@ -238,7 +239,7 @@ class InventoryController extends Controller
             'file' => 'required|file|mimes:csv,xlsx,xls,txt|max:10240',
         ]);
 
-        Excel::import(new InventoryItemsImport(), $validated['file']);
+        Excel::import(new InventoryItemsImport, $validated['file']);
 
         return redirect()->route('inventory.index')->with('success', 'Inventory items imported successfully.');
     }
@@ -246,17 +247,18 @@ class InventoryController extends Controller
     /**
      * Export the current inventory report to a CSV file.
      *
-     * @return \Illuminate\Http\Response
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return Response
+     *
+     * @throws AuthorizationException
      */
     public function exportCsv()
     {
         $this->authorize('export', InventoryItem::class);
 
         $items = $this->inventoryService->getAllItems(250)->items();
-        $filename = 'inventory_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.csv';
         $handle = fopen('php://memory', 'w');
-        fputcsv($handle, ['Category', 'Name', 'SKU', 'Stock', 'Min Stock', 'Reorder Level', 'Unit', 'Price (' . SystemSetting::currencyCode() . ')', 'Description', 'Status']);
+        fputcsv($handle, ['Category', 'Name', 'SKU', 'Stock', 'Min Stock', 'Reorder Level', 'Unit', 'Price ('.SystemSetting::currencyCode().')', 'Description', 'Status']);
 
         foreach ($items as $item) {
             fputcsv($handle, [
@@ -279,22 +281,23 @@ class InventoryController extends Controller
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
     /**
      * Export the current inventory report to an Excel file (.xlsx).
      *
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return BinaryFileResponse
+     *
+     * @throws AuthorizationException
      */
     public function exportExcel()
     {
         $this->authorize('export', InventoryItem::class);
 
-        $items = $this->inventoryService->getAllItems(250)->items();
-        $filename = 'inventory_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+        $items = collect($this->inventoryService->getAllItems(250)->items());
+        $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.xlsx';
 
         return Excel::download(new InventoryItemsExport($items, SystemSetting::currencyCode()), $filename);
     }
@@ -302,10 +305,9 @@ class InventoryController extends Controller
     /**
      * Record a "stock in" transaction for the specified item.
      *
-     * @param Request $request
-     * @param InventoryItem $item
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function stockIn(Request $request, InventoryItem $item)
     {
@@ -331,10 +333,9 @@ class InventoryController extends Controller
     /**
      * Record a "stock out" transaction for the specified item.
      *
-     * @param Request $request
-     * @param InventoryItem $item
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function stockOut(Request $request, InventoryItem $item)
     {
@@ -360,10 +361,9 @@ class InventoryController extends Controller
     /**
      * Perform an ad-hoc stock adjustment (either addition or deduction).
      *
-     * @param Request $request
-     * @param InventoryItem $item
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function adjustStock(Request $request, InventoryItem $item)
     {
@@ -397,7 +397,7 @@ class InventoryController extends Controller
     /**
      * View a list of inventory items that are currently below their minimum stock levels.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function lowStock()
     {
@@ -493,7 +493,7 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'category_id' => 'sometimes|required|exists:categories,id',
             'name' => 'sometimes|required|string|max:255',
-            'sku' => 'sometimes|required|string|unique:inventory_items,sku,' . $item->id,
+            'sku' => 'sometimes|required|string|unique:inventory_items,sku,'.$item->id,
             'stock' => 'sometimes|required|integer|min:0',
             'unit' => 'sometimes|required|in:'.implode(',', $units),
             'min_stock' => 'sometimes|required|integer|min:0',

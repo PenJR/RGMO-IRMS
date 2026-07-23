@@ -3,15 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\View\View;
 
 class BackupController extends Controller
 {
     /**
      * Display a listing of system backups.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function index()
     {
@@ -27,14 +29,30 @@ class BackupController extends Controller
     /**
      * Trigger a manual system backup.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function run(Request $request)
     {
         abort_unless($request->user()?->isAdmin(), 403);
 
-        Artisan::call('backup:run');
+        $exitCode = Artisan::call('backup:run');
+        $output = Artisan::output();
+
+        if ($exitCode !== 0) {
+            AuditLog::log(
+                $request->user()->id,
+                'backup_failed',
+                'system',
+                null,
+                null,
+                null,
+                ['output' => $output, 'exit_code' => $exitCode]
+            );
+
+            return redirect()->back()->withErrors([
+                'backup' => 'Backup failed. Check the application logs and database dump tools.',
+            ]);
+        }
 
         AuditLog::log(
             $request->user()->id,
@@ -43,7 +61,7 @@ class BackupController extends Controller
             null,
             null,
             null,
-            ['output' => Artisan::output()]
+            ['output' => $output]
         );
 
         return redirect()->back()->with('success', 'Backup completed successfully.');
