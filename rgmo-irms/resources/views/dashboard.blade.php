@@ -83,7 +83,7 @@
                         <div class="card shadow-sm border-0 bg-dark text-white overflow-hidden card-stat" style="background: linear-gradient(135deg, #006837 0%, #004d29 100%) !important; min-height: 160px; display: flex; justify-content: center;">
                             <div class="card-body py-0 px-4 position-relative d-flex align-items-center">
                                 <div class="d-flex align-items-center justify-content-between w-100 position-relative" style="z-index: 2;">
-                                    <div class="d-flex align-items-center gap-4">
+                                    <div class="d-flex align-items-center gap-4 ai-forecast-cta">
                                         <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: var(--cmu-yellow); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);">
                                             <i data-lucide="sparkles" style="width: 32px; height: 32px; color: var(--cmu-green);"></i>
                                         </div>

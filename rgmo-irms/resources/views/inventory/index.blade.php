@@ -83,7 +83,7 @@
                 <div class="card-body p-0">
                     @if($items->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-modern align-middle">
+                            <table class="table table-modern mobile-card-table align-middle">
                                 <thead>
                                     <tr>
                                         <th>Item</th>
@@ -100,7 +100,7 @@
                                 <tbody>
                                     @foreach($items as $item)
                                         <tr>
-                                            <td>
+                                            <td data-label="Item">
                                                 <div class="d-flex align-items-center gap-3">
                                                     <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center fw-semibold text-muted" style="width: 40px; height: 40px;">
                                                         {{ strtoupper(substr($item->name, 0, 1)) }}
@@ -113,9 +113,9 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ $item->sku }}</td>
-                                            <td>{{ $item->category->name ?? 'N/A' }}</td>
-                                            <td>
+                                            <td data-label="SKU">{{ $item->sku }}</td>
+                                            <td data-label="Category">{{ $item->category->name ?? 'N/A' }}</td>
+                                            <td data-label="Stock">
                                                 {{ $item->stock }} {{ $item->unit }}
                                                 @if($item->stock <= $item->min_stock)
                                                     <span class="badge rounded-pill status-badge status-badge--danger ms-2">
@@ -123,12 +123,12 @@
                                                     </span>
                                                 @endif
                                             </td>
-	                                            <td>
+	                                            <td data-label="Low / Reorder">
 	                                                <div class="small">Low: {{ $item->min_stock }} {{ $item->unit }}</div>
 	                                                <div class="small text-muted">Reorder: {{ $item->getReorderPoint() }} {{ $item->unit }}</div>
 	                                            </td>
-                                            <td>{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
-	                                            <td>
+                                            <td data-label="Price">{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
+	                                            <td data-label="Status">
 	                                                <span class="badge rounded-pill status-badge
 	                                                    @if($item->getStockStatus() === 'low') status-badge--danger
 	                                                    @elseif($item->getStockStatus() === 'warning') status-badge--warning
@@ -139,7 +139,7 @@
 	                                                    <span class="badge rounded-pill status-badge status-badge--info ms-1">Reorder</span>
 	                                                @endif
 	                                            </td>
-	                                            <td>
+	                                            <td data-label="Expiry">
 	                                                @if($item->has_expiry)
 	                                                    <div class="small">{{ $item->expiry_date?->format('M d, Y') ?? 'No date' }}</div>
 	                                                    @if($item->isExpired())
@@ -153,7 +153,7 @@
 	                                                    <span class="text-muted small">No expiry</span>
                                                 @endif
                                             </td>
-                                            <td class="text-end">
+                                            <td class="text-end" data-label="Actions">
                                                 <div class="d-inline-flex gap-2">
                                                     @can('view', $item)
                                                         <a href="{{ route('inventory.show', ['inventory' => $item->id]) }}" class="btn btn-sm inventory-action inventory-action--view">View</a>

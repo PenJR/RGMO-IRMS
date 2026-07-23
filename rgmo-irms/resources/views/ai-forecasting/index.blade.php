@@ -66,7 +66,7 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table align-middle mb-0">
+                            <table class="table mobile-card-table align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Item</th>
@@ -89,28 +89,28 @@
                                             ][$forecast['risk']];
                                         @endphp
                                         <tr data-forecast-row>
-                                            <td>
+                                            <td data-label="Item">
                                                 <div class="fw-semibold">{{ $item->name }}</div>
                                                 <div class="text-muted small">{{ $item->sku }} &middot; {{ $item->category?->name ?? 'Uncategorized' }}</div>
                                             </td>
-                                            <td class="text-end">{{ number_format($item->stock) }} {{ $item->unit }}</td>
-                                            <td class="text-end">
+                                            <td class="text-end" data-label="Stock">{{ number_format($item->stock) }} {{ $item->unit }}</td>
+                                            <td class="text-end" data-label="Average / Day">
                                                 <div>{{ number_format($forecast['average_daily_usage'], 2) }}</div>
                                                 <div class="text-muted small">{{ $forecast['forecast_model'] }}</div>
                                             </td>
-                                            <td class="text-end">
+                                            <td class="text-end" data-label="{{ $forecast_days }}-Day Demand">
                                                 <div>{{ number_format($forecast['projected_demand']) }} {{ $item->unit }}</div>
                                                 <div class="text-muted small">
                                                     {{ number_format($forecast['forecast_lower']) }}–{{ number_format($forecast['forecast_upper']) }} · {{ $forecast['confidence_score'] }}%
                                                 </div>
                                             </td>
-                                            <td class="text-end">
+                                            <td class="text-end" data-label="Runout">
                                                 {{ $forecast['days_until_stockout'] === null ? 'No trend' : $forecast['days_until_stockout'] . ' days' }}
                                             </td>
-                                            <td class="text-end">
+                                            <td class="text-end" data-label="Reorder">
                                                 {{ $forecast['recommended_order'] > 0 ? number_format($forecast['recommended_order']) . ' ' . $item->unit : '-' }}
                                             </td>
-                                            <td>
+                                            <td data-label="Status">
                                                 <span class="badge status-badge status-badge--{{ $badge }}">{{ ucfirst($forecast['risk']) }}</span>
                                             </td>
                                         </tr>
@@ -124,8 +124,8 @@
                                 </tbody>
                             </table>
                         </div>
-                        @if($forecasts->count() > 8)
-                            <div class="d-flex align-items-center justify-content-between gap-3 px-3 py-3 border-top">
+                        @if($forecasts->count() > 4)
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 px-3 py-3 border-top" id="forecast-pagination">
                                 <span class="small text-muted" id="forecast-page-range" aria-live="polite"></span>
                                 <div class="d-flex align-items-center gap-2">
                                     <button
@@ -238,9 +238,11 @@
                 const nextButton = document.getElementById('forecast-page-next');
                 const pageLabel = document.getElementById('forecast-page-label');
                 const rangeLabel = document.getElementById('forecast-page-range');
-                const pageSize = 8;
+                const pagination = document.getElementById('forecast-pagination');
+                const pageSize = window.matchMedia('(max-width: 576px)').matches ? 4 : 8;
 
                 if (rows.length <= pageSize || !previousButton || !nextButton || !pageLabel || !rangeLabel) {
+                    pagination?.classList.add('d-none');
                     return;
                 }
 

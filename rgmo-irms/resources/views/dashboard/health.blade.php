@@ -5,12 +5,14 @@
                 <h2 class="h5 fw-bold mb-0">Module Health</h2>
                 <p class="text-muted mb-0 small">Operational status across inventory, requests, security, and audit activity.</p>
             </div>
-            <span class="badge text-uppercase fw-bold px-3 py-2
+            <span
                 @class([
-                    'bg-success-subtle text-success' => $health['summary']['overall_status'] === 'healthy',
-                    'bg-warning-subtle text-warning' => $health['summary']['overall_status'] === 'warning',
-                    'bg-danger-subtle text-danger' => $health['summary']['overall_status'] === 'critical',
-                ])">
+                    'badge status-badge text-uppercase fw-bold px-3 py-2',
+                    'status-badge--success' => $health['summary']['overall_status'] === 'healthy',
+                    'status-badge--warning' => $health['summary']['overall_status'] === 'warning',
+                    'status-badge--danger' => $health['summary']['overall_status'] === 'critical',
+                ])
+            >
                 {{ $health['summary']['overall_status'] }}
             </span>
         </div>
@@ -29,8 +31,8 @@
             <div class="col-12 col-md-4">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body d-flex align-items-center gap-3">
-                        <div class="rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                            <i data-lucide="check-circle-2" style="width: 24px; height: 24px;"></i>
+                        <div class="health-icon health-icon--success" aria-hidden="true">
+                            <i data-lucide="check-circle-2"></i>
                         </div>
                         <div>
                             <p class="text-muted text-uppercase fw-bold small mb-1">Healthy Modules</p>
@@ -42,8 +44,8 @@
             <div class="col-12 col-md-4">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body d-flex align-items-center gap-3">
-                        <div class="rounded-3 bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                            <i data-lucide="alert-triangle" style="width: 24px; height: 24px;"></i>
+                        <div class="health-icon health-icon--warning" aria-hidden="true">
+                            <i data-lucide="alert-triangle"></i>
                         </div>
                         <div>
                             <p class="text-muted text-uppercase fw-bold small mb-1">Watch Modules</p>
@@ -55,8 +57,8 @@
             <div class="col-12 col-md-4">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body d-flex align-items-center gap-3">
-                        <div class="rounded-3 bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                            <i data-lucide="circle-alert" style="width: 24px; height: 24px;"></i>
+                        <div class="health-icon health-icon--danger" aria-hidden="true">
+                            <i data-lucide="circle-alert"></i>
                         </div>
                         <div>
                             <p class="text-muted text-uppercase fw-bold small mb-1">Critical Modules</p>
@@ -74,15 +76,15 @@
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-header bg-white border-0 pt-4 px-4 d-flex align-items-start justify-content-between gap-3">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-3 bg-{{ $style['class'] }}-subtle text-{{ $style['class'] }} d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                                    <i data-lucide="{{ $module['icon'] }}" style="width: 24px; height: 24px;"></i>
+                                <div class="health-icon health-icon--{{ $style['class'] }}" aria-hidden="true">
+                                    <i data-lucide="{{ $module['icon'] }}"></i>
                                 </div>
                                 <div>
                                     <h5 class="fw-bold mb-1">{{ $module['label'] }}</h5>
                                     <p class="text-muted small mb-0">Updated {{ $health['generated_at'] }}</p>
                                 </div>
                             </div>
-                            <span class="badge bg-{{ $style['class'] }}-subtle text-{{ $style['class'] }} d-inline-flex align-items-center gap-1">
+                            <span class="badge status-badge status-badge--{{ $style['class'] }} d-inline-flex align-items-center gap-1">
                                 <i data-lucide="{{ $style['icon'] }}" style="width: 14px; height: 14px;"></i>
                                 {{ $style['label'] }}
                             </span>
@@ -133,7 +135,7 @@
                             </div>
                         @empty
                             <div class="text-center py-5">
-                                <i data-lucide="check-circle-2" class="text-success opacity-25 mb-2" style="width: 44px; height: 44px;"></i>
+                                <i data-lucide="check-circle-2" class="text-success health-empty-icon mb-2" style="width: 44px; height: 44px;"></i>
                                 <p class="text-muted mb-0 small">No low-stock items right now.</p>
                             </div>
                         @endforelse
@@ -160,7 +162,7 @@
                             </div>
                         @empty
                             <div class="text-center py-5">
-                                <i data-lucide="check-circle-2" class="text-success opacity-25 mb-2" style="width: 44px; height: 44px;"></i>
+                                <i data-lucide="check-circle-2" class="text-success health-empty-icon mb-2" style="width: 44px; height: 44px;"></i>
                                 <p class="text-muted mb-0 small">No items expiring in the next 30 days.</p>
                             </div>
                         @endforelse
@@ -186,12 +188,12 @@
                                         <p class="fw-semibold mb-1">{{ $request->purpose }}</p>
                                         <p class="text-muted small mb-0">Requested by {{ $request->user?->name ?? 'Unknown user' }}</p>
                                     </div>
-                                    <span class="badge bg-light text-dark border">{{ $request->created_at->diffForHumans() }}</span>
+                                    <span class="health-time-badge">{{ $request->created_at->diffForHumans() }}</span>
                                 </div>
                             </div>
                         @empty
                             <div class="text-center py-5">
-                                <i data-lucide="check-circle-2" class="text-success opacity-25 mb-2" style="width: 44px; height: 44px;"></i>
+                                <i data-lucide="check-circle-2" class="text-success health-empty-icon mb-2" style="width: 44px; height: 44px;"></i>
                                 <p class="text-muted mb-0 small">No pending requests in the queue.</p>
                             </div>
                         @endforelse
@@ -214,11 +216,11 @@
                                     <p class="fw-semibold mb-0">{{ str($log->action)->replace('_', ' ')->title() }}</p>
                                     <p class="text-muted small mb-0">{{ str($log->module)->replace('_', ' ')->title() }} by {{ $log->user?->name ?? 'System' }}</p>
                                 </div>
-                                <span class="text-muted small">{{ $log->created_at->diffForHumans() }}</span>
+                                <span class="health-time-badge">{{ $log->created_at->diffForHumans() }}</span>
                             </div>
                         @empty
                             <div class="text-center py-5">
-                                <i data-lucide="info" class="text-muted opacity-25 mb-2" style="width: 44px; height: 44px;"></i>
+                                <i data-lucide="info" class="text-muted health-empty-icon mb-2" style="width: 44px; height: 44px;"></i>
                                 <p class="text-muted mb-0 small">No audit activity has been recorded yet.</p>
                             </div>
                         @endforelse

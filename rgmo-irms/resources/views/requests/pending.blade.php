@@ -13,7 +13,7 @@
             <div class="card-body p-0">
                 @if($requests->count() > 0)
                     <div class="table-responsive">
-                        <table class="table table-modern align-middle">
+                        <table class="table table-modern mobile-card-table align-middle">
                             <thead>
                                 <tr>
                                     <th>Request ID</th>
@@ -27,11 +27,11 @@
                             <tbody>
                                 @foreach($requests as $request)
                                     <tr>
-                                        <td>#RQ-{{ $request->id }}</td>
-	                                        <td>{{ $request->user->name ?? 'Unknown' }}</td>
-	                                        <td>{{ Str::limit($request->purpose, 60) }}</td>
-	                                        <td>{{ $request->needed_date?->format('M d, Y') ?? 'N/A' }}</td>
-	                                        <td>
+                                        <td data-label="Request">#RQ-{{ $request->id }}</td>
+	                                        <td data-label="Requester">{{ $request->user->name ?? 'Unknown' }}</td>
+	                                        <td data-label="Purpose">{{ Str::limit($request->purpose, 60) }}</td>
+	                                        <td data-label="Needed Date">{{ $request->needed_date?->format('M d, Y') ?? 'N/A' }}</td>
+	                                        <td data-label="Readiness">
 	                                            @php
 	                                                $shortItems = $request->items->filter(fn ($item) => ! $item->item || $item->item->stock < $item->quantity);
 	                                            @endphp
@@ -41,7 +41,7 @@
 	                                                <span class="badge rounded-pill status-badge status-badge--danger">{{ $shortItems->count() }} short</span>
 	                                            @endif
 	                                        </td>
-	                                        <td class="text-end">
+	                                        <td class="text-end" data-label="Actions">
                                             <a href="{{ route('requests.show', ['request' => $request->id]) }}" class="btn btn-sm btn-outline-primary">Review</a>
                                         </td>
                                     </tr>

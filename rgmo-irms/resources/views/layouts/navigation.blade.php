@@ -7,9 +7,12 @@
                 <p class="sidebar-kicker">Central Mindanao</p>
             </div>
         </div>
-        <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Minimize sidebar" aria-expanded="true" title="Minimize sidebar">
+        <button type="button" class="sidebar-toggle d-none d-lg-inline-flex" id="sidebarToggle" aria-label="Minimize sidebar" aria-expanded="true" title="Minimize sidebar">
             <i data-lucide="panel-left-close" class="sidebar-toggle-icon sidebar-toggle-collapse"></i>
             <i data-lucide="panel-left-open" class="sidebar-toggle-icon sidebar-toggle-expand"></i>
+        </button>
+        <button type="button" class="mobile-sidebar-close d-lg-none" id="mobileSidebarClose" aria-label="Close navigation">
+            <i data-lucide="x" aria-hidden="true"></i>
         </button>
     </div>
 

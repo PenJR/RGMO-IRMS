@@ -834,28 +834,41 @@
 
             @media (max-width: 992px) {
                 #sidebar {
-                    position: relative;
-                    width: 100%;
-                    min-width: 100%;
-                    min-height: auto;
+                    position: fixed;
+                    inset: 0 auto 0 0;
+                    z-index: 1055;
+                    width: min(86vw, 320px);
+                    min-width: min(86vw, 320px);
+                    height: 100vh;
+                    height: 100dvh;
+                    min-height: 0;
+                    max-height: 100dvh;
+                    transform: translateX(-105%);
+                    transition: transform 0.24s ease;
+                    box-shadow: 18px 0 45px rgba(0, 0, 0, 0.28);
                 }
 
-                .sidebar-toggle {
-                    display: none;
+                body.mobile-sidebar-open {
+                    overflow: hidden;
+                }
+
+                body.mobile-sidebar-open #sidebar {
+                    transform: translateX(0);
                 }
 
                 .layout-wrapper {
-                    overflow: auto !important;
+                    overflow: visible !important;
                     height: auto !important;
                     min-height: 100vh;
                 }
 
                 .top-nav {
-                    padding: 0 1rem;
+                    min-height: 68px;
+                    padding: 0.65rem 1rem;
                 }
 
                 .main-content {
-                    padding: 1.5rem;
+                    padding: 0;
                     overflow: visible !important;
                 }
             }
@@ -872,9 +885,20 @@
 
         <div class="layout-wrapper d-flex flex-column flex-lg-row overflow-hidden min-vh-100">
             @include('layouts.navigation')
+            <div class="mobile-sidebar-backdrop" id="mobileSidebarBackdrop" aria-hidden="true"></div>
 
             <main class="d-flex flex-column flex-grow-1" style="min-width: 0;">
                 <header class="top-nav d-flex justify-content-between align-items-center gap-3">
+                    <button
+                        type="button"
+                        class="mobile-sidebar-toggle d-lg-none"
+                        id="mobileSidebarToggle"
+                        aria-label="Open navigation"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                    >
+                        <i data-lucide="menu" aria-hidden="true"></i>
+                    </button>
                     <div class="flex-grow-1" style="min-width: 0;">
                         @if(isset($header))
                             {{ $header }}
@@ -922,7 +946,24 @@
             lucide.createIcons();
 
             const sidebarToggle = document.getElementById('sidebarToggle');
+            const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+            const mobileSidebarClose = document.getElementById('mobileSidebarClose');
+            const mobileSidebarBackdrop = document.getElementById('mobileSidebarBackdrop');
+            const sidebar = document.getElementById('sidebar');
             const sidebarStorageKey = 'rgmoSidebarCollapsed';
+            const mobileSidebarQuery = window.matchMedia('(max-width: 992px)');
+            const setMobileSidebar = (open) => {
+                const shouldOpen = open && mobileSidebarQuery.matches;
+
+                document.body.classList.toggle('mobile-sidebar-open', shouldOpen);
+                mobileSidebarToggle?.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                mobileSidebarBackdrop?.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+                sidebar?.toggleAttribute('inert', mobileSidebarQuery.matches && !shouldOpen);
+
+                if (shouldOpen) {
+                    mobileSidebarClose?.focus();
+                }
+            };
             const applySidebarState = (collapsed) => {
                 document.body.classList.toggle('sidebar-collapsed', collapsed);
 
@@ -934,12 +975,30 @@
             };
 
             applySidebarState(localStorage.getItem(sidebarStorageKey) === 'true');
+            setMobileSidebar(false);
 
             sidebarToggle?.addEventListener('click', () => {
                 const collapsed = !document.body.classList.contains('sidebar-collapsed');
                 localStorage.setItem(sidebarStorageKey, String(collapsed));
                 applySidebarState(collapsed);
             });
+
+            mobileSidebarToggle?.addEventListener('click', () => setMobileSidebar(true));
+            mobileSidebarClose?.addEventListener('click', () => setMobileSidebar(false));
+            mobileSidebarBackdrop?.addEventListener('click', () => setMobileSidebar(false));
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && document.body.classList.contains('mobile-sidebar-open')) {
+                    setMobileSidebar(false);
+                    mobileSidebarToggle?.focus();
+                }
+            });
+
+            document.querySelectorAll('#sidebar a[href]').forEach((link) => {
+                link.addEventListener('click', () => setMobileSidebar(false));
+            });
+
+            mobileSidebarQuery.addEventListener('change', () => setMobileSidebar(false));
 
             const themeStorageKey = 'rgmoColorTheme';
             const themeSelect = document.getElementById('colorTheme');
