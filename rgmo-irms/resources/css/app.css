@@ -1107,6 +1107,36 @@ html[data-bs-theme="dark"] .text-info {
     color: var(--status-info) !important;
 }
 
+html[data-bs-theme="dark"] .alert-success {
+    background-color: var(--status-success-bg) !important;
+    color: var(--status-success) !important;
+    border-color: var(--status-success-border) !important;
+}
+
+html[data-bs-theme="dark"] .alert-warning {
+    background-color: var(--status-warning-bg) !important;
+    color: var(--status-warning) !important;
+    border-color: var(--status-warning-border) !important;
+}
+
+html[data-bs-theme="dark"] .alert-info {
+    background-color: var(--status-info-bg) !important;
+    color: var(--status-info) !important;
+    border-color: var(--status-info-border) !important;
+}
+
+html[data-bs-theme="dark"] .alert-danger {
+    background-color: var(--status-danger-bg) !important;
+    color: var(--status-danger) !important;
+    border-color: var(--status-danger-border) !important;
+}
+
+html[data-bs-theme="dark"] .alert-light {
+    background-color: var(--ui-surface-soft) !important;
+    color: var(--cmu-text) !important;
+    border-color: var(--ui-line-strong) !important;
+}
+
 html[data-bs-theme="dark"] .bg-light {
     background-color: var(--ui-surface-soft) !important;
 }

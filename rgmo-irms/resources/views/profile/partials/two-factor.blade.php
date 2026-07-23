@@ -38,6 +38,10 @@
 
             <div id="2fa-setup" class="mt-4 d-none p-4 rounded border bg-light">
                 <div id="qr-container" class="mb-3 text-center"></div>
+                <div class="alert alert-light border small mb-3">
+                    <span class="fw-semibold">Manual setup key:</span>
+                    <code id="2fa-manual-secret" class="ms-1 user-select-all"></code>
+                </div>
                 <p class="small text-muted mb-3">Scan the QR code with your authenticator app, then enter the code below to confirm setup.</p>
                 <form id="confirm-2fa-form" class="row g-2">
                     @csrf
@@ -58,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const enableBtn = document.getElementById('enable-2fa');
     const setupDiv = document.getElementById('2fa-setup');
     const qrContainer = document.getElementById('qr-container');
+    const manualSecret = document.getElementById('2fa-manual-secret');
     const confirmForm = document.getElementById('confirm-2fa-form');
     const disableForm = document.getElementById('disable-2fa-form');
 
@@ -72,11 +77,26 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const res = await fetch('{{ route('2fa.enable') }}', { headers: { 'Accept': 'application/json' }});
                 const data = await res.json();
-                const otpauth = encodeURIComponent(data.otpauth_url);
-                qrContainer.innerHTML = `<img src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${otpauth}" alt="QR" class="img-thumbnail shadow-sm"/>`;
+
+                if (!res.ok) {
+                    throw new Error(data.message || 'Unable to start two-factor authentication setup.');
+                }
+
+                const qrDataUrl = await window.QRCode.toDataURL(data.otpauth_url, {
+                    errorCorrectionLevel: 'M',
+                    margin: 2,
+                    width: 220,
+                });
+                const qrImage = document.createElement('img');
+                qrImage.src = qrDataUrl;
+                qrImage.alt = 'Authenticator setup QR code';
+                qrImage.className = 'img-thumbnail shadow-sm';
+                qrContainer.replaceChildren(qrImage);
+                manualSecret.textContent = data.secret;
                 setupDiv.classList.remove('d-none');
             } catch (error) {
                 console.error('Error enabling 2FA:', error);
+                alert(error.message || 'Unable to start two-factor authentication setup.');
             } finally {
                 enableBtn.disabled = false;
             }

@@ -1,4 +1,7 @@
 import './bootstrap';
+import QRCode from 'qrcode';
+
+window.QRCode = QRCode;
 
 const loader = document.querySelector('[data-rgmo-loader]');
 
