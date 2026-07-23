@@ -60,7 +60,11 @@ class UserController extends Controller
      */
     public function deleteUser(int $id)
     {
+        $user = User::findOrFail($id);
+        $this->authorize('delete', $user);
+
         $this->service->deleteUser($id);
+
         return response()->json(['message' => 'User deleted']);
     }
 

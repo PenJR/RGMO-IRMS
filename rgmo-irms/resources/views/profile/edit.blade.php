@@ -27,11 +27,6 @@
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm border-start border-4 border-danger">
-                    <div class="card-body p-4">
-                        @include('profile.partials.delete-user-form')
-                    </div>
-                </div>
             </div>
         </div>
     </div>

@@ -9,6 +9,7 @@ use App\Services\TwoFactorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 
 class TwoFactorController extends Controller
 {
@@ -33,16 +34,39 @@ class TwoFactorController extends Controller
             abort(403);
         }
 
-        if (! $user->two_factor_secret) {
-            $secret = $this->twoFactor->generateSecret();
-            $user->update(['two_factor_secret' => $secret, 'two_factor_enabled' => false]);
-        } else {
-            $secret = $user->two_factor_secret;
+        if ($user->two_factor_enabled) {
+            return response()->json(['message' => 'Two-factor authentication is already enabled.'], 409);
         }
+
+        // Rotate any unfinished setup secret so an exposed or abandoned key cannot be reused.
+        $secret = $this->twoFactor->generateSecret();
+        $user->update(['two_factor_secret' => $secret, 'two_factor_enabled' => false]);
 
         $uri = $this->twoFactor->getProvisioningUri($user->email, $secret);
 
         return response()->json(['secret' => $secret, 'otpauth_url' => $uri]);
+    }
+
+    /**
+     * Reveal the current setup key after password confirmation.
+     */
+    public function revealSecret(Request $request)
+    {
+        $validated = $request->validate(['password' => 'required|string']);
+        $user = $request->user();
+
+        if (! $user || $user->two_factor_enabled || ! $user->two_factor_secret) {
+            return response()->json(['message' => 'No pending two-factor setup was found.'], 422);
+        }
+
+        if (! Hash::check($validated['password'], $user->password)) {
+            return response()->json(['message' => 'The provided password is incorrect.'], 422);
+        }
+
+        return response()->json([
+            'secret' => $user->two_factor_secret,
+            'expires_in' => 600,
+        ])->header('Cache-Control', 'no-store, private');
     }
 
     /**
@@ -78,7 +102,7 @@ class TwoFactorController extends Controller
         $user = $request->user();
         if (! $user) abort(403);
 
-        if (! \Hash::check($request->input('password'), $user->password)) {
+        if (! Hash::check($request->input('password'), $user->password)) {
             return response()->json(['message' => 'Invalid password'], 422);
         }
 

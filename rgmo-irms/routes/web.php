@@ -32,7 +32,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Inventory demand forecasting
     Route::middleware(['permission:view-forecasts'])->group(function () {
@@ -84,6 +83,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Two-Factor Authentication
     Route::get('/2fa/enable', [TwoFactorController::class, 'showEnable'])->name('2fa.enable');
+    Route::post('/2fa/reveal-secret', [TwoFactorController::class, 'revealSecret'])
+        ->middleware('throttle:5,1')
+        ->name('2fa.reveal-secret');
     Route::post('/2fa/confirm', [TwoFactorController::class, 'confirm'])->name('2fa.confirm');
     Route::post('/2fa/disable', [TwoFactorController::class, 'disable'])->name('2fa.disable');
 
