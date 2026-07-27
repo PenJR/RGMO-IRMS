@@ -239,7 +239,7 @@ class InventoryController extends Controller
             'file' => 'required|file|mimes:csv,xlsx,xls,txt|max:10240',
         ]);
 
-        Excel::import(new InventoryItemsImport, $validated['file']);
+        Excel::import(new InventoryItemsImport($this->inventoryService), $validated['file']);
 
         return redirect()->route('inventory.index')->with('success', 'Inventory items imported successfully.');
     }
@@ -317,6 +317,7 @@ class InventoryController extends Controller
             'quantity' => 'required|integer|min:1',
             'source' => 'required|string|max:255',
             'funding_source' => 'nullable|string|max:255',
+            'reference' => 'nullable|string|max:100',
         ]);
 
         $this->inventoryService->recordStockIn(
@@ -324,7 +325,8 @@ class InventoryController extends Controller
             $validated['quantity'],
             $validated['source'],
             auth()->id(),
-            $validated['funding_source'] ?? null
+            $validated['funding_source'] ?? null,
+            $validated['reference'] ?? null
         );
 
         return redirect()->route('inventory.show', $item)->with('success', 'Stock in recorded successfully.');
@@ -345,6 +347,7 @@ class InventoryController extends Controller
             'quantity' => 'required|integer|min:1',
             'destination' => 'required|string|max:255',
             'funding_source' => 'nullable|string|max:255',
+            'reference' => 'nullable|string|max:100',
         ]);
 
         $this->inventoryService->recordStockOut(
@@ -352,7 +355,8 @@ class InventoryController extends Controller
             $validated['quantity'],
             $validated['destination'],
             auth()->id(),
-            $validated['funding_source'] ?? null
+            $validated['funding_source'] ?? null,
+            $validated['reference'] ?? null
         );
 
         return redirect()->route('inventory.show', $item)->with('success', 'Stock out recorded successfully.');
@@ -436,6 +440,8 @@ class InventoryController extends Controller
      */
     public function getAllInventoryItems(Request $request)
     {
+        $this->authorize('viewAny', InventoryItem::class);
+
         $filters = $request->only(['category_id', 'search', 'status']);
         $perPage = (int) $request->input('per_page', 15);
 
@@ -447,6 +453,8 @@ class InventoryController extends Controller
      */
     public function createInventoryItem(Request $request)
     {
+        $this->authorize('create', InventoryItem::class);
+
         $units = config('inventory.units', $this->units());
 
         $validated = $request->validate([
@@ -478,6 +486,7 @@ class InventoryController extends Controller
     public function getInventoryItemById(int $id)
     {
         $item = InventoryItem::with('category', 'transactions.user')->findOrFail($id);
+        $this->authorize('view', $item);
 
         return response()->json($item);
     }
@@ -488,6 +497,7 @@ class InventoryController extends Controller
     public function updateInventoryItem(Request $request, int $id)
     {
         $item = InventoryItem::findOrFail($id);
+        $this->authorize('update', $item);
         $units = config('inventory.units', $this->units());
 
         $validated = $request->validate([
@@ -521,6 +531,7 @@ class InventoryController extends Controller
     public function deleteInventoryItem(int $id)
     {
         $item = InventoryItem::findOrFail($id);
+        $this->authorize('delete', $item);
         $this->inventoryService->deleteItem($item, auth()->id());
 
         return response()->json(['message' => 'Inventory item deleted successfully.']);
@@ -531,6 +542,8 @@ class InventoryController extends Controller
      */
     public function searchInventoryItems(Request $request)
     {
+        $this->authorize('viewAny', InventoryItem::class);
+
         $validated = $request->validate([
             'q' => 'nullable|string|max:255',
             'search' => 'nullable|string|max:255',
@@ -546,6 +559,8 @@ class InventoryController extends Controller
      */
     public function filterInventoryByCategory(int $categoryId)
     {
+        $this->authorize('viewAny', InventoryItem::class);
+
         return response()->json($this->inventoryService->getAllItems(15, ['category_id' => $categoryId]));
     }
 
@@ -555,19 +570,25 @@ class InventoryController extends Controller
     public function increaseStock(Request $request, int $itemId)
     {
         $item = InventoryItem::findOrFail($itemId);
+        $this->authorize('update', $item);
+        $request->merge(['idempotency_key' => $request->header('Idempotency-Key')]);
 
         $validated = $request->validate([
             'quantity' => 'required|integer|min:1',
-            'source' => 'nullable|string|max:255',
+            'source' => 'required|string|max:255',
             'funding_source' => 'nullable|string|max:255',
+            'reference' => 'nullable|string|max:100',
+            'idempotency_key' => 'nullable|string|max:100',
         ]);
 
         $this->inventoryService->recordStockIn(
             $item,
             $validated['quantity'],
-            $validated['source'] ?? 'API stock increase',
+            $validated['source'],
             auth()->id(),
-            $validated['funding_source'] ?? null
+            $validated['funding_source'] ?? null,
+            $validated['reference'] ?? null,
+            $validated['idempotency_key'] ?? null
         );
 
         return response()->json($item->fresh(['category', 'transactions']));
@@ -579,19 +600,25 @@ class InventoryController extends Controller
     public function decreaseStock(Request $request, int $itemId)
     {
         $item = InventoryItem::findOrFail($itemId);
+        $this->authorize('update', $item);
+        $request->merge(['idempotency_key' => $request->header('Idempotency-Key')]);
 
         $validated = $request->validate([
             'quantity' => 'required|integer|min:1',
-            'destination' => 'nullable|string|max:255',
+            'destination' => 'required|string|max:255',
             'funding_source' => 'nullable|string|max:255',
+            'reference' => 'nullable|string|max:100',
+            'idempotency_key' => 'nullable|string|max:100',
         ]);
 
         $this->inventoryService->recordStockOut(
             $item,
             $validated['quantity'],
-            $validated['destination'] ?? 'API stock decrease',
+            $validated['destination'],
             auth()->id(),
-            $validated['funding_source'] ?? null
+            $validated['funding_source'] ?? null,
+            $validated['reference'] ?? null,
+            $validated['idempotency_key'] ?? null
         );
 
         return response()->json($item->fresh(['category', 'transactions']));
@@ -602,6 +629,8 @@ class InventoryController extends Controller
      */
     public function getLowStockItems()
     {
+        $this->authorize('viewAny', InventoryItem::class);
+
         return response()->json($this->inventoryService->getLowStockItems()->load('category'));
     }
 }

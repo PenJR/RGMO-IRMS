@@ -6,10 +6,14 @@ use App\Models\LoginHistory;
 use App\Models\User;
 use App\Services\NotificationService;
 use App\Services\TwoFactorService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class TwoFactorController extends Controller
 {
@@ -24,11 +28,11 @@ class TwoFactorController extends Controller
     /**
      * Show the 2FA enablement details, generating a secret if needed.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function showEnable(Request $request)
     {
+        $validated = $request->validate(['password' => 'required|string']);
         $user = $request->user();
         if (! $user) {
             abort(403);
@@ -38,9 +42,18 @@ class TwoFactorController extends Controller
             return response()->json(['message' => 'Two-factor authentication is already enabled.'], 409);
         }
 
+        if (! Hash::check($validated['password'], $user->password)) {
+            return response()->json(['message' => 'The provided password is incorrect.'], 422);
+        }
+
         // Rotate any unfinished setup secret so an exposed or abandoned key cannot be reused.
         $secret = $this->twoFactor->generateSecret();
-        $user->update(['two_factor_secret' => $secret, 'two_factor_enabled' => false]);
+        $user->update([
+            'two_factor_secret' => $secret,
+            'two_factor_enabled' => false,
+            'two_factor_recovery_codes' => null,
+            'two_factor_last_used_step' => null,
+        ]);
 
         $uri = $this->twoFactor->getProvisioningUri($user->email, $secret);
 
@@ -72,49 +85,64 @@ class TwoFactorController extends Controller
     /**
      * Confirm 2FA setup by verifying a code provided by the user.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function confirm(Request $request)
     {
         $request->validate(['code' => 'required|string']);
         $user = $request->user() ?? auth()->user();
-        if (! $user) abort(403);
+        if (! $user) {
+            abort(403);
+        }
 
-        $ok = $this->twoFactor->verifyCode($user->two_factor_secret, $request->input('code'));
-        if (! $ok) {
+        $matchedStep = $this->twoFactor->matchedTimeSlice($user->two_factor_secret, $request->input('code'));
+        if ($matchedStep === null || ! $this->claimTimeSlice($user, $matchedStep)) {
             return response()->json(['message' => 'Invalid code'], 422);
         }
 
-        $user->update(['two_factor_enabled' => true]);
-        return response()->json(['message' => 'Two-factor authentication enabled']);
+        $recoveryCodes = $this->generateRecoveryCodes();
+        $user->update([
+            'two_factor_enabled' => true,
+            'two_factor_recovery_codes' => array_map(fn (string $code) => Hash::make($code), $recoveryCodes),
+        ]);
+
+        return response()->json([
+            'message' => 'Two-factor authentication enabled',
+            'recovery_codes' => $recoveryCodes,
+        ])->header('Cache-Control', 'no-store, private');
     }
 
     /**
      * Disable 2FA for the authenticated user, requires password validation.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function disable(Request $request)
     {
         $request->validate(['password' => 'required|string']);
         $user = $request->user();
-        if (! $user) abort(403);
+        if (! $user) {
+            abort(403);
+        }
 
         if (! Hash::check($request->input('password'), $user->password)) {
             return response()->json(['message' => 'Invalid password'], 422);
         }
 
-        $user->update(['two_factor_enabled' => false, 'two_factor_secret' => null]);
+        $user->update([
+            'two_factor_enabled' => false,
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_last_used_step' => null,
+        ]);
+
         return response()->json(['message' => 'Two-factor authentication disabled']);
     }
 
     /**
      * Show the 2FA verification challenge during login.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     * @return View|JsonResponse
      */
     public function showVerify(Request $request)
     {
@@ -128,8 +156,7 @@ class TwoFactorController extends Controller
     /**
      * Verify the 2FA code during a login attempt and authenticate the user.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @return RedirectResponse|JsonResponse
      */
     public function verify(Request $request)
     {
@@ -141,7 +168,7 @@ class TwoFactorController extends Controller
         }
 
         if (! $pendingUserId && $request->input('two_factor_challenge')) {
-            $challengeKey = '2fa:challenge:' . hash('sha256', (string) $request->input('two_factor_challenge'));
+            $challengeKey = '2fa:challenge:'.hash('sha256', (string) $request->input('two_factor_challenge'));
             $pendingUserId = Cache::pull($challengeKey);
         }
 
@@ -153,14 +180,21 @@ class TwoFactorController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Invalid or expired two-factor challenge.'], 422);
             }
+
             return redirect()->route('login')->withErrors(['message' => 'Invalid user.']);
         }
 
         $code = $request->input('code');
-        if (! $this->twoFactor->verifyCode($user->two_factor_secret, $code)) {
+        $matchedStep = $this->twoFactor->matchedTimeSlice($user->two_factor_secret, $code);
+        $verified = $matchedStep !== null
+            ? $this->claimTimeSlice($user, $matchedStep)
+            : $this->consumeRecoveryCode($user, $code);
+
+        if (! $verified) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'The provided two-factor code is invalid.'], 422);
             }
+
             return back()->withErrors(['code' => 'The provided two-factor code is invalid.']);
         }
 
@@ -196,5 +230,52 @@ class TwoFactorController extends Controller
         }
 
         return redirect()->route('dashboard');
+    }
+
+    /**
+     * Atomically prevent reuse of a TOTP code from the same or an older time slice.
+     */
+    private function claimTimeSlice(User $user, int $timeSlice): bool
+    {
+        return User::query()
+            ->whereKey($user->id)
+            ->where(function ($query) use ($timeSlice) {
+                $query->whereNull('two_factor_last_used_step')
+                    ->orWhere('two_factor_last_used_step', '<', $timeSlice);
+            })
+            ->update(['two_factor_last_used_step' => $timeSlice]) === 1;
+    }
+
+    /**
+     * Generate one-time recovery codes. Only their hashes are persisted.
+     *
+     * @return array<int, string>
+     */
+    private function generateRecoveryCodes(): array
+    {
+        return collect(range(1, 8))
+            ->map(fn () => Str::upper(Str::random(5).'-'.Str::random(5)))
+            ->all();
+    }
+
+    /**
+     * Consume a recovery code exactly once.
+     */
+    private function consumeRecoveryCode(User $user, string $candidate): bool
+    {
+        $codes = $user->two_factor_recovery_codes ?? [];
+
+        foreach ($codes as $index => $hash) {
+            if (! Hash::check(Str::upper(trim($candidate)), $hash)) {
+                continue;
+            }
+
+            unset($codes[$index]);
+            $user->update(['two_factor_recovery_codes' => array_values($codes)]);
+
+            return true;
+        }
+
+        return false;
     }
 }

@@ -42,6 +42,7 @@
                 --cmu-accent: #919F02;
                 --sidebar-width: 260px;
                 --sidebar-collapsed-width: 86px;
+                --top-nav-height: 76px;
             }
 
             body {
@@ -194,14 +195,16 @@
                 backdrop-filter: blur(10px);
                 border-bottom: 1px solid rgba(0, 73, 30, 0.08);
                 padding: 0.5rem 2rem;
-                position: sticky;
+                position: fixed !important;
                 top: 0;
+                right: 0;
+                left: 0;
                 z-index: 1020;
             }
 
             .main-content {
                 flex: 1;
-                padding: 0;
+                padding: var(--top-nav-height) 0 0;
                 overflow-y: auto;
             }
 
@@ -219,8 +222,17 @@
                     transition: margin-left 0.22s ease;
                 }
 
+                .top-nav {
+                    left: var(--sidebar-width);
+                    transition: left 0.22s ease;
+                }
+
                 body.sidebar-collapsed .layout-wrapper > main {
                     margin-left: var(--sidebar-collapsed-width);
+                }
+
+                body.sidebar-collapsed .top-nav {
+                    left: var(--sidebar-collapsed-width);
                 }
             }
 
@@ -865,10 +877,11 @@
                 .top-nav {
                     min-height: 68px;
                     padding: 0.65rem 1rem;
+                    left: 0;
                 }
 
                 .main-content {
-                    padding: 0;
+                    padding: var(--top-nav-height) 0 0 !important;
                     overflow: visible !important;
                 }
             }
@@ -906,16 +919,6 @@
                             <h2 class="h5 fw-bold mb-0 text-dark">Dashboard</h2>
                         @endif
                     </div>
-                    <div class="theme-setting">
-                        <i data-lucide="sun" class="theme-setting__icon theme-setting__icon--light" aria-hidden="true"></i>
-                        <i data-lucide="moon" class="theme-setting__icon theme-setting__icon--dark" aria-hidden="true"></i>
-                        <label for="colorTheme" class="theme-setting__label">Theme</label>
-                        <select id="colorTheme" class="theme-setting__select" aria-label="Color theme">
-                            <option value="system">System</option>
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                        </select>
-                    </div>
                 </header>
 
                 <div class="main-content">
@@ -946,12 +949,26 @@
             lucide.createIcons();
 
             const sidebarToggle = document.getElementById('sidebarToggle');
+            const topNav = document.querySelector('.top-nav');
             const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
             const mobileSidebarClose = document.getElementById('mobileSidebarClose');
             const mobileSidebarBackdrop = document.getElementById('mobileSidebarBackdrop');
             const sidebar = document.getElementById('sidebar');
             const sidebarStorageKey = 'rgmoSidebarCollapsed';
             const mobileSidebarQuery = window.matchMedia('(max-width: 992px)');
+            const syncTopNavHeight = () => {
+                if (topNav) {
+                    document.documentElement.style.setProperty('--top-nav-height', `${Math.ceil(topNav.getBoundingClientRect().height)}px`);
+                }
+            };
+
+            syncTopNavHeight();
+
+            if ('ResizeObserver' in window && topNav) {
+                new ResizeObserver(syncTopNavHeight).observe(topNav);
+            } else {
+                window.addEventListener('resize', syncTopNavHeight);
+            }
             const setMobileSidebar = (open) => {
                 const shouldOpen = open && mobileSidebarQuery.matches;
 

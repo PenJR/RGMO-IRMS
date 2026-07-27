@@ -5,13 +5,12 @@ namespace App\Providers;
 use App\Models\InventoryItem;
 use App\Models\Project;
 use App\Models\ResourceRequest;
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Models\User;
-use App\Policies\UserPolicy;
 use App\Policies\InventoryItemPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\ResourceRequestPolicy;
-use Illuminate\Support\Facades\Gate;
+use App\Policies\UserPolicy;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -32,8 +31,8 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::before(function (User $user) {
-            return $user->isAdmin() ? true : null;
-        });
+        // Administrators receive their permissions through config/rbac.php.
+        // Do not globally bypass policies because policies also enforce
+        // invariants such as preventing self-deletion and invalid transitions.
     }
 }

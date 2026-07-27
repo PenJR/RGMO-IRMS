@@ -3,7 +3,7 @@
         <div class="d-flex justify-content-between align-items-center w-100">
             <div>
                 <h2 class="fw-bold mb-1">System Settings</h2>
-                <p class="text-muted mb-0">Configure application settings used across inventory and notification workflows.</p>
+                <p class="text-muted mb-0">Configure appearance, inventory, and application preferences.</p>
             </div>
         </div>
     </x-slot>
@@ -15,6 +15,29 @@
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div>
+                        <h5 class="mb-1">Appearance</h5>
+                        <p class="text-muted small mb-0">Choose how RGMO-IRMS appears in this browser.</p>
+                    </div>
+                    <div class="theme-setting">
+                        <i data-lucide="sun" class="theme-setting__icon theme-setting__icon--light" aria-hidden="true"></i>
+                        <i data-lucide="moon" class="theme-setting__icon theme-setting__icon--dark" aria-hidden="true"></i>
+                        <label for="colorTheme" class="theme-setting__label">Theme</label>
+                        <select id="colorTheme" class="theme-setting__select" aria-label="Color theme">
+                            <option value="system">System</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h5 class="mb-1">Inventory Thresholds</h5>
+                <p class="text-muted small mb-4">Set the low-stock threshold for an individual resource.</p>
                 <form method="POST" action="{{ route('admin.settings.update') }}">
                     @csrf
                     <div class="row g-3">

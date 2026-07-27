@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Services\TwoFactorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class TwoFactorTest extends TestCase
@@ -20,7 +22,7 @@ class TwoFactorTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->getJson('/2fa/enable');
+            ->postJson('/2fa/enable', ['password' => 'password']);
 
         $response->assertOk();
         $response->assertJsonStructure(['secret', 'otpauth_url']);
@@ -28,6 +30,10 @@ class TwoFactorTest extends TestCase
 
         $this->assertNotEmpty($response->json('secret'));
         $this->assertStringStartsWith('otpauth://', $response->json('otpauth_url'));
+        $this->assertNotSame(
+            $response->json('secret'),
+            DB::table('users')->where('id', $user->id)->value('two_factor_secret')
+        );
     }
 
     /**
@@ -48,9 +54,15 @@ class TwoFactorTest extends TestCase
             ->post('/2fa/confirm', ['_token' => $session['_token'], 'code' => $totp]);
 
         $response->assertOk();
+        $response->assertJsonStructure(['recovery_codes']);
+        $this->assertCount(8, $response->json('recovery_codes'));
         $user->refresh();
         $this->assertTrue($user->two_factor_enabled);
         $this->assertSame($secret, $user->two_factor_secret);
+
+        $this->actingAs($user)
+            ->postJson('/2fa/confirm', ['code' => $totp])
+            ->assertUnprocessable();
     }
 
     /**
@@ -69,10 +81,10 @@ class TwoFactorTest extends TestCase
         $response = $this
             ->withSession($session)
             ->post('/login', [
-            '_token' => $session['_token'],
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
+                '_token' => $session['_token'],
+                'email' => $user->email,
+                'password' => 'password',
+            ]);
 
         $response->assertRedirect('/2fa/verify');
         $this->assertGuest();
@@ -113,6 +125,41 @@ class TwoFactorTest extends TestCase
         $verify->assertJson(['message' => 'Authenticated']);
 
         $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_recovery_code_can_only_be_used_once(): void
+    {
+        $secret = app(TwoFactorService::class)->generateSecret();
+        $recoveryCode = 'ABCDE-12345';
+        $user = User::factory()->create([
+            'password' => bcrypt('password'),
+            'two_factor_enabled' => true,
+            'two_factor_secret' => $secret,
+            'two_factor_recovery_codes' => [Hash::make($recoveryCode)],
+        ]);
+
+        $login = $this->postJson('/api/auth/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertStatus(202);
+
+        $this->postJson('/api/auth/verify', [
+            'code' => $recoveryCode,
+            'two_factor_challenge' => $login->json('two_factor_challenge'),
+        ])->assertOk();
+
+        $this->assertSame([], $user->fresh()->two_factor_recovery_codes);
+
+        auth()->logout();
+        $secondLogin = $this->postJson('/api/auth/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertStatus(202);
+
+        $this->postJson('/api/auth/verify', [
+            'code' => $recoveryCode,
+            'two_factor_challenge' => $secondLogin->json('two_factor_challenge'),
+        ])->assertUnprocessable();
     }
 
     /**

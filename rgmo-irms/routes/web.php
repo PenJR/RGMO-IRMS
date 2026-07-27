@@ -82,12 +82,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Two-Factor Authentication
-    Route::get('/2fa/enable', [TwoFactorController::class, 'showEnable'])->name('2fa.enable');
+    Route::post('/2fa/enable', [TwoFactorController::class, 'showEnable'])
+        ->middleware('throttle:5,1')
+        ->name('2fa.enable');
     Route::post('/2fa/reveal-secret', [TwoFactorController::class, 'revealSecret'])
         ->middleware('throttle:5,1')
         ->name('2fa.reveal-secret');
-    Route::post('/2fa/confirm', [TwoFactorController::class, 'confirm'])->name('2fa.confirm');
-    Route::post('/2fa/disable', [TwoFactorController::class, 'disable'])->name('2fa.disable');
+    Route::post('/2fa/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:6,1')->name('2fa.confirm');
+    Route::post('/2fa/disable', [TwoFactorController::class, 'disable'])->middleware('throttle:5,1')->name('2fa.disable');
 
     // Reports
     Route::middleware(['permission:generate-reports,view-audit-trail'])->group(function () {
@@ -127,6 +129,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Two-Factor verification must be available while login is pending.
 Route::get('/2fa/verify', [TwoFactorController::class, 'showVerify'])->name('2fa.verify');
-Route::post('/2fa/verify', [TwoFactorController::class, 'verify'])->name('2fa.verify.post');
+Route::post('/2fa/verify', [TwoFactorController::class, 'verify'])->middleware('throttle:6,1')->name('2fa.verify.post');
 
 require __DIR__.'/auth.php';

@@ -16,6 +16,8 @@ class InventoryTransaction extends Model
         'funding_source',
         'source',
         'destination',
+        'reference',
+        'idempotency_key',
         'meta',
     ];
 
@@ -25,17 +27,15 @@ class InventoryTransaction extends Model
 
     /**
      * Compute a readable detail string based on the transaction type and its source/destination.
-     *
-     * @return string
      */
     public function getDetailsAttribute(): string
     {
         if ($this->transaction_type === 'stock_in') {
-            return $this->source ? 'Source: ' . $this->source : ($this->meta ? json_encode($this->meta) : 'N/A');
+            return $this->source ? 'Source: '.$this->source : ($this->meta ? json_encode($this->meta) : 'N/A');
         }
 
         if ($this->transaction_type === 'stock_out') {
-            return $this->destination ? 'Destination: ' . $this->destination : ($this->meta ? json_encode($this->meta) : 'N/A');
+            return $this->destination ? 'Destination: '.$this->destination : ($this->meta ? json_encode($this->meta) : 'N/A');
         }
 
         return $this->meta ? json_encode($this->meta) : 'N/A';
@@ -43,8 +43,6 @@ class InventoryTransaction extends Model
 
     /**
      * Get the inventory item involved in this transaction.
-     *
-     * @return BelongsTo
      */
     public function item(): BelongsTo
     {
@@ -53,8 +51,6 @@ class InventoryTransaction extends Model
 
     /**
      * Get the user who initialized the transaction.
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -64,9 +60,6 @@ class InventoryTransaction extends Model
     // Scopes
     /**
      * Scope a query to only include stock-in transactions.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeStockIn(Builder $query): Builder
     {
@@ -75,9 +68,6 @@ class InventoryTransaction extends Model
 
     /**
      * Scope a query to only include stock-out (withdrawals) transactions.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeStockOut(Builder $query): Builder
     {
@@ -86,10 +76,6 @@ class InventoryTransaction extends Model
 
     /**
      * Scope a query to only include transactions for a specific user.
-     *
-     * @param Builder $query
-     * @param int $userId
-     * @return Builder
      */
     public function scopeByUser(Builder $query, int $userId): Builder
     {
@@ -98,10 +84,6 @@ class InventoryTransaction extends Model
 
     /**
      * Scope a query to only include transactions for a specific inventory item.
-     *
-     * @param Builder $query
-     * @param int $itemId
-     * @return Builder
      */
     public function scopeByItem(Builder $query, int $itemId): Builder
     {
@@ -111,10 +93,8 @@ class InventoryTransaction extends Model
     /**
      * Scope a query to only include transactions within a specific date range.
      *
-     * @param Builder $query
-     * @param mixed $startDate
-     * @param mixed $endDate
-     * @return Builder
+     * @param  mixed  $startDate
+     * @param  mixed  $endDate
      */
     public function scopeDateRange(Builder $query, $startDate, $endDate): Builder
     {

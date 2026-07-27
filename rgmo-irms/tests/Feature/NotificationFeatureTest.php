@@ -127,6 +127,59 @@ class NotificationFeatureTest extends TestCase
     }
 
     /**
+     * Verify that non-admin logins create role-aware notifications for privileged users.
+     */
+    public function test_non_admin_logins_create_role_aware_notifications(): void
+    {
+        $admin = $this->activeUser(User::ROLE_ADMIN);
+        $head = $this->activeUser(User::ROLE_RGMO_HEAD, [
+            'name' => 'Rosa Head',
+            'email' => 'head@example.test',
+        ]);
+        $staff = $this->activeUser(User::ROLE_STAFF, [
+            'name' => 'Sam Staff',
+            'email' => 'staff@example.test',
+        ]);
+
+        $this->post(route('login'), [
+            'email' => $head->email,
+            'password' => 'password',
+        ])->assertRedirect(route('dashboard', absolute: false));
+
+        foreach ([$admin, $head] as $recipient) {
+            $this->assertDatabaseHas('notifications', [
+                'user_id' => $recipient->id,
+                'title' => 'RGMO Head Login',
+                'type' => 'rgmo_head_login',
+                'message' => 'RGMO Head Rosa Head logged in to the system.',
+                'sender_id' => $head->id,
+            ]);
+        }
+
+        $this->post(route('logout'))->assertRedirect('/');
+
+        $this->post(route('login'), [
+            'email' => $staff->email,
+            'password' => 'password',
+        ])->assertRedirect(route('dashboard', absolute: false));
+
+        foreach ([$admin, $head] as $recipient) {
+            $this->assertDatabaseHas('notifications', [
+                'user_id' => $recipient->id,
+                'title' => 'Staff Login',
+                'type' => 'staff_login',
+                'message' => 'Staff Sam Staff logged in to the system.',
+                'sender_id' => $staff->id,
+            ]);
+        }
+
+        $this->assertDatabaseMissing('notifications', [
+            'user_id' => $staff->id,
+            'type' => 'staff_login',
+        ]);
+    }
+
+    /**
      * Verify that notification api lists and marks notifications read.
      */
     public function test_notification_api_lists_and_marks_notifications_read(): void

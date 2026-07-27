@@ -34,7 +34,15 @@
                 <div>Two-factor authentication is currently <strong>disabled</strong>.</div>
             </div>
             
-            <button id="enable-2fa" class="btn btn-cmu px-4">Enable 2FA</button>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-6">
+                    <label for="enable-2fa-password" class="form-label fw-semibold small">Confirm Password to Start</label>
+                    <input id="enable-2fa-password" type="password" class="form-control" required autocomplete="current-password">
+                </div>
+                <div class="col-md-4">
+                    <button id="enable-2fa" type="button" class="btn btn-cmu px-4 w-100">Enable 2FA</button>
+                </div>
+            </div>
 
             <div id="2fa-setup" class="mt-4 d-none p-4 rounded border bg-light">
                 <div id="qr-container" class="mb-3 text-center"></div>
@@ -64,6 +72,12 @@
                         <button type="submit" class="btn btn-cmu w-100">Confirm</button>
                     </div>
                 </form>
+                <div id="2fa-recovery-codes" class="alert alert-warning mt-3 d-none" role="status">
+                    <strong>Save these one-time recovery codes now.</strong>
+                    <p class="small mb-2">They will not be shown again.</p>
+                    <pre id="2fa-recovery-code-list" class="mb-0 user-select-all"></pre>
+                    <button id="finish-2fa-setup" type="button" class="btn btn-sm btn-dark mt-3">I saved them</button>
+                </div>
             </div>
         @endif
     </div>
@@ -92,6 +106,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const enableBtn = document.getElementById('enable-2fa');
     const setupDiv = document.getElementById('2fa-setup');
+    const enablePassword = document.getElementById('enable-2fa-password');
     const qrContainer = document.getElementById('qr-container');
     const manualSecret = document.getElementById('2fa-manual-secret');
     const secretTimerDisplay = document.getElementById('2fa-secret-timer');
@@ -150,7 +165,15 @@ document.addEventListener('DOMContentLoaded', function() {
         enableBtn.addEventListener('click', async function() {
             enableBtn.disabled = true;
             try {
-                const res = await fetch('{{ route('2fa.enable') }}', { headers: { 'Accept': 'application/json' }});
+                const res = await fetch('{{ route('2fa.enable') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getCsrf(),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ password: enablePassword.value })
+                });
                 const data = await res.json();
 
                 if (!res.ok) {
@@ -248,9 +271,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert(j.message || 'Invalid code');
                 return;
             }
-            location.reload();
+            const recoveryPanel = document.getElementById('2fa-recovery-codes');
+            const recoveryList = document.getElementById('2fa-recovery-code-list');
+            recoveryList.textContent = (j.recovery_codes || []).join('\n');
+            recoveryPanel.classList.remove('d-none');
+            confirmForm.classList.add('d-none');
         });
     }
+
+    document.getElementById('finish-2fa-setup')?.addEventListener('click', () => location.reload());
 
     if (disableForm) {
         disableForm.addEventListener('submit', async function(e) {

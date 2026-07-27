@@ -2,10 +2,9 @@
 
 namespace App\Imports;
 
-use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\InventoryItem;
-use Illuminate\Validation\Rule;
+use App\Services\InventoryService;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
@@ -14,9 +13,11 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class InventoryItemsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure, SkipsEmptyRows
+class InventoryItemsImport implements SkipsEmptyRows, SkipsOnFailure, ToModel, WithHeadingRow, WithValidation
 {
     use Importable, SkipsFailures;
+
+    public function __construct(private readonly InventoryService $inventoryService) {}
 
     /**
      * Handle model.
@@ -51,23 +52,17 @@ class InventoryItemsImport implements ToModel, WithHeadingRow, WithValidation, S
             'description' => trim($row['description'] ?? ''),
         ];
 
-        $item = InventoryItem::withTrashed()->updateOrCreate([
-            'sku' => $itemData['sku'],
-        ], $itemData);
+        $item = InventoryItem::withTrashed()->where('sku', $itemData['sku'])->first();
 
-        if ($item->trashed()) {
-            $item->restore();
+        if ($item) {
+            if ($item->trashed()) {
+                $item->restore();
+            }
+
+            $item = $this->inventoryService->updateItem($item, $itemData, auth()->id());
+        } else {
+            $item = $this->inventoryService->createItem($itemData, auth()->id());
         }
-
-        AuditLog::log(
-            auth()->id() ?? 0,
-            'import',
-            'inventory',
-            InventoryItem::class,
-            $item->id,
-            null,
-            $itemData
-        );
 
         return $item;
     }

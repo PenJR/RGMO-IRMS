@@ -17,9 +17,9 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'getAuthenticatedUser']);
         Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('throttle:6,1');
         Route::post('/register', [AuthController::class, 'registerUser'])->middleware('permission:manage-users');
-        Route::get('/2fa/enable', [TwoFactorController::class, 'showEnable']);
-        Route::post('/2fa/confirm', [TwoFactorController::class, 'confirm']);
-        Route::post('/2fa/disable', [TwoFactorController::class, 'disable']);
+        Route::post('/2fa/enable', [TwoFactorController::class, 'showEnable'])->middleware('throttle:5,1');
+        Route::post('/2fa/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:6,1');
+        Route::post('/2fa/disable', [TwoFactorController::class, 'disable'])->middleware('throttle:5,1');
         Route::post('/logout', [AuthController::class, 'logoutUser']);
     });
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:3,1');
@@ -35,25 +35,30 @@ Route::middleware(['auth', 'permission:receive-notifications'])->prefix('notific
 Route::middleware(['auth', 'permission:generate-reports,view-audit-trail'])
     ->get('/dashboard/health', [DashboardController::class, 'healthData']);
 
-Route::middleware(['auth', 'permission:manage-users,assign-roles'])->prefix('users')->group(function () {
+Route::middleware(['auth', 'permission:manage-users'])->prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'getAllUsers']);
     Route::post('/', [UserController::class, 'createUser']);
     Route::get('/{id}', [UserController::class, 'getUserById']);
     Route::put('/{id}', [UserController::class, 'updateUser']);
     Route::delete('/{id}', [UserController::class, 'deleteUser']);
-    Route::patch('/{userId}/role', [UserController::class, 'assignRole']);
     Route::patch('/{id}/deactivate', [UserController::class, 'deactivateUser']);
     Route::patch('/{id}/activate', [UserController::class, 'activateUser']);
     Route::get('/{userId}/activity-logs', [UserController::class, 'getUserActivityLogs']);
 });
 
-Route::middleware(['auth', 'permission:view-inventory,manage-inventory'])->prefix('inventory')->group(function () {
+Route::middleware(['auth', 'permission:assign-roles'])
+    ->patch('/users/{userId}/role', [UserController::class, 'assignRole']);
+
+Route::middleware(['auth', 'permission:view-inventory'])->prefix('inventory')->group(function () {
     Route::get('/', [InventoryController::class, 'getAllInventoryItems']);
-    Route::post('/', [InventoryController::class, 'createInventoryItem']);
     Route::get('/search/query', [InventoryController::class, 'searchInventoryItems']);
     Route::get('/category/{categoryId}', [InventoryController::class, 'filterInventoryByCategory']);
     Route::get('/alerts/low-stock', [InventoryController::class, 'getLowStockItems']);
     Route::get('/{id}', [InventoryController::class, 'getInventoryItemById']);
+});
+
+Route::middleware(['auth', 'permission:manage-inventory'])->prefix('inventory')->group(function () {
+    Route::post('/', [InventoryController::class, 'createInventoryItem']);
     Route::put('/{id}', [InventoryController::class, 'updateInventoryItem']);
     Route::delete('/{id}', [InventoryController::class, 'deleteInventoryItem']);
     Route::patch('/{itemId}/increase', [InventoryController::class, 'increaseStock']);
@@ -86,7 +91,6 @@ Route::middleware('auth')->prefix('ops')->group(function () {
         Route::patch('/requests/{requestId}/cancel', [OperationsController::class, 'cancelRequest']);
         Route::get('/users/{userId}/requests', [OperationsController::class, 'getUserRequests']);
         Route::get('/requests/{requestId}', [OperationsController::class, 'getRequestById']);
-        Route::patch('/requests/{requestId}/status', [OperationsController::class, 'updateRequestStatus']);
     });
 
     Route::middleware('permission:review-request,approve-request')->group(function () {
@@ -121,7 +125,6 @@ Route::middleware('auth')->prefix('ops')->group(function () {
         Route::get('/reports/consumption', [OperationsController::class, 'generateConsumptionReport']);
         Route::post('/reports/export-pdf', [OperationsController::class, 'exportReportPDF']);
         Route::post('/reports/export-excel', [OperationsController::class, 'exportReportExcel']);
-        Route::post('/audit/log', [OperationsController::class, 'logActivity']);
         Route::get('/audit/logs', [OperationsController::class, 'getAuditLogs']);
         Route::get('/audit/logs/users/{userId}', [OperationsController::class, 'getUserAuditLogs']);
         Route::post('/audit/logs/filter', [OperationsController::class, 'filterAuditLogs']);
@@ -135,10 +138,15 @@ Route::middleware('auth')->prefix('ops')->group(function () {
         Route::post('/notifications/requests/{requestId}/status', [OperationsController::class, 'sendRequestStatusNotification']);
     });
 
-    Route::middleware('permission:manage-forecasting-settings,view-forecasts')->group(function () {
-        Route::put('/settings', [OperationsController::class, 'updateSystemSettings']);
+    Route::middleware('permission:view-forecasts')->group(function () {
         Route::get('/settings', [OperationsController::class, 'getSystemSettings']);
-        Route::post('/settings/low-stock-threshold', [OperationsController::class, 'setLowStockThreshold']);
         Route::get('/settings/roles-permissions', [OperationsController::class, 'manageRolesPermissions']);
     });
+
+    Route::middleware('permission:manage-forecasting-settings')->group(function () {
+        Route::put('/settings', [OperationsController::class, 'updateSystemSettings']);
+        Route::post('/settings/low-stock-threshold', [OperationsController::class, 'setLowStockThreshold']);
+    });
+
+    Route::middleware('admin')->post('/audit/log', [OperationsController::class, 'logActivity']);
 });

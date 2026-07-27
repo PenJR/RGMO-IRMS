@@ -106,6 +106,22 @@ class RbacConfigurationTest extends TestCase
         $this->assertSame(12, $item->fresh()->min_stock);
     }
 
+    public function test_theme_control_is_only_rendered_on_the_settings_page(): void
+    {
+        $admin = $this->activeUser(User::ROLE_ADMIN);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertDontSee('id="colorTheme"', false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.settings.index'))
+            ->assertOk()
+            ->assertSee('id="colorTheme"', false)
+            ->assertSee('Appearance');
+    }
+
     /**
      * Handle active user.
      */

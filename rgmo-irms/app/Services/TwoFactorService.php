@@ -10,6 +10,7 @@ class TwoFactorService
     public function generateSecret(int $length = 16): string
     {
         $bytes = random_bytes($length);
+
         return $this->base32Encode($bytes);
     }
 
@@ -20,6 +21,7 @@ class TwoFactorService
     {
         $label = rawurlencode($label);
         $issuer = rawurlencode($issuer);
+
         return "otpauth://totp/{$issuer}:{$label}?secret={$secret}&issuer={$issuer}&algorithm=SHA1&digits=6&period=30";
     }
 
@@ -28,9 +30,17 @@ class TwoFactorService
      */
     public function verifyCode(string $secret, string $code, int $window = 1): bool
     {
+        return $this->matchedTimeSlice($secret, $code, $window) !== null;
+    }
+
+    /**
+     * Return the exact TOTP time slice matched by a code.
+     */
+    public function matchedTimeSlice(string $secret, string $code, int $window = 1): ?int
+    {
         $code = trim($code);
         if ($code === '') {
-            return false;
+            return null;
         }
 
         $timeSlice = floor(time() / 30);
@@ -39,11 +49,11 @@ class TwoFactorService
             $calculated = str_pad((string) $calculated, 6, '0', STR_PAD_LEFT);
 
             if (hash_equals($calculated, $code)) {
-                return true;
+                return $timeSlice + $i;
             }
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -56,10 +66,10 @@ class TwoFactorService
         $time = pack('N2', 0, $timeSlice);
         $hash = hash_hmac('sha1', $time, $key, true);
         $offset = ord($hash[19]) & 0x0F;
-        $binary = ((ord($hash[$offset]) & 0x7f) << 24) |
-                  ((ord($hash[$offset + 1]) & 0xff) << 16) |
-                  ((ord($hash[$offset + 2]) & 0xff) << 8) |
-                  (ord($hash[$offset + 3]) & 0xff);
+        $binary = ((ord($hash[$offset]) & 0x7F) << 24) |
+                  ((ord($hash[$offset + 1]) & 0xFF) << 16) |
+                  ((ord($hash[$offset + 2]) & 0xFF) << 8) |
+                  (ord($hash[$offset + 3]) & 0xFF);
 
         return $binary % 1000000;
     }
@@ -97,12 +107,16 @@ class TwoFactorService
 
         foreach (str_split($b32) as $c) {
             $pos = strpos($alphabet, $c);
-            if ($pos === false) continue;
+            if ($pos === false) {
+                continue;
+            }
             $bits .= str_pad(decbin($pos), 5, '0', STR_PAD_LEFT);
         }
 
         foreach (str_split($bits, 8) as $byte) {
-            if (strlen($byte) < 8) continue;
+            if (strlen($byte) < 8) {
+                continue;
+            }
             $data .= chr(bindec($byte));
         }
 

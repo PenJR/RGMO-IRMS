@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class InventoryItem extends Model
 {
@@ -230,14 +232,18 @@ class InventoryItem extends Model
      */
     public function recordStockIn(int $quantity, string $source, ?int $userId = null, ?string $fundingSource = null): void
     {
-        $this->increment('stock', $quantity);
-        $this->transactions()->create([
-            'user_id' => $userId,
-            'transaction_type' => 'stock_in',
-            'quantity' => $quantity,
-            'source' => $source,
-            'funding_source' => $fundingSource,
-        ]);
+        DB::transaction(function () use ($quantity, $source, $userId, $fundingSource) {
+            $lockedItem = self::lockForUpdate()->findOrFail($this->id);
+            $lockedItem->increment('stock', $quantity);
+            $lockedItem->transactions()->create([
+                'user_id' => $userId,
+                'transaction_type' => 'stock_in',
+                'quantity' => $quantity,
+                'source' => $source,
+                'funding_source' => $fundingSource,
+            ]);
+            $this->setRawAttributes($lockedItem->fresh()->getAttributes(), true);
+        });
     }
 
     /**
@@ -245,13 +251,23 @@ class InventoryItem extends Model
      */
     public function recordStockOut(int $quantity, string $destination, ?int $userId = null, ?string $fundingSource = null): void
     {
-        $this->decrement('stock', $quantity);
-        $this->transactions()->create([
-            'user_id' => $userId,
-            'transaction_type' => 'stock_out',
-            'quantity' => $quantity,
-            'destination' => $destination,
-            'funding_source' => $fundingSource,
-        ]);
+        DB::transaction(function () use ($quantity, $destination, $userId, $fundingSource) {
+            $lockedItem = self::lockForUpdate()->findOrFail($this->id);
+            if ($lockedItem->stock < $quantity) {
+                throw ValidationException::withMessages([
+                    'quantity' => 'Insufficient stock to complete this transaction.',
+                ]);
+            }
+
+            $lockedItem->decrement('stock', $quantity);
+            $lockedItem->transactions()->create([
+                'user_id' => $userId,
+                'transaction_type' => 'stock_out',
+                'quantity' => $quantity,
+                'destination' => $destination,
+                'funding_source' => $fundingSource,
+            ]);
+            $this->setRawAttributes($lockedItem->fresh()->getAttributes(), true);
+        });
     }
 }

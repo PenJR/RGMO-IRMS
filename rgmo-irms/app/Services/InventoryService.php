@@ -7,6 +7,7 @@ use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class InventoryService
@@ -75,22 +76,37 @@ class InventoryService
      */
     public function createItem(array $data, ?int $userId = null): InventoryItem
     {
-        $item = InventoryItem::create($data);
+        return DB::transaction(function () use ($data, $userId) {
+            $openingStock = (int) ($data['stock'] ?? 0);
+            $data['stock'] = 0;
+            $item = InventoryItem::create($data);
 
-        // Log the action
-        if ($userId) {
-            AuditLog::log(
-                $userId,
-                'create',
-                'inventory',
-                InventoryItem::class,
-                $item->id,
-                null,
-                $item->toArray()
-            );
-        }
+            if ($openingStock > 0) {
+                $item->update(['stock' => $openingStock]);
+                $item->transactions()->create([
+                    'user_id' => $userId,
+                    'transaction_type' => 'stock_in',
+                    'quantity' => $openingStock,
+                    'source' => 'Opening balance',
+                    'reference' => 'OPENING-'.$item->id,
+                    'meta' => ['opening_balance' => true],
+                ]);
+            }
 
-        return $item;
+            if ($userId) {
+                AuditLog::log(
+                    $userId,
+                    'create',
+                    'inventory',
+                    InventoryItem::class,
+                    $item->id,
+                    null,
+                    $item->fresh()->toArray()
+                );
+            }
+
+            return $item->fresh();
+        });
     }
 
     /**
@@ -102,23 +118,42 @@ class InventoryService
      */
     public function updateItem(InventoryItem $item, array $data, ?int $userId = null): InventoryItem
     {
-        $oldValues = $item->toArray();
-        $item->update($data);
+        return DB::transaction(function () use ($item, $data, $userId) {
+            $lockedItem = InventoryItem::lockForUpdate()->findOrFail($item->id);
+            $oldValues = $lockedItem->toArray();
+            $newStock = array_key_exists('stock', $data) ? (int) $data['stock'] : (int) $lockedItem->stock;
+            unset($data['stock']);
 
-        // Log the action
-        if ($userId) {
-            AuditLog::log(
-                $userId,
-                'update',
-                'inventory',
-                InventoryItem::class,
-                $item->id,
-                $oldValues,
-                $item->fresh()->toArray()
-            );
-        }
+            $lockedItem->update($data);
 
-        return $item;
+            $difference = $newStock - (int) $lockedItem->stock;
+            if ($difference !== 0) {
+                $lockedItem->update(['stock' => $newStock]);
+                $lockedItem->transactions()->create([
+                    'user_id' => $userId,
+                    'transaction_type' => $difference > 0 ? 'stock_in' : 'stock_out',
+                    'quantity' => abs($difference),
+                    'source' => $difference > 0 ? 'Inventory edit adjustment' : null,
+                    'destination' => $difference < 0 ? 'Inventory edit adjustment' : null,
+                    'reference' => 'EDIT-'.$lockedItem->id.'-'.now()->format('YmdHisv'),
+                    'meta' => ['adjustment' => true],
+                ]);
+            }
+
+            if ($userId) {
+                AuditLog::log(
+                    $userId,
+                    'update',
+                    'inventory',
+                    InventoryItem::class,
+                    $lockedItem->id,
+                    $oldValues,
+                    $lockedItem->fresh()->toArray()
+                );
+            }
+
+            return $lockedItem->fresh();
+        });
     }
 
     /**
@@ -165,21 +200,40 @@ class InventoryService
     /**
      * Record a stock-in transaction, update the item's current stock, and log the action.
      */
-    public function recordStockIn(InventoryItem $item, int $quantity, string $source, int $userId, ?string $fundingSource = null): InventoryTransaction
+    public function recordStockIn(InventoryItem $item, int $quantity, string $source, int $userId, ?string $fundingSource = null, ?string $reference = null, ?string $idempotencyKey = null): InventoryTransaction
     {
-        $item->recordStockIn($quantity, $source, $userId, $fundingSource);
+        return DB::transaction(function () use ($item, $quantity, $source, $userId, $fundingSource, $reference, $idempotencyKey) {
+            if ($idempotencyKey) {
+                $existing = InventoryTransaction::where('idempotency_key', $idempotencyKey)->first();
+                if ($existing) {
+                    return $existing;
+                }
+            }
 
-        AuditLog::log(
-            $userId,
-            'stock_in',
-            'inventory',
-            InventoryTransaction::class,
-            null,
-            null,
-            ['item_id' => $item->id, 'quantity' => $quantity, 'source' => $source, 'funding_source' => $fundingSource]
-        );
+            $lockedItem = InventoryItem::lockForUpdate()->findOrFail($item->id);
+            $lockedItem->increment('stock', $quantity);
+            $transaction = $lockedItem->transactions()->create([
+                'user_id' => $userId,
+                'transaction_type' => 'stock_in',
+                'quantity' => $quantity,
+                'source' => $source,
+                'funding_source' => $fundingSource,
+                'reference' => $reference,
+                'idempotency_key' => $idempotencyKey,
+            ]);
 
-        return $item->transactions()->latest()->first();
+            AuditLog::log(
+                $userId,
+                'stock_in',
+                'inventory',
+                InventoryTransaction::class,
+                $transaction->id,
+                null,
+                ['item_id' => $lockedItem->id, 'quantity' => $quantity, 'source' => $source, 'funding_source' => $fundingSource, 'reference' => $reference]
+            );
+
+            return $transaction;
+        });
     }
 
     /**
@@ -188,29 +242,51 @@ class InventoryService
      *
      * @throws ValidationException
      */
-    public function recordStockOut(InventoryItem $item, int $quantity, string $destination, int $userId, ?string $fundingSource = null): InventoryTransaction
+    public function recordStockOut(InventoryItem $item, int $quantity, string $destination, int $userId, ?string $fundingSource = null, ?string $reference = null, ?string $idempotencyKey = null): InventoryTransaction
     {
-        if ($item->stock < $quantity) {
-            throw ValidationException::withMessages(['quantity' => 'Insufficient stock to complete this transaction.']);
+        $transaction = DB::transaction(function () use ($item, $quantity, $destination, $userId, $fundingSource, $reference, $idempotencyKey) {
+            if ($idempotencyKey) {
+                $existing = InventoryTransaction::where('idempotency_key', $idempotencyKey)->first();
+                if ($existing) {
+                    return $existing;
+                }
+            }
+
+            $lockedItem = InventoryItem::lockForUpdate()->findOrFail($item->id);
+            if ($lockedItem->stock < $quantity) {
+                throw ValidationException::withMessages(['quantity' => 'Insufficient stock to complete this transaction.']);
+            }
+
+            $lockedItem->decrement('stock', $quantity);
+            $transaction = $lockedItem->transactions()->create([
+                'user_id' => $userId,
+                'transaction_type' => 'stock_out',
+                'quantity' => $quantity,
+                'destination' => $destination,
+                'funding_source' => $fundingSource,
+                'reference' => $reference,
+                'idempotency_key' => $idempotencyKey,
+            ]);
+
+            AuditLog::log(
+                $userId,
+                'stock_out',
+                'inventory',
+                InventoryTransaction::class,
+                $transaction->id,
+                null,
+                ['item_id' => $lockedItem->id, 'quantity' => $quantity, 'destination' => $destination, 'funding_source' => $fundingSource, 'reference' => $reference]
+            );
+
+            return $transaction;
+        });
+
+        $freshItem = $item->fresh();
+        if ($freshItem->isLowStock()) {
+            $this->notificationService->notifyLowStock($freshItem->name, $freshItem->stock);
         }
 
-        $item->recordStockOut($quantity, $destination, $userId, $fundingSource);
-
-        AuditLog::log(
-            $userId,
-            'stock_out',
-            'inventory',
-            InventoryTransaction::class,
-            null,
-            null,
-            ['item_id' => $item->id, 'quantity' => $quantity, 'destination' => $destination, 'funding_source' => $fundingSource]
-        );
-
-        if ($item->isLowStock()) {
-            $this->notificationService->notifyLowStock($item->name, $item->stock);
-        }
-
-        return $item->transactions()->latest()->first();
+        return $transaction;
     }
 
     /**

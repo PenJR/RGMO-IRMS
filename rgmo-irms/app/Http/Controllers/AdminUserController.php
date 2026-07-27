@@ -4,17 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Models\LoginHistory;
 use App\Models\User;
+use App\Services\UserService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\View\View;
 
 class AdminUserController extends Controller
 {
+    public function __construct(private readonly UserService $userService) {}
+
     /**
      * Display a paginated listing of users with search, role, and status filtering.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function index(Request $request)
     {
@@ -44,9 +50,9 @@ class AdminUserController extends Controller
     /**
      * Display a paginated listing of system-wide login logs with user and date filtering.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function loginLogs(Request $request)
     {
@@ -84,8 +90,9 @@ class AdminUserController extends Controller
     /**
      * Show the creation form for a new user account.
      *
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function create()
     {
@@ -97,9 +104,9 @@ class AdminUserController extends Controller
     /**
      * Store a newly created user account in the database.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function store(Request $request)
     {
@@ -127,9 +134,9 @@ class AdminUserController extends Controller
     /**
      * Display details of a specific user including their recent activities and audit logs.
      *
-     * @param User $user
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function show(User $user)
     {
@@ -148,9 +155,9 @@ class AdminUserController extends Controller
     /**
      * Show the edit form for an existing user account.
      *
-     * @param User $user
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function edit(User $user)
     {
@@ -162,10 +169,9 @@ class AdminUserController extends Controller
     /**
      * Update an existing user account's profile information and status.
      *
-     * @param Request $request
-     * @param User $user
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function update(Request $request, User $user)
     {
@@ -173,12 +179,12 @@ class AdminUserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'role' => 'required|in:admin,staff,project_manager,rgmo_head',
             'status' => 'required|in:active,inactive,suspended',
         ]);
 
-        $user->update($validated);
+        $user = $this->userService->update($user, $validated, $request->user()->id);
 
         return redirect()->route('admin.users.show', $user)->with('success', 'User updated successfully.');
     }
@@ -186,15 +192,15 @@ class AdminUserController extends Controller
     /**
      * Delete a specific user account from the system.
      *
-     * @param User $user
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function destroy(User $user)
     {
         $this->authorize('delete', $user);
 
-        $user->delete();
+        $this->userService->delete($user, auth()->id());
 
         return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
     }
@@ -202,10 +208,9 @@ class AdminUserController extends Controller
     /**
      * Administrative override to reset a specific user's login password.
      *
-     * @param Request $request
-     * @param User $user
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function resetPassword(Request $request, User $user)
     {
@@ -215,7 +220,7 @@ class AdminUserController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $user->update(['password' => bcrypt($validated['password'])]);
+        $this->userService->resetPassword($user, $validated['password'], $request->user()->id);
 
         return redirect()->route('admin.users.show', $user)->with('success', 'Password reset successfully.');
     }
@@ -223,9 +228,9 @@ class AdminUserController extends Controller
     /**
      * Start a session impersonating another user for troubleshooting or support purposes.
      *
-     * @param User $user
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function impersonate(User $user)
     {
@@ -233,13 +238,13 @@ class AdminUserController extends Controller
 
         session(['impersonate_user' => $user->id, 'impersonate_original_user' => auth()->id()]);
 
-        return redirect()->route('dashboard')->with('success', 'You are now impersonating ' . $user->name);
+        return redirect()->route('dashboard')->with('success', 'You are now impersonating '.$user->name);
     }
 
     /**
      * End the current impersonation session and return to the original administrator account.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function stopImpersonate()
     {
@@ -252,9 +257,9 @@ class AdminUserController extends Controller
     /**
      * Retrieve the specific login history for a single user account.
      *
-     * @param User $user
-     * @return \Illuminate\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return View
+     *
+     * @throws AuthorizationException
      */
     public function loginHistory(User $user)
     {
