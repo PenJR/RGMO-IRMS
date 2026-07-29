@@ -109,15 +109,22 @@
         <div class="row g-4 mt-2">
             <div class="col-lg-8">
                 <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center gap-3 flex-wrap">
                         <div>
                             <h5 class="fw-bold mb-0">Inventory Dynamics</h5>
                             <p class="text-muted small mb-0" id="inventoryChartSubtitle">Active stock volume across recent months</p>
                         </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="btn-group btn-group-sm" role="group" aria-label="Inventory chart period">
-                                <button type="button" class="btn btn-success fw-semibold" data-inventory-period="monthly">Month</button>
-                                <button type="button" class="btn btn-outline-success fw-semibold" data-inventory-period="weekly">Week</button>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <label for="inventoryChartItem" class="visually-hidden">Inventory item</label>
+                            <select class="form-select form-select-sm" id="inventoryChartItem" style="width: auto; max-width: 220px;" aria-label="Filter inventory dynamics by item">
+                                <option value="all">All inventory items</option>
+                                @foreach($stats['charts']['inventory_levels']['items'] as $chartItem)
+                                    <option value="{{ $chartItem['id'] }}">{{ $chartItem['name'] }} ({{ $chartItem['sku'] }})</option>
+                                @endforeach
+                            </select>
+                            <div class="d-flex gap-1" role="group" aria-label="Inventory chart period">
+                                <button type="button" class="btn btn-sm btn-success fw-semibold rounded" data-inventory-period="monthly">Month</button>
+                                <button type="button" class="btn btn-sm btn-outline-success fw-semibold rounded" data-inventory-period="weekly">Week</button>
                             </div>
                             <span class="badge bg-light text-dark border fw-semibold" id="inventoryChartRange">Last 6 Months</span>
                         </div>
@@ -402,7 +409,10 @@
             };
             const inventoryRange = document.getElementById('inventoryChartRange');
             const inventorySubtitle = document.getElementById('inventoryChartSubtitle');
+            const inventoryItemSelect = document.getElementById('inventoryChartItem');
             const inventoryPeriodButtons = document.querySelectorAll('[data-inventory-period]');
+            const inventoryItems = chartData.inventory_levels.items ?? [];
+            let activeInventoryPeriod = 'monthly';
 
             const inventoryChart = new Chart(ctxInv, {
                 type: 'line',
@@ -444,17 +454,27 @@
                 }
             });
 
+            const updateInventoryChart = () => {
+                const periodData = inventoryPeriods[activeInventoryPeriod] ?? inventoryPeriods.monthly;
+                const selectedItem = inventoryItems.find(item => String(item.id) === inventoryItemSelect?.value);
+
+                inventoryChart.data.labels = periodData.labels;
+                inventoryChart.data.datasets[0].data = selectedItem?.[activeInventoryPeriod] ?? periodData.data;
+                inventoryChart.data.datasets[0].label = selectedItem
+                    ? `${selectedItem.name} Stock (${selectedItem.unit})`
+                    : 'Total Stock Volume';
+                inventoryChart.update();
+
+                inventoryRange.textContent = periodData.range_label;
+                inventorySubtitle.textContent = selectedItem
+                    ? `${selectedItem.name} (${selectedItem.sku}) stock level across recent ${activeInventoryPeriod === 'weekly' ? 'weeks' : 'months'}`
+                    : periodData.subtitle;
+            };
+
             inventoryPeriodButtons.forEach((button) => {
                 button.addEventListener('click', () => {
-                    const period = button.dataset.inventoryPeriod;
-                    const periodData = inventoryPeriods[period] ?? inventoryPeriods.monthly;
-
-                    inventoryChart.data.labels = periodData.labels;
-                    inventoryChart.data.datasets[0].data = periodData.data;
-                    inventoryChart.update();
-
-                    inventoryRange.textContent = periodData.range_label;
-                    inventorySubtitle.textContent = periodData.subtitle;
+                    activeInventoryPeriod = button.dataset.inventoryPeriod;
+                    updateInventoryChart();
 
                     inventoryPeriodButtons.forEach((periodButton) => {
                         periodButton.classList.toggle('btn-success', periodButton === button);
@@ -462,6 +482,8 @@
                     });
                 });
             });
+
+            inventoryItemSelect?.addEventListener('change', updateInventoryChart);
 
             // Requests Distribution Chart
             const ctxReq = document.getElementById('requestsChart').getContext('2d');

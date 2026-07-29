@@ -351,30 +351,47 @@ class ReportService
      */
     private function getInventoryLevelChartData(): array
     {
-        $activeItems = InventoryItem::active()->get(['stock', 'created_at']);
-        $monthlyLabels = [];
-        $monthlyData = [];
+        $monthlyBuckets = collect($this->getRecentMonthBuckets())
+            ->map(fn (string $label, string $month): array => [
+                'label' => $label,
+                'ends_at' => Carbon::parse($month.'-01')->endOfMonth(),
+            ])
+            ->values();
+        $weeklyBuckets = collect($this->getRecentWeekBuckets());
+        $historyStartsAt = $monthlyBuckets->first()['ends_at'];
+        $activeItems = InventoryItem::active()
+            ->with(['transactions' => fn ($query) => $query
+                ->where('created_at', '>', $historyStartsAt)
+                ->orderBy('created_at')])
+            ->orderBy('name')
+            ->get(['id', 'name', 'sku', 'unit', 'stock', 'created_at']);
 
-        foreach ($this->getRecentMonthBuckets() as $month => $label) {
-            $monthlyLabels[] = $label;
-            $monthlyData[] = (int) $activeItems
-                ->filter(fn ($item) => $item->created_at->format('Y-m') <= $month)
-                ->sum('stock');
-        }
+        $items = $activeItems->map(fn (InventoryItem $item): array => [
+            'id' => $item->id,
+            'name' => $item->name,
+            'sku' => $item->sku,
+            'unit' => $item->unit,
+            'monthly' => $monthlyBuckets
+                ->map(fn (array $bucket): int => $this->inventoryLevelAt($item, $bucket['ends_at']))
+                ->all(),
+            'weekly' => $weeklyBuckets
+                ->map(fn (array $bucket): int => $this->inventoryLevelAt($item, $bucket['ends_at']))
+                ->all(),
+        ])->values();
 
-        $weeklyLabels = [];
-        $weeklyData = [];
-
-        foreach ($this->getRecentWeekBuckets() as $week) {
-            $weeklyLabels[] = $week['label'];
-            $weeklyData[] = (int) $activeItems
-                ->filter(fn ($item) => $item->created_at->lessThanOrEqualTo($week['ends_at']))
-                ->sum('stock');
-        }
+        $monthlyLabels = $monthlyBuckets->pluck('label')->all();
+        $weeklyLabels = $weeklyBuckets->pluck('label')->all();
+        $monthlyData = $monthlyLabels === []
+            ? []
+            : collect(array_keys($monthlyLabels))->map(fn (int $index): int => $items->sum(fn (array $item): int => $item['monthly'][$index]))->all();
+        $weeklyData = $weeklyLabels === []
+            ? []
+            : collect(array_keys($weeklyLabels))->map(fn (int $index): int => $items->sum(fn (array $item): int => $item['weekly'][$index]))->all();
 
         return [
             'labels' => $monthlyLabels,
             'data' => $monthlyData,
+            'items' => $items->all(),
             'monthly' => [
                 'labels' => $monthlyLabels,
                 'data' => $monthlyData,
@@ -388,6 +405,26 @@ class ReportService
                 'subtitle' => 'Active stock volume across recent weeks',
             ],
         ];
+    }
+
+    /**
+     * Reconstruct an item's closing stock at a historical point in time.
+     */
+    private function inventoryLevelAt(InventoryItem $item, Carbon $endsAt): int
+    {
+        if ($item->created_at->greaterThan($endsAt)) {
+            return 0;
+        }
+
+        $stock = (int) $item->stock;
+
+        foreach ($item->transactions->where('created_at', '>', $endsAt) as $transaction) {
+            $stock += $transaction->transaction_type === 'stock_out'
+                ? (int) $transaction->quantity
+                : -(int) $transaction->quantity;
+        }
+
+        return max(0, $stock);
     }
 
     /**

@@ -94,6 +94,61 @@ class AIForecastingTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_user_can_select_a_one_week_forecast_period(): void
+    {
+        $manager = User::factory()->create([
+            'role' => User::ROLE_PROJECT_MANAGER,
+            'status' => User::STATUS_ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+        $category = Category::create(['name' => 'Seeds']);
+        $item = InventoryItem::create([
+            'category_id' => $category->id,
+            'name' => 'Corn seeds',
+            'sku' => 'SEED-CORN-WEEK',
+            'stock' => 100,
+            'unit' => 'bag',
+            'min_stock' => 10,
+        ]);
+
+        foreach (range(1, 90) as $daysAgo) {
+            InventoryTransaction::forceCreate([
+                'inventory_item_id' => $item->id,
+                'user_id' => $manager->id,
+                'transaction_type' => 'stock_out',
+                'quantity' => 1,
+                'destination' => 'Field project',
+                'created_at' => now()->subDays($daysAgo),
+                'updated_at' => now()->subDays($daysAgo),
+            ]);
+        }
+
+        $this->actingAs($manager)
+            ->get(route('ai-forecasting.index', ['forecast_days' => 7]))
+            ->assertOk()
+            ->assertSee('Projected 7-Day Demand')
+            ->assertSee('value="7" selected', false)
+            ->assertViewHas('forecast_days', 7)
+            ->assertViewHas('forecasts', fn (Collection $forecasts): bool => $forecasts->first()['projected_demand'] > 0
+                    && $forecasts->first()['projected_demand'] <= 7
+            );
+    }
+
+    public function test_unsupported_forecast_period_falls_back_to_one_month(): void
+    {
+        $manager = User::factory()->create([
+            'role' => User::ROLE_PROJECT_MANAGER,
+            'status' => User::STATUS_ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('ai-forecasting.index', ['forecast_days' => 365]))
+            ->assertOk()
+            ->assertViewHas('forecast_days', 30)
+            ->assertSee('Projected 30-Day Demand');
+    }
+
     /**
      * Verify that sparse evidence is reported with a wide range and low confidence.
      */

@@ -13,7 +13,14 @@ class InventoryForecastingService
 
     private const COMPARISON_DAYS = 90;
 
-    private const FORECAST_DAYS = 30;
+    public const DEFAULT_FORECAST_DAYS = 30;
+
+    public const FORECAST_PERIODS = [
+        7 => '1 Week',
+        14 => '2 Weeks',
+        30 => '1 Month',
+        90 => '3 Months',
+    ];
 
     private const BACKTEST_WINDOWS = 3;
 
@@ -30,8 +37,12 @@ class InventoryForecastingService
      *
      * @return array<string, mixed>
      */
-    public function buildForecast(): array
+    public function buildForecast(int $forecastDays = self::DEFAULT_FORECAST_DAYS): array
     {
+        if (! array_key_exists($forecastDays, self::FORECAST_PERIODS)) {
+            $forecastDays = self::DEFAULT_FORECAST_DAYS;
+        }
+
         $asOf = CarbonImmutable::now()->startOfDay();
         $historyStartsAt = $asOf->subDays(self::HISTORY_DAYS - 1);
         $dailyUsage = $this->stockOutDailyTotals($historyStartsAt, $asOf->endOfDay());
@@ -42,23 +53,23 @@ class InventoryForecastingService
             ->orderBy('name')
             ->get();
 
-        $forecasts = $items->map(function (InventoryItem $item) use ($dailyUsage, $historyStartsAt): array {
+        $forecasts = $items->map(function (InventoryItem $item) use ($dailyUsage, $historyStartsAt, $forecastDays): array {
             $series = $this->dailySeries(
                 $dailyUsage->get($item->id, collect()),
                 $historyStartsAt,
                 self::HISTORY_DAYS
             );
-            $prediction = $this->forecastSeries($series);
-            $currentUsage = (int) array_sum(array_slice($series, -self::COMPARISON_DAYS));
+            $prediction = $this->forecastSeries($series, $forecastDays);
+            $currentUsage = (int) array_sum(array_slice($series, -$forecastDays));
             $previousUsage = (int) array_sum(array_slice(
                 $series,
-                -(self::COMPARISON_DAYS * 2),
-                self::COMPARISON_DAYS
+                -($forecastDays * 2),
+                $forecastDays
             ));
             $projectedDemand = (int) round($prediction['point']);
             $forecastLower = (int) floor($prediction['lower']);
             $forecastUpper = (int) ceil($prediction['upper']);
-            $averageDailyUsage = $prediction['point'] / self::FORECAST_DAYS;
+            $averageDailyUsage = $prediction['point'] / $forecastDays;
             $daysUntilStockout = $averageDailyUsage > 0
                 ? (int) floor($item->stock / $averageDailyUsage)
                 : null;
@@ -81,7 +92,7 @@ class InventoryForecastingService
                 'forecast_model' => $prediction['model'],
                 'backtest_error_percent' => $prediction['backtest_error_percent'],
                 'confidence_score' => $prediction['confidence_score'],
-                'risk' => $this->riskLevel($item, $projectedDemand, $forecastUpper, $daysUntilStockout),
+                'risk' => $this->riskLevel($item, $projectedDemand, $forecastUpper, $daysUntilStockout, $forecastDays),
             ];
         });
 
@@ -101,7 +112,8 @@ class InventoryForecastingService
         return [
             'as_of' => $asOf,
             'history_days' => self::HISTORY_DAYS,
-            'forecast_days' => self::FORECAST_DAYS,
+            'forecast_days' => $forecastDays,
+            'forecast_periods' => self::FORECAST_PERIODS,
             'forecasts' => $rankedForecasts,
             'summary' => $this->summary($rankedForecasts, (int) $currentUsage, (int) round($previousUsage)),
             'category_demand' => $this->categoryDemand($rankedForecasts),
@@ -149,7 +161,7 @@ class InventoryForecastingService
      * @param  list<float>  $series
      * @return array{point: float, lower: float, upper: float, model: string, backtest_error_percent: ?float, confidence_score: int}
      */
-    private function forecastSeries(array $series): array
+    private function forecastSeries(array $series, int $forecastDays): array
     {
         if (array_sum($series) <= 0) {
             return [
@@ -167,16 +179,16 @@ class InventoryForecastingService
             'Weighted average' => fn (array $training): float => $this->weightedDailyRate($training),
             '90-day average' => fn (array $training): float => $this->movingAverageDailyRate($training),
         ];
-        $backtests = $this->backtestModels($series, $models);
+        $backtests = $this->backtestModels($series, $models, $forecastDays);
         $selectedModel = collect($backtests)
             ->sortBy(fn (array $result, string $name): array => [$result['normalized_error'], array_search($name, array_keys($models), true)])
             ->keys()
             ->first() ?? '90-day average';
         $dailyRate = max(0.0, $models[$selectedModel]($series));
-        $point = $dailyRate * self::FORECAST_DAYS;
+        $point = $dailyRate * $forecastDays;
         $normalizedError = $backtests[$selectedModel]['normalized_error'] ?? null;
         $absoluteErrors = $backtests[$selectedModel]['absolute_errors'] ?? [];
-        $intervalMargin = $this->intervalMargin($series, $absoluteErrors);
+        $intervalMargin = $this->intervalMargin($series, $absoluteErrors, $forecastDays);
         $nonZeroDays = count(array_filter($series, fn (float $value): bool => $value > 0));
 
         return [
@@ -192,13 +204,13 @@ class InventoryForecastingService
     }
 
     /**
-     * Compare candidate models against up to three completed 30-day periods.
+     * Compare candidate models against up to three completed forecast periods.
      *
      * @param  list<float>  $series
      * @param  array<string, callable(array): float>  $models
      * @return array<string, array{normalized_error: float, absolute_errors: list<float>}>
      */
-    private function backtestModels(array $series, array $models): array
+    private function backtestModels(array $series, array $models, int $forecastDays): array
     {
         $seriesLength = count($series);
         $results = [];
@@ -209,15 +221,15 @@ class InventoryForecastingService
             $predictedTotal = 0.0;
 
             for ($window = self::BACKTEST_WINDOWS; $window >= 1; $window--) {
-                $cutoff = $seriesLength - ($window * self::FORECAST_DAYS);
+                $cutoff = $seriesLength - ($window * $forecastDays);
 
                 if ($cutoff < self::MINIMUM_TRAINING_DAYS) {
                     continue;
                 }
 
                 $training = array_slice($series, 0, $cutoff);
-                $actual = array_sum(array_slice($series, $cutoff, self::FORECAST_DAYS));
-                $predicted = max(0.0, $model($training) * self::FORECAST_DAYS);
+                $actual = array_sum(array_slice($series, $cutoff, $forecastDays));
+                $predicted = max(0.0, $model($training) * $forecastDays);
                 $absoluteErrors[] = abs($actual - $predicted);
                 $actualTotal += $actual;
                 $predictedTotal += $predicted;
@@ -283,22 +295,22 @@ class InventoryForecastingService
     }
 
     /**
-     * Estimate an 80% planning interval from monthly history and backtest misses.
+     * Estimate an 80% planning interval from matching historical periods and backtest misses.
      *
      * @param  list<float>  $series
      * @param  list<float>  $absoluteErrors
      */
-    private function intervalMargin(array $series, array $absoluteErrors): float
+    private function intervalMargin(array $series, array $absoluteErrors, int $forecastDays): float
     {
-        $monthlyTotals = [];
+        $periodTotals = [];
 
-        foreach (array_chunk($series, self::FORECAST_DAYS) as $month) {
-            if (count($month) === self::FORECAST_DAYS) {
-                $monthlyTotals[] = array_sum($month);
+        foreach (array_chunk($series, $forecastDays) as $period) {
+            if (count($period) === $forecastDays) {
+                $periodTotals[] = array_sum($period);
             }
         }
 
-        $standardDeviation = $this->sampleStandardDeviation($monthlyTotals);
+        $standardDeviation = $this->sampleStandardDeviation($periodTotals);
         $meanBacktestError = $absoluteErrors === [] ? 0.0 : array_sum($absoluteErrors) / count($absoluteErrors);
 
         return max(1.28 * $standardDeviation, $meanBacktestError);
@@ -336,14 +348,15 @@ class InventoryForecastingService
         InventoryItem $item,
         int $projectedDemand,
         int $forecastUpper,
-        ?int $daysUntilStockout
+        ?int $daysUntilStockout,
+        int $forecastDays
     ): string {
         if ($item->stock <= $item->min_stock || ($daysUntilStockout !== null && $daysUntilStockout <= 14)) {
             return 'critical';
         }
 
         if ($forecastUpper >= $item->stock || $projectedDemand >= $item->stock
-            || ($daysUntilStockout !== null && $daysUntilStockout <= self::FORECAST_DAYS)) {
+            || ($daysUntilStockout !== null && $daysUntilStockout <= $forecastDays)) {
             return 'watch';
         }
 

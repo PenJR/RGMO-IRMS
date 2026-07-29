@@ -7,8 +7,21 @@
                     Demand forecast from the last {{ $history_days }} days of stock movement
                 </p>
             </div>
-            <div class="text-muted small">
-                Updated {{ $as_of->format('M d, Y') }}
+            <div class="d-flex align-items-end gap-3 flex-wrap">
+                <form method="GET" action="{{ route('ai-forecasting.index') }}" class="d-flex align-items-end gap-2">
+                    <div>
+                        <label for="forecast-days" class="form-label small fw-semibold mb-1">Forecast period</label>
+                        <select id="forecast-days" name="forecast_days" class="form-select form-select-sm" onchange="this.form.submit()">
+                            @foreach($forecast_periods as $days => $label)
+                                <option value="{{ $days }}" @selected($forecast_days === $days)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <noscript><button type="submit" class="btn btn-sm btn-primary">Apply</button></noscript>
+                </form>
+                <div class="text-muted small pb-1">
+                    Updated {{ $as_of->format('M d, Y') }}
+                </div>
             </div>
         </div>
     </x-slot>
@@ -309,7 +322,7 @@
                 const controller = new AbortController();
                 const timeout = window.setTimeout(() => controller.abort(), 6000);
 
-                fetch(@json(route('ai-forecasting.explanation')), {
+                fetch(@json(route('ai-forecasting.explanation', ['forecast_days' => $forecast_days])), {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',

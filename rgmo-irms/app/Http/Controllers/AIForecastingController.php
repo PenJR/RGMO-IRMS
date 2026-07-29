@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\ForecastExplanationService;
 use App\Services\InventoryForecastingService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AIForecastingController extends Controller
@@ -22,11 +23,11 @@ class AIForecastingController extends Controller
      *
      * @return View
      */
-    public function index()
+    public function index(Request $request)
     {
         abort_unless(auth()->user()?->hasPermission('view-forecasts'), 403);
 
-        $forecast = $this->forecastingService->buildForecast();
+        $forecast = $this->forecastingService->buildForecast($this->forecastDays($request));
         $forecast['ai_enabled'] = $this->explanationService->isConfigured();
 
         return view('ai-forecasting.index', $forecast);
@@ -35,7 +36,7 @@ class AIForecastingController extends Controller
     /**
      * Generate the optional hosted-AI brief without blocking the forecast page.
      */
-    public function explanation(): JsonResponse
+    public function explanation(Request $request): JsonResponse
     {
         abort_unless(auth()->user()?->hasPermission('view-forecasts'), 403);
 
@@ -44,7 +45,7 @@ class AIForecastingController extends Controller
         }
 
         $explanation = $this->explanationService->explain(
-            $this->forecastingService->buildForecast()
+            $this->forecastingService->buildForecast($this->forecastDays($request))
         );
 
         if ($explanation === null) {
@@ -54,5 +55,14 @@ class AIForecastingController extends Controller
         }
 
         return response()->json($explanation);
+    }
+
+    private function forecastDays(Request $request): int
+    {
+        $forecastDays = $request->integer('forecast_days', InventoryForecastingService::DEFAULT_FORECAST_DAYS);
+
+        return array_key_exists($forecastDays, InventoryForecastingService::FORECAST_PERIODS)
+            ? $forecastDays
+            : InventoryForecastingService::DEFAULT_FORECAST_DAYS;
     }
 }
