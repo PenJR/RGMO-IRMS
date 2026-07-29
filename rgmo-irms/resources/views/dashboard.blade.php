@@ -1,25 +1,47 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex align-items-center justify-content-between">
-            <div>
-                <h2 class="h5 fw-bold mb-0">RGMO-IRMS Dashboard</h2>
-                <p class="text-muted mb-0 small">Welcome back, {{ Auth::user()->name }}.</p>
-            </div>
+        <div>
+            <p class="module-eyebrow mb-1">Command center</p>
+            <h2 class="h5 fw-bold mb-0">Dashboard</h2>
+            <p class="text-muted mb-0 small">A focused view of inventory and resource operations.</p>
         </div>
     </x-slot>
 
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 dashboard-page">
+        <section class="dashboard-welcome" aria-labelledby="dashboardWelcomeTitle">
+            <div class="dashboard-welcome__content">
+                <p class="dashboard-welcome__eyebrow mb-2">{{ now()->format('l, F j') }}</p>
+                <h1 id="dashboardWelcomeTitle">Welcome back, {{ Str::before(Auth::user()->name, ' ') }}.</h1>
+                <p class="mb-0">You have <strong>{{ $stats['low_stock_count'] }} low-stock {{ Str::plural('item', $stats['low_stock_count']) }}</strong> and <strong>{{ $stats['pending_requests'] }} pending {{ Str::plural('request', $stats['pending_requests']) }}</strong> requiring attention.</p>
+            </div>
+            <div class="dashboard-welcome__actions" aria-label="Quick actions">
+                @can('viewAny', App\Models\InventoryItem::class)
+                    <a href="{{ route('inventory.low-stock') }}" class="btn btn-light dashboard-action-btn">
+                        <i data-lucide="package-search" aria-hidden="true"></i>
+                        Review inventory
+                    </a>
+                @endcan
+                @if(auth()->user()->hasPermission('view-forecasts'))
+                    <a href="{{ route('ai-forecasting.index') }}" class="btn dashboard-action-btn dashboard-action-btn--accent">
+                        <i data-lucide="sparkles" aria-hidden="true"></i>
+                        AI forecasting
+                    </a>
+                @endif
+            </div>
+        </section>
+
         <div class="row g-4">
             <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card shadow-sm border-0 h-100 card-stat">
+                <div class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--users">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
                             <div class="stat-icon" aria-hidden="true">
                                 <i data-lucide="users"></i>
                             </div>
                             <div>
-                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Total Users</p>
+                                <p class="dashboard-kpi__label">Total Users</p>
                                 <h3 class="mb-0 fw-bold">{{ $stats['total_users'] }}</h3>
+                                <span class="dashboard-kpi__context">Registered accounts</span>
                             </div>
                         </div>
                     </div>
@@ -27,15 +49,16 @@
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card shadow-sm border-0 h-100 card-stat">
+                <div class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--inventory">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
                             <div class="stat-icon stat-icon--inventory" aria-hidden="true">
                                 <i data-lucide="package"></i>
                             </div>
                             <div>
-                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Inventory Items</p>
+                                <p class="dashboard-kpi__label">Inventory Items</p>
                                 <h3 class="mb-0 fw-bold">{{ $stats['total_items'] }}</h3>
+                                <span class="dashboard-kpi__context">Active resources</span>
                             </div>
                         </div>
                     </div>
@@ -43,15 +66,16 @@
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card shadow-sm border-0 h-100 card-stat">
+                <div class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--danger">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
                             <div class="stat-icon stat-icon--danger" aria-hidden="true">
                                 <i data-lucide="alert-triangle"></i>
                             </div>
                             <div>
-                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Low Stock Alerts</p>
+                                <p class="dashboard-kpi__label">Low Stock Alerts</p>
                                 <h3 class="mb-0 fw-bold text-danger">{{ $stats['low_stock_count'] }}</h3>
+                                <span class="dashboard-kpi__context">Needs replenishment</span>
                             </div>
                         </div>
                     </div>
@@ -59,15 +83,16 @@
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card shadow-sm border-0 h-100 card-stat">
+                <div class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--warning">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3">
                             <div class="stat-icon stat-icon--warning" aria-hidden="true">
                                 <i data-lucide="clipboard-check"></i>
                             </div>
                             <div>
-                                <p class="text-uppercase text-muted mb-1 small fw-bold" style="font-size: 10px; letter-spacing: 0.1em;">Pending Requests</p>
+                                <p class="dashboard-kpi__label">Pending Requests</p>
                                 <h3 class="mb-0 fw-bold text-warning">{{ $stats['pending_requests'] }}</h3>
+                                <span class="dashboard-kpi__context">Awaiting review</span>
                             </div>
                         </div>
                     </div>
@@ -75,40 +100,16 @@
             </div>
         </div>
 
-        @if(auth()->user()->hasPermission('view-forecasts'))
-            <!-- AI Forecasting Button Card -->
-            <div class="row g-4 mt-2">
-                <div class="col-12">
-                    <a href="{{ route('ai-forecasting.index') }}" class="text-decoration-none">
-                        <div class="card shadow-sm border-0 bg-dark text-white overflow-hidden card-stat" style="background: linear-gradient(135deg, #006837 0%, #004d29 100%) !important; min-height: 160px; display: flex; justify-content: center;">
-                            <div class="card-body py-0 px-4 position-relative d-flex align-items-center">
-                                <div class="d-flex align-items-center justify-content-between w-100 position-relative" style="z-index: 2;">
-                                    <div class="d-flex align-items-center gap-4 ai-forecast-cta">
-                                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: var(--cmu-yellow); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);">
-                                            <i data-lucide="sparkles" style="width: 32px; height: 32px; color: var(--cmu-green);"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="mb-1 fw-bold">Explore AI Forecasting</h4>
-                                            <p class="mb-0 text-white text-opacity-75">Predict stock demand and optimize inventory levels using intelligent analytics.</p>
-                                        </div>
-                                    </div>
-                                    <div class="d-none d-md-block text-end">
-                                        <span class="btn btn-warning fw-bold px-4 rounded-pill">VIEW INSIGHTS</span>
-                                    </div>
-                                </div>
-                                <!-- Background pattern/icon -->
-                                <i data-lucide="trending-up" class="position-absolute opacity-10" style="width: 150px; height: 150px; bottom: -30px; right: 20px; transform: rotate(-15deg); z-index: 1; color: rgba(255, 255, 255, 0.9);"></i>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+        <div class="dashboard-section-heading dashboard-section-heading--spaced">
+            <div>
+                <p class="module-eyebrow mb-1">Live overview</p>
+                <h2>Inventory and requests</h2>
             </div>
-        @endif
+        </div>
 
-        <!-- Charts Dashboard Section -->
-        <div class="row g-4 mt-2">
+        <div class="row g-4">
             <div class="col-lg-8">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center gap-3 flex-wrap">
                         <div>
                             <h5 class="fw-bold mb-0">Inventory Dynamics</h5>
@@ -135,7 +136,7 @@
                 </div>
             </div>
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4">
                         <h5 class="fw-bold mb-0">Request Status Distribution</h5>
                         <p class="text-muted small mb-0">Current status of all submitted requests</p>
@@ -149,9 +150,19 @@
             </div>
         </div>
 
-        <div class="row g-4 mt-1">
+        <details class="dashboard-disclosure" id="dashboardAnalytics">
+            <summary>
+                <span class="dashboard-disclosure__icon"><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i></span>
+                <span>
+                    <strong>Explore detailed analytics</strong>
+                    <small>Request trends, stock health, category value, and inventory movement</small>
+                </span>
+                <i data-lucide="chevron-down" class="dashboard-disclosure__chevron" aria-hidden="true"></i>
+            </summary>
+            <div class="dashboard-disclosure__content">
+        <div class="row g-4">
             <div class="col-12 col-xl-8">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="fw-bold mb-0">Request Activity Trend</h5>
@@ -165,7 +176,7 @@
                 </div>
             </div>
             <div class="col-12 col-xl-4">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4">
                         <h5 class="fw-bold mb-0">Stock Health</h5>
                         <p class="text-muted small mb-0">Healthy, warning, and low stock inventory counts</p>
@@ -179,9 +190,9 @@
             </div>
         </div>
 
-        <div class="row g-4 mt-1">
+        <div class="row g-4 mt-4">
             <div class="col-12 col-xl-4">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4">
                         <h5 class="fw-bold mb-0">Inventory Value by Category</h5>
                         <p class="text-muted small mb-0">Top categories by current stock value</p>
@@ -192,7 +203,7 @@
                 </div>
             </div>
             <div class="col-12 col-xl-4">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4">
                         <h5 class="fw-bold mb-0">Inventory Movement</h5>
                         <p class="text-muted small mb-0">Monthly stock-in and stock-out quantities</p>
@@ -203,7 +214,7 @@
                 </div>
             </div>
             <div class="col-12 col-xl-4">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4">
                         <h5 class="fw-bold mb-0">Top Requested Items</h5>
                         <p class="text-muted small mb-0">Highest total requested quantities</p>
@@ -214,10 +225,19 @@
                 </div>
             </div>
         </div>
+            </div>
+        </details>
 
-        <div class="row g-4 mt-1">
+        <div class="dashboard-section-heading dashboard-section-heading--spaced">
+            <div>
+                <p class="module-eyebrow mb-1">Needs attention</p>
+                <h2>Priority work and recent requests</h2>
+            </div>
+        </div>
+
+        <div class="row g-4">
             <div class="col-12 col-xl-5">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card border-0 h-100 dashboard-panel dashboard-panel--attention">
                     <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
                             <i data-lucide="alert-circle" class="text-danger" style="width: 20px;"></i>
@@ -256,7 +276,7 @@
             </div>
 
             <div class="col-12 col-xl-7">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
                             <i data-lucide="clipboard-list" class="text-primary" style="width: 20px;"></i>
@@ -319,9 +339,19 @@
             </div>
         </div>
 
-        <div class="row g-4 mt-1">
+        <details class="dashboard-disclosure dashboard-disclosure--activity">
+            <summary>
+                <span class="dashboard-disclosure__icon"><i data-lucide="history" aria-hidden="true"></i></span>
+                <span>
+                    <strong>Recent system activity</strong>
+                    <small>Review the latest changes recorded in the audit trail</small>
+                </span>
+                <i data-lucide="chevron-down" class="dashboard-disclosure__chevron" aria-hidden="true"></i>
+            </summary>
+            <div class="dashboard-disclosure__content">
+        <div class="row g-4">
             <div class="col-12">
-                <div class="card shadow-sm border-0">
+                <div class="card border-0 dashboard-panel">
                     <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
                             <i data-lucide="activity" class="text-info" style="width: 20px;"></i>
@@ -370,6 +400,8 @@
                 </div>
             </div>
         </div>
+            </div>
+        </details>
     </div>
 
     @push('scripts')
@@ -386,6 +418,17 @@
                 bodyFont: { size: 12 },
                 cornerRadius: 6
             };
+            const analyticsDisclosure = document.getElementById('dashboardAnalytics');
+
+            analyticsDisclosure?.addEventListener('toggle', () => {
+                if (!analyticsDisclosure.open) return;
+
+                window.requestAnimationFrame(() => {
+                    analyticsDisclosure.querySelectorAll('canvas').forEach((canvas) => {
+                        Chart.getChart(canvas)?.resize();
+                    });
+                });
+            });
 
             // Inventory Dynamics Chart
             const ctxInv = document.getElementById('inventoryChart').getContext('2d');

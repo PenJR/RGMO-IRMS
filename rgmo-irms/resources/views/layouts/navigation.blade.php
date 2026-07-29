@@ -21,12 +21,14 @@
         <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-sidebar-item="dashboard" draggable="true" data-sidebar-tooltip="Dashboard" aria-label="Dashboard">
             <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
             <span class="nav-label">Dashboard</span>
+            <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
         </a>
 
         @if(auth()->user()->hasPermission(['generate-reports', 'view-audit-trail']))
             <a href="{{ route('dashboard.health') }}" class="nav-link {{ request()->routeIs('dashboard.health*') ? 'active' : '' }}" data-sidebar-item="health" draggable="true" data-sidebar-tooltip="Module Health" aria-label="Module Health">
                 <span class="nav-icon"><i data-lucide="activity"></i></span>
                 <span class="nav-label">Module Health</span>
+                <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
             </a>
         @endif
 
@@ -36,6 +38,7 @@
                     <span class="nav-group-toggle" data-sidebar-tooltip="Inventory" aria-label="Inventory">
                         <span class="nav-icon"><i data-lucide="package"></i></span>
                         <span class="nav-label">Inventory</span>
+                        <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
@@ -53,12 +56,14 @@
             <a href="{{ route('projects.index') }}" class="nav-link {{ request()->routeIs('projects.*') ? 'active' : '' }}" data-sidebar-item="projects" draggable="true" data-sidebar-tooltip="Projects" aria-label="Projects">
                 <span class="nav-icon"><i data-lucide="folder-kanban"></i></span>
                 <span class="nav-label">Projects</span>
+                <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
             </a>
         @endcan
 
         <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}" data-sidebar-item="notifications" draggable="true" data-sidebar-tooltip="Notifications" aria-label="Notifications">
             <span class="nav-icon"><i data-lucide="bell"></i></span>
             <span class="nav-label">Notifications</span>
+            <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
             <span id="notification-unread-badge" class="nav-badge ms-auto {{ $unreadCount > 0 ? '' : 'd-none' }}">{{ $unreadCount }}</span>
         </a>
 
@@ -68,6 +73,7 @@
                     <span class="nav-group-toggle" data-sidebar-tooltip="Requests" aria-label="Requests">
                         <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
                         <span class="nav-label">Requests</span>
+                        <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
@@ -91,6 +97,7 @@
                     <span class="nav-group-toggle" data-sidebar-tooltip="Reports" aria-label="Reports">
                         <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span>
                         <span class="nav-label">Reports</span>
+                        <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
@@ -111,6 +118,7 @@
             <a href="{{ route('ai-forecasting.index') }}" class="nav-link {{ request()->routeIs('ai-forecasting.*') ? 'active' : '' }}" data-sidebar-item="forecasting" draggable="true" data-sidebar-tooltip="AI Forecasting" aria-label="AI Forecasting">
                 <span class="nav-icon"><i data-lucide="sparkles"></i></span>
                 <span class="nav-label">AI Forecasting</span>
+                <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
             </a>
         @endif
 
@@ -120,6 +128,7 @@
                     <span class="nav-group-toggle" data-sidebar-tooltip="User Management" aria-label="User Management">
                         <span class="nav-icon"><i data-lucide="users"></i></span>
                         <span class="nav-label">User Management</span>
+                        <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
@@ -138,6 +147,7 @@
                     <span class="nav-group-toggle" data-sidebar-tooltip="System" aria-label="System">
                         <span class="nav-icon"><i data-lucide="settings"></i></span>
                         <span class="nav-label">System</span>
+                        <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
