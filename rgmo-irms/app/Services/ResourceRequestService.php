@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\RequestItem;
 use App\Models\ResourceRequest;
+use App\Models\ResourceUsage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,7 @@ class ResourceRequestService
      */
     public function getAllRequests(int $perPage = 15, array $filters = [])
     {
-        $query = ResourceRequest::query()->with('user', 'approver', 'items.item');
+        $query = ResourceRequest::query()->with('user', 'project', 'approver', 'items.item');
 
         // Filter by status
         if (! empty($filters['status'])) {
@@ -76,6 +77,28 @@ class ResourceRequestService
         );
 
         $this->notificationService->notifyResourceRequestSubmitted($request);
+
+        return $request;
+    }
+
+    /**
+     * Update a pending request and preserve its before-and-after values in the audit trail.
+     */
+    public function updateRequest(ResourceRequest $request, array $data, int $actorId): ResourceRequest
+    {
+        $oldValues = $request->only(['project_id', 'purpose', 'remarks', 'needed_date']);
+        $request->update($data);
+        $request->refresh();
+
+        AuditLog::log(
+            $actorId,
+            'update',
+            'resource_request',
+            ResourceRequest::class,
+            $request->id,
+            $oldValues,
+            $request->only(['project_id', 'purpose', 'remarks', 'needed_date'])
+        );
 
         return $request;
     }
@@ -161,7 +184,7 @@ class ResourceRequestService
      */
     public function getPendingRequests()
     {
-        return ResourceRequest::pending()->with('user', 'items.item')->orderBy('created_at', 'asc')->get();
+        return ResourceRequest::pending()->with('user', 'project', 'items.item')->orderBy('created_at', 'asc')->get();
     }
 
     /**
@@ -172,7 +195,7 @@ class ResourceRequestService
     public function getUserRequests(int $userId, int $perPage = 10)
     {
         return ResourceRequest::where('user_id', $userId)
-            ->with('items.item', 'approver')
+            ->with('items.item', 'project', 'approver')
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
@@ -221,6 +244,14 @@ class ResourceRequestService
                     'resource_request_'.$request->id,
                     auth()->id()
                 );
+
+                ResourceUsage::create([
+                    'inventory_item_id' => $item->inventory_item_id,
+                    'user_id' => $request->user_id,
+                    'project_id' => $request->project_id,
+                    'quantity' => $item->quantity,
+                    'notes' => 'Released through resource request #RQ-'.$request->id,
+                ]);
             }
 
             $request->update(['status' => ResourceRequest::STATUS_COMPLETED]);

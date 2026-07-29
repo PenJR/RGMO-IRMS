@@ -4,7 +4,7 @@
             <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS Logo" class="rounded-circle brand-logo">
             <div class="min-w-0">
                 <h1 class="sidebar-title">RGMO-IRMS</h1>
-                <p class="sidebar-kicker">Central Mindanao</p>
+                <p class="sidebar-kicker">Central Mindanao University</p>
             </div>
         </div>
         <button type="button" class="sidebar-toggle d-none d-lg-inline-flex" id="sidebarToggle" aria-label="Minimize sidebar" aria-expanded="true" title="Minimize sidebar">
@@ -18,20 +18,20 @@
 
     @php $unreadCount = auth()->user()->notifications()->unread()->count(); @endphp
     <div class="sidebar-menu nav flex-column flex-grow-1">
-        <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-sidebar-tooltip="Dashboard" aria-label="Dashboard">
+        <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-sidebar-item="dashboard" draggable="true" data-sidebar-tooltip="Dashboard" aria-label="Dashboard">
             <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
             <span class="nav-label">Dashboard</span>
         </a>
 
         @if(auth()->user()->hasPermission(['generate-reports', 'view-audit-trail']))
-            <a href="{{ route('dashboard.health') }}" class="nav-link {{ request()->routeIs('dashboard.health*') ? 'active' : '' }}" data-sidebar-tooltip="Module Health" aria-label="Module Health">
+            <a href="{{ route('dashboard.health') }}" class="nav-link {{ request()->routeIs('dashboard.health*') ? 'active' : '' }}" data-sidebar-item="health" draggable="true" data-sidebar-tooltip="Module Health" aria-label="Module Health">
                 <span class="nav-icon"><i data-lucide="activity"></i></span>
                 <span class="nav-label">Module Health</span>
             </a>
         @endif
 
         @can('viewAny', App\Models\InventoryItem::class)
-            <details class="nav-group {{ request()->routeIs('inventory.*') ? 'active' : '' }}" {{ request()->routeIs('inventory.*') ? 'open' : '' }}>
+            <details class="nav-group {{ request()->routeIs('inventory.*') ? 'active' : '' }}" data-sidebar-item="inventory" draggable="true" {{ request()->routeIs('inventory.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle" data-sidebar-tooltip="Inventory" aria-label="Inventory">
                         <span class="nav-icon"><i data-lucide="package"></i></span>
@@ -50,20 +50,20 @@
         @endcan
 
         @can('viewAny', App\Models\Project::class)
-            <a href="{{ route('projects.index') }}" class="nav-link {{ request()->routeIs('projects.*') ? 'active' : '' }}" data-sidebar-tooltip="Projects" aria-label="Projects">
+            <a href="{{ route('projects.index') }}" class="nav-link {{ request()->routeIs('projects.*') ? 'active' : '' }}" data-sidebar-item="projects" draggable="true" data-sidebar-tooltip="Projects" aria-label="Projects">
                 <span class="nav-icon"><i data-lucide="folder-kanban"></i></span>
                 <span class="nav-label">Projects</span>
             </a>
         @endcan
 
-        <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}" data-sidebar-tooltip="Notifications" aria-label="Notifications">
+        <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}" data-sidebar-item="notifications" draggable="true" data-sidebar-tooltip="Notifications" aria-label="Notifications">
             <span class="nav-icon"><i data-lucide="bell"></i></span>
             <span class="nav-label">Notifications</span>
             <span id="notification-unread-badge" class="nav-badge ms-auto {{ $unreadCount > 0 ? '' : 'd-none' }}">{{ $unreadCount }}</span>
         </a>
 
         @if(auth()->user()->can('viewAny', App\Models\ResourceRequest::class) || auth()->user()->can('create', App\Models\ResourceRequest::class))
-            <details class="nav-group {{ request()->routeIs('requests.*') ? 'active' : '' }}" {{ request()->routeIs('requests.*') ? 'open' : '' }}>
+            <details class="nav-group {{ request()->routeIs('requests.*') ? 'active' : '' }}" data-sidebar-item="requests" draggable="true" {{ request()->routeIs('requests.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle" data-sidebar-tooltip="Requests" aria-label="Requests">
                         <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
@@ -86,7 +86,7 @@
         @endif
 
         @if(auth()->user()->hasPermission(['generate-reports', 'view-audit-trail']))
-            <details class="nav-group {{ request()->routeIs('reports.*') ? 'active' : '' }}" {{ request()->routeIs('reports.*') ? 'open' : '' }}>
+            <details class="nav-group {{ request()->routeIs('reports.*') ? 'active' : '' }}" data-sidebar-item="reports" draggable="true" {{ request()->routeIs('reports.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle" data-sidebar-tooltip="Reports" aria-label="Reports">
                         <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span>
@@ -108,14 +108,14 @@
         @endif
 
         @if(auth()->user()->hasPermission('view-forecasts'))
-            <a href="{{ route('ai-forecasting.index') }}" class="nav-link {{ request()->routeIs('ai-forecasting.*') ? 'active' : '' }}" data-sidebar-tooltip="AI Forecasting" aria-label="AI Forecasting">
+            <a href="{{ route('ai-forecasting.index') }}" class="nav-link {{ request()->routeIs('ai-forecasting.*') ? 'active' : '' }}" data-sidebar-item="forecasting" draggable="true" data-sidebar-tooltip="AI Forecasting" aria-label="AI Forecasting">
                 <span class="nav-icon"><i data-lucide="sparkles"></i></span>
                 <span class="nav-label">AI Forecasting</span>
             </a>
         @endif
 
         @can('viewAny', App\Models\User::class)
-            <details class="nav-group {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'active' : '' }}" {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'open' : '' }}>
+            <details class="nav-group {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'active' : '' }}" data-sidebar-item="users" draggable="true" {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle" data-sidebar-tooltip="User Management" aria-label="User Management">
                         <span class="nav-icon"><i data-lucide="users"></i></span>
@@ -133,7 +133,7 @@
         @endcan
 
         @if(auth()->user()->isAdmin())
-            <details class="nav-group {{ request()->routeIs('admin.backup.*') || request()->routeIs('admin.settings.*') ? 'active' : '' }}" {{ request()->routeIs('admin.backup.*') || request()->routeIs('admin.settings.*') ? 'open' : '' }}>
+            <details class="nav-group {{ request()->routeIs('admin.backup.*') || request()->routeIs('admin.settings.*') ? 'active' : '' }}" data-sidebar-item="system" draggable="true" {{ request()->routeIs('admin.backup.*') || request()->routeIs('admin.settings.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle" data-sidebar-tooltip="System" aria-label="System">
                         <span class="nav-icon"><i data-lucide="settings"></i></span>
@@ -148,6 +148,8 @@
             </details>
         @endif
     </div>
+
+    <span class="visually-hidden" id="sidebar-order-status" role="status" aria-live="polite"></span>
 
     <div class="sidebar-footer mt-auto">
         <div class="sidebar-user d-flex align-items-center gap-3">

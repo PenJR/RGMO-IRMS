@@ -67,6 +67,21 @@
                                     @endif
 
                                     <div class="row g-4 mb-5">
+                                        <div class="col-12">
+                                            <label for="project-id" class="form-label">Current Project</label>
+                                            <select id="project-id" name="project_id" class="form-select @error('project_id') is-invalid @enderror" required>
+                                                <option value="">Select the project this request supports...</option>
+                                                @foreach($projects as $project)
+                                                    <option value="{{ $project->id }}" @selected((string) old('project_id') === (string) $project->id)>
+                                                        {{ $project->name }} ({{ $project->code }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('project_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            @if($projects->isEmpty())
+                                                <div class="form-text text-danger">No current projects are available. Ask a project administrator to activate a project before submitting a request.</div>
+                                            @endif
+                                        </div>
                                         <div class="col-md-8">
                                             <label class="form-label">Purpose of Request</label>
                                             <input type="text" name="purpose" value="{{ old('purpose') }}" placeholder="e.g., Office Supplies Maintenance" class="form-control @error('purpose') is-invalid @enderror" required>
@@ -134,7 +149,7 @@
 
                                     <div class="mt-5 pt-4 border-top">
                                         <div class="d-flex gap-3">
-                                            <button type="submit" class="btn btn-cmu d-flex align-items-center gap-2 px-5 shadow-sm">
+                                            <button type="submit" class="btn btn-cmu d-flex align-items-center gap-2 px-5 shadow-sm" @disabled($projects->isEmpty())>
                                                 <i data-lucide="send" style="width: 18px"></i>
                                                 Submit Formal Request
                                             </button>

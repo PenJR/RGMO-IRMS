@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Notification;
 use App\Models\ResourceRequest;
 use App\Models\User;
+use App\Rules\CurrentProject;
 use App\Services\RmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -68,7 +69,11 @@ class OperationsController extends Controller
     public function createRequest(Request $request)
     {
         $this->authorize('create', ResourceRequest::class);
-        $data = $request->validate(['purpose' => 'required|string', 'remarks' => 'nullable|string']);
+        $data = $request->validate([
+            'project_id' => ['required', 'integer', new CurrentProject],
+            'purpose' => 'required|string',
+            'remarks' => 'nullable|string',
+        ]);
 
         return response()->json($this->service->createRequest($request->user()->id, $data), 201);
     }

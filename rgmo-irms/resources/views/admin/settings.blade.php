@@ -1,9 +1,25 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div>
-                <h2 class="fw-bold mb-1">System Settings</h2>
-                <p class="text-muted mb-0">Configure appearance, inventory, and application preferences.</p>
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap w-100 py-1">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon flex-shrink-0" aria-hidden="true">
+                    <i data-lucide="settings-2"></i>
+                </div>
+                <div>
+                    <div class="text-uppercase text-success fw-bold mb-1" style="font-size: 0.64rem; letter-spacing: 0.12em;">System Administration</div>
+                    <h2 class="h5 fw-bold mb-1">System Settings</h2>
+                    <p class="text-muted small mb-0">Configure appearance, inventory thresholds, and application preferences.</p>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 ms-md-auto">
+                <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle d-inline-flex align-items-center gap-1 px-3 py-2">
+                    <i data-lucide="shield-check" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+                    Administrator controls
+                </span>
+                <a href="{{ route('admin.backup.index') }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-2 px-3">
+                    <i data-lucide="database-backup" style="width: 15px; height: 15px;" aria-hidden="true"></i>
+                    Backup Center
+                </a>
             </div>
         </div>
     </x-slot>

@@ -390,13 +390,12 @@
             .sidebar-kicker {
                 margin: 0.22rem 0 0;
                 color: rgba(255, 255, 255, 0.56);
-                font-size: 0.64rem;
+                font-size: 0.56rem;
                 font-weight: 700;
-                letter-spacing: 0.12em;
+                letter-spacing: 0.07em;
+                line-height: 1.25;
                 text-transform: uppercase;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                white-space: normal;
             }
 
             .sidebar-toggle {
@@ -440,6 +439,25 @@
                 overflow-y: auto;
                 scrollbar-width: thin;
                 scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+            }
+
+            .sidebar-menu > [data-sidebar-item],
+            .sidebar-menu > [data-sidebar-item] > summary {
+                cursor: grab;
+            }
+
+            .sidebar-menu > [data-sidebar-item]:active,
+            .sidebar-menu > [data-sidebar-item] > summary:active {
+                cursor: grabbing;
+            }
+
+            .sidebar-menu > [data-sidebar-item] {
+                transition: opacity 0.16s ease, transform 0.16s ease;
+            }
+
+            .sidebar-menu > [data-sidebar-item].sidebar-dragging {
+                opacity: 0.42;
+                transform: scale(0.97);
             }
 
             #sidebar .nav-link,
@@ -912,7 +930,7 @@
                     >
                         <i data-lucide="menu" aria-hidden="true"></i>
                     </button>
-                    <div class="flex-grow-1" style="min-width: 0;">
+                    <div class="page-header-content flex-grow-1" style="min-width: 0;">
                         @if(isset($header))
                             {{ $header }}
                         @else
@@ -998,6 +1016,126 @@
                 const collapsed = !document.body.classList.contains('sidebar-collapsed');
                 localStorage.setItem(sidebarStorageKey, String(collapsed));
                 applySidebarState(collapsed);
+            });
+
+            const sidebarMenu = sidebar?.querySelector('.sidebar-menu');
+            const sidebarOrderStatus = document.getElementById('sidebar-order-status');
+            const savedSidebarOrder = @json(auth()->user()->sidebar_order ?? []);
+            const sidebarOrderUrl = @json(route('profile.sidebar-order.update'));
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const sidebarItems = () => Array.from(sidebarMenu?.querySelectorAll(':scope > [data-sidebar-item]') ?? []);
+            const currentSidebarOrder = () => sidebarItems().map((item) => item.dataset.sidebarItem);
+            const applySidebarOrder = (order) => {
+                if (!sidebarMenu || !Array.isArray(order)) return;
+
+                const itemsById = new Map(sidebarItems().map((item) => [item.dataset.sidebarItem, item]));
+                order.forEach((id) => {
+                    const item = itemsById.get(id);
+                    if (item) {
+                        sidebarMenu.appendChild(item);
+                        itemsById.delete(id);
+                    }
+                });
+                itemsById.forEach((item) => sidebarMenu.appendChild(item));
+            };
+
+            applySidebarOrder(savedSidebarOrder);
+            let persistedSidebarOrder = currentSidebarOrder();
+            let draggedSidebarItem = null;
+            let dragStartOrder = '';
+
+            const announceSidebarOrder = (message) => {
+                if (sidebarOrderStatus) sidebarOrderStatus.textContent = message;
+            };
+            const saveSidebarOrder = async () => {
+                const order = currentSidebarOrder();
+
+                try {
+                    const response = await fetch(sidebarOrderUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({ order }),
+                    });
+
+                    if (!response.ok) throw new Error('Unable to save sidebar order.');
+
+                    persistedSidebarOrder = order;
+                    announceSidebarOrder('Sidebar order saved.');
+                } catch (error) {
+                    applySidebarOrder(persistedSidebarOrder);
+                    announceSidebarOrder('Sidebar order could not be saved. The previous order was restored.');
+                }
+            };
+            const sidebarItemAfterPointer = (pointerY) => sidebarItems()
+                .filter((item) => item !== draggedSidebarItem)
+                .reduce((closest, item) => {
+                    const box = item.getBoundingClientRect();
+                    const offset = pointerY - box.top - (box.height / 2);
+
+                    return offset < 0 && offset > closest.offset
+                        ? { offset, item }
+                        : closest;
+                }, { offset: Number.NEGATIVE_INFINITY, item: null }).item;
+
+            sidebarMenu?.addEventListener('dragstart', (event) => {
+                const item = event.target.closest('[data-sidebar-item]');
+
+                if (!item || item.parentElement !== sidebarMenu || event.target.closest('.nav-submenu')) {
+                    event.preventDefault();
+                    return;
+                }
+
+                draggedSidebarItem = item;
+                dragStartOrder = currentSidebarOrder().join(',');
+                item.classList.add('sidebar-dragging');
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', item.dataset.sidebarItem);
+            });
+            sidebarMenu?.addEventListener('dragover', (event) => {
+                if (!draggedSidebarItem) return;
+
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+                const afterItem = sidebarItemAfterPointer(event.clientY);
+
+                if (afterItem) {
+                    sidebarMenu.insertBefore(draggedSidebarItem, afterItem);
+                } else {
+                    sidebarMenu.appendChild(draggedSidebarItem);
+                }
+            });
+            sidebarMenu?.addEventListener('drop', (event) => event.preventDefault());
+            sidebarMenu?.addEventListener('dragend', () => {
+                draggedSidebarItem?.classList.remove('sidebar-dragging');
+                draggedSidebarItem = null;
+
+                if (dragStartOrder !== currentSidebarOrder().join(',')) saveSidebarOrder();
+            });
+            sidebarMenu?.addEventListener('keydown', (event) => {
+                if (!event.altKey || !['ArrowUp', 'ArrowDown'].includes(event.key)) return;
+
+                const item = event.target.closest('[data-sidebar-item]');
+                if (!item || item.parentElement !== sidebarMenu) return;
+
+                const items = sidebarItems();
+                const currentIndex = items.indexOf(item);
+                const targetIndex = event.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1;
+                if (targetIndex < 0 || targetIndex >= items.length) return;
+
+                event.preventDefault();
+                if (event.key === 'ArrowUp') {
+                    sidebarMenu.insertBefore(item, items[targetIndex]);
+                } else {
+                    sidebarMenu.insertBefore(items[targetIndex], item);
+                }
+
+                saveSidebarOrder();
+                event.target.focus();
             });
 
             mobileSidebarToggle?.addEventListener('click', () => setMobileSidebar(true));

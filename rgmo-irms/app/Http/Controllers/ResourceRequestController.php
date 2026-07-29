@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\InventoryItem;
+use App\Models\Project;
 use App\Models\ResourceRequest;
+use App\Rules\CurrentProject;
 use App\Services\ResourceRequestService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -51,6 +53,7 @@ class ResourceRequestController extends Controller
 
         return view('requests.create', [
             'items' => InventoryItem::active()->get(),
+            'projects' => Project::query()->current()->orderBy('name')->get(),
         ]);
     }
 
@@ -66,6 +69,7 @@ class ResourceRequestController extends Controller
         $this->authorize('create', ResourceRequest::class);
 
         $validated = $request->validate([
+            'project_id' => ['required', 'integer', new CurrentProject],
             'purpose' => 'required|string',
             'remarks' => 'nullable|string',
             'ris_no' => 'nullable|string|max:50',
@@ -79,6 +83,7 @@ class ResourceRequestController extends Controller
 
         $requestData = [
             'user_id' => auth()->id(),
+            'project_id' => $validated['project_id'],
             'status' => ResourceRequest::STATUS_PENDING,
             'ris_no' => $validated['ris_no'] ?? null,
             'responsible_center' => $validated['responsible_center'] ?? null,
@@ -104,7 +109,7 @@ class ResourceRequestController extends Controller
     {
         $this->authorize('view', $request);
 
-        $request->load('user', 'approver', 'items.item');
+        $request->load('user', 'project', 'approver', 'items.item');
         $workflowLogs = AuditLog::with('user:id,name')
             ->where('model_type', ResourceRequest::class)
             ->where('model_id', $request->id)
@@ -132,6 +137,7 @@ class ResourceRequestController extends Controller
         return view('requests.edit', [
             'request' => $request->load('items'),
             'items' => InventoryItem::active()->get(),
+            'projects' => Project::query()->current()->orderBy('name')->get(),
         ]);
     }
 
@@ -149,12 +155,13 @@ class ResourceRequestController extends Controller
         $this->authorize('update', $request);
 
         $validated = $httpRequest->validate([
+            'project_id' => ['required', 'integer', new CurrentProject],
             'purpose' => 'required|string',
             'remarks' => 'nullable|string',
             'needed_date' => 'nullable|date',
         ]);
 
-        $request->update($validated);
+        $this->requestService->updateRequest($request, $validated, (int) auth()->id());
 
         return redirect()->route('requests.show', $request)->with('success', 'Resource request updated successfully.');
     }

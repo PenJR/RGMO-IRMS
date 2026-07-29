@@ -29,6 +29,19 @@ class User extends Authenticatable implements MustVerifyEmail
 
     const STATUS_SUSPENDED = 'suspended';
 
+    public const SIDEBAR_ITEMS = [
+        'dashboard',
+        'health',
+        'inventory',
+        'projects',
+        'notifications',
+        'requests',
+        'reports',
+        'forecasting',
+        'users',
+        'system',
+    ];
+
     protected $fillable = [
         'name',
         'email',
@@ -37,6 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'department',
         'status',
         'avatar',
+        'sidebar_order',
         'last_login_at',
         'login_attempts',
         'locked_until',
@@ -119,6 +133,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'last_login_at' => 'datetime',
             'locked_until' => 'datetime',
+            'sidebar_order' => 'array',
             'two_factor_enabled' => 'boolean',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',

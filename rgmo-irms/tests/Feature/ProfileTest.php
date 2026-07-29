@@ -70,6 +70,33 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
+    public function test_user_can_save_a_personal_sidebar_order(): void
+    {
+        $user = User::factory()->create();
+        $order = ['requests', 'inventory', 'dashboard', 'notifications'];
+
+        $this->actingAs($user)
+            ->putJson(route('profile.sidebar-order.update'), ['order' => $order])
+            ->assertOk()
+            ->assertJsonPath('message', 'Sidebar order saved.');
+
+        $this->assertSame($order, $user->refresh()->sidebar_order);
+    }
+
+    public function test_sidebar_order_rejects_unknown_or_duplicate_items(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->putJson(route('profile.sidebar-order.update'), [
+                'order' => ['dashboard', 'dashboard', 'unauthorized-module'],
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['order.1', 'order.2']);
+
+        $this->assertNull($user->refresh()->sidebar_order);
+    }
+
     /**
      * Verify that user can delete their account.
      */

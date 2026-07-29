@@ -54,6 +54,7 @@
                                 <tr>
                                     <th>Request ID</th>
                                     <th>Requester</th>
+                                    <th>Project</th>
                                     <th>Status</th>
                                     <th>Needed Date</th>
                                     <th class="text-end">Actions</th>
@@ -64,6 +65,14 @@
                                     <tr>
                                         <td data-label="Request">#RQ-{{ $request->id }}</td>
                                         <td data-label="Requester">{{ $request->user->name ?? 'Unknown' }}</td>
+                                        <td data-label="Project">
+                                            @if($request->project)
+                                                <div class="fw-semibold">{{ $request->project->name }}</div>
+                                                <div class="small text-muted">{{ $request->project->code }}</div>
+                                            @else
+                                                <span class="text-muted">Legacy / unassigned</span>
+                                            @endif
+                                        </td>
                                         <td data-label="Status">
 	                                            <span class="badge rounded-pill
 	                                                @if($request->status === 'approved') bg-success text-white

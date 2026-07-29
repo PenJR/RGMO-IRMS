@@ -67,6 +67,29 @@ class Project extends Model
     }
 
     /**
+     * Get resource requests submitted for this project.
+     */
+    public function resourceRequests(): HasMany
+    {
+        return $this->hasMany(ResourceRequest::class);
+    }
+
+    /**
+     * Limit projects to active records whose configured dates include today.
+     */
+    public function scopeCurrent(Builder $query): Builder
+    {
+        return $query
+            ->where('status', self::STATUS_ACTIVE)
+            ->where(fn (Builder $inner) => $inner
+                ->whereNull('start_date')
+                ->orWhereDate('start_date', '<=', today()))
+            ->where(fn (Builder $inner) => $inner
+                ->whereNull('end_date')
+                ->orWhereDate('end_date', '>=', today()));
+    }
+
+    /**
      * Apply the search query scope.
      */
     public function scopeSearch(Builder $query, ?string $search): Builder

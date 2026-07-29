@@ -575,16 +575,49 @@ a:hover {
 }
 
 .top-nav {
-    min-height: 76px !important;
-    background: rgba(255, 255, 255, 0.94) !important;
-    border-bottom: 1px solid var(--ui-line) !important;
-    box-shadow: 0 8px 22px rgba(15, 46, 28, 0.05);
+    min-height: 86px !important;
+    background:
+        radial-gradient(circle at 92% -80%, rgba(255, 198, 0, 0.2), transparent 38%),
+        linear-gradient(120deg, rgba(255, 255, 255, 0.98), rgba(245, 251, 247, 0.96)) !important;
+    border-bottom: 1px solid rgba(0, 73, 30, 0.13) !important;
+    box-shadow: 0 10px 28px rgba(15, 46, 28, 0.08);
+    isolation: isolate;
+    overflow: hidden;
+}
+
+.top-nav::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cmu-green), var(--cmu-yellow) 38%, rgba(255, 198, 0, 0) 78%);
+}
+
+.page-header-content {
+    position: relative;
+    padding-left: 1rem;
+}
+
+.page-header-content::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 4px;
+    height: min(46px, 72%);
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--cmu-yellow), var(--cmu-green-2));
+    box-shadow: 0 0 0 4px rgba(255, 198, 0, 0.08);
+    transform: translateY(-50%);
 }
 
 .top-nav h2,
 .top-nav .h5 {
     color: #10251b !important;
-    font-size: 1.08rem;
+    font-size: 1.14rem;
     font-weight: 800 !important;
     letter-spacing: 0;
 }
@@ -932,6 +965,9 @@ html[data-bs-theme="dark"] .form-glass {
 }
 
 html[data-bs-theme="dark"] .top-nav {
+    background:
+        radial-gradient(circle at 92% -80%, rgba(255, 198, 0, 0.11), transparent 38%),
+        linear-gradient(120deg, #18271f, #122019) !important;
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.26);
 }
 
@@ -1479,8 +1515,17 @@ body.mobile-sidebar-open .mobile-sidebar-backdrop {
     }
 
     .top-nav {
-        min-height: 64px !important;
+        min-height: 70px !important;
         align-items: center !important;
+    }
+
+    .page-header-content {
+        padding-left: 0.7rem;
+    }
+
+    .page-header-content::before {
+        width: 3px;
+        height: 34px;
     }
 
     .top-nav h2,

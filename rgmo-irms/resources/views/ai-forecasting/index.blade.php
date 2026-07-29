@@ -69,7 +69,7 @@
         </div>
 
         <div class="row g-4">
-            <div class="col-12 col-xl-8">
+            <div class="col-12">
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
@@ -167,9 +167,9 @@
                 </div>
             </div>
 
-            <div class="col-12 col-xl-4">
-                @if($ai_enabled)
-                    <div class="card shadow-sm border-0 mb-4">
+            @if($ai_enabled)
+                <div class="col-12 col-xl-4">
+                    <div class="card shadow-sm border-0 h-100">
                         <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between gap-2">
                             <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
                                 <i data-lucide="sparkles" class="text-primary" style="width: 20px;"></i>
@@ -184,9 +184,11 @@
                             </div>
                         </div>
                     </div>
-                @endif
+                </div>
+            @endif
 
-                <div class="card shadow-sm border-0 mb-4">
+            <div class="col-12 {{ $ai_enabled ? 'col-xl-4' : 'col-lg-6' }}">
+                <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
                             <i data-lucide="zap" style="width: 20px; color: var(--cmu-green);"></i>
@@ -211,8 +213,10 @@
                         @endforelse
                     </div>
                 </div>
+            </div>
 
-                <div class="card shadow-sm border-0">
+            <div class="col-12 {{ $ai_enabled ? 'col-xl-4' : 'col-lg-6' }}">
+                <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
                             <i data-lucide="bar-chart-3" class="text-primary" style="width: 20px;"></i>
@@ -252,7 +256,7 @@
                 const pageLabel = document.getElementById('forecast-page-label');
                 const rangeLabel = document.getElementById('forecast-page-range');
                 const pagination = document.getElementById('forecast-pagination');
-                const pageSize = window.matchMedia('(max-width: 576px)').matches ? 4 : 8;
+                const pageSize = 4;
 
                 if (rows.length <= pageSize || !previousButton || !nextButton || !pageLabel || !rangeLabel) {
                     pagination?.classList.add('d-none');

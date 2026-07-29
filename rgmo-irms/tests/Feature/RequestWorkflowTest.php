@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\InventoryItem;
+use App\Models\Project;
 use App\Models\RequestItem;
 use App\Models\ResourceRequest;
 use App\Models\User;
@@ -48,6 +49,38 @@ class RequestWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_request_edit_is_recorded_in_the_request_audit_timeline(): void
+    {
+        $staff = $this->activeUser(User::ROLE_STAFF);
+        $request = $this->resourceRequestWithItem(requester: $staff);
+
+        $this->actingAs($staff)
+            ->put(route('requests.update', $request), [
+                'purpose' => 'Updated field deployment',
+                'project_id' => $request->project_id,
+                'remarks' => 'Quantity requirements were reviewed.',
+                'needed_date' => now()->addWeek()->toDateString(),
+            ])
+            ->assertRedirect(route('requests.show', $request));
+
+        $log = AuditLog::query()
+            ->where('action', 'update')
+            ->where('module', 'resource_request')
+            ->where('model_type', ResourceRequest::class)
+            ->where('model_id', $request->id)
+            ->firstOrFail();
+
+        $this->assertSame($staff->id, $log->user_id);
+        $this->assertSame('Field deployment', $log->old_values['purpose']);
+        $this->assertSame('Updated field deployment', $log->new_values['purpose']);
+
+        $this->actingAs($staff)
+            ->get(route('requests.show', $request))
+            ->assertOk()
+            ->assertSee('Update')
+            ->assertSee('by '.$staff->name);
+    }
+
     public function test_approved_request_can_be_fulfilled_and_deducts_inventory(): void
     {
         $admin = $this->activeUser(User::ROLE_ADMIN);
@@ -71,6 +104,12 @@ class RequestWorkflowTest extends TestCase
             'transaction_type' => 'stock_out',
             'quantity' => 4,
             'destination' => 'resource_request_'.$request->id,
+        ]);
+        $this->assertDatabaseHas('resource_usages', [
+            'inventory_item_id' => $item->id,
+            'user_id' => $request->user_id,
+            'project_id' => $request->project_id,
+            'quantity' => 4,
         ]);
         $this->assertTrue(AuditLog::where('action', 'fulfill')
             ->where('module', 'resource_request')
@@ -101,6 +140,13 @@ class RequestWorkflowTest extends TestCase
         ]);
         $request = ResourceRequest::create([
             'user_id' => $requester->id,
+            'project_id' => Project::create([
+                'name' => fake()->unique()->words(2, true),
+                'code' => fake()->unique()->bothify('REQ-PRJ-####'),
+                'status' => Project::STATUS_ACTIVE,
+                'start_date' => today()->subDay(),
+                'end_date' => today()->addMonth(),
+            ])->id,
             'status' => ResourceRequest::STATUS_PENDING,
             'purpose' => 'Field deployment',
         ]);

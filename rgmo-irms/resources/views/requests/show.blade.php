@@ -39,6 +39,16 @@
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-4 mb-4">
+                            <div class="col-12">
+                                <p class="text-uppercase text-muted small mb-1">Project</p>
+                                @if($request->project)
+                                    <a href="{{ route('projects.show', $request->project) }}" class="fw-semibold text-decoration-none">
+                                        {{ $request->project->name }} ({{ $request->project->code }})
+                                    </a>
+                                @else
+                                    <p class="mb-0 text-muted">Legacy request — no project assigned</p>
+                                @endif
+                            </div>
                             <div class="col-sm-6">
                                 <p class="text-uppercase text-muted small mb-1">Submission Date</p>
                                 <p class="mb-0">{{ $request->created_at?->format('M d, Y H:i') }}</p>

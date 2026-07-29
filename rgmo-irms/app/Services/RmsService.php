@@ -268,7 +268,7 @@ class RmsService
     /**
      * Get user requests.
      */
-    public function getUserRequests(int $userId) { return ResourceRequest::with('items')->where('user_id', $userId)->latest()->get(); }
+    public function getUserRequests(int $userId) { return ResourceRequest::with('items', 'project')->where('user_id', $userId)->latest()->get(); }
     /**
      * Get request by id.
      */

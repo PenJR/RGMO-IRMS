@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Models\LoginHistory;
 use App\Models\Notification;
+use App\Models\Project;
 use App\Models\RequestItem;
 use App\Models\ResourceRequest;
 use App\Models\User;
@@ -25,8 +26,15 @@ class NotificationFeatureTest extends TestCase
         $admin = $this->activeUser(User::ROLE_ADMIN);
         $head = $this->activeUser(User::ROLE_RGMO_HEAD);
         $item = $this->inventoryItem('Hybrid Rice Seeds');
+        $project = Project::create([
+            'name' => 'Rice Demonstration',
+            'code' => 'PRJ-RICE-DEMO',
+            'status' => Project::STATUS_ACTIVE,
+            'start_date' => today(),
+        ]);
 
         $response = $this->actingAs($staff)->post(route('requests.store'), [
+            'project_id' => $project->id,
             'purpose' => 'Field demo',
             'items' => [
                 ['inventory_item_id' => $item->id, 'quantity' => 2],

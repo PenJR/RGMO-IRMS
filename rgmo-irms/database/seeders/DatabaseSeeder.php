@@ -367,6 +367,7 @@ class DatabaseSeeder extends Seeder
 
                 $request = ResourceRequest::create([
                     'user_id' => $requestUser->id,
+                    'project_id' => $projects->random()->id,
                     'ris_no' => 'RIS-' . now()->format('Y') . '-' . str_pad((string) $i, 4, '0', STR_PAD_LEFT),
                     'responsible_center' => $requestUser->department ?? 'RGMO',
                     'status' => $status,
