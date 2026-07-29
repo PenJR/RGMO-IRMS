@@ -55,7 +55,7 @@
             <div class="card-body p-0">
                 @if(!empty($report['requests']) && count($report['requests']) > 0)
                     <div class="table-responsive">
-                        <table class="table table-modern align-middle">
+                        <table class="table table-modern align-middle" data-enhanced-table data-page-size="10" data-table-label="requests" data-search-placeholder="Search request report…">
                             <thead>
                                 <tr>
                                     <th>Request ID</th>

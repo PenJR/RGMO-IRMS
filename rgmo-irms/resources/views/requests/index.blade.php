@@ -19,6 +19,10 @@
             <div class="card-body p-4">
                 <form method="GET" action="{{ route('requests.index') }}" class="row g-3">
                     <div class="col-md-3">
+                        <label class="form-label">Search</label>
+                        <input type="search" name="search" value="{{ request('search') }}" class="form-control" placeholder="Requester, project, RIS, purpose">
+                    </div>
+                    <div class="col-md-2">
                         <label class="form-label">Status</label>
                         <select name="status" class="form-select">
                             <option value="">All</option>
@@ -29,11 +33,11 @@
 	                            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">From</label>
                         <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control" />
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">To</label>
                         <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control" />
                     </div>
@@ -49,14 +53,14 @@
             <div class="card-body p-0">
                 @if($requests->count() > 0)
                     <div class="table-responsive">
-                        <table class="table table-modern mobile-card-table align-middle">
+                        <table class="table table-modern mobile-card-table align-middle" data-sticky-table>
                             <thead>
                                 <tr>
-                                    <th>Request ID</th>
+                                    <x-sortable-th column="id">Request ID</x-sortable-th>
                                     <th>Requester</th>
                                     <th>Project</th>
-                                    <th>Status</th>
-                                    <th>Needed Date</th>
+                                    <x-sortable-th column="status">Status</x-sortable-th>
+                                    <x-sortable-th column="needed_date">Needed Date</x-sortable-th>
                                     <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
@@ -96,9 +100,7 @@
                         </table>
                     </div>
 
-                    <div class="mt-4">
-                        {{ $requests->appends(request()->query())->links() }}
-                    </div>
+                    <x-table-pagination :paginator="$requests" label="requests" />
                 @else
                     <div class="text-center py-5">
                         <h5 class="mb-2">No requests found</h5>

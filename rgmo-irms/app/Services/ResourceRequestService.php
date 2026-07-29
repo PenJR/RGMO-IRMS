@@ -28,6 +28,18 @@ class ResourceRequestService
     {
         $query = ResourceRequest::query()->with('user', 'project', 'approver', 'items.item');
 
+        if (! empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($inner) use ($search) {
+                $inner->where('purpose', 'like', "%{$search}%")
+                    ->orWhere('ris_no', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($userQuery) => $userQuery->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('project', fn ($projectQuery) => $projectQuery
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%"));
+            });
+        }
+
         // Filter by status
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -43,7 +55,13 @@ class ResourceRequestService
             $query->dateRange($filters['start_date'], $filters['end_date']);
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $sortableColumns = ['id', 'status', 'needed_date', 'created_at'];
+        $sort = in_array($filters['sort'] ?? null, $sortableColumns, true) ? $filters['sort'] : 'created_at';
+        $direction = in_array($filters['direction'] ?? null, ['asc', 'desc'], true)
+            ? $filters['direction']
+            : 'desc';
+
+        return $query->orderBy($sort, $direction)->orderBy('id', 'desc')->paginate($perPage);
     }
 
     /**

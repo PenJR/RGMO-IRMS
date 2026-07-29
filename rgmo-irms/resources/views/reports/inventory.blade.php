@@ -41,7 +41,7 @@
             <div class="card-body p-0">
                 @if(!empty($report['items']) && count($report['items']) > 0)
                     <div class="table-responsive">
-                        <table class="table table-modern align-middle">
+                        <table class="table table-modern align-middle" data-enhanced-table data-page-size="10" data-table-label="inventory items" data-search-placeholder="Search inventory report…">
                             <thead>
                                 <tr>
                                     <th>Item</th>

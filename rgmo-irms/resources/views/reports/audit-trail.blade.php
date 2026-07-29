@@ -36,7 +36,7 @@
             <div class="card-body p-0">
                 @if(!empty($report) && count($report) > 0)
                     <div class="table-responsive">
-                        <table class="table table-modern align-middle">
+                        <table class="table table-modern align-middle" data-enhanced-table data-page-size="10" data-table-label="audit entries" data-search-placeholder="Search audit entries…">
                             <thead>
                                 <tr>
                                     <th>Timestamp</th>

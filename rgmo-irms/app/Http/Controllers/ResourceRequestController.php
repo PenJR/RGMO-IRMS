@@ -31,8 +31,8 @@ class ResourceRequestController extends Controller
     {
         $this->authorize('viewAny', ResourceRequest::class);
 
-        $filters = $request->only(['status', 'user_id', 'start_date', 'end_date']);
-        $requests = $this->requestService->getAllRequests(15, $filters);
+        $filters = $request->only(['search', 'status', 'user_id', 'start_date', 'end_date', 'sort', 'direction']);
+        $requests = $this->requestService->getAllRequests(15, $filters)->withQueryString();
 
         return view('requests.index', [
             'requests' => $requests,

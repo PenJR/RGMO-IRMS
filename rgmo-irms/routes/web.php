@@ -35,6 +35,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/profile/sidebar-order', [ProfileController::class, 'updateSidebarOrder'])
         ->middleware('throttle:30,1')
         ->name('profile.sidebar-order.update');
+    Route::delete('/profile/sidebar-order', [ProfileController::class, 'resetSidebarOrder'])
+        ->middleware('throttle:10,1')
+        ->name('profile.sidebar-order.reset');
 
     // Inventory demand forecasting
     Route::middleware(['permission:view-forecasts'])->group(function () {

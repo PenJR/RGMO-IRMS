@@ -117,6 +117,28 @@ class RequestWorkflowTest extends TestCase
             ->exists());
     }
 
+    public function test_request_list_can_search_projects_and_sort_results(): void
+    {
+        $admin = $this->activeUser(User::ROLE_ADMIN);
+        $matching = $this->resourceRequestWithItem();
+        $other = $this->resourceRequestWithItem();
+        $matching->project->update(['name' => 'Distinct Rice Initiative', 'code' => 'PRJ-DISTINCT']);
+        $matching->update(['needed_date' => today()->addDays(10)]);
+        $other->update(['needed_date' => today()->addDay()]);
+
+        $this->actingAs($admin)
+            ->get(route('requests.index', ['search' => 'Distinct Rice']))
+            ->assertOk()
+            ->assertSee('Distinct Rice Initiative')
+            ->assertDontSee($other->project->name)
+            ->assertSee('Showing 1–1 of 1 requests');
+
+        $this->actingAs($admin)
+            ->get(route('requests.index', ['sort' => 'needed_date', 'direction' => 'desc']))
+            ->assertOk()
+            ->assertSeeInOrder([$matching->project->name, $other->project->name]);
+    }
+
     private function activeUser(string $role): User
     {
         return User::factory()->create([

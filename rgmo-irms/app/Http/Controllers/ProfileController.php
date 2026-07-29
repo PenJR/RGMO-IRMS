@@ -53,4 +53,14 @@ class ProfileController extends Controller
 
         return response()->json(['message' => 'Sidebar order saved.']);
     }
+
+    /**
+     * Restore the authenticated user's sidebar to the default module order.
+     */
+    public function resetSidebarOrder(Request $request): RedirectResponse
+    {
+        $request->user()->update(['sidebar_order' => null]);
+
+        return Redirect::route('profile.edit')->with('status', 'sidebar-order-reset');
+    }
 }

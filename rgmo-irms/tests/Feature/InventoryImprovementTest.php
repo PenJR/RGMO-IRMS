@@ -93,6 +93,29 @@ class InventoryImprovementTest extends TestCase
             ->assertDontSee($expiringItem->name);
     }
 
+    public function test_inventory_columns_can_be_sorted_server_side(): void
+    {
+        $admin = $this->activeAdmin();
+        $category = Category::create(['name' => 'Sorted Supplies']);
+
+        foreach ([['Low Quantity Item', 2], ['High Quantity Item', 40]] as [$name, $stock]) {
+            InventoryItem::create([
+                'category_id' => $category->id,
+                'name' => $name,
+                'sku' => fake()->unique()->bothify('SORT-####'),
+                'stock' => $stock,
+                'unit' => 'piece',
+                'min_stock' => 1,
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('inventory.index', ['sort' => 'stock', 'direction' => 'desc']))
+            ->assertOk()
+            ->assertSeeInOrder(['High Quantity Item', 'Low Quantity Item'])
+            ->assertSee('Showing 1–2 of 2 items');
+    }
+
     private function activeAdmin(): User
     {
         return User::factory()->create([

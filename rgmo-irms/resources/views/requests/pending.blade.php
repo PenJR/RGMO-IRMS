@@ -13,7 +13,7 @@
             <div class="card-body p-0">
                 @if($requests->count() > 0)
                     <div class="table-responsive">
-                        <table class="table table-modern mobile-card-table align-middle">
+                        <table class="table table-modern mobile-card-table align-middle" data-enhanced-table data-page-size="10" data-table-label="pending requests" data-search-placeholder="Search pending requests…">
                             <thead>
                                 <tr>
                                     <th>Request ID</th>
@@ -21,7 +21,7 @@
 	                                    <th>Purpose</th>
 	                                    <th>Needed Date</th>
 	                                    <th>Readiness</th>
-	                                    <th class="text-end">Actions</th>
+	                                    <th class="text-end" data-sortable="false">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>

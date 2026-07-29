@@ -79,7 +79,7 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table mobile-card-table align-middle mb-0">
+                            <table class="table mobile-card-table align-middle mb-0" data-enhanced-table data-page-size="4" data-table-label="forecast items" data-search-placeholder="Search forecast items…">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Item</th>
@@ -88,7 +88,7 @@
                                         <th class="text-end">{{ $forecast_days }}-Day Demand</th>
                                         <th class="text-end">Runout</th>
                                         <th class="text-end">Reorder</th>
-                                        <th>Status</th>
+                                        <th data-sortable="false">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -137,32 +137,6 @@
                                 </tbody>
                             </table>
                         </div>
-                        @if($forecasts->count() > 4)
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 px-3 py-3 border-top" id="forecast-pagination">
-                                <span class="small text-muted" id="forecast-page-range" aria-live="polite"></span>
-                                <div class="d-flex align-items-center gap-2">
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center"
-                                        id="forecast-page-previous"
-                                        aria-label="Show previous forecast items"
-                                        title="Previous page"
-                                    >
-                                        <i data-lucide="chevron-left" style="width: 16px; height: 16px;" aria-hidden="true"></i>
-                                    </button>
-                                    <span class="small fw-semibold text-nowrap" id="forecast-page-label" aria-live="polite"></span>
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center"
-                                        id="forecast-page-next"
-                                        aria-label="Show next forecast items"
-                                        title="Next page"
-                                    >
-                                        <i data-lucide="chevron-right" style="width: 16px; height: 16px;" aria-hidden="true"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -246,47 +220,6 @@
             </div>
         </div>
     </div>
-
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const rows = Array.from(document.querySelectorAll('[data-forecast-row]'));
-                const previousButton = document.getElementById('forecast-page-previous');
-                const nextButton = document.getElementById('forecast-page-next');
-                const pageLabel = document.getElementById('forecast-page-label');
-                const rangeLabel = document.getElementById('forecast-page-range');
-                const pagination = document.getElementById('forecast-pagination');
-                const pageSize = 4;
-
-                if (rows.length <= pageSize || !previousButton || !nextButton || !pageLabel || !rangeLabel) {
-                    pagination?.classList.add('d-none');
-                    return;
-                }
-
-                const pageCount = Math.ceil(rows.length / pageSize);
-                let currentPage = 0;
-
-                const showPage = (page) => {
-                    currentPage = Math.min(Math.max(page, 0), pageCount - 1);
-                    const firstIndex = currentPage * pageSize;
-                    const lastIndex = Math.min(firstIndex + pageSize, rows.length);
-
-                    rows.forEach((row, index) => {
-                        row.classList.toggle('d-none', index < firstIndex || index >= lastIndex);
-                    });
-
-                    previousButton.disabled = currentPage === 0;
-                    nextButton.disabled = currentPage === pageCount - 1;
-                    pageLabel.textContent = `Page ${currentPage + 1} of ${pageCount}`;
-                    rangeLabel.textContent = `Showing ${firstIndex + 1}–${lastIndex} of ${rows.length} items`;
-                };
-
-                previousButton.addEventListener('click', () => showPage(currentPage - 1));
-                nextButton.addEventListener('click', () => showPage(currentPage + 1));
-                showPage(0);
-            });
-        </script>
-    @endpush
 
     @if($ai_enabled)
     @push('scripts')

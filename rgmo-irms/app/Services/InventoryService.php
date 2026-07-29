@@ -55,7 +55,11 @@ class InventoryService
             }
         }
 
-        return $query->orderBy('name')->paginate($perPage);
+        $sortableColumns = ['name', 'sku', 'stock', 'price', 'expiry_date', 'created_at'];
+        $sort = in_array($filters['sort'] ?? null, $sortableColumns, true) ? $filters['sort'] : 'name';
+        $direction = ($filters['direction'] ?? null) === 'desc' ? 'desc' : 'asc';
+
+        return $query->orderBy($sort, $direction)->orderBy('id')->paginate($perPage);
     }
 
     /**

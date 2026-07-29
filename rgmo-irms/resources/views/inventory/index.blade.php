@@ -83,17 +83,17 @@
                 <div class="card-body p-0">
                     @if($items->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-modern mobile-card-table align-middle">
+                            <table class="table table-modern mobile-card-table align-middle" data-sticky-table>
                                 <thead>
                                     <tr>
-                                        <th>Item</th>
-                                        <th>SKU</th>
+                                        <x-sortable-th column="name">Item</x-sortable-th>
+                                        <x-sortable-th column="sku">SKU</x-sortable-th>
                                         <th>Category</th>
-                                        <th>Stock</th>
+                                        <x-sortable-th column="stock">Stock</x-sortable-th>
 	                                        <th>Low / Reorder Point</th>
-                                        <th>Price</th>
+                                        <x-sortable-th column="price">Price</x-sortable-th>
                                         <th>Status</th>
-                                        <th>Expiry</th>
+                                        <x-sortable-th column="expiry_date">Expiry</x-sortable-th>
                                         <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
@@ -177,48 +177,7 @@
                             </table>
                         </div>
 
-                        @if($items->hasPages())
-                            <nav class="d-flex align-items-center justify-content-between gap-3 mt-4" aria-label="Inventory pagination">
-                                <span class="small text-muted">
-                                    Showing {{ $items->firstItem() }}–{{ $items->lastItem() }} of {{ $items->total() }} items
-                                </span>
-                                <div class="d-flex align-items-center gap-2">
-                                    @if($items->onFirstPage())
-                                        <span class="btn btn-sm btn-outline-secondary disabled d-inline-flex align-items-center justify-content-center" aria-disabled="true">
-                                            <i data-lucide="chevron-left" style="width: 16px; height: 16px;" aria-hidden="true"></i>
-                                        </span>
-                                    @else
-                                        <a
-                                            href="{{ $items->previousPageUrl() }}"
-                                            class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center"
-                                            aria-label="Show previous inventory items"
-                                            title="Previous page"
-                                        >
-                                            <i data-lucide="chevron-left" style="width: 16px; height: 16px;" aria-hidden="true"></i>
-                                        </a>
-                                    @endif
-
-                                    <span class="small fw-semibold text-nowrap">
-                                        Page {{ $items->currentPage() }} of {{ $items->lastPage() }}
-                                    </span>
-
-                                    @if($items->hasMorePages())
-                                        <a
-                                            href="{{ $items->nextPageUrl() }}"
-                                            class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center"
-                                            aria-label="Show next inventory items"
-                                            title="Next page"
-                                        >
-                                            <i data-lucide="chevron-right" style="width: 16px; height: 16px;" aria-hidden="true"></i>
-                                        </a>
-                                    @else
-                                        <span class="btn btn-sm btn-outline-secondary disabled d-inline-flex align-items-center justify-content-center" aria-disabled="true">
-                                            <i data-lucide="chevron-right" style="width: 16px; height: 16px;" aria-hidden="true"></i>
-                                        </span>
-                                    @endif
-                                </div>
-                            </nav>
-                        @endif
+                        <x-table-pagination :paginator="$items" label="items" />
                     @else
                         <div class="text-center py-5">
                             <i data-lucide="package-search" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>

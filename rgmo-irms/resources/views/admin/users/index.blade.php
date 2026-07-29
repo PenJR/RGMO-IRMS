@@ -48,7 +48,7 @@
             <div class="card-body p-0">
                 @if($users->count() > 0)
                     <div class="table-responsive">
-                        <table class="table table-modern align-middle">
+                        <table class="table table-modern align-middle" data-sticky-table>
                             <thead>
                                 <tr>
                                     <th>Name</th>
@@ -89,9 +89,7 @@
                         </table>
                     </div>
 
-                    <div class="mt-4">
-                        {{ $users->appends(request()->query())->links() }}
-                    </div>
+                    <x-table-pagination :paginator="$users" label="users" />
                 @else
                     <div class="text-center py-5">
                         <h5 class="mb-2">No users found</h5>

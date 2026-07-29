@@ -30,8 +30,10 @@ class AdminUserController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where('name', 'like', "%$search%")
-                ->orWhere('email', 'like', "%$search%");
+            $query->where(function ($inner) use ($search) {
+                $inner->where('name', 'like', "%$search%")
+                    ->orWhere('email', 'like', "%$search%");
+            });
         }
 
         if ($request->filled('role')) {
@@ -42,7 +44,7 @@ class AdminUserController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $users = $query->paginate(15);
+        $users = $query->paginate(15)->withQueryString();
 
         return view('admin.users.index', ['users' => $users]);
     }

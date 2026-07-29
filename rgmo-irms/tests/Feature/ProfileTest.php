@@ -97,6 +97,20 @@ class ProfileTest extends TestCase
         $this->assertNull($user->refresh()->sidebar_order);
     }
 
+    public function test_user_can_restore_the_default_sidebar_order(): void
+    {
+        $user = User::factory()->create([
+            'sidebar_order' => ['requests', 'dashboard', 'inventory'],
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('profile.sidebar-order.reset'))
+            ->assertRedirect(route('profile.edit'))
+            ->assertSessionHas('status', 'sidebar-order-reset');
+
+        $this->assertNull($user->refresh()->sidebar_order);
+    }
+
     /**
      * Verify that user can delete their account.
      */

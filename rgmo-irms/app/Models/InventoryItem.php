@@ -144,9 +144,11 @@ class InventoryItem extends Model
      */
     public function scopeSearch(Builder $query, string $search): Builder
     {
-        return $query->where('name', 'like', "%$search%")
-            ->orWhere('sku', 'like', "%$search%")
-            ->orWhere('description', 'like', "%$search%");
+        return $query->where(function (Builder $inner) use ($search) {
+            $inner->where('name', 'like', "%$search%")
+                ->orWhere('sku', 'like', "%$search%")
+                ->orWhere('description', 'like', "%$search%");
+        });
     }
 
     // Methods
