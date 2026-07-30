@@ -45,11 +45,21 @@ class DashboardController extends Controller
     public function staff()
     {
         $user = auth()->user();
-        $myRequests = $user->requests()->limit(5)->get();
+        $myRequests = $user->requests()->latest()->limit(5)->get();
         $stats = [
             'total_requests' => $user->requests()->count(),
             'pending_requests' => $user->requests()->where('status', ResourceRequest::STATUS_PENDING)->count(),
             'approved_requests' => $user->requests()->where('status', ResourceRequest::STATUS_APPROVED)->count(),
+            'submitted_this_week' => $user->requests()->where('created_at', '>=', now()->startOfWeek())->count(),
+            'pending_overdue' => $user->requests()
+                ->where('status', ResourceRequest::STATUS_PENDING)
+                ->whereNotNull('needed_date')
+                ->whereDate('needed_date', '<', today())
+                ->count(),
+            'approved_this_week' => $user->requests()
+                ->where('status', ResourceRequest::STATUS_APPROVED)
+                ->where('approved_at', '>=', now()->startOfWeek())
+                ->count(),
         ];
 
         return view('dashboard.staff', [

@@ -67,6 +67,9 @@ class RbacConfigurationTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('href="' . route('inventory.index') . '"', false)
+            ->assertSee('class="rgmo-progress"', false)
+            ->assertSee('href="#main-content"', false)
+            ->assertDontSee('rgmo-loader__mark', false)
             ->assertDontSee('href="' . route('reports.inventory') . '"', false)
             ->assertDontSee('href="' . route('ai-forecasting.index') . '"', false);
 

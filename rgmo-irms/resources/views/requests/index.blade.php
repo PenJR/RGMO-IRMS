@@ -2,12 +2,16 @@
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center w-100">
             <div>
-                <h2 class="fw-bold mb-1">Resource Requests</h2>
-                <p class="text-muted mb-0">Review all submitted resource requests across the system.</p>
+                <h2 class="fw-bold mb-1">{{ $canReviewAllRequests ? 'Resource Requests' : 'My Requests' }}</h2>
+                <p class="text-muted mb-0">{{ $canReviewAllRequests ? 'Review all submitted resource requests across the system.' : 'Track the status and needed dates of your submitted requests.' }}</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('requests.pending') }}" class="btn btn-outline-secondary">Pending List</a>
-                <a href="{{ route('requests.create') }}" class="btn btn-cmu">New Request</a>
+                @can('review', App\Models\ResourceRequest::class)
+                    <a href="{{ route('requests.pending') }}" class="btn btn-outline-secondary">Pending List</a>
+                @endcan
+                @can('create', App\Models\ResourceRequest::class)
+                    <a href="{{ route('requests.create') }}" class="btn btn-cmu">New Request</a>
+                @endcan
             </div>
         </div>
     </x-slot>

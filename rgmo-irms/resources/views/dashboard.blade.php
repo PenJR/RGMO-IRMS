@@ -31,71 +31,80 @@
 
         <div class="row g-4">
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--users">
+                <a href="{{ route('inventory.index') }}" class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--inventory dashboard-kpi--interactive text-decoration-none" aria-label="View all {{ $stats['total_items'] }} inventory items">
                     <div class="card-body">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon" aria-hidden="true">
-                                <i data-lucide="users"></i>
-                            </div>
-                            <div>
-                                <p class="dashboard-kpi__label">Total Users</p>
-                                <h3 class="mb-0 fw-bold">{{ $stats['total_users'] }}</h3>
-                                <span class="dashboard-kpi__context">Registered accounts</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--inventory">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="dashboard-kpi__body">
                             <div class="stat-icon stat-icon--inventory" aria-hidden="true">
                                 <i data-lucide="package"></i>
                             </div>
-                            <div>
+                            <div class="flex-grow-1">
                                 <p class="dashboard-kpi__label">Inventory Items</p>
                                 <h3 class="mb-0 fw-bold">{{ $stats['total_items'] }}</h3>
-                                <span class="dashboard-kpi__context">Active resources</span>
+                                <span class="dashboard-kpi__context">{{ $stats['charts']['resource_readiness']['ready_items'] }} ready for use</span>
                             </div>
+                            <i data-lucide="arrow-up-right" class="dashboard-kpi__affordance" aria-hidden="true"></i>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--danger">
+                <a href="{{ route('inventory.index') }}" class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--ready dashboard-kpi--interactive text-decoration-none" aria-label="View inventory with {{ $stats['charts']['resource_readiness']['percent'] }} percent resource readiness">
                     <div class="card-body">
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="dashboard-kpi__body">
+                            <div class="stat-icon" aria-hidden="true">
+                                <i data-lucide="gauge"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="dashboard-kpi__label">Resource Readiness</p>
+                                <h3 class="mb-0 fw-bold">{{ $stats['total_items'] > 0 ? $stats['charts']['resource_readiness']['percent'].'%' : '—' }}</h3>
+                                <span class="dashboard-kpi__context">{{ $stats['charts']['resource_readiness']['ready_items'] }} of {{ $stats['total_items'] }} items ready</span>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="dashboard-kpi__affordance" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <a href="{{ route('inventory.low-stock') }}" class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--danger dashboard-kpi--interactive text-decoration-none" aria-label="Review {{ $stats['low_stock_count'] }} low-stock items">
+                    <div class="card-body">
+                        <div class="dashboard-kpi__body">
                             <div class="stat-icon stat-icon--danger" aria-hidden="true">
                                 <i data-lucide="alert-triangle"></i>
                             </div>
-                            <div>
+                            <div class="flex-grow-1">
                                 <p class="dashboard-kpi__label">Low Stock Alerts</p>
                                 <h3 class="mb-0 fw-bold text-danger">{{ $stats['low_stock_count'] }}</h3>
-                                <span class="dashboard-kpi__context">Needs replenishment</span>
+                                <span class="dashboard-kpi__context">{{ $stats['total_items'] > 0 ? round(($stats['low_stock_count'] / $stats['total_items']) * 100) : 0 }}% of inventory needs attention</span>
                             </div>
+                            <i data-lucide="arrow-up-right" class="dashboard-kpi__affordance" aria-hidden="true"></i>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--warning">
+                @can('review', App\Models\ResourceRequest::class)
+                    @php $pendingRequestRoute = route('requests.pending'); @endphp
+                @else
+                    @php $pendingRequestRoute = route('requests.index'); @endphp
+                @endcan
+                <a href="{{ $pendingRequestRoute }}" class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--warning dashboard-kpi--interactive text-decoration-none" aria-label="Review {{ $stats['pending_requests'] }} pending requests">
                     <div class="card-body">
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="dashboard-kpi__body">
                             <div class="stat-icon stat-icon--warning" aria-hidden="true">
                                 <i data-lucide="clipboard-check"></i>
                             </div>
-                            <div>
+                            <div class="flex-grow-1">
                                 <p class="dashboard-kpi__label">Pending Requests</p>
                                 <h3 class="mb-0 fw-bold text-warning">{{ $stats['pending_requests'] }}</h3>
-                                <span class="dashboard-kpi__context">Awaiting review</span>
+                                <span class="dashboard-kpi__context">{{ $stats['pending_overdue_count'] }} overdue · {{ $stats['pending_submitted_this_week'] }} new this week</span>
                             </div>
+                            <i data-lucide="arrow-up-right" class="dashboard-kpi__affordance" aria-hidden="true"></i>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -245,7 +254,7 @@
                             </h5>
                             <p class="text-muted small mb-0">Items currently above minimum stock</p>
                         </div>
-                        <a href="{{ route('inventory.low-stock') }}" class="btn btn-link text-decoration-none small p-0" style="font-size: 11px; color: var(--cmu-green); font-weight: 600;">VIEW ALL</a>
+                        <a href="{{ route('inventory.low-stock') }}" class="btn btn-link text-decoration-none dashboard-view-all p-0">View all</a>
                     </div>
                     <div class="card-body p-0">
                         <div class="resource-readiness">
@@ -307,7 +316,7 @@
                             <i data-lucide="clipboard-list" class="text-primary" style="width: 20px;"></i>
                             Recent Requests
                         </h5>
-                        <a href="{{ route('requests.index') }}" class="btn btn-link text-decoration-none small p-0" style="font-size: 11px; color: var(--cmu-green); font-weight: 600;">VIEW ALL</a>
+                        <a href="{{ route('requests.index') }}" class="btn btn-link text-decoration-none dashboard-view-all p-0">View all</a>
                     </div>
                     <div class="card-body p-0">
                         @if($recentRequests->count() > 0)
@@ -315,9 +324,9 @@
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="border-0 px-4 py-3" style="font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: 700;">User / Purpose</th>
-                                            <th class="border-0 px-4 py-3 text-center" style="font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: 700;">Status</th>
-                                            <th class="border-0 px-4 py-3 text-end" style="font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: 700;">Time</th>
+                                            <th class="border-0 px-4 py-3">User / Purpose</th>
+                                            <th class="border-0 px-4 py-3 text-center">Status</th>
+                                            <th class="border-0 px-4 py-3 text-end">Time</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -325,12 +334,12 @@
                                             <tr>
                                                 <td class="px-4 py-3">
                                                     <div class="d-flex align-items-center">
-                                                        <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 32px; height: 32px; font-size: 11px;">
+                                                        <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center me-3 fw-bold dashboard-request-avatar">
                                                             {{ strtoupper(substr($request->user->name, 0, 2)) }}
                                                         </div>
                                                         <div>
                                                             <div class="small fw-bold text-dark">{{ $request->user->name }}</div>
-                                                            <div class="text-muted" style="font-size: 10px;">{{ Str::limit($request->purpose, 30) }}</div>
+                                                            <div class="text-muted dashboard-request-meta">{{ Str::limit($request->purpose, 30) }}</div>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -343,7 +352,7 @@
                                                             default => 'background-color: #f3f4f6; color: #374151; border: 1px solid #e5e7eb;'
                                                         };
                                                     @endphp
-                                                    <span class="badge rounded-pill fw-bold" style="{{ $statusStyle }} font-size: 9px; padding: 0.4em 0.8em; text-transform: uppercase;">{{ $request->status }}</span>
+                                                    <span class="badge rounded-pill fw-bold text-uppercase" style="{{ $statusStyle }} padding: 0.4em 0.8em;">{{ $request->status }}</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-end small text-muted">
                                                     {{ $request->created_at->diffForHumans(null, true) }}
@@ -389,9 +398,9 @@
                                 <table class="table table-hover align-middle mb-0" style="min-width: 600px;">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th class="border-0 px-4 py-3" style="font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: 700;">Activity</th>
-                                            <th class="border-0 px-4 py-3" style="font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: 700;">Module</th>
-                                            <th class="border-0 px-4 py-3" style="font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: 700;">Timestamp</th>
+                                            <th class="border-0 px-4 py-3">Activity</th>
+                                            <th class="border-0 px-4 py-3">Module</th>
+                                            <th class="border-0 px-4 py-3">Timestamp</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -406,7 +415,7 @@
                                                     </div>
                                                 </td>
                                                 <td class="px-4 py-3">
-                                                    <span class="badge bg-light text-dark border fw-normal" style="font-size: 10px; padding: 0.3em 0.6em;">{{ $activity->module }}</span>
+                                                    <span class="badge bg-light text-dark border fw-normal">{{ $activity->module }}</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-muted small">
                                                     {{ $activity->created_at->format('M d, Y • h:i A') }}

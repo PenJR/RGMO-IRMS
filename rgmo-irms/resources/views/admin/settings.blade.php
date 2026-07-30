@@ -6,7 +6,7 @@
                     <i data-lucide="settings-2"></i>
                 </div>
                 <div>
-                    <div class="text-uppercase text-success fw-bold mb-1" style="font-size: 0.64rem; letter-spacing: 0.12em;">System Administration</div>
+                    <div class="module-eyebrow mb-1">System Administration</div>
                     <h2 class="h5 fw-bold mb-1">System Settings</h2>
                     <p class="text-muted small mb-0">Configure appearance, inventory thresholds, and application preferences.</p>
                 </div>

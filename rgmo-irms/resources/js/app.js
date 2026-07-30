@@ -10,12 +10,12 @@ if (loader) {
 
     const hideLoader = () => {
         loader.classList.add('is-hidden');
-        loader.setAttribute('aria-busy', 'false');
+        loader.setAttribute('aria-hidden', 'true');
     };
 
     const showLoader = () => {
         loader.classList.remove('is-hidden');
-        loader.setAttribute('aria-busy', 'true');
+        loader.setAttribute('aria-hidden', 'false');
     };
 
     const isDownloadUrl = (url) => {

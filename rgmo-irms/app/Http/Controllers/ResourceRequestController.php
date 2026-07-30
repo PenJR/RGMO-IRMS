@@ -32,11 +32,19 @@ class ResourceRequestController extends Controller
         $this->authorize('viewAny', ResourceRequest::class);
 
         $filters = $request->only(['search', 'status', 'user_id', 'start_date', 'end_date', 'sort', 'direction']);
+        $canReviewAllRequests = $request->user()->hasPermission('review-request')
+            || $request->user()->hasPermission('approve-request');
+
+        if (! $canReviewAllRequests) {
+            $filters['user_id'] = $request->user()->id;
+        }
+
         $requests = $this->requestService->getAllRequests(15, $filters)->withQueryString();
 
         return view('requests.index', [
             'requests' => $requests,
             'filters' => $filters,
+            'canReviewAllRequests' => $canReviewAllRequests,
         ]);
     }
 

@@ -12,7 +12,9 @@ class ResourceRequestPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('review-request') || $user->hasPermission('approve-request');
+        return $user->hasPermission('monitor-status')
+            || $user->hasPermission('review-request')
+            || $user->hasPermission('approve-request');
     }
 
     /**

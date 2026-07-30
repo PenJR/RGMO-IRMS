@@ -35,19 +35,14 @@
 
     </head>
     <body class="font-sans antialiased">
-        <div class="rgmo-loader" data-rgmo-loader role="status" aria-live="polite" aria-busy="true">
-            <div class="rgmo-loader__mark" aria-hidden="true">
-                <img src="{{ asset('images/logo.png') }}" alt="" class="rgmo-loader__logo">
-                <span class="rgmo-loader__track"></span>
-            </div>
-            <span class="visually-hidden">Loading</span>
-        </div>
+        <a href="#main-content" class="skip-link">Skip to main content</a>
+        <div class="rgmo-progress" data-rgmo-loader role="progressbar" aria-label="Page loading" aria-hidden="false"></div>
 
         <div class="layout-wrapper d-flex flex-column flex-lg-row overflow-hidden min-vh-100">
             @include('layouts.navigation')
             <div class="mobile-sidebar-backdrop" id="mobileSidebarBackdrop" aria-hidden="true"></div>
 
-            <main class="d-flex flex-column flex-grow-1" style="min-width: 0;">
+            <main id="main-content" tabindex="-1" class="d-flex flex-column flex-grow-1" style="min-width: 0;">
                 <header class="top-nav d-flex justify-content-between align-items-center gap-3">
                     <button
                         type="button"
@@ -76,7 +71,7 @@
                                     <i data-lucide="check-circle" class="me-2" style="width: 18px"></i>
                                     <span>{{ session('success') }}</span>
                                 </div>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss notification"></button>
                             </div>
                         </div>
                     @endif

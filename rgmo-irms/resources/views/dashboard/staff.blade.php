@@ -1,146 +1,172 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Staff Dashboard') }}
-        </h2>
+        <div>
+            <h2 class="h5 fw-bold mb-0">My Dashboard</h2>
+            <p class="text-muted mb-0 small">Track your resource requests and take the next action.</p>
+        </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="container-fluid py-4 dashboard-page staff-dashboard">
+        <section class="dashboard-welcome" aria-labelledby="staffDashboardWelcomeTitle">
+            <div class="dashboard-welcome__content">
+                <p class="dashboard-welcome__eyebrow mb-2">{{ now()->format('l, F j') }}</p>
+                <h1 id="staffDashboardWelcomeTitle">Welcome back, {{ Str::before(Auth::user()->name, ' ') }}.</h1>
+                <p class="mb-0">
+                    You have <strong>{{ $stats['pending_requests'] }} pending {{ Str::plural('request', $stats['pending_requests']) }}</strong>
+                    and <strong>{{ $stats['approved_requests'] }} approved {{ Str::plural('request', $stats['approved_requests']) }}</strong>.
+                </p>
+            </div>
+            <div class="dashboard-welcome__actions" aria-label="Quick actions">
+                <a href="{{ route('requests.create') }}" class="btn dashboard-action-btn dashboard-action-btn--accent">
+                    <i data-lucide="file-plus-2" aria-hidden="true"></i>
+                    New request
+                </a>
+                <a href="{{ route('requests.index') }}" class="btn btn-light dashboard-action-btn">
+                    <i data-lucide="clipboard-list" aria-hidden="true"></i>
+                    View my requests
+                </a>
+            </div>
+        </section>
 
-            <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- My Total Requests -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
+        <div class="dashboard-section-heading">
+            <div>
+                <p class="module-eyebrow mb-1">Request overview</p>
+                <h2>Your activity at a glance</h2>
+            </div>
+            <span>Updated {{ now()->format('g:i A') }}</span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-md-4">
+                <a href="{{ route('requests.index') }}" class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--inventory dashboard-kpi--interactive text-decoration-none" aria-label="View all {{ $stats['total_requests'] }} of your requests">
+                    <div class="card-body">
+                        <div class="dashboard-kpi__body">
+                            <div class="stat-icon stat-icon--inventory" aria-hidden="true">
+                                <i data-lucide="files"></i>
                             </div>
-                            <div class="ml-4">
-                                <dt class="text-sm font-medium text-gray-500 truncate">My Total Requests</dt>
-                                <dd class="text-2xl font-semibold text-gray-900">{{ $stats['total_requests'] }}</dd>
+                            <div class="flex-grow-1">
+                                <p class="dashboard-kpi__label">Total Requests</p>
+                                <h3 class="mb-0 fw-bold">{{ $stats['total_requests'] }}</h3>
+                                <span class="dashboard-kpi__context">{{ $stats['submitted_this_week'] }} submitted this week</span>
                             </div>
+                            <i data-lucide="arrow-up-right" class="dashboard-kpi__affordance" aria-hidden="true"></i>
                         </div>
                     </div>
-                </div>
-
-                <!-- Pending Requests -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="h-8 w-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-4">
-                                <dt class="text-sm font-medium text-gray-500 truncate">Pending Requests</dt>
-                                <dd class="text-2xl font-semibold text-gray-900">{{ $stats['pending_requests'] }}</dd>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Approved Requests -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="h-8 w-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-4">
-                                <dt class="text-sm font-medium text-gray-500 truncate">Approved Requests</dt>
-                                <dd class="text-2xl font-semibold text-gray-900">{{ $stats['approved_requests'] }}</dd>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                </a>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <a href="{{ route('requests.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            New Request
-                        </a>
-                        <a href="{{ route('requests.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
-                            My Requests
-                        </a>
-                        <a href="{{ route('profile.edit') }}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            Profile
-                        </a>
+            <div class="col-12 col-md-4">
+                <a href="{{ route('requests.index', ['status' => 'pending']) }}" class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--warning dashboard-kpi--interactive text-decoration-none" aria-label="View your {{ $stats['pending_requests'] }} pending requests">
+                    <div class="card-body">
+                        <div class="dashboard-kpi__body">
+                            <div class="stat-icon stat-icon--warning" aria-hidden="true">
+                                <i data-lucide="clock-3"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="dashboard-kpi__label">Pending Requests</p>
+                                <h3 class="mb-0 fw-bold text-warning">{{ $stats['pending_requests'] }}</h3>
+                                <span class="dashboard-kpi__context">{{ $stats['pending_overdue'] }} past the needed date</span>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="dashboard-kpi__affordance" aria-hidden="true"></i>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
 
-            <!-- My Recent Requests -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">My Recent Requests</h3>
-                    @if($myRequests->count() > 0)
-                        <div class="space-y-3">
+            <div class="col-12 col-md-4">
+                <a href="{{ route('requests.index', ['status' => 'approved']) }}" class="card border-0 h-100 card-stat dashboard-kpi dashboard-kpi--ready dashboard-kpi--interactive text-decoration-none" aria-label="View your {{ $stats['approved_requests'] }} approved requests">
+                    <div class="card-body">
+                        <div class="dashboard-kpi__body">
+                            <div class="stat-icon" aria-hidden="true">
+                                <i data-lucide="badge-check"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="dashboard-kpi__label">Approved Requests</p>
+                                <h3 class="mb-0 fw-bold text-success">{{ $stats['approved_requests'] }}</h3>
+                                <span class="dashboard-kpi__context">{{ $stats['approved_this_week'] }} approved this week</span>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="dashboard-kpi__affordance" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="dashboard-section-heading dashboard-section-heading--spaced">
+            <div>
+                <p class="module-eyebrow mb-1">Recent activity</p>
+                <h2>My latest requests</h2>
+            </div>
+            <a href="{{ route('requests.index') }}" class="btn btn-sm btn-outline-success">View all requests</a>
+        </div>
+
+        <div class="card border-0 dashboard-panel">
+            @if($myRequests->isNotEmpty())
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 staff-request-table">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-3">Purpose</th>
+                                <th class="px-4 py-3">Requested</th>
+                                <th class="px-4 py-3">Needed by</th>
+                                <th class="px-4 py-3 text-center">Status</th>
+                                <th class="px-4 py-3 text-end" data-sortable="false"><span class="visually-hidden">Action</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             @foreach($myRequests as $request)
-                                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                    <div class="flex-1">
-                                        <p class="text-sm font-medium text-gray-900">{{ $request->purpose }}</p>
-                                        <p class="text-xs text-gray-500">Requested: {{ $request->created_at->format('M j, Y') }}</p>
+                                @php
+                                    $statusClass = match($request->status) {
+                                        App\Models\ResourceRequest::STATUS_PENDING => 'status-badge--warning',
+                                        App\Models\ResourceRequest::STATUS_APPROVED => 'status-badge--success',
+                                        App\Models\ResourceRequest::STATUS_REJECTED => 'status-badge--danger',
+                                        default => 'status-badge--info',
+                                    };
+                                @endphp
+                                <tr>
+                                    <td class="px-4 py-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="staff-request-icon" aria-hidden="true"><i data-lucide="file-text"></i></span>
+                                            <div>
+                                                <p class="mb-0 fw-bold text-dark">{{ Str::limit($request->purpose, 58) }}</p>
+                                                <span class="small text-muted">Request #{{ $request->id }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-muted">{{ $request->created_at->format('M j, Y') }}</td>
+                                    <td class="px-4 py-3">
                                         @if($request->needed_date)
-                                            <p class="text-xs text-gray-500">Needed by: {{ $request->needed_date->format('M j, Y') }}</p>
+                                            <span class="{{ $request->status === App\Models\ResourceRequest::STATUS_PENDING && $request->needed_date->isPast() ? 'text-danger fw-semibold' : 'text-muted' }}">
+                                                {{ $request->needed_date->format('M j, Y') }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">Not specified</span>
                                         @endif
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            @if($request->status === 'pending') bg-yellow-100 text-yellow-800
-                                            @elseif($request->status === 'approved') bg-green-100 text-green-800
-                                            @elseif($request->status === 'rejected') bg-red-100 text-red-800
-                                            @else bg-gray-100 text-gray-800 @endif">
-                                            {{ ucfirst($request->status) }}
-                                        </span>
-                                        @if($request->approved_at)
-                                            <p class="text-xs text-gray-500 mt-1">Approved: {{ $request->approved_at->format('M j, Y') }}</p>
-                                        @endif
-                                    </div>
-                                </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="badge status-badge {{ $statusClass }}">{{ str($request->status)->headline() }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-end">
+                                        <a href="{{ route('requests.show', $request) }}" class="btn btn-sm btn-outline-success" aria-label="View request number {{ $request->id }}">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
                             @endforeach
-                        </div>
-                        <div class="mt-4">
-                            <a href="{{ route('requests.index') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">View all requests →</a>
-                        </div>
-                    @else
-                        <div class="text-center py-8">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">No requests yet</h3>
-                            <p class="mt-1 text-sm text-gray-500">Get started by creating your first resource request.</p>
-                            <div class="mt-6">
-                                <a href="{{ route('requests.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                    </svg>
-                                    Create Request
-                                </a>
-                            </div>
-                        </div>
-                    @endif
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            @else
+                <div class="staff-dashboard__empty text-center">
+                    <span class="staff-dashboard__empty-icon" aria-hidden="true"><i data-lucide="clipboard-plus"></i></span>
+                    <h3>No requests yet</h3>
+                    <p>Create your first resource request and its progress will appear here.</p>
+                    <a href="{{ route('requests.create') }}" class="btn btn-cmu">
+                        <i data-lucide="plus" aria-hidden="true"></i>
+                        Create request
+                    </a>
+                </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

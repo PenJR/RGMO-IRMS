@@ -160,7 +160,7 @@ class TwoFactorController extends Controller
      */
     public function verify(Request $request)
     {
-        $request->validate(['code' => 'required|string']);
+        $request->validate(['code' => 'required|string|max:64']);
 
         $pendingUserId = null;
         if ($request->hasSession()) {

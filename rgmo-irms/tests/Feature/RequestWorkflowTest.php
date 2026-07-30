@@ -139,6 +139,33 @@ class RequestWorkflowTest extends TestCase
             ->assertSeeInOrder([$matching->project->name, $other->project->name]);
     }
 
+    public function test_staff_dashboard_and_request_list_show_only_the_requesters_work(): void
+    {
+        $staff = $this->activeUser(User::ROLE_STAFF);
+        $mine = $this->resourceRequestWithItem(requester: $staff);
+        $other = $this->resourceRequestWithItem();
+        $mine->update(['purpose' => 'My irrigation supplies']);
+        $other->update(['purpose' => 'Another requester supplies']);
+        $mine->project->update(['name' => 'My assigned irrigation project']);
+        $other->project->update(['name' => 'Another requester project']);
+
+        $this->actingAs($staff)
+            ->get(route('dashboard.staff'))
+            ->assertOk()
+            ->assertSee('My Dashboard')
+            ->assertSee('Request overview')
+            ->assertSee('My irrigation supplies')
+            ->assertSee('dashboard-kpi--interactive', false)
+            ->assertDontSee('Another requester supplies');
+
+        $this->actingAs($staff)
+            ->get(route('requests.index'))
+            ->assertOk()
+            ->assertSee('My Requests')
+            ->assertSee('My assigned irrigation project')
+            ->assertDontSee('Another requester project');
+    }
+
     private function activeUser(string $role): User
     {
         return User::factory()->create([

@@ -153,7 +153,7 @@
             .auth-mobile-brand span {
                 margin-top: 0.2rem;
                 color: #627169;
-                font-size: 0.68rem;
+                font-size: 0.75rem;
                 font-weight: 700;
                 line-height: 1.25;
             }
@@ -442,13 +442,8 @@
         </style>
     </head>
     <body class="antialiased">
-        <div class="rgmo-loader" data-rgmo-loader role="status" aria-live="polite" aria-busy="true">
-            <div class="rgmo-loader__mark" aria-hidden="true">
-                <img src="{{ asset('images/logo.png') }}" alt="" class="rgmo-loader__logo">
-                <span class="rgmo-loader__track"></span>
-            </div>
-            <span class="visually-hidden">Loading</span>
-        </div>
+        <a href="#auth-content" class="skip-link">Skip to form</a>
+        <div class="rgmo-progress" data-rgmo-loader role="progressbar" aria-label="Page loading" aria-hidden="false"></div>
 
         <div class="floating-blobs">
             <div class="blob" style="top: -10%; left: -10%; background: var(--cmu-yellow); animation-delay: 0s; opacity: 0.16;"></div>
@@ -513,7 +508,7 @@
 
                 <!-- Login Card Column -->
                 <div class="col-lg-5 col-md-8">
-                    <div class="login-card mx-auto">
+                    <main class="login-card mx-auto" id="auth-content" tabindex="-1">
                         <div class="auth-mobile-brand d-lg-none">
                             <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS logo" class="cmu-logo">
                             <div>
@@ -523,7 +518,7 @@
                         </div>
                         
                         {{ $slot }}
-                    </div>
+                    </main>
                     
                 </div>
             </div>

@@ -54,6 +54,8 @@ class DashboardInventoryDynamicsTest extends TestCase
             ->assertSee('Resource Readiness')
             ->assertSee('50%')
             ->assertSee('1 of 2 ready')
+            ->assertSee('dashboard-kpi--interactive', false)
+            ->assertSee('0 overdue · 0 new this week')
             ->assertSee('Add 13 bags');
     }
 

@@ -285,6 +285,13 @@ class ReportService
             'total_items' => $totalItems,
             'low_stock_count' => $lowStockCount,
             'pending_requests' => ResourceRequest::pending()->count(),
+            'pending_overdue_count' => ResourceRequest::pending()
+                ->whereNotNull('needed_date')
+                ->whereDate('needed_date', '<', today())
+                ->count(),
+            'pending_submitted_this_week' => ResourceRequest::pending()
+                ->where('created_at', '>=', now()->startOfWeek())
+                ->count(),
             'total_inventory_value' => InventoryItem::active()->sum(\DB::raw('stock * price')),
             'recent_transactions' => AuditLog::recent(7)->count(),
             'charts' => [

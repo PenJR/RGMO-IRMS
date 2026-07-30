@@ -11,10 +11,10 @@
             <p class="text-muted mb-0" style="font-size: 0.75rem;">Tracking all fertilizers, seeds, tools, and chemicals allocated for CMU operations.</p>
         </div>
         <div>
-            <button class="btn btn-light btn-sm text-uppercase fw-bold border me-2" style="font-size: 10px;">
+            <button class="btn btn-light btn-sm text-uppercase fw-bold border me-2">
                 <i data-lucide="download" class="me-2 d-inline-block" style="width: 12px"></i> Export
             </button>
-            <button class="btn btn-cmu btn-sm text-uppercase fw-bold" data-bs-toggle="modal" data-bs-target="#addItemModal" style="font-size: 10px;">
+            <button class="btn btn-cmu btn-sm text-uppercase fw-bold" data-bs-toggle="modal" data-bs-target="#addItemModal">
                 <i data-lucide="plus" class="me-2 d-inline-block" style="width: 12px"></i> Add New Item
             </button>
         </div>
@@ -41,7 +41,7 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-gray-50">
-                    <tr class="text-uppercase text-muted fw-bold" style="font-size: 10px;">
+                    <tr class="text-uppercase text-muted fw-bold">
                         <th class="ps-4 py-3">Item Name</th>
                         <th>Category</th>
                         <th>Current Stock</th>
@@ -55,31 +55,31 @@
                     <tr>
                         <td class="ps-4">
                             <div class="fw-bold text-dark">Urea Fertilizer (50kg Bag)</div>
-                            <div class="text-muted" style="font-size: 10px;">ID: CHM-001</div>
+                            <div class="text-muted small">ID: CHM-001</div>
                         </td>
                         <td><span class="text-muted">Chemicals</span></td>
                         <td><span class="fw-bold text-danger">5</span></td>
                         <td>Bags</td>
                         <td>10</td>
-                        <td><span class="px-2 py-0.5 rounded-pill bg-danger-subtle text-danger fw-bold" style="font-size: 10px;">CRITICAL</span></td>
+                        <td><span class="badge rounded-pill bg-danger-subtle text-danger fw-bold">CRITICAL</span></td>
                         <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-link text-muted p-1" title="Edit Item"><i data-lucide="edit-3" style="width: 16px"></i></button>
-                            <button class="btn btn-sm btn-link text-muted p-1" title="View History"><i data-lucide="history" style="width: 16px"></i></button>
+                            <button class="btn btn-sm btn-link text-muted p-1" title="Edit Item" aria-label="Edit item"><i data-lucide="edit-3" style="width: 16px" aria-hidden="true"></i></button>
+                            <button class="btn btn-sm btn-link text-muted p-1" title="View History" aria-label="View item history"><i data-lucide="history" style="width: 16px" aria-hidden="true"></i></button>
                         </td>
                     </tr>
                     <tr>
                         <td class="ps-4">
                             <div class="fw-bold text-dark">Yellow Corn Seeds (Pioneer)</div>
-                            <div class="text-muted" style="font-size: 10px;">ID: SED-024</div>
+                            <div class="text-muted small">ID: SED-024</div>
                         </td>
                         <td><span class="text-muted">Seeds</span></td>
                         <td><span class="fw-bold">450</span></td>
                         <td>Kilos</td>
                         <td>50</td>
-                        <td><span class="px-2 py-0.5 rounded-pill bg-green-subtle text-green fw-bold" style="font-size: 10px;">OPTIMAL</span></td>
+                        <td><span class="badge rounded-pill bg-green-subtle text-green fw-bold">OPTIMAL</span></td>
                         <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-link text-muted p-1" title="Edit Item"><i data-lucide="edit-3" style="width: 16px"></i></button>
-                            <button class="btn btn-sm btn-link text-muted p-1" title="View History"><i data-lucide="history" style="width: 16px"></i></button>
+                            <button class="btn btn-sm btn-link text-muted p-1" title="Edit Item" aria-label="Edit item"><i data-lucide="edit-3" style="width: 16px" aria-hidden="true"></i></button>
+                            <button class="btn btn-sm btn-link text-muted p-1" title="View History" aria-label="View item history"><i data-lucide="history" style="width: 16px" aria-hidden="true"></i></button>
                         </td>
                     </tr>
                 </tbody>
@@ -94,17 +94,17 @@
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
             <div class="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                 <h5 class="fw-bold mb-0">Record New Resource</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close add item dialog"></button>
             </div>
             <div class="modal-body p-4">
                 <form>
                     <div class="mb-3">
-                        <label class="form-label text-uppercase fw-bold text-muted" style="font-size: 10px;">Identification</label>
+                        <label class="form-label text-uppercase fw-bold text-muted">Identification</label>
                         <input type="text" class="form-control" placeholder="Item Name (e.g. Hybrid Rice Seeds)">
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label text-uppercase fw-bold text-muted" style="font-size: 10px;">Classification</label>
+                            <label class="form-label text-uppercase fw-bold text-muted">Classification</label>
                             <select class="form-select">
                                 <option>Fertilizers</option>
                                 <option>Seeds</option>
@@ -112,25 +112,25 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label text-uppercase fw-bold text-muted" style="font-size: 10px;">Unit of Measure</label>
+                            <label class="form-label text-uppercase fw-bold text-muted">Unit of Measure</label>
                             <input type="text" class="form-control" placeholder="Bags, Kilos, Pcs">
                         </div>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label text-uppercase fw-bold text-muted" style="font-size: 10px;">Opening Stock</label>
+                            <label class="form-label text-uppercase fw-bold text-muted">Opening Stock</label>
                             <input type="number" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label text-uppercase fw-bold text-muted" style="font-size: 10px;">Critical Level</label>
+                            <label class="form-label text-uppercase fw-bold text-muted">Critical Level</label>
                             <input type="number" class="form-control" value="10">
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer border-0 p-4 pt-0">
-                <button type="button" class="btn btn-light border w-100 mb-2 py-2 fw-bold text-uppercase" style="font-size: 10px;" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-cmu w-100 py-2 fw-bold text-uppercase" style="font-size: 10px;">Register Resource</button>
+                <button type="button" class="btn btn-light border w-100 mb-2 py-2 fw-bold text-uppercase" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-cmu w-100 py-2 fw-bold text-uppercase">Register Resource</button>
             </div>
         </div>
     </div>

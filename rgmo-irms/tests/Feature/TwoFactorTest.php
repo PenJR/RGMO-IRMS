@@ -13,6 +13,19 @@ class TwoFactorTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_two_factor_challenge_uses_the_accessible_branded_layout(): void
+    {
+        $this->withSession(['2fa:user_id' => 999])
+            ->get(route('2fa.verify'))
+            ->assertOk()
+            ->assertSee('Verify your identity')
+            ->assertSee('id="auth-content"', false)
+            ->assertSee('inputmode="numeric"', false)
+            ->assertSee('autocomplete="one-time-code"', false)
+            ->assertSee('aria-describedby="twoFactorHelp"', false)
+            ->assertSee('class="rgmo-progress"', false);
+    }
+
     /**
      * Verify that user can enable two factor authentication.
      */
