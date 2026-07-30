@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class AIForecastingTest extends TestCase
@@ -25,6 +26,8 @@ class AIForecastingTest extends TestCase
         config([
             'cache.default' => 'array',
             'services.gemini.key' => null,
+            'services.gemini.requests_per_minute' => 5,
+            'services.gemini.requests_per_day' => 50,
         ]);
     }
 
@@ -278,6 +281,56 @@ class AIForecastingTest extends TestCase
         $explanation = app(ForecastExplanationService::class)->explain($forecast);
 
         $this->assertNull($explanation);
+    }
+
+    #[DataProvider('geminiRequestBudgetProvider')]
+    public function test_gemini_request_budget_blocks_uncached_api_spending(
+        int $perMinute,
+        int $perDay,
+        string $apiKey
+    ): void {
+        config([
+            'services.gemini.key' => $apiKey,
+            'services.gemini.model' => 'gemini-test-model',
+            'services.gemini.url' => 'https://gemini.test/v1beta',
+            'services.gemini.requests_per_minute' => $perMinute,
+            'services.gemini.requests_per_day' => $perDay,
+        ]);
+        Http::fake([
+            'https://gemini.test/*' => Http::response([
+                'candidates' => [[
+                    'content' => ['parts' => [[
+                        'text' => json_encode([
+                            'summary' => 'The numerical forecast is ready.',
+                            'priorities' => [],
+                            'warnings' => [],
+                        ]),
+                    ]]],
+                ]],
+            ]),
+        ]);
+        $forecast = app(InventoryForecastingService::class)->buildForecast();
+        $service = app(ForecastExplanationService::class);
+
+        $first = $service->explain($forecast);
+        $cached = $service->explain($forecast);
+        $differentForecast = $forecast;
+        $differentForecast['forecast_days'] = 7;
+        $blocked = $service->explain($differentForecast);
+
+        $this->assertNotNull($first);
+        $this->assertSame($first, $cached);
+        $this->assertNull($blocked);
+        Http::assertSentCount(1);
+    }
+
+    /** @return array<string, array{int, int, string}> */
+    public static function geminiRequestBudgetProvider(): array
+    {
+        return [
+            'per-minute limit' => [1, 10, 'minute-rate-limited-api-key'],
+            'daily limit' => [10, 1, 'daily-rate-limited-api-key'],
+        ];
     }
 
     /**

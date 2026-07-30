@@ -25,7 +25,7 @@ class DashboardController extends Controller
     public function index()
     {
         $stats = $this->reportService->getDashboardStats();
-        $lowStockItems = InventoryItem::lowStock()->limit(5)->get();
+        $lowStockItems = InventoryItem::lowStock()->orderBy('stock')->limit(5)->get();
         $recentRequests = ResourceRequest::latest()->limit(5)->with('user')->get();
         $recentActivities = AuditLog::latest()->limit(10)->with('user')->get();
 

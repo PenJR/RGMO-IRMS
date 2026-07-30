@@ -82,12 +82,6 @@
                     @endif
 
                     {{ $slot }}
-
-                    <div class="container-fluid">
-                        <footer class="mt-5 pt-4 text-center border-top mb-4">
-                            <p class="text-muted" style="font-size: 10px; color: #6b7280 !important;">© {{ date('Y') }} Central Mindanao University - RGMO-IRMS • System v1.0</p>
-                        </footer>
-                    </div>
                 </div>
             </main>
         </div>

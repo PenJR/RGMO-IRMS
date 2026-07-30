@@ -2,14 +2,16 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use App\Models\RequestItem;
 use App\Models\ResourceRequest;
 use App\Models\ResourceUsage;
-use App\Models\AuditLog;
 use App\Models\User;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ReportService
@@ -17,18 +19,18 @@ class ReportService
     /**
      * Compile a comprehensive inventory report with statistical aggregates.
      *
-     * @param array $filters (category_id, low_stock).
+     * @param  array  $filters  (category_id, low_stock).
      * @return array Summary of total items, low stock counts, and total valuation.
      */
     public function getInventoryReport(array $filters = [])
     {
         $query = InventoryItem::active()->with('category', 'transactions');
 
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
 
-        if (!empty($filters['low_stock'])) {
+        if (! empty($filters['low_stock'])) {
             $query->lowStock();
         }
 
@@ -36,8 +38,8 @@ class ReportService
 
         return [
             'total_items' => $items->count(),
-            'low_stock_items' => $items->filter(fn($item) => $item->isLowStock())->count(),
-            'total_value' => $items->sum(fn($item) => $item->stock * $item->price),
+            'low_stock_items' => $items->filter(fn ($item) => $item->isLowStock())->count(),
+            'total_value' => $items->sum(fn ($item) => $item->stock * $item->price),
             'items' => $items,
         ];
     }
@@ -45,7 +47,7 @@ class ReportService
     /**
      * Generate a report tracking how resources are consumed over time.
      *
-     * @param array $filters (start_date, end_date, user_id, item_id).
+     * @param  array  $filters  (start_date, end_date, user_id, item_id).
      * @return array Collection of usage records and total volume.
      */
     public function getResourceUsageReport(array $filters = [])
@@ -53,15 +55,15 @@ class ReportService
         $query = ResourceUsage::query()
             ->with('item', 'user', 'project');
 
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+        if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
             $query->dateRange($filters['start_date'], $filters['end_date']);
         }
 
-        if (!empty($filters['user_id'])) {
+        if (! empty($filters['user_id'])) {
             $query->byUser($filters['user_id']);
         }
 
-        if (!empty($filters['item_id'])) {
+        if (! empty($filters['item_id'])) {
             $query->byItem($filters['item_id']);
         }
 
@@ -74,26 +76,26 @@ class ReportService
     /**
      * Extract a paginated list of system activities for audit purposes.
      *
-     * @param array $filters (action, module, user_id, start_date, end_date).
-     * @return \Illuminate\Pagination\LengthAwarePaginator
+     * @param  array  $filters  (action, module, user_id, start_date, end_date).
+     * @return LengthAwarePaginator
      */
     public function getAuditTrailReport(array $filters = [])
     {
         $query = AuditLog::query()->with('user');
 
-        if (!empty($filters['action'])) {
+        if (! empty($filters['action'])) {
             $query->byAction($filters['action']);
         }
 
-        if (!empty($filters['module'])) {
+        if (! empty($filters['module'])) {
             $query->byModule($filters['module']);
         }
 
-        if (!empty($filters['user_id'])) {
+        if (! empty($filters['user_id'])) {
             $query->byUser($filters['user_id']);
         }
 
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+        if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
             $query->dateRange($filters['start_date'], $filters['end_date']);
         }
 
@@ -103,18 +105,18 @@ class ReportService
     /**
      * Consolidate metrics regarding resource requests and approval rates.
      *
-     * @param array $filters (status, start_date, end_date).
+     * @param  array  $filters  (status, start_date, end_date).
      * @return array Statistics on volume and status breakdown.
      */
     public function getResourceRequestReport(array $filters = [])
     {
         $query = ResourceRequest::query()->with('user', 'approver', 'items.item');
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+        if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
             $query->dateRange($filters['start_date'], $filters['end_date']);
         }
 
@@ -132,8 +134,7 @@ class ReportService
     /**
      * Retrieve the login history for a specific user within a given timeframe.
      *
-     * @param User $user
-     * @param int $days Number of past days to include.
+     * @param  int  $days  Number of past days to include.
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getUserLoginHistory(User $user, int $days = 30)
@@ -147,17 +148,15 @@ class ReportService
     /**
      * Generate the Weekly Report of Biological Assets and Agricultural Produce.
      *
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function getBiologicalAssetsReport(Carbon $startDate, Carbon $endDate)
     {
-        $items = InventoryItem::whereHas('category', function($q) {
+        $items = InventoryItem::whereHas('category', function ($q) {
             $q->where('name', 'like', '%Biological Assets%');
         })->with(['transactions'])->get();
 
-        return $items->map(function($item) use ($startDate, $endDate) {
+        return $items->map(function ($item) use ($startDate, $endDate) {
             // Previous balance = stock before startDate
             $stockInBefore = $item->transactions()->where('transaction_type', 'stock_in')->where('created_at', '<', $startDate)->sum('quantity');
             $stockOutBefore = $item->transactions()->where('transaction_type', 'stock_out')->where('created_at', '<', $startDate)->sum('quantity');
@@ -187,8 +186,6 @@ class ReportService
     /**
      * Generate the Monthly Report of Agricultural and Marine Supplies Issuance.
      *
-     * @param int $month
-     * @param int $year
      * @return array
      */
     public function getSuppliesIssuanceReport(int $month, int $year)
@@ -213,16 +210,14 @@ class ReportService
                 ];
             }
         }
-        
+
         return $data;
     }
 
     /**
      * Generate the Monthly Inventory of Agricultural Materials and Other Supplies.
      *
-     * @param int $month
-     * @param int $year
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function getMonthlyInventoryReport(int $month, int $year)
     {
@@ -231,7 +226,7 @@ class ReportService
 
         $items = InventoryItem::with(['transactions'])->get();
 
-        return $items->map(function($item) use ($startDate, $endDate) {
+        return $items->map(function ($item) use ($startDate, $endDate) {
             // Previous Balance breakdown by source
             $sources = ['RGMO', 'DA Grant', 'DA Hybrid'];
             $beginningBalances = [];
@@ -240,7 +235,7 @@ class ReportService
                 $stockOutBefore = $item->transactions()->where('transaction_type', 'stock_out')->where('funding_source', $source)->where('created_at', '<', $startDate)->sum('quantity');
                 $beginningBalances[$source] = (object) [
                     'qty' => $stockInBefore - $stockOutBefore,
-                    'value' => ($stockInBefore - $stockOutBefore) * $item->price
+                    'value' => ($stockInBefore - $stockOutBefore) * $item->price,
                 ];
             }
 
@@ -251,7 +246,7 @@ class ReportService
             foreach ($beginningBalances as $bb) {
                 $totalBeginningQty += $bb->qty;
             }
-            
+
             return (object) [
                 'particulars' => $item->name,
                 'unit' => $item->unit,
@@ -281,11 +276,14 @@ class ReportService
             ->select('status', DB::raw('COUNT(*) as total'))
             ->groupBy('status')
             ->pluck('total', 'status');
+        $totalItems = InventoryItem::active()->count();
+        $lowStockCount = InventoryItem::active()->lowStock()->count();
+        $readyItems = max(0, $totalItems - $lowStockCount);
 
         return [
             'total_users' => User::count(),
-            'total_items' => InventoryItem::active()->count(),
-            'low_stock_count' => InventoryItem::lowStock()->count(),
+            'total_items' => $totalItems,
+            'low_stock_count' => $lowStockCount,
             'pending_requests' => ResourceRequest::pending()->count(),
             'total_inventory_value' => InventoryItem::active()->sum(\DB::raw('stock * price')),
             'recent_transactions' => AuditLog::recent(7)->count(),
@@ -303,6 +301,11 @@ class ReportService
                 ],
                 'request_trends' => $this->getRequestTrendChartData(),
                 'stock_health' => $this->getStockHealthChartData(),
+                'resource_readiness' => [
+                    'percent' => $totalItems > 0 ? (int) round(($readyItems / $totalItems) * 100) : 0,
+                    'ready_items' => $readyItems,
+                    'total_items' => $totalItems,
+                ],
                 'category_values' => $this->getCategoryValueChartData(),
                 'inventory_movements' => $this->getInventoryMovementChartData(),
                 'top_requested_items' => $this->getTopRequestedItemChartData(),
@@ -547,13 +550,13 @@ class ReportService
     public function getInventoryTrends(int $days = 30)
     {
         $startDate = now()->subDays($days);
-        
+
         return InventoryItem::active()
-            ->with(['transactions' => function($query) use ($startDate) {
+            ->with(['transactions' => function ($query) use ($startDate) {
                 $query->where('created_at', '>=', $startDate);
             }])
             ->get()
-            ->map(function($item) {
+            ->map(function ($item) {
                 return [
                     'name' => $item->name,
                     'current_stock' => $item->stock,
@@ -567,7 +570,7 @@ class ReportService
      */
     public function exportReportToCSV(string $reportType, array $filters = [])
     {
-        $filename = $reportType . '_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        $filename = $reportType.'_'.now()->format('Y-m-d_H-i-s').'.csv';
 
         if ($reportType === 'inventory') {
             $report = $this->getInventoryReport($filters);

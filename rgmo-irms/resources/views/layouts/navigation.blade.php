@@ -163,17 +163,24 @@
 
     <div class="sidebar-footer mt-auto">
         <div class="sidebar-user d-flex align-items-center gap-3">
-            <div class="rounded d-flex align-items-center justify-content-center user-pill">{{ strtoupper(substr(Auth::user()->name, 0, 2)) }}</div>
-            <div class="overflow-hidden">
+            <div class="d-flex align-items-center justify-content-center user-pill" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name, 0, 2)) }}</div>
+            <div class="sidebar-user-details">
                 <p class="sidebar-user-name">{{ Auth::user()->name }}</p>
                 <p class="sidebar-user-email">{{ Auth::user()->email }}</p>
+                <p class="sidebar-user-role">{{ str(Auth::user()->role)->replace('_', ' ')->title() }}</p>
             </div>
         </div>
-        <div class="mt-3 d-flex gap-2">
-            <a href="{{ route('profile.edit') }}" class="btn btn-light w-100 text-uppercase fw-bold">Profile</a>
+        <div class="sidebar-actions d-flex gap-2">
+            <a href="{{ route('profile.edit') }}" class="btn btn-light w-100 fw-bold">
+                <i data-lucide="user-round" aria-hidden="true"></i>
+                <span>Profile</span>
+            </a>
             <form method="POST" action="{{ route('logout') }}" class="w-100">
                 @csrf
-                <button type="submit" class="btn btn-outline-light w-100 text-uppercase fw-bold">Logout</button>
+                <button type="submit" class="btn btn-outline-light w-100 fw-bold">
+                    <i data-lucide="log-out" aria-hidden="true"></i>
+                    <span>Sign out</span>
+                </button>
             </form>
         </div>
     </div>

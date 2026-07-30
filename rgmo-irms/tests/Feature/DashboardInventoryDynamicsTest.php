@@ -15,6 +15,48 @@ class DashboardInventoryDynamicsTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_dashboard_shows_resource_readiness_and_replenishment_suggestions(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+        $category = Category::create(['name' => 'Field Supplies']);
+        InventoryItem::create([
+            'category_id' => $category->id,
+            'name' => 'Healthy Seed Bags',
+            'sku' => 'SEED-HEALTHY',
+            'stock' => 20,
+            'unit' => 'bag',
+            'min_stock' => 10,
+        ]);
+        InventoryItem::create([
+            'category_id' => $category->id,
+            'name' => 'Low Seed Bags',
+            'sku' => 'SEED-LOW',
+            'stock' => 3,
+            'unit' => 'bag',
+            'min_stock' => 10,
+        ]);
+
+        $readiness = app(ReportService::class)->getDashboardStats()['charts']['resource_readiness'];
+
+        $this->assertSame([
+            'percent' => 50,
+            'ready_items' => 1,
+            'total_items' => 2,
+        ], $readiness);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Resource Readiness')
+            ->assertSee('50%')
+            ->assertSee('1 of 2 ready')
+            ->assertSee('Add 13 bags');
+    }
+
     public function test_inventory_dynamics_can_be_filtered_by_item_and_uses_historical_stock(): void
     {
         Carbon::setTestNow('2026-07-29 10:00:00');

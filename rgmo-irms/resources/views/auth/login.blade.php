@@ -1,6 +1,5 @@
 <x-guest-layout>
     <div class="auth-card-heading">
-        <span class="auth-kicker">Secure Access</span>
         <h2>Welcome back</h2>
         <p>Sign in to manage inventory, resource requests, reports, and approvals.</p>
     </div>

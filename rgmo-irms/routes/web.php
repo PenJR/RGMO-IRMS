@@ -42,7 +42,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Inventory demand forecasting
     Route::middleware(['permission:view-forecasts'])->group(function () {
         Route::get('/ai-forecasting', [AIForecastingController::class, 'index'])->name('ai-forecasting.index');
-        Route::get('/ai-forecasting/explanation', [AIForecastingController::class, 'explanation'])->name('ai-forecasting.explanation');
+        Route::get('/ai-forecasting/explanation', [AIForecastingController::class, 'explanation'])
+            ->middleware('throttle:10,1')
+            ->name('ai-forecasting.explanation');
     });
 
     // Inventory Module

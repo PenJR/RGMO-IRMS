@@ -1,7 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="module-eyebrow mb-1">Command center</p>
             <h2 class="h5 fw-bold mb-0">Dashboard</h2>
             <p class="text-muted mb-0 small">A focused view of inventory and resource operations.</p>
         </div>
@@ -238,28 +237,54 @@
         <div class="row g-4">
             <div class="col-12 col-xl-5">
                 <div class="card border-0 h-100 dashboard-panel dashboard-panel--attention">
-                    <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
-                            <i data-lucide="alert-circle" class="text-danger" style="width: 20px;"></i>
-                            Low Stock Items
-                        </h5>
+                    <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between gap-3">
+                        <div>
+                            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+                                <i data-lucide="gauge" class="text-success" style="width: 20px;"></i>
+                                Resource Readiness
+                            </h5>
+                            <p class="text-muted small mb-0">Items currently above minimum stock</p>
+                        </div>
                         <a href="{{ route('inventory.low-stock') }}" class="btn btn-link text-decoration-none small p-0" style="font-size: 11px; color: var(--cmu-green); font-weight: 600;">VIEW ALL</a>
                     </div>
                     <div class="card-body p-0">
+                        <div class="resource-readiness">
+                            <div class="resource-readiness__chart">
+                                <canvas
+                                    id="resourceReadinessChart"
+                                    role="img"
+                                    aria-label="{{ $stats['charts']['resource_readiness']['percent'] }} percent resource readiness"
+                                ></canvas>
+                                <div class="resource-readiness__value" aria-hidden="true">
+                                    <strong>{{ $stats['charts']['resource_readiness']['total_items'] > 0 ? $stats['charts']['resource_readiness']['percent'].'%' : '—' }}</strong>
+                                    <span>{{ $stats['charts']['resource_readiness']['ready_items'] }} of {{ $stats['charts']['resource_readiness']['total_items'] }} ready</span>
+                                </div>
+                            </div>
+                            <div class="resource-readiness__scale" aria-hidden="true">
+                                <span>0%</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+
+                        <div class="resource-suggestions-heading">
+                            <span>Suggested replenishment</span>
+                            <small>Top up to healthy stock</small>
+                        </div>
                         @if($lowStockItems->count() > 0)
-                            <div class="list-group list-group-flush">
+                            <div class="list-group list-group-flush resource-suggestions">
                                 @foreach($lowStockItems as $item)
+                                    @php
+                                        $healthyTarget = max((int) ($item->reorder_level ?? 0), (int) floor($item->min_stock * 1.5) + 1);
+                                        $suggestedQuantity = max(0, $healthyTarget - $item->stock);
+                                    @endphp
                                     <div class="list-group-item px-4 py-3 border-0 border-bottom-1">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
                                                 <h6 class="mb-0 fw-bold" style="font-size: 0.9rem;">{{ $item->name }}</h6>
-                                                <p class="mb-0 text-muted" style="font-size: 0.75rem;">SKU: {{ $item->sku }}</p>
+                                                <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ $item->sku }} · {{ $item->stock }} {{ Str::plural($item->unit, $item->stock) }} available</p>
                                             </div>
                                             <div class="text-end">
-                                                <p class="mb-0 fw-bold text-danger">{{ $item->stock }} {{ $item->unit }}</p>
-                                                <div class="progress mt-1" style="height: 4px; width: 60px;">
-                                                    <div class="progress-bar bg-danger" style="width: {{ ($item->stock / max($item->min_stock, 1)) * 100 }}%"></div>
-                                                </div>
+                                                <span class="resource-suggestion-quantity">Add {{ number_format($suggestedQuantity) }} {{ Str::plural($item->unit, $suggestedQuantity) }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -419,6 +444,33 @@
                 cornerRadius: 6
             };
             const analyticsDisclosure = document.getElementById('dashboardAnalytics');
+
+            const readiness = chartData.resource_readiness ?? { percent: 0, ready_items: 0, total_items: 0 };
+            const readinessPercent = Math.max(0, Math.min(100, Number(readiness.percent) || 0));
+            new Chart(document.getElementById('resourceReadinessChart'), {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [readinessPercent, 100 - readinessPercent],
+                        backgroundColor: ['#19704a', '#d9dfe2'],
+                        borderWidth: 0,
+                        borderRadius: 8,
+                        hoverOffset: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    rotation: -90,
+                    circumference: 180,
+                    cutout: '78%',
+                    events: [],
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
 
             analyticsDisclosure?.addEventListener('toggle', () => {
                 if (!analyticsDisclosure.open) return;

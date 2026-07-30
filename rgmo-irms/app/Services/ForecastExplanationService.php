@@ -6,6 +6,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use JsonException;
 use Throwable;
 
@@ -101,6 +102,10 @@ class ForecastExplanationService
      */
     private function requestExplanation(string $apiKey, array $input): ?array
     {
+        if (! $this->consumeRequestBudget($apiKey)) {
+            return null;
+        }
+
         $model = (string) config('services.gemini.model', 'gemini-3.1-flash-lite');
         $baseUrl = rtrim((string) config('services.gemini.url'), '/');
         $prompt = <<<'PROMPT'
@@ -149,6 +154,45 @@ PROMPT;
         $decoded = json_decode($content, true, flags: JSON_THROW_ON_ERROR);
 
         return $this->validateExplanation($decoded);
+    }
+
+    /**
+     * Atomically reserve one outbound request from the shared API-key budget.
+     * Cached explanations never reach this method and therefore consume no quota.
+     */
+    private function consumeRequestBudget(string $apiKey): bool
+    {
+        $keyHash = hash('sha256', $apiKey);
+        $perMinute = max(0, (int) config('services.gemini.requests_per_minute', 5));
+        $perDay = max(0, (int) config('services.gemini.requests_per_day', 50));
+
+        if ($perMinute === 0 || $perDay === 0) {
+            Log::notice('Gemini request blocked because its spending limit is disabled.');
+
+            return false;
+        }
+
+        $minuteAttempts = RateLimiter::increment("gemini:requests:minute:{$keyHash}", 60);
+
+        if ($minuteAttempts > $perMinute) {
+            Log::notice('Gemini request blocked by the per-minute spending limit.', [
+                'limit' => $perMinute,
+            ]);
+
+            return false;
+        }
+
+        $dailyAttempts = RateLimiter::increment("gemini:requests:day:{$keyHash}", 86400);
+
+        if ($dailyAttempts > $perDay) {
+            Log::notice('Gemini request blocked by the daily spending limit.', [
+                'limit' => $perDay,
+            ]);
+
+            return false;
+        }
+
+        return true;
     }
 
     /** @return array<string, mixed> */

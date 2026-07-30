@@ -40,6 +40,8 @@ return [
         'model' => env('GEMINI_MODEL', 'gemini-3.1-flash-lite'),
         'url' => env('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta'),
         'cache_hours' => (int) env('GEMINI_CACHE_HOURS', 6),
+        'requests_per_minute' => (int) env('GEMINI_REQUESTS_PER_MINUTE', 5),
+        'requests_per_day' => (int) env('GEMINI_REQUESTS_PER_DAY', 50),
     ],
 
 ];

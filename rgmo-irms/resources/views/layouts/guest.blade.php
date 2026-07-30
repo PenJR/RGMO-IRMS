@@ -121,6 +121,43 @@
                 border: 1px solid rgba(255, 255, 255, 0.14);
             }
 
+            .auth-mobile-brand {
+                display: flex;
+                align-items: center;
+                gap: 0.8rem;
+                margin-bottom: 1.25rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid rgba(0, 73, 30, 0.1);
+            }
+
+            .auth-mobile-brand img {
+                width: 52px;
+                height: 52px;
+                flex: 0 0 52px;
+                object-fit: contain;
+            }
+
+            .auth-mobile-brand strong,
+            .auth-mobile-brand span {
+                display: block;
+            }
+
+            .auth-mobile-brand strong {
+                color: var(--cmu-green);
+                font-size: 1.05rem;
+                font-weight: 800;
+                line-height: 1.15;
+                letter-spacing: -0.01em;
+            }
+
+            .auth-mobile-brand span {
+                margin-top: 0.2rem;
+                color: #627169;
+                font-size: 0.68rem;
+                font-weight: 700;
+                line-height: 1.25;
+            }
+
             .input-group-text {
                 background: transparent;
                 border-right: none;
@@ -225,17 +262,6 @@
 
             .auth-card-heading {
                 margin-bottom: 1.4rem;
-            }
-
-            .auth-kicker {
-                display: inline-flex;
-                align-items: center;
-                color: var(--cmu-green-2);
-                font-size: 0.74rem;
-                font-weight: 800;
-                letter-spacing: 0.12em;
-                text-transform: uppercase;
-                margin-bottom: 0.65rem;
             }
 
             .auth-card-heading h2 {
@@ -389,12 +415,6 @@
                 color: var(--cmu-green);
             }
 
-            .auth-footnote {
-                color: rgba(244, 255, 246, 0.58);
-                font-size: 0.78rem;
-                margin-top: 1.25rem;
-            }
-
             @media (max-width: 991.98px) {
                 body {
                     align-items: flex-start;
@@ -488,23 +508,23 @@
                                 </div>
                             </div>
                         </div>
-                        <p class="auth-footnote">© {{ date('Y') }} Central Mindanao University · RGMO-IRMS</p>
                     </div>
                 </div>
 
                 <!-- Login Card Column -->
                 <div class="col-lg-5 col-md-8">
                     <div class="login-card mx-auto">
-                        <div class="brand-logo d-lg-none">
-                            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="cmu-logo" style="width: 54px; height: 54px;">
+                        <div class="auth-mobile-brand d-lg-none">
+                            <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS logo" class="cmu-logo">
+                            <div>
+                                <strong>RGMO-IRMS</strong>
+                                <span>Central Mindanao University</span>
+                            </div>
                         </div>
                         
                         {{ $slot }}
                     </div>
                     
-                    <div class="text-center mt-4 opacity-50 d-lg-none" style="color: #4f6458;">
-                        <p class="small">© {{ date('Y') }} Central Mindanao University</p>
-                    </div>
                 </div>
             </div>
         </div>
