@@ -38,6 +38,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile/sidebar-order', [ProfileController::class, 'resetSidebarOrder'])
         ->middleware('throttle:10,1')
         ->name('profile.sidebar-order.reset');
+    Route::delete('/profile/sessions', [ProfileController::class, 'destroyOtherSessions'])
+        ->middleware('throttle:5,1')
+        ->name('profile.sessions.destroy-others');
+    Route::delete('/profile/sessions/{sessionId}', [ProfileController::class, 'destroySession'])
+        ->middleware('throttle:10,1')
+        ->where('sessionId', '[A-Za-z0-9_-]+')
+        ->name('profile.sessions.destroy');
 
     // Inventory demand forecasting
     Route::middleware(['permission:view-forecasts'])->group(function () {

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -22,6 +23,71 @@ class ProfileTest extends TestCase
             ->get('/profile');
 
         $response->assertOk();
+    }
+
+    public function test_profile_displays_cookie_settings_and_active_sessions(): void
+    {
+        config(['session.driver' => 'database']);
+        $user = User::factory()->create();
+        $this->createSession('other-session', $user, '192.168.1.22', 'Mozilla/5.0 (Windows NT 10.0; rv:120.0) Gecko/20100101 Firefox/120.0');
+
+        $this->actingAs($user)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('Cookies &amp; Sessions', false)
+            ->assertSee('Essential cookies only')
+            ->assertSee('Firefox on Windows')
+            ->assertSee('192.168.1.22');
+    }
+
+    public function test_user_can_revoke_one_owned_browser_session(): void
+    {
+        config(['session.driver' => 'database']);
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $this->createSession('owned-session', $user);
+        $this->createSession('foreign-session', $otherUser);
+
+        $this->actingAs($user)
+            ->delete(route('profile.sessions.destroy', 'owned-session'))
+            ->assertRedirect(route('profile.edit'))
+            ->assertSessionHas('status', 'session-revoked');
+
+        $this->assertDatabaseMissing('sessions', ['id' => 'owned-session']);
+        $this->assertDatabaseHas('sessions', ['id' => 'foreign-session']);
+    }
+
+    public function test_user_can_revoke_all_other_owned_browser_sessions(): void
+    {
+        config(['session.driver' => 'database']);
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $this->createSession('owned-session-one', $user);
+        $this->createSession('owned-session-two', $user);
+        $this->createSession('foreign-session', $otherUser);
+
+        $this->actingAs($user)
+            ->delete(route('profile.sessions.destroy-others'))
+            ->assertRedirect(route('profile.edit'))
+            ->assertSessionHas('status', 'other-sessions-revoked');
+
+        $this->assertDatabaseMissing('sessions', ['id' => 'owned-session-one']);
+        $this->assertDatabaseMissing('sessions', ['id' => 'owned-session-two']);
+        $this->assertDatabaseHas('sessions', ['id' => 'foreign-session']);
+    }
+
+    public function test_user_cannot_revoke_another_users_session(): void
+    {
+        config(['session.driver' => 'database']);
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $this->createSession('foreign-session', $otherUser);
+
+        $this->actingAs($user)
+            ->delete(route('profile.sessions.destroy', 'foreign-session'))
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('sessions', ['id' => 'foreign-session']);
     }
 
     /**
@@ -151,5 +217,21 @@ class ProfileTest extends TestCase
             ->assertRedirect(route('admin.users.index'));
 
         $this->assertNull($user->fresh());
+    }
+
+    private function createSession(
+        string $id,
+        User $user,
+        string $ipAddress = '192.168.1.20',
+        string $userAgent = 'Mozilla/5.0 (Linux; Android 14) Chrome/126.0'
+    ): void {
+        DB::table('sessions')->insert([
+            'id' => $id,
+            'user_id' => $user->id,
+            'ip_address' => $ipAddress,
+            'user_agent' => $userAgent,
+            'payload' => base64_encode('test-session'),
+            'last_activity' => now()->subMinutes(5)->timestamp,
+        ]);
     }
 }

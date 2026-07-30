@@ -23,6 +23,12 @@
 
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-4">
+                        @include('profile.partials.session-controls')
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
                         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                             <div class="d-flex align-items-start gap-3">
                                 <div class="stat-icon flex-shrink-0" aria-hidden="true">
