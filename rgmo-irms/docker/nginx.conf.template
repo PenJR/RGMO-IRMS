@@ -1,0 +1,52 @@
+server {
+    listen ${PORT};
+    listen [::]:${PORT};
+    server_name _;
+    server_tokens off;
+
+    root /var/www/html/public;
+    index index.php;
+
+    charset utf-8;
+    client_max_body_size 20m;
+
+    access_log /dev/stdout;
+    error_log /dev/stderr warn;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico {
+        access_log off;
+        log_not_found off;
+    }
+
+    location = /robots.txt {
+        access_log off;
+        log_not_found off;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        include fastcgi_params;
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param HTTP_X_FORWARDED_FOR $proxy_add_x_forwarded_for;
+        fastcgi_param HTTP_X_FORWARDED_PROTO $http_x_forwarded_proto;
+        fastcgi_read_timeout 120s;
+    }
+
+    location ~* \.(?:css|js|jpg|jpeg|gif|png|ico|webp|svg|woff|woff2|ttf)$ {
+        expires 7d;
+        access_log off;
+        try_files $uri =404;
+    }
+
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+}
