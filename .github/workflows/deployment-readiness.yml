@@ -42,7 +42,7 @@ jobs:
 
     env:
       APP_ENV: testing
-      APP_KEY: 01234567890123456789012345678901
+      APP_KEY: "base64:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE="
       APP_DEBUG: "false"
       BCRYPT_ROUNDS: 4
       CACHE_STORE: array
@@ -59,7 +59,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -70,7 +70,7 @@ jobs:
           tools: composer:v2
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
           cache: npm
