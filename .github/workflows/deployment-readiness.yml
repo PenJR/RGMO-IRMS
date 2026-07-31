@@ -85,12 +85,6 @@ jobs:
       - name: Audit PHP dependencies
         run: composer audit --locked
 
-      - name: Verify PostgreSQL migrations
-        run: php artisan migrate:fresh --force --no-interaction
-
-      - name: Run Laravel tests on PostgreSQL
-        run: php artisan test
-
       - name: Install frontend dependencies
         run: npm ci --no-audit --no-fund
 
@@ -99,3 +93,9 @@ jobs:
 
       - name: Build production frontend assets
         run: npm run build
+
+      - name: Verify PostgreSQL migrations
+        run: php artisan migrate:fresh --force --no-interaction
+
+      - name: Run Laravel tests on PostgreSQL
+        run: php artisan test
