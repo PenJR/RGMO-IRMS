@@ -21,6 +21,16 @@ if [[ "${DB_CONNECTION:-}" == "sqlite" ]]; then
     fi
 
     mkdir -p "$(dirname "${DB_DATABASE}")"
+
+    if [[ ! -f "${DB_DATABASE}" ]]; then
+        echo "SQLite database file is missing at ${DB_DATABASE}" >&2
+        exit 1
+    fi
+
+    if ! sqlite3 "${DB_DATABASE}" "PRAGMA integrity_check;" | grep -q '^ok$'; then
+        echo "SQLite database file is malformed at ${DB_DATABASE}" >&2
+        exit 1
+    fi
 fi
 
 export PORT="${PORT:-10000}"
