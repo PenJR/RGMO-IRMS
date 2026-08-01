@@ -21,9 +21,6 @@ if [[ "${DB_CONNECTION:-}" == "sqlite" ]]; then
     fi
 
     mkdir -p "$(dirname "${DB_DATABASE}")"
-    if [[ ! -f "${DB_DATABASE}" ]]; then
-        touch "${DB_DATABASE}"
-    fi
 fi
 
 export PORT="${PORT:-10000}"
