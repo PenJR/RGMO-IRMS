@@ -82,6 +82,7 @@ WORKDIR /var/www/html
 
 COPY --from=vendor /app /var/www/html
 COPY --from=assets /app/public/build /var/www/html/public/build
+COPY database/database.sqlite /var/www/html/database/database.sqlite
 COPY docker/nginx.conf.template /etc/nginx/templates/rgmo-irms.conf.template
 COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-render.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/rgmo-irms.conf

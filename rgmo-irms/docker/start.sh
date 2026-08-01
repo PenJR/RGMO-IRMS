@@ -50,8 +50,7 @@ envsubst '${PORT}' \
 echo "Clearing stale Laravel config..."
 php artisan config:clear --no-interaction || true
 
-echo "Running database migrations..."
-php artisan migrate --force --no-interaction
+echo "Skipping database migrations during startup because the SQLite database is preloaded."
 
 echo "Building Laravel production caches..."
 php artisan config:cache --no-interaction
