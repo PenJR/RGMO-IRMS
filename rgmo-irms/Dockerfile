@@ -97,7 +97,4 @@ RUN chmod +x /var/www/html/docker/start.sh \
 
 EXPOSE 10000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD-SHELL curl --fail --silent "http://127.0.0.1:${PORT:-10000}/up" >/dev/null || exit 1
-
 CMD ["/var/www/html/docker/start.sh"]
