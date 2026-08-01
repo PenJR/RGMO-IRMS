@@ -11,26 +11,19 @@ for variable in "${required_variables[@]}"; do
     fi
 done
 
-if [[ -z "${DB_URL:-}" ]]; then
-    if [[ "${DB_CONNECTION:-}" == "sqlite" ]]; then
-        if [[ -z "${DB_DATABASE:-}" ]]; then
-            export DB_DATABASE="/var/www/html/database/database.sqlite"
-        fi
-
-        if [[ "${DB_DATABASE}" != /* ]]; then
-            export DB_DATABASE="/var/www/html/${DB_DATABASE}"
-        fi
-
-        export DB_URL="sqlite:///${DB_DATABASE}"
-    else
-        echo "Required environment variable DB_URL is not set." >&2
-        exit 1
-    fi
-fi
-
 if [[ "${DB_CONNECTION:-}" == "sqlite" ]]; then
+    if [[ -z "${DB_DATABASE:-}" ]]; then
+        export DB_DATABASE="/var/www/html/database/database.sqlite"
+    fi
+
+    if [[ "${DB_DATABASE}" != /* ]]; then
+        export DB_DATABASE="/var/www/html/${DB_DATABASE}"
+    fi
+
     mkdir -p "$(dirname "${DB_DATABASE}")"
-    touch "${DB_DATABASE}"
+    if [[ ! -f "${DB_DATABASE}" ]]; then
+        touch "${DB_DATABASE}"
+    fi
 fi
 
 export PORT="${PORT:-10000}"

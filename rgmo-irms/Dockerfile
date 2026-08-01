@@ -96,7 +96,6 @@ RUN chmod +x /var/www/html/docker/start.sh \
         /var/www/html/storage/framework/views \
         /var/www/html/storage/logs \
         /var/www/html/bootstrap/cache \
-    && touch /var/www/html/database/database.sqlite \
     && chown -R www-data:www-data \
         /var/www/html/database \
         /var/www/html/storage \
