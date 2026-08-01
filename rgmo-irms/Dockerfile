@@ -1,49 +1,103 @@
-FROM php:8.2-cli
+# syntax=docker/dockerfile:1.7
+
+FROM php:8.3-fpm-bookworm AS php-base
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    COMPOSER_ALLOW_SUPERUSER=1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        gettext-base \
+        git \
+        libfreetype6-dev \
+        libicu-dev \
+        libjpeg62-turbo-dev \
+        libonig-dev \
+        libpng-dev \
+        libpq-dev \
+        libxml2-dev \
+        libzip-dev \
+        nginx \
+        postgresql-client \
+        supervisor \
+        unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        bcmath \
+        exif \
+        gd \
+        intl \
+        mbstring \
+        opcache \
+        pcntl \
+        pdo_pgsql \
+        zip \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /etc/nginx/sites-enabled/default
+
+FROM php-base AS vendor
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --no-scripts \
+    --optimize-autoloader \
+    --prefer-dist
+
+COPY . .
+RUN composer dump-autoload --no-dev --optimize --no-interaction \
+    && composer check-platform-reqs --no-dev \
+    && php artisan package:discover --ansi
+
+FROM node:20-bookworm-slim AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+COPY resources ./resources
+COPY public ./public
+COPY vite.config.js ./vite.config.js
+RUN npm run build
+
+FROM php-base AS runtime
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
+    LOG_CHANNEL=stderr \
     PORT=10000
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    curl \
-    libzip-dev \
-    zip \
-    sqlite3 \
-    libsqlite3-dev \
-    nodejs \
-    npm \
-    && docker-php-ext-install pdo pdo_sqlite zip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy dependency manifests first for better layer caching
-COPY composer.json composer.lock* ./
-COPY package.json package-lock.json* ./
+COPY --from=vendor /app /var/www/html
+COPY --from=assets /app/public/build /var/www/html/public/build
+COPY docker/nginx.conf.template /etc/nginx/templates/rgmo-irms.conf.template
+COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-render.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/rgmo-irms.conf
 
-# Install PHP and Node dependencies
-RUN composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader \
-    && npm install
-
-# Copy the rest of the application
-COPY . .
-
-# Build frontend assets
-RUN npm run build
-
-# Prepare SQLite database file and Laravel caches
-RUN touch database/database.sqlite \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+RUN chmod +x /var/www/html/docker/start.sh \
+    && mkdir -p \
+        /var/www/html/storage/app/public \
+        /var/www/html/storage/framework/cache \
+        /var/www/html/storage/framework/sessions \
+        /var/www/html/storage/framework/views \
+        /var/www/html/storage/logs \
+        /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data \
+        /var/www/html/storage \
+        /var/www/html/bootstrap/cache
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT}"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD-SHELL curl --fail --silent "http://127.0.0.1:${PORT:-10000}/up" >/dev/null || exit 1
+
+CMD ["/var/www/html/docker/start.sh"]

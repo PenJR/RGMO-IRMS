@@ -3,6 +3,29 @@ import QRCode from 'qrcode';
 
 window.QRCode = QRCode;
 
+document.addEventListener('click', (event) => {
+    const dismissButton = event.target instanceof Element
+        ? event.target.closest('[data-bs-dismiss="alert"]')
+        : null;
+
+    if (!dismissButton) return;
+
+    const alert = dismissButton.closest('.alert');
+    if (!alert) return;
+
+    event.preventDefault();
+    alert.classList.remove('show');
+
+    if (!alert.classList.contains('fade')) {
+        alert.remove();
+        return;
+    }
+
+    const removeAlert = () => alert.remove();
+    alert.addEventListener('transitionend', removeAlert, { once: true });
+    window.setTimeout(removeAlert, 200);
+});
+
 const loader = document.querySelector('[data-rgmo-loader]');
 
 if (loader) {

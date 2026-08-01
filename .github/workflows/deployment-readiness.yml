@@ -1,0 +1,101 @@
+name: Deployment readiness
+
+on:
+  push:
+    branches:
+      - main
+      - deployment-readiness
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deployment-readiness-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  postgresql-tests:
+    name: Laravel 12 / PHP 8.3 / PostgreSQL 16
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: rgmo_irms_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d rgmo_irms_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: rgmo-irms
+
+    env:
+      APP_ENV: testing
+      APP_KEY: "base64:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE="
+      APP_DEBUG: "false"
+      BCRYPT_ROUNDS: 4
+      CACHE_STORE: array
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: rgmo_irms_test
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_URL: ""
+      MAIL_MAILER: array
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: array
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: bcmath, ctype, dom, fileinfo, gd, intl, mbstring, openssl, pdo_pgsql, tokenizer, xml, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: rgmo-irms/package-lock.json
+
+      - name: Validate Composer files
+        run: composer validate --no-check-publish --strict
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Audit PHP dependencies
+        run: composer audit --locked
+
+      - name: Install frontend dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Audit frontend dependencies
+        run: npm audit
+
+      - name: Build production frontend assets
+        run: npm run build
+
+      - name: Verify PostgreSQL migrations
+        run: php artisan migrate:fresh --force --no-interaction
+
+      - name: Run Laravel tests on PostgreSQL
+        run: php artisan test
