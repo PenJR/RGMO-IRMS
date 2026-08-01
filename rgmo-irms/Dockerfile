@@ -16,10 +16,12 @@ RUN apt-get update \
         libonig-dev \
         libpng-dev \
         libpq-dev \
+        libsqlite3-dev \
         libxml2-dev \
         libzip-dev \
         nginx \
         postgresql-client \
+        sqlite3 \
         supervisor \
         unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -32,6 +34,7 @@ RUN apt-get update \
         opcache \
         pcntl \
         pdo_pgsql \
+        pdo_sqlite \
         zip \
     && rm -rf /var/lib/apt/lists/* \
     && rm -f /etc/nginx/sites-enabled/default
@@ -85,13 +88,16 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/rgmo-irms.conf
 
 RUN chmod +x /var/www/html/docker/start.sh \
     && mkdir -p \
+        /var/www/html/database \
         /var/www/html/storage/app/public \
         /var/www/html/storage/framework/cache \
         /var/www/html/storage/framework/sessions \
         /var/www/html/storage/framework/views \
         /var/www/html/storage/logs \
         /var/www/html/bootstrap/cache \
+    && touch /var/www/html/database/database.sqlite \
     && chown -R www-data:www-data \
+        /var/www/html/database \
         /var/www/html/storage \
         /var/www/html/bootstrap/cache
 

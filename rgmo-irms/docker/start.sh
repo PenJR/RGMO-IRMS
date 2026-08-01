@@ -2,7 +2,7 @@
 
 set -Eeuo pipefail
 
-required_variables=(APP_KEY DB_URL)
+required_variables=(APP_KEY)
 
 for variable in "${required_variables[@]}"; do
     if [[ -z "${!variable:-}" ]]; then
@@ -10,6 +10,28 @@ for variable in "${required_variables[@]}"; do
         exit 1
     fi
 done
+
+if [[ -z "${DB_URL:-}" ]]; then
+    if [[ "${DB_CONNECTION:-}" == "sqlite" ]]; then
+        if [[ -z "${DB_DATABASE:-}" ]]; then
+            export DB_DATABASE="/var/www/html/database/database.sqlite"
+        fi
+
+        if [[ "${DB_DATABASE}" != /* ]]; then
+            export DB_DATABASE="/var/www/html/${DB_DATABASE}"
+        fi
+
+        export DB_URL="sqlite:///${DB_DATABASE}"
+    else
+        echo "Required environment variable DB_URL is not set." >&2
+        exit 1
+    fi
+fi
+
+if [[ "${DB_CONNECTION:-}" == "sqlite" ]]; then
+    mkdir -p "$(dirname "${DB_DATABASE}")"
+    touch "${DB_DATABASE}"
+fi
 
 export PORT="${PORT:-10000}"
 
@@ -24,6 +46,9 @@ fi
 envsubst '${PORT}' \
     < /etc/nginx/templates/rgmo-irms.conf.template \
     > /etc/nginx/conf.d/default.conf
+
+echo "Clearing stale Laravel config..."
+php artisan config:clear --no-interaction || true
 
 echo "Running database migrations..."
 php artisan migrate --force --no-interaction
