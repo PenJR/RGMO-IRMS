@@ -20,10 +20,23 @@
             <label for="email" class="auth-label">{{ __('Email Address') }}</label>
             <div class="auth-input-wrap">
                 <i data-lucide="mail" aria-hidden="true"></i>
-                <input id="email" class="form-control @error('email') is-invalid @enderror" type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="name@example.com" />
+                <input
+                    id="email"
+                    class="form-control @error('email') is-invalid @enderror"
+                    type="email"
+                    name="email"
+                    value="{{ old('email') }}"
+                    required
+                    autofocus
+                    autocomplete="username"
+                    inputmode="email"
+                    placeholder="name@example.com"
+                    aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}"
+                    @error('email') aria-describedby="email-error" @enderror
+                />
             </div>
             @error('email')
-                <div class="invalid-feedback">{{ $message }}</div>
+                <div class="invalid-feedback d-block" id="email-error">{{ $message }}</div>
             @enderror
         </div>
 
@@ -42,13 +55,17 @@
                 <input id="password" class="form-control @error('password') is-invalid @enderror"
                                 type="password"
                                 name="password"
-                                required placeholder="••••••••" />
+                                required
+                                autocomplete="current-password"
+                                placeholder="••••••••"
+                                aria-invalid="{{ $errors->has('password') ? 'true' : 'false' }}"
+                                @error('password') aria-describedby="password-error" @enderror />
                 <button class="btn auth-icon-button" type="button" id="togglePassword" aria-label="Show password">
                     <i data-lucide="eye" id="toggleIcon"></i>
                 </button>
             </div>
             @error('password')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
+                <div class="invalid-feedback d-block" id="password-error">{{ $message }}</div>
             @enderror
         </div>
 
@@ -60,7 +77,7 @@
             </div>
         </div>
 
-        <div class="d-grid mt-4">
+        <div class="d-grid mt-3">
             <button type="submit" class="btn btn-cmu d-flex align-items-center justify-content-center gap-2">
                 <i data-lucide="log-in" aria-hidden="true"></i>
                 {{ __('Login') }}

@@ -29,10 +29,9 @@
 
             body {
                 background:
-                    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-                    linear-gradient(135deg, #003414 0%, #005323 54%, #113f23 100%) !important;
-                background-size: 44px 44px, 44px 44px, auto;
+                    radial-gradient(circle at 12% 8%, rgba(255, 198, 0, 0.13), transparent 23rem),
+                    radial-gradient(circle at 92% 88%, rgba(145, 159, 2, 0.13), transparent 30rem),
+                    linear-gradient(135deg, #002f13 0%, #00491e 52%, #003716 100%) !important;
                 font-family: 'Inter', system-ui, sans-serif;
                 color: #f4fff6;
                 min-height: 100vh;
@@ -45,16 +44,16 @@
 
             body::before {
                 content: "";
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
+                position: fixed;
+                inset: 0;
                 pointer-events: none;
                 z-index: 0;
                 background:
-                    linear-gradient(90deg, rgba(255, 198, 0, 0.12), transparent 32%),
-                    linear-gradient(180deg, transparent 0%, rgba(0, 22, 9, 0.26) 100%);
+                    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+                background-size: 56px 56px;
+                -webkit-mask-image: linear-gradient(to right, #000, transparent 72%);
+                mask-image: linear-gradient(to right, #000, transparent 72%);
             }
 
             .floating-blobs {
@@ -75,33 +74,70 @@
             }
 
             .feature-card:hover {
-                background: rgba(253, 255, 250, 0.98) !important;
-                transform: translateY(-2px);
-                border-color: var(--cmu-yellow) !important;
-                box-shadow: 0 18px 36px rgba(0, 30, 12, 0.2);
+                background: rgba(255, 255, 255, 0.1) !important;
+                transform: translateY(-3px);
+                border-color: rgba(255, 198, 0, 0.5) !important;
+                box-shadow: 0 18px 36px rgba(0, 21, 8, 0.18);
             }
 
             .feature-card:hover h5 {
-                color: var(--cmu-green) !important;
+                color: #ffffff !important;
             }
 
             .feature-card:hover p {
-                color: #4f6458 !important;
+                color: rgba(244, 255, 246, 0.78) !important;
             }
 
             .feature-card {
-                border: 1px solid rgba(255, 198, 0, 0.36);
+                border: 1px solid rgba(255, 255, 255, 0.13);
+            }
+
+            .auth-feature-card {
+                align-items: flex-start !important;
+                gap: 0.9rem !important;
+                padding: 1.05rem !important;
+                background: rgba(255, 255, 255, 0.065) !important;
+                border: 1px solid rgba(255, 255, 255, 0.13) !important;
+                border-radius: 14px !important;
+                box-shadow: none !important;
+            }
+
+            .auth-feature-card .brand-mark {
+                width: 42px;
+                height: 42px;
+                min-width: 42px !important;
+                flex: 0 0 42px;
+                color: var(--cmu-yellow);
+                background: rgba(255, 198, 0, 0.13);
+                border: 1px solid rgba(255, 198, 0, 0.2);
+                box-shadow: none !important;
+            }
+
+            .auth-feature-card .brand-mark svg {
+                width: 21px !important;
+                height: 21px !important;
+                color: var(--cmu-yellow) !important;
+            }
+
+            .auth-feature-card h5 {
+                font-size: 0.94rem;
+                line-height: 1.3;
+            }
+
+            .auth-feature-card p {
+                font-size: 0.78rem;
+                line-height: 1.5;
             }
 
             .login-card {
-                background: #fbfdf9;
-                backdrop-filter: blur(12px);
-                border: 1px solid rgba(255, 198, 0, 0.58);
-                border-radius: 10px;
-                box-shadow: 0 30px 70px rgba(0, 24, 10, 0.34);
+                background: rgba(253, 254, 251, 0.985);
+                backdrop-filter: blur(18px);
+                border: 1px solid rgba(255, 255, 255, 0.82) !important;
+                border-radius: 24px !important;
+                box-shadow: 0 32px 80px rgba(0, 20, 8, 0.34), 0 4px 18px rgba(0, 20, 8, 0.12);
                 width: 100%;
-                max-width: 500px;
-                padding: 2.75rem;
+                max-width: 470px;
+                padding: 2.6rem;
                 position: relative;
                 overflow: hidden;
             }
@@ -110,8 +146,8 @@
                 content: "";
                 position: absolute;
                 inset: 0 0 auto 0;
-                height: 5px;
-                background: linear-gradient(90deg, var(--cmu-yellow), var(--cmu-green-2), var(--cmu-accent));
+                height: 4px;
+                background: linear-gradient(90deg, var(--cmu-yellow) 0 42%, var(--cmu-accent) 42% 67%, var(--cmu-green-2) 67%);
             }
 
             .login-card .brand-mark {
@@ -164,9 +200,10 @@
             }
 
             .form-control {
-                border-radius: 8px;
+                border-radius: 10px;
                 padding: 0.75rem 1rem;
-                border-color: rgba(0, 73, 30, 0.28);
+                border-color: #cad8ce;
+                background-color: #ffffff;
             }
 
             .form-control:focus {
@@ -189,11 +226,11 @@
             }
 
             .feature-card h5 {
-                color: var(--cmu-green) !important;
+                color: #ffffff !important;
             }
 
             .feature-card p {
-                color: #4f6458 !important;
+                color: rgba(244, 255, 246, 0.7) !important;
                 opacity: 1 !important;
             }
 
@@ -209,7 +246,7 @@
                 display: flex;
                 align-items: center;
                 gap: 1.25rem;
-                margin-bottom: 2.25rem;
+                margin-bottom: 2rem;
             }
 
             .auth-brand-lockup > div {
@@ -217,14 +254,14 @@
             }
 
             .auth-brand-lockup img {
-                width: 104px;
-                height: 104px;
+                width: 88px;
+                height: 88px;
                 object-fit: contain;
             }
 
             .auth-brand-lockup .office-name {
                 color: rgba(244, 255, 246, 0.86);
-                font-size: 0.76rem;
+                font-size: 0.72rem;
                 font-weight: 800;
                 letter-spacing: 0.14em;
                 text-transform: uppercase;
@@ -233,8 +270,8 @@
 
             .auth-title {
                 color: #ffffff;
-                font-size: clamp(3rem, 4.4vw, 4.2rem);
-                line-height: 0.92;
+                font-size: clamp(2.85rem, 4vw, 3.75rem);
+                line-height: 0.95;
                 font-weight: 800;
                 letter-spacing: 0;
                 margin: 0;
@@ -242,11 +279,11 @@
             }
 
             .auth-subtitle {
-                max-width: 560px;
+                max-width: 590px;
                 color: rgba(244, 255, 246, 0.9);
-                font-size: 1.08rem;
-                line-height: 1.7;
-                margin: 0 0 2rem;
+                font-size: 1rem;
+                line-height: 1.65;
+                margin: 0 0 1.8rem;
                 border-left: 3px solid var(--cmu-yellow);
                 padding-left: 1.25rem;
             }
@@ -257,7 +294,7 @@
                 font-weight: 800;
                 letter-spacing: 0.12em;
                 text-transform: uppercase;
-                margin: 1.75rem 0 0.85rem;
+                margin: 0 0 0.85rem;
             }
 
             .auth-card-heading {
@@ -266,7 +303,7 @@
 
             .auth-card-heading h2 {
                 color: #1f2d27;
-                font-size: 2rem;
+                font-size: 1.9rem;
                 font-weight: 800;
                 line-height: 1.1;
                 margin: 0 0 0.45rem;
@@ -283,10 +320,10 @@
                 align-items: center;
                 gap: 0.65rem;
                 color: #244335;
-                background: rgba(2, 104, 30, 0.08);
-                border: 1px solid rgba(2, 104, 30, 0.18);
-                border-radius: 8px;
-                padding: 0.75rem 0.9rem;
+                background: #edf6ee;
+                border: 1px solid #c8ddcc;
+                border-radius: 10px;
+                padding: 0.8rem 0.9rem;
                 font-size: 0.84rem;
                 font-weight: 700;
             }
@@ -300,7 +337,7 @@
 
             .auth-form {
                 display: grid;
-                gap: 1rem;
+                gap: 1.05rem;
             }
 
             .auth-field {
@@ -332,7 +369,7 @@
             .auth-input-wrap .form-control,
             .auth-password-group .form-control {
                 padding-left: 2.65rem;
-                min-height: 48px;
+                min-height: 50px;
             }
 
             .auth-password-group .form-control {
@@ -341,8 +378,8 @@
             }
 
             .auth-icon-button {
-                width: 48px;
-                min-height: 48px;
+                width: 50px;
+                min-height: 50px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
@@ -350,8 +387,8 @@
                 border-left: 0;
                 color: #53645b;
                 background: #ffffff;
-                border-top-right-radius: 8px !important;
-                border-bottom-right-radius: 8px !important;
+                border-top-right-radius: 10px !important;
+                border-bottom-right-radius: 10px !important;
             }
 
             .auth-icon-button:hover,
@@ -393,8 +430,9 @@
             }
 
             .btn-cmu {
-                min-height: 48px;
-                border-radius: 8px;
+                min-height: 50px;
+                border-radius: 10px !important;
+                box-shadow: 0 8px 22px rgba(181, 139, 0, 0.22);
             }
 
             .auth-card-footer {
@@ -425,6 +463,21 @@
                 }
             }
 
+            @media (min-width: 992px) {
+                .auth-page-shell {
+                    max-width: 1240px;
+                }
+
+                .auth-panel {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 0.8rem;
+                }
+
+                .auth-feature-card {
+                    min-height: 132px;
+                }
+            }
+
             @media (max-width: 575.98px) {
                 .container {
                     padding-left: 1rem;
@@ -432,11 +485,31 @@
                 }
 
                 .login-card {
-                    padding: 1.5rem;
+                    padding: 1.5rem 1.35rem;
+                    border-radius: 18px !important;
                 }
 
                 .auth-card-heading h2 {
                     font-size: 1.7rem;
+                }
+            }
+
+            @media (min-width: 992px) and (max-height: 780px) {
+                .auth-brand-lockup {
+                    margin-bottom: 1.35rem;
+                }
+
+                .auth-subtitle {
+                    margin-bottom: 1.25rem;
+                }
+
+                .auth-feature-card {
+                    min-height: 112px;
+                    padding: 0.85rem !important;
+                }
+
+                .login-card {
+                    padding: 2.1rem 2.35rem;
                 }
             }
         </style>
@@ -450,13 +523,13 @@
             <div class="blob" style="bottom: -10%; right: -10%; background: var(--cmu-accent); animation-delay: -5s; opacity: 0.16;"></div>
         </div>
 
-        <div class="container py-5">
-            <div class="row align-items-center justify-content-center g-5 min-vh-100">
+        <div class="container auth-page-shell py-4">
+            <div class="row align-items-center justify-content-between g-5 min-vh-100">
                 <!-- Info Column (Visible on Desktop) -->
-                <div class="col-lg-6 d-none d-lg-block auth-shell-copy">
-                    <div class="pe-lg-5">
+                <div class="col-lg-7 d-none d-lg-block auth-shell-copy">
+                    <div class="pe-lg-4 pe-xl-5">
                         <div class="auth-brand-lockup">
-                            <img src="{{ asset('images/logo.png') }}" alt="CMU Logo" class="cmu-logo" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+                            <img src="{{ asset('images/logo.png') }}" alt="CMU Logo" class="cmu-logo">
                             <div>
                                 <div class="office-name">Resource Generation Management Office</div>
                                 <h1 class="auth-title">RGMO-IRMS</h1>
