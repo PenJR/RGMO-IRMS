@@ -22,7 +22,9 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/data', [DashboardController::class, 'data'])->name('dashboard.data');
+    Route::get('/dashboard/data', [DashboardController::class, 'data'])
+        ->middleware('permission:generate-reports,view-audit-trail')
+        ->name('dashboard.data');
     Route::get('/staff/dashboard', [DashboardController::class, 'staff'])->name('dashboard.staff');
     Route::middleware(['permission:generate-reports,view-audit-trail'])->group(function () {
         Route::get('/dashboard/health', [DashboardController::class, 'health'])->name('dashboard.health');

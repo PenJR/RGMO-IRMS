@@ -102,59 +102,34 @@
 
         <div class="card border-0 dashboard-panel">
             @if($myRequests->isNotEmpty())
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0 staff-request-table">
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-3">Purpose</th>
-                                <th class="px-4 py-3">Requested</th>
-                                <th class="px-4 py-3">Needed by</th>
-                                <th class="px-4 py-3 text-center">Status</th>
-                                <th class="px-4 py-3 text-end" data-sortable="false"><span class="visually-hidden">Action</span></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($myRequests as $request)
-                                @php
-                                    $statusClass = match($request->status) {
-                                        App\Models\ResourceRequest::STATUS_PENDING => 'status-badge--warning',
-                                        App\Models\ResourceRequest::STATUS_APPROVED => 'status-badge--success',
-                                        App\Models\ResourceRequest::STATUS_REJECTED => 'status-badge--danger',
-                                        default => 'status-badge--info',
-                                    };
-                                @endphp
-                                <tr>
-                                    <td class="px-4 py-3">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <span class="staff-request-icon" aria-hidden="true"><i data-lucide="file-text"></i></span>
-                                            <div>
-                                                <p class="mb-0 fw-bold text-dark">{{ Str::limit($request->purpose, 58) }}</p>
-                                                <span class="small text-muted">Request #{{ $request->id }}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3 text-muted">{{ $request->created_at->format('M j, Y') }}</td>
-                                    <td class="px-4 py-3">
-                                        @if($request->needed_date)
-                                            <span class="{{ $request->status === App\Models\ResourceRequest::STATUS_PENDING && $request->needed_date->isPast() ? 'text-danger fw-semibold' : 'text-muted' }}">
-                                                {{ $request->needed_date->format('M j, Y') }}
-                                            </span>
-                                        @else
-                                            <span class="text-muted">Not specified</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span class="badge status-badge {{ $statusClass }}">{{ str($request->status)->headline() }}</span>
-                                    </td>
-                                    <td class="px-4 py-3 text-end">
-                                        <a href="{{ route('requests.show', $request) }}" class="btn btn-sm btn-outline-success" aria-label="View request number {{ $request->id }}">
-                                            View
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <div class="dashboard-request-list" role="list" aria-label="Your five most recent resource requests">
+                    @foreach($myRequests as $request)
+                        @php
+                            $statusClass = match($request->status) {
+                                App\Models\ResourceRequest::STATUS_PENDING => 'status-badge--warning',
+                                App\Models\ResourceRequest::STATUS_APPROVED => 'status-badge--success',
+                                App\Models\ResourceRequest::STATUS_REJECTED => 'status-badge--danger',
+                                default => 'status-badge--info',
+                            };
+                        @endphp
+                        <a href="{{ route('requests.show', $request) }}" class="dashboard-request-card" role="listitem" aria-label="View request number {{ $request->id }}">
+                            <span class="staff-request-icon" aria-hidden="true"><i data-lucide="file-text"></i></span>
+                            <span class="dashboard-request-card__content">
+                                <span class="dashboard-request-card__topline">
+                                    <strong>{{ Str::limit($request->purpose, 72) }}</strong>
+                                    <span class="badge status-badge {{ $statusClass }}">{{ str($request->status)->headline() }}</span>
+                                </span>
+                                <span class="dashboard-request-card__meta">
+                                    <span>Request #{{ $request->id }}</span>
+                                    <span>Submitted {{ $request->created_at->format('M j') }}</span>
+                                    <span class="{{ $request->status === App\Models\ResourceRequest::STATUS_PENDING && $request->needed_date?->isPast() ? 'dashboard-request-card__overdue' : '' }}">
+                                        Needed {{ $request->needed_date?->format('M j') ?? 'not set' }}
+                                    </span>
+                                </span>
+                            </span>
+                            <i data-lucide="chevron-right" class="dashboard-request-card__chevron" aria-hidden="true"></i>
+                        </a>
+                    @endforeach
                 </div>
             @else
                 <div class="staff-dashboard__empty text-center">

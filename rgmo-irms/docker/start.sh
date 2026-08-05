@@ -35,11 +35,22 @@ fi
 
 export PORT="${PORT:-10000}"
 
-if [[ -z "${APP_URL:-}" && -n "${RENDER_EXTERNAL_HOSTNAME:-}" ]]; then
-    export APP_URL="https://${RENDER_EXTERNAL_HOSTNAME}"
-fi
+if [[ -n "${RENDER_EXTERNAL_HOSTNAME:-}" ]]; then
+    if [[ -z "${APP_URL:-}" || "${APP_URL}" =~ ^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?/?$ ]]; then
+        export APP_URL="https://${RENDER_EXTERNAL_HOSTNAME}"
+    elif [[ "${APP_URL}" == http://* ]]; then
+        export APP_URL="https://${APP_URL#http://}"
+    fi
 
-if [[ -z "${ASSET_URL:-}" && -n "${APP_URL:-}" ]]; then
+    if [[ -z "${ASSET_URL:-}" || "${ASSET_URL}" =~ ^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?/?$ ]]; then
+        export ASSET_URL="${APP_URL}"
+    elif [[ "${ASSET_URL}" == http://* ]]; then
+        export ASSET_URL="https://${ASSET_URL#http://}"
+    fi
+
+    # Render web services are externally served over HTTPS.
+    export SESSION_SECURE_COOKIE=true
+elif [[ -z "${ASSET_URL:-}" && -n "${APP_URL:-}" ]]; then
     export ASSET_URL="${APP_URL}"
 fi
 

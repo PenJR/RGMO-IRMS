@@ -64,7 +64,7 @@ class RbacConfigurationTest extends TestCase
         $staff = $this->activeUser(User::ROLE_STAFF);
 
         $this->actingAs($staff)
-            ->get(route('dashboard'))
+            ->get(route('dashboard.staff'))
             ->assertOk()
             ->assertSee('href="' . route('inventory.index') . '"', false)
             ->assertSee('class="rgmo-progress"', false)

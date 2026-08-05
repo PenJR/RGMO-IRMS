@@ -49,6 +49,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('app:low-stock-alert')->daily();
     })
     ->withMiddleware(function (Middleware $middleware): void {
+        // Render terminates TLS before forwarding requests to this container.
+        // Trust its forwarded headers so Laravel retains the original HTTPS
+        // scheme when generating asset, route, and form URLs.
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO
+                | Request::HEADER_X_FORWARDED_PREFIX,
+        );
+
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,

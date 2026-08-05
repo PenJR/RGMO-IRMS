@@ -24,6 +24,10 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        if (! auth()->user()->hasPermission(['generate-reports', 'view-audit-trail'])) {
+            return redirect()->route('dashboard.staff');
+        }
+
         $stats = $this->reportService->getDashboardStats();
         $lowStockItems = InventoryItem::lowStock()->orderBy('stock')->limit(5)->get();
         $recentRequests = ResourceRequest::latest()->limit(5)->with('user')->get();

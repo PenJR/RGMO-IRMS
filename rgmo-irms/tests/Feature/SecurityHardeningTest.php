@@ -40,6 +40,37 @@ class SecurityHardeningTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_staff_is_redirected_away_from_system_dashboard(): void
+    {
+        $staff = $this->activeUser(User::ROLE_STAFF);
+
+        $this->actingAs($staff)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('dashboard.staff'));
+    }
+
+    public function test_staff_cannot_access_system_dashboard_data(): void
+    {
+        $staff = $this->activeUser(User::ROLE_STAFF);
+
+        $this->actingAs($staff)
+            ->getJson(route('dashboard.data'))
+            ->assertForbidden();
+    }
+
+    public function test_report_authorized_user_can_access_system_dashboard(): void
+    {
+        $manager = $this->activeUser(User::ROLE_PROJECT_MANAGER);
+
+        $this->actingAs($manager)
+            ->get(route('dashboard'))
+            ->assertOk();
+
+        $this->actingAs($manager)
+            ->getJson(route('dashboard.data'))
+            ->assertOk();
+    }
+
     public function test_requester_cannot_access_or_update_another_users_request(): void
     {
         $owner = $this->activeUser(User::ROLE_STAFF);

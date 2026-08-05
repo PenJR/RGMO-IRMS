@@ -320,47 +320,33 @@
                     </div>
                     <div class="card-body p-0">
                         @if($recentRequests->count() > 0)
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th class="border-0 px-4 py-3">User / Purpose</th>
-                                            <th class="border-0 px-4 py-3 text-center">Status</th>
-                                            <th class="border-0 px-4 py-3 text-end">Time</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($recentRequests as $request)
-                                            <tr>
-                                                <td class="px-4 py-3">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center me-3 fw-bold dashboard-request-avatar">
-                                                            {{ strtoupper(substr($request->user->name, 0, 2)) }}
-                                                        </div>
-                                                        <div>
-                                                            <div class="small fw-bold text-dark">{{ $request->user->name }}</div>
-                                                            <div class="text-muted dashboard-request-meta">{{ Str::limit($request->purpose, 30) }}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="px-4 py-3 text-center">
-                                                    @php
-                                                        $statusStyle = match($request->status) {
-                                                            'pending' => 'background-color: #fef9c3; color: #854d0e; border: 1px solid #fef08a;',
-                                                            'approved' => 'background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0;',
-                                                            'rejected' => 'background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca;',
-                                                            default => 'background-color: #f3f4f6; color: #374151; border: 1px solid #e5e7eb;'
-                                                        };
-                                                    @endphp
-                                                    <span class="badge rounded-pill fw-bold text-uppercase" style="{{ $statusStyle }} padding: 0.4em 0.8em;">{{ $request->status }}</span>
-                                                </td>
-                                                <td class="px-4 py-3 text-end small text-muted">
-                                                    {{ $request->created_at->diffForHumans(null, true) }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                            <div class="dashboard-feed" role="list" aria-label="Five most recent resource requests">
+                                @foreach($recentRequests as $request)
+                                    @php
+                                        $statusClass = match($request->status) {
+                                            'pending' => 'status-badge--warning',
+                                            'approved' => 'status-badge--success',
+                                            'rejected' => 'status-badge--danger',
+                                            default => 'status-badge--info',
+                                        };
+                                    @endphp
+                                    <article class="dashboard-feed__item" role="listitem">
+                                        <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center fw-bold dashboard-request-avatar" aria-hidden="true">
+                                            {{ strtoupper(substr($request->user->name, 0, 2)) }}
+                                        </div>
+                                        <div class="dashboard-feed__content">
+                                            <div class="dashboard-feed__topline">
+                                                <h6>{{ $request->user->name }}</h6>
+                                                <span class="badge status-badge {{ $statusClass }}">{{ str($request->status)->headline() }}</span>
+                                            </div>
+                                            <p>{{ Str::limit($request->purpose, 72) }}</p>
+                                            <span class="dashboard-feed__time" title="{{ $request->created_at->format('M j, Y \a\t g:i A') }}">
+                                                <i data-lucide="clock-3" aria-hidden="true"></i>
+                                                {{ $request->created_at->diffForHumans(null, true) }} ago
+                                            </span>
+                                        </div>
+                                    </article>
+                                @endforeach
                             </div>
                         @else
                             <div class="text-center py-5">
@@ -394,36 +380,25 @@
                     </div>
                     <div class="card-body p-0">
                         @if($recentActivities->count() > 0)
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0" style="min-width: 600px;">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th class="border-0 px-4 py-3">Activity</th>
-                                            <th class="border-0 px-4 py-3">Module</th>
-                                            <th class="border-0 px-4 py-3">Timestamp</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($recentActivities as $activity)
-                                            <tr>
-                                                <td class="px-4 py-3">
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <div class="rounded bg-opacity-10 p-1 {{ str_contains(strtolower($activity->action), 'delete') ? 'bg-danger text-danger' : (str_contains(strtolower($activity->action), 'create') ? 'bg-success text-success' : 'bg-primary text-primary') }}">
-                                                            <i data-lucide="{{ str_contains(strtolower($activity->action), 'delete') ? 'trash-2' : (str_contains(strtolower($activity->action), 'create') ? 'plus-circle' : 'edit-3') }}" style="width: 14px; height: 14px;"></i>
-                                                        </div>
-                                                        <span class="small"><span class="fw-bold">{{ $activity->user->name ?? 'System' }}</span> {{ $activity->action }}</span>
-                                                    </div>
-                                                </td>
-                                                <td class="px-4 py-3">
-                                                    <span class="badge bg-light text-dark border fw-normal">{{ $activity->module }}</span>
-                                                </td>
-                                                <td class="px-4 py-3 text-muted small">
-                                                    {{ $activity->created_at->format('M d, Y • h:i A') }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                            <div class="dashboard-feed dashboard-feed--audit" role="list" aria-label="Ten most recent system audit events">
+                                @foreach($recentActivities as $activity)
+                                    <article class="dashboard-feed__item" role="listitem">
+                                        <div class="dashboard-activity-icon {{ str_contains(strtolower($activity->action), 'delete') ? 'dashboard-activity-icon--danger' : (str_contains(strtolower($activity->action), 'create') ? 'dashboard-activity-icon--success' : 'dashboard-activity-icon--neutral') }}" aria-hidden="true">
+                                            <i data-lucide="{{ str_contains(strtolower($activity->action), 'delete') ? 'trash-2' : (str_contains(strtolower($activity->action), 'create') ? 'plus' : 'pencil') }}"></i>
+                                        </div>
+                                        <div class="dashboard-feed__content">
+                                            <div class="dashboard-feed__topline">
+                                                <h6>{{ $activity->user->name ?? 'System' }}</h6>
+                                                <span class="dashboard-feed__module">{{ str($activity->module)->replace('_', ' ')->headline() }}</span>
+                                            </div>
+                                            <p>{{ $activity->action }}</p>
+                                            <span class="dashboard-feed__time" title="{{ $activity->created_at->format('M j, Y \a\t g:i A') }}">
+                                                <i data-lucide="clock-3" aria-hidden="true"></i>
+                                                {{ $activity->created_at->diffForHumans(null, true) }} ago
+                                            </span>
+                                        </div>
+                                    </article>
+                                @endforeach
                             </div>
                         @else
                             <div class="text-center py-4">
