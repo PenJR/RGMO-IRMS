@@ -24,6 +24,48 @@
                         <p class="mb-0"><strong>Joined:</strong> {{ $user->created_at?->format('M d, Y') }}</p>
                     </div>
                 </div>
+
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-semibold mb-1">Change Password</h5>
+                        <p class="text-muted small mb-4">
+                            Set a new password for this account. Other signed-in sessions for this user will be revoked.
+                        </p>
+
+                        <form method="POST" action="{{ route('admin.users.reset-password', $user) }}">
+                            @csrf
+
+                            <div class="mb-3">
+                                <label for="admin_password" class="form-label fw-semibold small">New Password</label>
+                                <input
+                                    id="admin_password"
+                                    name="password"
+                                    type="password"
+                                    class="form-control @error('password') is-invalid @enderror"
+                                    autocomplete="new-password"
+                                    required
+                                >
+                                @error('password')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="admin_password_confirmation" class="form-label fw-semibold small">Confirm New Password</label>
+                                <input
+                                    id="admin_password_confirmation"
+                                    name="password_confirmation"
+                                    type="password"
+                                    class="form-control"
+                                    autocomplete="new-password"
+                                    required
+                                >
+                            </div>
+
+                            <button type="submit" class="btn btn-cmu">Change Password</button>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <div class="col-lg-8">

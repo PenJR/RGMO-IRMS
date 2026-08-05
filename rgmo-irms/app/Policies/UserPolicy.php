@@ -39,6 +39,14 @@ class UserPolicy
     }
 
     /**
+     * Determine if the authenticated user can change an account password.
+     */
+    public function resetPassword(User $user, User $model): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
      * Determine if the user can delete the model.
      */
     public function delete(User $user, User $model): bool

@@ -216,7 +216,7 @@ class AdminUserController extends Controller
      */
     public function resetPassword(Request $request, User $user)
     {
-        $this->authorize('update', $user);
+        $this->authorize('resetPassword', $user);
 
         $validated = $request->validate([
             'password' => ['required', 'confirmed', Password::defaults()],
@@ -224,7 +224,10 @@ class AdminUserController extends Controller
 
         $this->userService->resetPassword($user, $validated['password'], $request->user()->id);
 
-        return redirect()->route('admin.users.show', $user)->with('success', 'Password reset successfully.');
+        return redirect()->route('admin.users.show', $user)->with(
+            'success',
+            "Password changed for {$user->name}. Their other signed-in sessions have been revoked."
+        );
     }
 
     /**

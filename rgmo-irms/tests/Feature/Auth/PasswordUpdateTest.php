@@ -16,7 +16,7 @@ class PasswordUpdateTest extends TestCase
      */
     public function test_password_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
         $response = $this
             ->actingAs($user)
@@ -39,7 +39,7 @@ class PasswordUpdateTest extends TestCase
      */
     public function test_correct_password_must_be_provided_to_update_password(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
         $response = $this
             ->actingAs($user)
@@ -53,5 +53,20 @@ class PasswordUpdateTest extends TestCase
         $response
             ->assertSessionHasErrorsIn('updatePassword', 'current_password')
             ->assertRedirect('/profile');
+    }
+
+    public function test_non_admin_cannot_update_their_own_password(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_STAFF]);
+
+        $this->actingAs($user)
+            ->put('/password', [
+                'current_password' => 'password',
+                'password' => 'Secure123!',
+                'password_confirmation' => 'Secure123!',
+            ])
+            ->assertForbidden();
+
+        $this->assertTrue(Hash::check('password', $user->refresh()->password));
     }
 }

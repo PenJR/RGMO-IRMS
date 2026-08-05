@@ -17,7 +17,16 @@
 
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-4">
-                        @include('profile.partials.update-password-form')
+                        @if($user->isAdmin())
+                            @include('profile.partials.update-password-form')
+                        @else
+                            <section>
+                                <h3 class="h5 fw-bold mb-1">Password Managed by Administrator</h3>
+                                <p class="text-muted small mb-0">
+                                    Only an administrator can change account passwords. Contact an administrator if you need a new password.
+                                </p>
+                            </section>
+                        @endif
                     </div>
                 </div>
 

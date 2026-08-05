@@ -133,7 +133,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['permission:manage-users,assign-roles,manage-forecasting-settings'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/login-logs', [AdminUserController::class, 'loginLogs'])->name('login-logs.index');
         Route::resource('users', AdminUserController::class);
-        Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
+        Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])
+            ->middleware(['admin', 'throttle:5,1'])
+            ->name('users.reset-password');
         Route::post('/users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
         Route::post('/users/impersonate/stop', [AdminUserController::class, 'stopImpersonate'])->name('users.impersonate.stop');
         Route::get('/users/{user}/login-history', [AdminUserController::class, 'loginHistory'])->name('users.login-history');

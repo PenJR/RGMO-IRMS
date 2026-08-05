@@ -126,6 +126,8 @@ class AuthController extends Controller
      */
     public function changePassword(Request $request)
     {
+        $this->authorize('resetPassword', $request->user());
+
         $data = $request->validate([
             'current_password' => 'required|string',
             'new_password' => ['required', 'string', 'confirmed', Password::defaults()],

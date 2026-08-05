@@ -15,7 +15,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/verify', [TwoFactorController::class, 'verify'])->middleware('throttle:5,1');
     Route::middleware('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'getAuthenticatedUser']);
-        Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('throttle:6,1');
+        Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware(['admin', 'throttle:6,1']);
         Route::post('/register', [AuthController::class, 'registerUser'])->middleware('permission:manage-users');
         Route::post('/2fa/enable', [TwoFactorController::class, 'showEnable'])->middleware('throttle:5,1');
         Route::post('/2fa/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:6,1');

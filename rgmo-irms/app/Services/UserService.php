@@ -49,7 +49,10 @@ class UserService
 
     public function resetPassword(User $user, string $password, int $actorId): User
     {
-        $user->update(['password' => $password, 'remember_token' => Str::random(60)]);
+        $user->forceFill([
+            'password' => $password,
+            'remember_token' => Str::random(60),
+        ])->save();
         $this->invalidateSessions($user);
         AuditLog::log(
             $actorId,
