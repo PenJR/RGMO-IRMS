@@ -15,7 +15,15 @@
                 <h2 class="fw-bold mb-1">Resource Request #RQ-{{ $request->id }}</h2>
                 <p class="text-muted mb-0">Review the request details and manage approvals.</p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('requests.withdrawal-slip', $request) }}" class="btn btn-outline-success" target="_blank" rel="noopener">
+                    Print Withdrawal Slip
+                </a>
+                @if(in_array($request->status, ['approved', 'completed'], true))
+                    <a href="{{ route('requests.withdrawal-slip', $request) }}" class="btn btn-success" target="_blank" rel="noopener">
+                        Edit &amp; Download Receipt
+                    </a>
+                @endif
                 <a href="{{ route('requests.index') }}" class="btn btn-outline-secondary">Back to Requests</a>
                 @can('update', $request)
                     <a href="{{ route('requests.edit', ['request' => $request->id]) }}" class="btn btn-outline-primary">Edit</a>

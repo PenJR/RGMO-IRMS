@@ -73,6 +73,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Resource Request Module
     Route::middleware(['permission:submit-request,update-pending-request,review-request,approve-request'])->group(function () {
         Route::get('/requests/pending/list', [ResourceRequestController::class, 'pending'])->name('requests.pending');
+        Route::get('/requests/{request}/withdrawal-slip/download', [ResourceRequestController::class, 'downloadWithdrawalSlip'])->name('requests.withdrawal-slip.download');
+        Route::get('/requests/{request}/withdrawal-slip', [ResourceRequestController::class, 'withdrawalSlip'])->name('requests.withdrawal-slip');
         Route::post('/requests/{request}/fulfill', [ResourceRequestController::class, 'fulfill'])->name('requests.fulfill');
         Route::resource('requests', ResourceRequestController::class);
     });

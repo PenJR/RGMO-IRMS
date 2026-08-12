@@ -8,9 +8,11 @@ use App\Models\Project;
 use App\Models\ResourceRequest;
 use App\Rules\CurrentProject;
 use App\Services\ResourceRequestService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ResourceRequestController extends Controller
@@ -129,6 +131,87 @@ class ResourceRequestController extends Controller
             'workflowLogs' => $workflowLogs,
             'canFulfill' => $this->requestService->canFulfillRequest($request),
         ]);
+    }
+
+    /**
+     * Display the request as an A4 withdrawal slip ready for printing.
+     *
+     * @throws AuthorizationException
+     */
+    public function withdrawalSlip(ResourceRequest $request): View
+    {
+        $this->authorize('view', $request);
+
+        $request->load('user', 'project', 'approver', 'items.item');
+
+        return view('requests.withdrawal-slip', [
+            'request' => $request,
+            'isPdf' => false,
+            'signatureValues' => $this->withdrawalSignatureDefaults($request),
+        ]);
+    }
+
+    /**
+     * Download an approved or completed request as a withdrawal-slip PDF.
+     *
+     * @throws AuthorizationException
+     */
+    public function downloadWithdrawalSlip(Request $httpRequest, ResourceRequest $request)
+    {
+        $this->authorize('view', $request);
+        abort_unless(in_array($request->status, [
+            ResourceRequest::STATUS_APPROVED,
+            ResourceRequest::STATUS_COMPLETED,
+        ], true), 403, 'The withdrawal receipt is available after the resource request is approved.');
+
+        $request->load('user', 'project', 'approver', 'items.item');
+        $signatureValues = array_replace(
+            $this->withdrawalSignatureDefaults($request),
+            $httpRequest->validate([
+                'requested_by' => 'nullable|string|max:120',
+                'requested_by_title' => 'nullable|string|max:120',
+                'issued_by' => 'nullable|string|max:120',
+                'issued_by_title' => 'nullable|string|max:120',
+                'noted_by' => 'nullable|string|max:120',
+                'noted_by_title' => 'nullable|string|max:120',
+                'received_by' => 'nullable|string|max:120',
+                'received_by_title' => 'nullable|string|max:120',
+            ])
+        );
+        $slipNumber = $request->ris_no ?: 'RQ-'.$request->id;
+        $filename = 'withdrawal-receipt-'.Str::slug($slipNumber).'.pdf';
+
+        return Pdf::loadView('requests.withdrawal-slip', [
+            'request' => $request,
+            'isPdf' => true,
+            'signatureValues' => $signatureValues,
+        ])->setPaper('a4')->download($filename);
+    }
+
+    /**
+     * Build editable signature defaults from the request workflow.
+     *
+     * @return array<string, string>
+     */
+    private function withdrawalSignatureDefaults(ResourceRequest $request): array
+    {
+        $requesterTitle = $request->user
+            ? config('rbac.roles.'.$request->user->normalizedRole().'.label', $request->user->department ?? '')
+            : '';
+        $approverTitle = $request->approver
+            ? config('rbac.roles.'.$request->approver->normalizedRole().'.label', $request->approver->department ?? '')
+            : '';
+
+        return [
+            'requested_by' => $request->user?->name ?? '',
+            'requested_by_title' => $requesterTitle,
+            'issued_by' => '',
+            'issued_by_title' => 'In-Charge',
+            'noted_by' => $request->approver?->name ?? '',
+            'noted_by_title' => $approverTitle,
+            'received_by' => '',
+            'received_by_title' => '',
+        ];
     }
 
     /**

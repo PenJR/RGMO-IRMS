@@ -117,6 +117,68 @@ class RequestWorkflowTest extends TestCase
             ->exists());
     }
 
+    public function test_authorized_user_can_print_a_withdrawal_slip_in_the_supplied_format(): void
+    {
+        $staff = $this->activeUser(User::ROLE_STAFF);
+        $request = $this->resourceRequestWithItem(requester: $staff, quantity: 3);
+        $request->update([
+            'ris_no' => '06-08-2026-083',
+            'responsible_center' => 'Special Project',
+            'requested_date' => '2026-08-10',
+            'purpose' => 'To be used for sacking of cassava',
+        ]);
+        $request->items->first()->item->update([
+            'name' => 'Empty Sacks Slightly Used',
+            'unit' => 'Piece',
+            'price' => 17,
+        ]);
+
+        $this->actingAs($staff)
+            ->get(route('requests.withdrawal-slip', $request))
+            ->assertOk()
+            ->assertSee('WITHDRAWAL SLIP')
+            ->assertSee('06-08-2026-083')
+            ->assertSee('August 10, 2026')
+            ->assertSee('Special Project')
+            ->assertSee('Empty Sacks Slightly Used')
+            ->assertSee('51.00')
+            ->assertSee('To be used for sacking of cassava')
+            ->assertSee($staff->name)
+            ->assertSee('name="issued_by"', false)
+            ->assertSee('name="received_by"', false);
+    }
+
+    public function test_withdrawal_receipt_can_be_downloaded_after_request_approval(): void
+    {
+        $staff = $this->activeUser(User::ROLE_STAFF);
+        $admin = $this->activeUser(User::ROLE_ADMIN);
+        $request = $this->resourceRequestWithItem(requester: $staff);
+        $request->update(['ris_no' => 'WS-2026-001']);
+
+        $this->actingAs($staff)
+            ->get(route('requests.show', $request))
+            ->assertOk()
+            ->assertDontSee('Edit &amp; Download Receipt', false);
+
+        $this->get(route('requests.withdrawal-slip.download', $request))
+            ->assertForbidden();
+
+        $request->approve($admin->id, 'Confirmed for release');
+
+        $this->get(route('requests.show', $request))
+            ->assertOk()
+            ->assertSee('Edit &amp; Download Receipt', false);
+
+        $this->get(route('requests.withdrawal-slip.download', [
+            'request' => $request,
+            'issued_by' => 'Warehouse Officer',
+            'received_by' => 'Juan Dela Cruz',
+        ]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertDownload('withdrawal-receipt-ws-2026-001.pdf');
+    }
+
     public function test_request_list_can_search_projects_and_sort_results(): void
     {
         $admin = $this->activeUser(User::ROLE_ADMIN);
