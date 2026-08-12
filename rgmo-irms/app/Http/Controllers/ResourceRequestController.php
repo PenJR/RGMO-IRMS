@@ -168,6 +168,8 @@ class ResourceRequestController extends Controller
         $signatureValues = array_replace(
             $this->withdrawalSignatureDefaults($request),
             $httpRequest->validate([
+                'po_number' => 'nullable|string|max:80',
+                'pr_number' => 'nullable|string|max:80',
                 'requested_by' => 'nullable|string|max:120',
                 'requested_by_title' => 'nullable|string|max:120',
                 'issued_by' => 'nullable|string|max:120',
@@ -203,6 +205,8 @@ class ResourceRequestController extends Controller
             : '';
 
         return [
+            'po_number' => '',
+            'pr_number' => '',
             'requested_by' => $request->user?->name ?? '',
             'requested_by_title' => $requesterTitle,
             'issued_by' => '',

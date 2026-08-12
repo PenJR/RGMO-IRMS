@@ -144,6 +144,8 @@ class RequestWorkflowTest extends TestCase
             ->assertSee('51.00')
             ->assertSee('To be used for sacking of cassava')
             ->assertSee($staff->name)
+            ->assertSee('name="po_number"', false)
+            ->assertSee('name="pr_number"', false)
             ->assertSee('name="issued_by"', false)
             ->assertSee('name="received_by"', false);
     }
@@ -171,6 +173,8 @@ class RequestWorkflowTest extends TestCase
 
         $this->get(route('requests.withdrawal-slip.download', [
             'request' => $request,
+            'po_number' => 'PO-2026-100',
+            'pr_number' => 'PR-2026-200',
             'issued_by' => 'Warehouse Officer',
             'received_by' => 'Juan Dela Cruz',
         ]))

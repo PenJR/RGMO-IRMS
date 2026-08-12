@@ -115,6 +115,21 @@
             line-height: 1;
         }
 
+        input.field-line {
+            width: 145px;
+            padding: 0 3px 1px;
+            border: 0;
+            border-bottom: 1px solid #000;
+            border-radius: 0;
+            background: transparent;
+            color: #000;
+            font: inherit;
+        }
+
+        input.field-line:focus {
+            outline: 2px solid rgba(23, 61, 43, .18);
+        }
+
         .items-table {
             width: 100%;
             border-collapse: collapse;
@@ -313,8 +328,18 @@
             </div>
             <div><strong>Department/College/Project/Unit:</strong> <span class="meta-value">{{ $department }}</span></div>
             <div>
-                <strong>P.O. Number:</strong> <span class="field-line">&nbsp;</span>
-                <strong>P. R. No.:</strong> <span class="field-line">&nbsp;</span>
+                <strong>P.O. Number:</strong>
+                @if($isPdf ?? false)
+                    <span class="field-line">{{ $signatureValues['po_number'] ?: ' ' }}</span>
+                @else
+                    <input type="text" class="field-line" name="po_number" value="{{ $signatureValues['po_number'] }}" aria-label="P.O. Number">
+                @endif
+                <strong>P. R. No.:</strong>
+                @if($isPdf ?? false)
+                    <span class="field-line">{{ $signatureValues['pr_number'] ?: ' ' }}</span>
+                @else
+                    <input type="text" class="field-line" name="pr_number" value="{{ $signatureValues['pr_number'] }}" aria-label="P.R. Number">
+                @endif
             </div>
         </section>
 
