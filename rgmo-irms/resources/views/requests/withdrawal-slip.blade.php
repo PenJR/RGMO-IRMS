@@ -117,17 +117,29 @@
 
         input.field-line {
             width: 145px;
-            padding: 0 3px 1px;
-            border: 0;
-            border-bottom: 1px solid #000;
-            border-radius: 0;
-            background: transparent;
+            margin: 0 5px 2px 2px;
+            padding: 3px 5px;
+            border: 1px solid #6b7280;
+            border-radius: 3px;
+            background: #fffbea;
             color: #000;
             font: inherit;
+            cursor: text;
         }
 
         input.field-line:focus {
             outline: 2px solid rgba(23, 61, 43, .18);
+        }
+
+        .edit-hint {
+            margin: -12px 0 12px;
+            padding: 7px 10px;
+            border: 1px solid #c7d8ce;
+            border-radius: 4px;
+            background: #f1f8f4;
+            color: #173d2b;
+            font: 10pt Arial, sans-serif;
+            text-align: center;
         }
 
         .items-table {
@@ -240,7 +252,8 @@
                 background: #fff;
             }
 
-            .print-toolbar {
+            .print-toolbar,
+            .edit-hint {
                 display: none !important;
             }
 
@@ -266,6 +279,15 @@
             input.signature-title {
                 border-color: transparent;
                 outline: 0;
+            }
+
+            input.field-line {
+                margin: 0;
+                padding: 0 3px 1px;
+                border: 0;
+                border-bottom: 1px solid #000;
+                border-radius: 0;
+                background: transparent;
             }
         }
 
@@ -321,6 +343,10 @@
             <h1>WITHDRAWAL SLIP</h1>
         </header>
 
+        @unless($isPdf ?? false)
+            <p class="edit-hint">Click the highlighted P.O./P.R. fields and the signature names below to edit them before printing or downloading.</p>
+        @endunless
+
         <section class="slip-meta" aria-label="Withdrawal slip details">
             <div class="meta-row">
                 <div><strong>No.</strong> <span class="meta-value">{{ $slipNumber }}</span></div>
@@ -332,13 +358,13 @@
                 @if($isPdf ?? false)
                     <span class="field-line">{{ $signatureValues['po_number'] ?: ' ' }}</span>
                 @else
-                    <input type="text" class="field-line" name="po_number" value="{{ $signatureValues['po_number'] }}" aria-label="P.O. Number">
+                    <input type="text" class="field-line" name="po_number" value="{{ $signatureValues['po_number'] }}" placeholder="Enter P.O. number" title="Click to edit the P.O. number" aria-label="P.O. Number">
                 @endif
                 <strong>P. R. No.:</strong>
                 @if($isPdf ?? false)
                     <span class="field-line">{{ $signatureValues['pr_number'] ?: ' ' }}</span>
                 @else
-                    <input type="text" class="field-line" name="pr_number" value="{{ $signatureValues['pr_number'] }}" aria-label="P.R. Number">
+                    <input type="text" class="field-line" name="pr_number" value="{{ $signatureValues['pr_number'] }}" placeholder="Enter P.R. number" title="Click to edit the P.R. number" aria-label="P.R. Number">
                 @endif
             </div>
         </section>

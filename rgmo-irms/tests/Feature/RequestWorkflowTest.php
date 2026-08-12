@@ -98,6 +98,7 @@ class RequestWorkflowTest extends TestCase
         $item = $request->items()->firstOrFail()->item()->firstOrFail();
 
         $this->assertSame(ResourceRequest::STATUS_COMPLETED, $request->status);
+        $this->assertNotNull($request->fulfilled_at);
         $this->assertSame(6, $item->stock);
         $this->assertDatabaseHas('inventory_transactions', [
             'inventory_item_id' => $item->id,
@@ -146,6 +147,8 @@ class RequestWorkflowTest extends TestCase
             ->assertSee($staff->name)
             ->assertSee('name="po_number"', false)
             ->assertSee('name="pr_number"', false)
+            ->assertSee('Enter P.O. number')
+            ->assertSee('Enter P.R. number')
             ->assertSee('name="issued_by"', false)
             ->assertSee('name="received_by"', false);
     }
