@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 12mm 13mm 12mm;
+            margin: {{ ($isPdf ?? false) ? '12mm 13mm 12mm' : '0' }};
         }
 
         * {
@@ -246,9 +246,9 @@
 
             .slip {
                 width: auto;
-                min-height: 0;
+                min-height: 297mm;
                 margin: 0;
-                padding: 0;
+                padding: 12mm 13mm;
                 box-shadow: none;
             }
 
