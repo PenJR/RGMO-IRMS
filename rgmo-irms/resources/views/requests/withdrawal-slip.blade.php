@@ -327,7 +327,7 @@
     @unless($isPdf ?? false)
         <div class="print-toolbar" aria-label="Withdrawal slip actions">
             <button type="button" onclick="window.print()">Print Withdrawal Slip</button>
-            @if(in_array($request->status, ['approved', 'completed'], true))
+            @if($request->status === 'approved')
                 <button type="submit">Download PDF</button>
             @endif
             <a href="{{ route('requests.show', $request) }}">Back to Request</a>

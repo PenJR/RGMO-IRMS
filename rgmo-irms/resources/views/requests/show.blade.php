@@ -16,10 +16,10 @@
                 <p class="text-muted mb-0">Review the request details and manage approvals.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                <a href="{{ route('requests.withdrawal-slip', $request) }}" class="btn btn-outline-success" target="_blank" rel="noopener">
-                    Print Withdrawal Slip
-                </a>
-                @if(in_array($request->status, ['approved', 'completed'], true))
+                @if($request->status === 'approved')
+                    <a href="{{ route('requests.withdrawal-slip', $request) }}" class="btn btn-outline-success" target="_blank" rel="noopener">
+                        Print Withdrawal Slip
+                    </a>
                     <a href="{{ route('requests.withdrawal-slip', $request) }}" class="btn btn-success" target="_blank" rel="noopener">
                         Edit &amp; Download Receipt
                     </a>
@@ -33,6 +33,15 @@
     </x-slot>
 
     <div class="container-fluid py-4">
+        @if($request->status !== 'approved' && auth()->id() === $request->user_id)
+            <div class="alert alert-info d-flex align-items-start gap-2" role="status">
+                <div>
+                    <strong>Request status: {{ str($request->status)->headline() }}</strong>
+                    <div>Receipt printing is available only while the request status is Approved. You will receive a notification when its status changes.</div>
+                </div>
+            </div>
+        @endif
+
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm">

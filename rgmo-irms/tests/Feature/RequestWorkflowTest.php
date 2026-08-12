@@ -121,6 +121,7 @@ class RequestWorkflowTest extends TestCase
     public function test_authorized_user_can_print_a_withdrawal_slip_in_the_supplied_format(): void
     {
         $staff = $this->activeUser(User::ROLE_STAFF);
+        $admin = $this->activeUser(User::ROLE_ADMIN);
         $request = $this->resourceRequestWithItem(requester: $staff, quantity: 3);
         $request->update([
             'ris_no' => '06-08-2026-083',
@@ -133,6 +134,8 @@ class RequestWorkflowTest extends TestCase
             'unit' => 'Piece',
             'price' => 17,
         ]);
+        $request->approve($admin->id, 'Approved for withdrawal');
+        $request->update(['approved_at' => '2026-08-10']);
 
         $this->actingAs($staff)
             ->get(route('requests.withdrawal-slip', $request))
@@ -151,6 +154,40 @@ class RequestWorkflowTest extends TestCase
             ->assertSee('Enter P.R. number')
             ->assertSee('name="issued_by"', false)
             ->assertSee('name="received_by"', false);
+    }
+
+    public function test_pending_request_cannot_open_or_print_a_withdrawal_receipt(): void
+    {
+        $staff = $this->activeUser(User::ROLE_STAFF);
+        $request = $this->resourceRequestWithItem(requester: $staff);
+
+        $this->actingAs($staff)
+            ->get(route('requests.show', $request))
+            ->assertOk()
+            ->assertDontSee('Print Withdrawal Slip')
+            ->assertDontSee('Edit &amp; Download Receipt', false)
+            ->assertSee('Request status: Pending')
+            ->assertSee('Receipt printing is available only while the request status is Approved.')
+            ->assertSee('You will receive a notification when its status changes.');
+
+        $this->get(route('requests.withdrawal-slip', $request))
+            ->assertForbidden();
+    }
+
+    public function test_completed_request_cannot_print_or_download_a_withdrawal_receipt(): void
+    {
+        $staff = $this->activeUser(User::ROLE_STAFF);
+        $request = $this->resourceRequestWithItem(requester: $staff);
+        $request->update(['status' => ResourceRequest::STATUS_COMPLETED]);
+
+        $this->actingAs($staff)
+            ->get(route('requests.show', $request))
+            ->assertOk()
+            ->assertDontSee('Print Withdrawal Slip')
+            ->assertDontSee('Edit &amp; Download Receipt', false);
+
+        $this->get(route('requests.withdrawal-slip', $request))->assertForbidden();
+        $this->get(route('requests.withdrawal-slip.download', $request))->assertForbidden();
     }
 
     public function test_withdrawal_receipt_can_be_downloaded_after_request_approval(): void

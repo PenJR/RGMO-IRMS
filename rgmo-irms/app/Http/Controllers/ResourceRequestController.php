@@ -141,6 +141,7 @@ class ResourceRequestController extends Controller
     public function withdrawalSlip(ResourceRequest $request): View
     {
         $this->authorize('view', $request);
+        $this->ensureWithdrawalReceiptIsAvailable($request);
 
         $request->load('user', 'project', 'approver', 'items.item');
 
@@ -152,17 +153,14 @@ class ResourceRequestController extends Controller
     }
 
     /**
-     * Download an approved or completed request as a withdrawal-slip PDF.
+     * Download an approved request as a withdrawal-slip PDF.
      *
      * @throws AuthorizationException
      */
     public function downloadWithdrawalSlip(Request $httpRequest, ResourceRequest $request)
     {
         $this->authorize('view', $request);
-        abort_unless(in_array($request->status, [
-            ResourceRequest::STATUS_APPROVED,
-            ResourceRequest::STATUS_COMPLETED,
-        ], true), 403, 'The withdrawal receipt is available after the resource request is approved.');
+        $this->ensureWithdrawalReceiptIsAvailable($request);
 
         $request->load('user', 'project', 'approver', 'items.item');
         $signatureValues = array_replace(
@@ -188,6 +186,18 @@ class ResourceRequestController extends Controller
             'isPdf' => true,
             'signatureValues' => $signatureValues,
         ])->setPaper('a4')->download($filename);
+    }
+
+    /**
+     * Prevent receipt access until the request has passed approval.
+     */
+    private function ensureWithdrawalReceiptIsAvailable(ResourceRequest $request): void
+    {
+        abort_unless(
+            $request->status === ResourceRequest::STATUS_APPROVED,
+            403,
+            'The withdrawal receipt is available only while the resource request status is approved.'
+        );
     }
 
     /**
