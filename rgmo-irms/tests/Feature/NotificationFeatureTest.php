@@ -17,6 +17,26 @@ class NotificationFeatureTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_notification_entry_is_a_top_bar_bell_instead_of_a_sidebar_item(): void
+    {
+        $staff = $this->activeUser(User::ROLE_STAFF);
+        Notification::create([
+            'user_id' => $staff->id,
+            'title' => 'Unread alert',
+            'type' => 'system',
+            'message' => 'A new alert is available.',
+        ]);
+
+        $this->actingAs($staff)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('class="top-nav-notifications', false)
+            ->assertSee('href="'.route('notifications.index').'"', false)
+            ->assertSee('aria-label="Notifications: 1 unread"', false)
+            ->assertSee('id="notification-unread-badge"', false)
+            ->assertDontSee('data-sidebar-item="notifications"', false);
+    }
+
     /**
      * Verify that resource request submission notifies admin and rgmo head.
      */

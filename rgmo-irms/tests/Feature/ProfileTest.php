@@ -112,7 +112,7 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertNotNull($user->email_verified_at);
     }
 
     /**
@@ -139,7 +139,7 @@ class ProfileTest extends TestCase
     public function test_user_can_save_a_personal_sidebar_order(): void
     {
         $user = User::factory()->create();
-        $order = ['requests', 'inventory', 'dashboard', 'notifications'];
+        $order = ['requests', 'inventory', 'dashboard', 'projects'];
 
         $this->actingAs($user)
             ->putJson(route('profile.sidebar-order.update'), ['order' => $order])

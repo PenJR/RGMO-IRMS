@@ -61,6 +61,21 @@
                             <h2 class="h5 fw-bold mb-0 text-dark">Dashboard</h2>
                         @endif
                     </div>
+                    @php $unreadNotificationCount = auth()->user()->notifications()->unread()->count(); @endphp
+                    <a
+                        href="{{ route('notifications.index') }}"
+                        class="top-nav-notifications {{ request()->routeIs('notifications.*') ? 'active' : '' }}"
+                        aria-label="Notifications{{ $unreadNotificationCount > 0 ? ': '.$unreadNotificationCount.' unread' : '' }}"
+                        aria-current="{{ request()->routeIs('notifications.*') ? 'page' : 'false' }}"
+                        title="Notifications"
+                    >
+                        <i data-lucide="bell" aria-hidden="true"></i>
+                        <span
+                            id="notification-unread-badge"
+                            class="top-nav-notification-badge {{ $unreadNotificationCount > 0 ? '' : 'd-none' }}"
+                            aria-hidden="true"
+                        >{{ $unreadNotificationCount }}</span>
+                    </a>
                 </header>
 
                 <div class="main-content">
@@ -392,6 +407,7 @@
             });
 
             const notificationBadge = document.getElementById('notification-unread-badge');
+            const notificationLink = document.querySelector('.top-nav-notifications');
             if (notificationBadge) {
                 fetch('{{ route('notifications.unread-count') }}', {
                     headers: {
@@ -406,6 +422,10 @@
                         const count = Number(payload.count ?? 0);
                         notificationBadge.textContent = count;
                         notificationBadge.classList.toggle('d-none', count <= 0);
+                        notificationLink?.setAttribute(
+                            'aria-label',
+                            count > 0 ? `Notifications: ${count} unread` : 'Notifications',
+                        );
                     })
                     .catch(() => {});
             }

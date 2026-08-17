@@ -120,6 +120,7 @@
                 const empty = document.getElementById('notifications-empty');
                 const summary = document.getElementById('notifications-unread-summary');
                 const badge = document.getElementById('notification-unread-badge');
+                const notificationLink = document.querySelector('.top-nav-notifications');
                 const csrfToken = panel.dataset.csrfToken;
 
                 const headers = {
@@ -141,6 +142,11 @@
                         badge.textContent = count;
                         badge.classList.toggle('d-none', count <= 0);
                     }
+
+                    notificationLink?.setAttribute(
+                        'aria-label',
+                        count > 0 ? `Notifications: ${count} unread` : 'Notifications',
+                    );
 
                     if (summary) {
                         summary.textContent = `${count} unread notification${count === 1 ? '' : 's'}`;

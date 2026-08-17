@@ -16,7 +16,6 @@
         </button>
     </div>
 
-    @php $unreadCount = auth()->user()->notifications()->unread()->count(); @endphp
     <div class="sidebar-menu nav flex-column flex-grow-1">
         <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-sidebar-item="dashboard" draggable="true" data-sidebar-tooltip="Dashboard" aria-label="Dashboard">
             <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
@@ -59,13 +58,6 @@
                 <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
             </a>
         @endcan
-
-        <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}" data-sidebar-item="notifications" draggable="true" data-sidebar-tooltip="Notifications" aria-label="Notifications">
-            <span class="nav-icon"><i data-lucide="bell"></i></span>
-            <span class="nav-label">Notifications</span>
-            <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
-            <span id="notification-unread-badge" class="nav-badge ms-auto {{ $unreadCount > 0 ? '' : 'd-none' }}">{{ $unreadCount }}</span>
-        </a>
 
         @if(auth()->user()->can('viewAny', App\Models\ResourceRequest::class) || auth()->user()->can('create', App\Models\ResourceRequest::class))
             <details class="nav-group {{ request()->routeIs('requests.*') ? 'active' : '' }}" data-sidebar-item="requests" draggable="true" {{ request()->routeIs('requests.*') ? 'open' : '' }}>

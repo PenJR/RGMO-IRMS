@@ -580,6 +580,82 @@ a:hover {
     color: var(--cmu-muted) !important;
 }
 
+.top-nav-notifications {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 2.75rem;
+    border: 1px solid rgba(0, 73, 30, 0.16);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--cmu-green);
+    box-shadow: 0 6px 16px rgba(15, 46, 28, 0.08);
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.top-nav-notifications:hover,
+.top-nav-notifications:focus-visible,
+.top-nav-notifications.active {
+    border-color: var(--cmu-yellow);
+    background: var(--cmu-yellow);
+    color: var(--cmu-green);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.top-nav-notifications:focus-visible {
+    outline: 3px solid rgba(2, 104, 30, 0.24);
+    outline-offset: 2px;
+}
+
+.top-nav-notifications [data-lucide] {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 2.25;
+}
+
+.top-nav-notification-badge {
+    position: absolute;
+    top: -0.28rem;
+    right: -0.32rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.3rem;
+    border: 2px solid #ffffff;
+    border-radius: 999px;
+    background: #c62828;
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 3px 8px rgba(90, 12, 12, 0.25);
+}
+
+html[data-bs-theme="dark"] .top-nav-notifications {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(21, 42, 29, 0.9);
+    color: #f4d45e;
+}
+
+html[data-bs-theme="dark"] .top-nav-notifications:hover,
+html[data-bs-theme="dark"] .top-nav-notifications:focus-visible,
+html[data-bs-theme="dark"] .top-nav-notifications.active {
+    border-color: var(--cmu-yellow);
+    background: var(--cmu-yellow);
+    color: var(--cmu-green);
+}
+
+html[data-bs-theme="dark"] .top-nav-notification-badge {
+    border-color: #152a1d;
+}
+
 .main-content {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0) 220px),

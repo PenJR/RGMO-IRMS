@@ -164,7 +164,7 @@ class DashboardController extends Controller
                 'metrics' => [
                     'Suspended users' => User::suspended()->count(),
                     'Failed attempts' => User::where('login_attempts', '>', 0)->sum('login_attempts'),
-                    'Unverified users' => User::whereNull('email_verified_at')->count(),
+                    'Active users' => User::active()->count(),
                     'Inactive users' => User::inactive()->count(),
                 ],
                 'route' => route('admin.users.index'),
@@ -197,7 +197,7 @@ class DashboardController extends Controller
         );
         $moduleStats['security']['status'] = $this->resolveStatus(
             $moduleStats['security']['headline'] > 0 || $moduleStats['security']['metrics']['Suspended users'] > 0,
-            $moduleStats['security']['metrics']['Failed attempts'] > 0 || $moduleStats['security']['metrics']['Unverified users'] > 0
+            $moduleStats['security']['metrics']['Failed attempts'] > 0
         );
         $moduleStats['audit']['status'] = $this->resolveStatus(false, $moduleStats['audit']['headline'] === 0);
 
