@@ -9,7 +9,7 @@
     <div class="container-fluid py-4">
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-                <form action="{{ route('admin.users.store') }}" method="POST">
+                <form action="{{ route('admin.users.store') }}" method="POST" id="create-user-form">
                     @csrf
                     <div class="row g-4">
                         <div class="col-md-6">
@@ -21,12 +21,14 @@
                             <input type="email" name="email" value="{{ old('email') }}" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="password" class="form-control" required>
+                            <label for="new-user-password" class="form-label">Password</label>
+                            <input id="new-user-password" type="password" name="password" class="form-control @error('password') is-invalid @enderror" autocomplete="new-password" aria-describedby="new-user-password-error" required>
+                            <div id="new-user-password-error" class="invalid-feedback">@error('password'){{ $message }}@enderror</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Confirm Password</label>
-                            <input type="password" name="password_confirmation" class="form-control" required>
+                            <label for="new-user-password-confirmation" class="form-label">Confirm Password</label>
+                            <input id="new-user-password-confirmation" type="password" name="password_confirmation" class="form-control" autocomplete="new-password" aria-describedby="password-match-feedback" required>
+                            <div id="password-match-feedback" class="invalid-feedback" aria-live="polite"></div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Role</label>
@@ -55,4 +57,36 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            (() => {
+                const form = document.getElementById('create-user-form');
+                const password = document.getElementById('new-user-password');
+                const confirmation = document.getElementById('new-user-password-confirmation');
+                const feedback = document.getElementById('password-match-feedback');
+
+                const checkPasswordMatch = () => {
+                    const mismatch = confirmation.value.length > 0 && password.value !== confirmation.value;
+                    const message = mismatch ? 'Passwords do not match. Please enter the same password in both fields.' : '';
+                    confirmation.setCustomValidity(message);
+                    confirmation.classList.toggle('is-invalid', mismatch);
+                    confirmation.setAttribute('aria-invalid', String(mismatch));
+                    feedback.textContent = message;
+                    return !mismatch;
+                };
+
+                password.addEventListener('input', checkPasswordMatch);
+                confirmation.addEventListener('input', checkPasswordMatch);
+                form.addEventListener('submit', (event) => {
+                    if (!checkPasswordMatch()) {
+                        event.preventDefault();
+                        confirmation.reportValidity();
+                        confirmation.focus();
+                    }
+                });
+                checkPasswordMatch();
+            })();
+        </script>
+    @endpush
 </x-app-layout>
