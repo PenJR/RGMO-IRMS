@@ -14,5 +14,6 @@ class SchedulerConfigurationTest extends TestCase
 
         $this->assertStringContainsString('app:backup', $commands);
         $this->assertStringContainsString('app:low-stock-alert', $commands);
+        $this->assertStringContainsString('model:prune', $commands);
     }
 }

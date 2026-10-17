@@ -81,6 +81,16 @@ class ReportService
      */
     public function getAuditTrailReport(array $filters = [])
     {
+        return $this->auditTrailQuery($filters)
+            ->orderBy('created_at', 'desc')
+            ->paginate(50);
+    }
+
+    /**
+     * Build the shared filtered audit-log query used by screens and complete exports.
+     */
+    public function auditTrailQuery(array $filters = [])
+    {
         $query = AuditLog::query()->with('user');
 
         if (! empty($filters['action'])) {
@@ -99,7 +109,7 @@ class ReportService
             $query->dateRange($filters['start_date'], $filters['end_date']);
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate(50);
+        return $query;
     }
 
     /**
@@ -190,9 +200,9 @@ class ReportService
      */
     public function getSuppliesIssuanceReport(int $month, int $year)
     {
-        $requests = ResourceRequest::whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->where('status', ResourceRequest::STATUS_APPROVED)
+        $requests = ResourceRequest::whereYear('fulfilled_at', $year)
+            ->whereMonth('fulfilled_at', $month)
+            ->where('status', ResourceRequest::STATUS_COMPLETED)
             ->with(['user', 'items.item'])
             ->get();
 

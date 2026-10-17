@@ -7,9 +7,8 @@
                 <p class="sidebar-kicker">Central Mindanao University</p>
             </div>
         </div>
-        <button type="button" class="sidebar-toggle d-none d-lg-inline-flex" id="sidebarToggle" aria-label="Minimize sidebar" aria-expanded="true" title="Minimize sidebar">
-            <i data-lucide="panel-left-close" class="sidebar-toggle-icon sidebar-toggle-collapse"></i>
-            <i data-lucide="panel-left-open" class="sidebar-toggle-icon sidebar-toggle-expand"></i>
+        <button type="button" class="sidebar-toggle d-none d-lg-inline-flex" id="sidebarToggle" aria-controls="sidebar" aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar">
+            <i data-lucide="chevron-left" class="sidebar-toggle-icon" aria-hidden="true"></i>
         </button>
         <button type="button" class="mobile-sidebar-close d-lg-none" id="mobileSidebarClose" aria-label="Close navigation">
             <i data-lucide="x" aria-hidden="true"></i>

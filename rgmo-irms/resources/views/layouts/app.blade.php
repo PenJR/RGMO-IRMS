@@ -27,9 +27,6 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -91,13 +88,25 @@
                         </div>
                     @endif
 
+                    @if (session('warning'))
+                        <div class="container-fluid mt-4">
+                            <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm mb-4" role="status" aria-live="polite">
+                                <div class="d-flex align-items-center">
+                                    <i data-lucide="triangle-alert" class="me-2" style="width: 18px" aria-hidden="true"></i>
+                                    <span>{{ session('warning') }}</span>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss notification"></button>
+                            </div>
+                        </div>
+                    @endif
+
                     {{ $slot }}
                 </div>
             </main>
         </div>
 
         <script>
-            lucide.createIcons();
+            document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
 
             const sidebarToggle = document.getElementById('sidebarToggle');
             const topNav = document.querySelector('.top-nav');
@@ -132,22 +141,36 @@
                     mobileSidebarClose?.focus();
                 }
             };
+            const indexSidebarLabels = () => {
+                const labels = Array.from(sidebar?.querySelectorAll('.sidebar-brand .min-w-0, .nav-label, .sidebar-user-details, .sidebar-actions span') ?? []);
+                labels.forEach((label, index) => {
+                    label.classList.add('sidebar-motion-label');
+                    label.style.setProperty('--i', index);
+                    label.style.setProperty('--reverse-i', labels.length - index - 1);
+                });
+                // Wait for the final label before narrowing, including role-specific links.
+                document.body.style.setProperty('--sidebar-collapse-delay', `${Math.max(340, (labels.length - 1) * 50 + 300)}ms`);
+            };
             const applySidebarState = (collapsed) => {
+                indexSidebarLabels();
                 document.body.classList.toggle('sidebar-collapsed', collapsed);
 
                 if (sidebarToggle) {
                     sidebarToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-                    sidebarToggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Minimize sidebar');
-                    sidebarToggle.setAttribute('title', collapsed ? 'Expand sidebar' : 'Minimize sidebar');
+                    sidebarToggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+                    sidebarToggle.setAttribute('title', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
                 }
             };
 
-            applySidebarState(localStorage.getItem(sidebarStorageKey) === 'true');
+            let savedCollapsed = false;
+            try { savedCollapsed = localStorage.getItem(sidebarStorageKey) === 'true'; } catch {}
+            applySidebarState(savedCollapsed);
+            requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add('sidebar-motion-ready')));
             setMobileSidebar(false);
 
             sidebarToggle?.addEventListener('click', () => {
                 const collapsed = !document.body.classList.contains('sidebar-collapsed');
-                localStorage.setItem(sidebarStorageKey, String(collapsed));
+                try { localStorage.setItem(sidebarStorageKey, String(collapsed)); } catch {}
                 applySidebarState(collapsed);
             });
 

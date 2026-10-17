@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserActivityLog extends Model
 {
+    use MassPrunable;
+
     protected $fillable = [
         'user_id',
         'activity',
@@ -25,21 +28,23 @@ class UserActivityLog extends Model
 
     /**
      * Get the user associated with this activity log entry.
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Remove low-value request telemetry after the configured retention period.
+     */
+    public function prunable(): Builder
+    {
+        return static::query()->where('created_at', '<=', now()->subDays(config('retention.user_activity_days')));
+    }
+
     // Scopes
     /**
      * Scope a query to only include activity logs for a specific user.
-     *
-     * @param Builder $query
-     * @param int $userId
-     * @return Builder
      */
     public function scopeByUser(Builder $query, int $userId): Builder
     {

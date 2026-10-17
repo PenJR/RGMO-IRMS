@@ -2,29 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\InventoryItem;
-use App\Models\ResourceRequest;
-use App\Models\AuditLog;
-use App\Services\ReportService;
 use App\Models\SystemSetting;
-use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Services\ReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
     /**
      * Create a new instance.
      */
-    public function __construct(private ReportService $reportService)
-    {
-    }
+    public function __construct(private ReportService $reportService) {}
 
     /**
      * Display a comprehensive inventory report with optional category and stock level filtering.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function inventory(Request $request)
     {
@@ -40,8 +37,7 @@ class ReportController extends Controller
     /**
      * Display a resource usage report allowing analysis of item consumption over time.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function resourceUsage(Request $request)
     {
@@ -57,8 +53,7 @@ class ReportController extends Controller
     /**
      * Display an audit trail report tracking system activities and configuration changes.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function auditTrail(Request $request)
     {
@@ -74,8 +69,7 @@ class ReportController extends Controller
     /**
      * Display a report on resource requests including status-based analytics.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function requests(Request $request)
     {
@@ -93,8 +87,8 @@ class ReportController extends Controller
      */
     public function biologicalAssets(Request $request)
     {
-        $startDate = $request->has('start_date') ? \Illuminate\Support\Carbon::parse($request->start_date) : now()->startOfWeek();
-        $endDate = $request->has('end_date') ? \Illuminate\Support\Carbon::parse($request->end_date) : now()->endOfWeek();
+        $startDate = $request->has('start_date') ? Carbon::parse($request->start_date) : now()->startOfWeek();
+        $endDate = $request->has('end_date') ? Carbon::parse($request->end_date) : now()->endOfWeek();
 
         $report = $this->reportService->getBiologicalAssetsReport($startDate, $endDate);
 
@@ -142,18 +136,17 @@ class ReportController extends Controller
     /**
      * Export the current inventory report data to a CSV file.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function exportInventoryCsv(Request $request)
     {
         $filters = $request->only(['category_id', 'low_stock']);
         $report = $this->reportService->getInventoryReport($filters);
 
-        $filename = 'inventory_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.csv';
 
         $handle = fopen('php://memory', 'w');
-        fputcsv($handle, ['Item Name', 'SKU', 'Category', 'Stock', 'Min Stock', 'Unit', 'Price (' . SystemSetting::currencyCode() . ')', 'Status']);
+        fputcsv($handle, ['Item Name', 'SKU', 'Category', 'Stock', 'Min Stock', 'Unit', 'Price ('.SystemSetting::currencyCode().')', 'Status']);
 
         foreach ($report['items'] as $item) {
             fputcsv($handle, [
@@ -174,15 +167,14 @@ class ReportController extends Controller
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
     /**
      * Export the current inventory report data to a PDF document.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function exportInventoryPdf(Request $request)
     {
@@ -195,7 +187,7 @@ class ReportController extends Controller
             'currencySymbol' => SystemSetting::currencySymbol(),
         ]);
 
-        return $pdf->download('inventory_' . now()->format('Y-m-d_H-i-s') . '.pdf');
+        return $pdf->download('inventory_'.now()->format('Y-m-d_H-i-s').'.pdf');
     }
 
     /**
@@ -203,8 +195,8 @@ class ReportController extends Controller
      */
     public function exportBiologicalAssetsPdf(Request $request)
     {
-        $startDate = $request->has('start_date') ? \Illuminate\Support\Carbon::parse($request->start_date) : now()->startOfWeek();
-        $endDate = $request->has('end_date') ? \Illuminate\Support\Carbon::parse($request->end_date) : now()->endOfWeek();
+        $startDate = $request->has('start_date') ? Carbon::parse($request->start_date) : now()->startOfWeek();
+        $endDate = $request->has('end_date') ? Carbon::parse($request->end_date) : now()->endOfWeek();
 
         $report = $this->reportService->getBiologicalAssetsReport($startDate, $endDate);
 
@@ -214,7 +206,7 @@ class ReportController extends Controller
             'endDate' => $endDate,
         ])->setPaper('a4', 'landscape');
 
-        return $pdf->stream('biological_assets_' . $startDate->format('Y-m-d') . '.pdf');
+        return $pdf->stream('biological_assets_'.$startDate->format('Y-m-d').'.pdf');
     }
 
     /**
@@ -233,7 +225,7 @@ class ReportController extends Controller
             'year' => $year,
         ]);
 
-        return $pdf->stream('supplies_issuance_' . $year . '_' . $month . '.pdf');
+        return $pdf->stream('supplies_issuance_'.$year.'_'.$month.'.pdf');
     }
 
     /**
@@ -252,51 +244,47 @@ class ReportController extends Controller
             'year' => $year,
         ])->setPaper('a4', 'landscape');
 
-        return $pdf->stream('monthly_inventory_' . $year . '_' . $month . '.pdf');
+        return $pdf->stream('monthly_inventory_'.$year.'_'.$month.'.pdf');
     }
 
     /**
      * Export the filtered audit trail logs to a CSV file.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
-    public function exportAuditTrailCsv(Request $request)
+    public function exportAuditTrailCsv(Request $request): StreamedResponse
     {
         $filters = $request->only(['action', 'module', 'user_id', 'start_date', 'end_date']);
-        $logs = $this->reportService->getAuditTrailReport($filters);
+        $filename = 'audit_trail_'.now()->format('Y-m-d_H-i-s').'.csv';
 
-        $filename = 'audit_trail_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        return response()->streamDownload(function () use ($filters): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['User', 'Action', 'Module', 'Model Type', 'Model ID', 'IP Address', 'Timestamp']);
 
-        $handle = fopen('php://memory', 'w');
-        fputcsv($handle, ['User', 'Action', 'Module', 'Model Type', 'Model ID', 'IP Address', 'Timestamp']);
+            $this->reportService
+                ->auditTrailQuery($filters)
+                ->chunkById(500, function ($logs) use ($handle): void {
+                    foreach ($logs as $log) {
+                        fputcsv($handle, [
+                            $log->user->name ?? 'N/A',
+                            $log->action,
+                            $log->module,
+                            $log->model_type,
+                            $log->model_id,
+                            $log->ip_address,
+                            $log->created_at,
+                        ]);
+                    }
+                });
 
-        foreach ($logs as $log) {
-            fputcsv($handle, [
-                $log->user->name ?? 'N/A',
-                $log->action,
-                $log->module,
-                $log->model_type,
-                $log->model_id,
-                $log->ip_address,
-                $log->created_at,
-            ]);
-        }
-
-        rewind($handle);
-        $csv = stream_get_contents($handle);
-        fclose($handle);
-
-        return response($csv, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**
      * Display the main reporting dashboard with high-level performance metrics.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function dashboard()
     {

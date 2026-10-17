@@ -36,6 +36,7 @@ class ResourceRequest extends Model
         'approved_at',
         'rejected_at',
         'cancelled_at',
+        'fulfilled_at',
     ];
 
     protected $casts = [
@@ -44,6 +45,7 @@ class ResourceRequest extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'fulfilled_at' => 'datetime',
     ];
 
     /**

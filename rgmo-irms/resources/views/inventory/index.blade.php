@@ -64,16 +64,27 @@
                         <form method="POST" action="{{ route('inventory.import') }}" enctype="multipart/form-data" class="row g-3">
                             @csrf
                             <div class="col-md-8">
-                                <label class="form-label">Upload spreadsheet</label>
-                                <input type="file" name="file" accept=".csv,.xlsx,.xls,.txt" class="form-control" required>
+                                <label class="form-label" for="inventory-import-file">Upload spreadsheet</label>
+                                <input type="file" name="file" id="inventory-import-file" accept=".csv,.xlsx,.xls,.txt" class="form-control @error('file') is-invalid @enderror" aria-describedby="inventory-import-help" required>
+                                @error('file')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-4 d-flex align-items-end">
                                 <button type="submit" class="btn btn-cmu w-100">Import Items</button>
                             </div>
                             <div class="col-12">
-                                <small class="text-muted">Supported formats: CSV, XLSX, XLS, TXT. Maximum file size 10MB.</small>
+                                <small class="text-muted" id="inventory-import-help">Supported formats: CSV, XLSX, XLS, TXT. Maximum file size 10MB. Required columns: category or category_id, name, and SKU.</small>
                             </div>
                         </form>
+                        @if(session('import_failures'))
+                            <details class="alert alert-warning mt-3 mb-0" open>
+                                <summary class="fw-semibold">Rows that need attention</summary>
+                                <ul class="mb-0 mt-2 ps-3">
+                                    @foreach(session('import_failures') as $failure)
+                                        <li>{{ $failure }}</li>
+                                    @endforeach
+                                </ul>
+                            </details>
+                        @endif
                     </div>
                 </div>
             @endcan

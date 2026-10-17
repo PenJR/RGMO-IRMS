@@ -1,6 +1,37 @@
 import './bootstrap';
+import Chart from 'chart.js/auto';
+import {
+    Activity, AlertCircle, AlertTriangle, ArrowLeft, ArrowUpRight, BadgeCheck,
+    BarChart3, Bell, Briefcase, Calendar, CalendarClock, ChartNoAxesCombined,
+    Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
+    CircleAlert, Clipboard, ClipboardCheck, ClipboardList, ClipboardPlus, Clock3,
+    DatabaseBackup, Download, Edit3, Eye, EyeOff, FileCheck, FilePlus2, FileText, Files,
+    FolderKanban, Gauge, History, Home, Info, KeyRound, LayoutDashboard, Leaf,
+    LineChart, LockKeyhole, LogIn, LogOut, Mail, Menu, Monitor, Moon, Package,
+    PackagePlus, PackageSearch, PanelLeft, PanelLeftClose, PanelLeftOpen, Pencil,
+    PieChart, Plus, PlusCircle, RotateCcw, Search, Send, Settings, Settings2,
+    ShieldAlert, ShieldCheck, ShoppingCart, Smartphone, Sparkles, Sun, Trash2,
+    TrendingUp, TriangleAlert, UserRound, Users, X, Zap, createIcons,
+} from 'lucide';
 import QRCode from 'qrcode';
 
+window.Chart = Chart;
+const lucideIcons = {
+    Activity, AlertCircle, AlertTriangle, ArrowLeft, ArrowUpRight, BadgeCheck,
+    BarChart3, Bell, Briefcase, Calendar, CalendarClock, ChartNoAxesCombined,
+    Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
+    CircleAlert, Clipboard, ClipboardCheck, ClipboardList, ClipboardPlus, Clock3,
+    DatabaseBackup, Download, Edit3, Eye, EyeOff, FileCheck, FilePlus2, FileText, Files,
+    FolderKanban, Gauge, History, Home, Info, KeyRound, LayoutDashboard, Leaf,
+    LineChart, LockKeyhole, LogIn, LogOut, Mail, Menu, Monitor, Moon, Package,
+    PackagePlus, PackageSearch, PanelLeft, PanelLeftClose, PanelLeftOpen, Pencil,
+    PieChart, Plus, PlusCircle, RotateCcw, Search, Send, Settings, Settings2,
+    ShieldAlert, ShieldCheck, ShoppingCart, Smartphone, Sparkles, Sun, Trash2,
+    TrendingUp, TriangleAlert, UserRound, Users, X, Zap,
+};
+window.lucide = {
+    createIcons: () => createIcons({ icons: lucideIcons }),
+};
 window.QRCode = QRCode;
 
 document.addEventListener('click', (event) => {

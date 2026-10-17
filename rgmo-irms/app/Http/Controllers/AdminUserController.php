@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreUserRequest;
 use App\Models\LoginHistory;
 use App\Models\User;
 use App\Services\UserService;
@@ -110,17 +111,11 @@ class AdminUserController extends Controller
      *
      * @throws AuthorizationException
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
         $this->authorize('create', User::class);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => 'required|in:admin,staff,project_manager,rgmo_head',
-            'status' => 'required|in:active,inactive,suspended',
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
             'name' => $validated['name'],

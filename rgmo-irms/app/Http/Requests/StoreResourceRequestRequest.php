@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ResourceRequest;
+use App\Rules\CurrentProject;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreResourceRequestRequest extends FormRequest
@@ -11,7 +13,7 @@ class StoreResourceRequestRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check();
+        return $this->user()?->can('create', ResourceRequest::class) ?? false;
     }
 
     /**
@@ -20,8 +22,11 @@ class StoreResourceRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'purpose' => 'required|string|max:500',
+            'project_id' => ['required', 'integer', new CurrentProject],
+            'purpose' => 'required|string|max:1000',
             'remarks' => 'nullable|string|max:1000',
+            'ris_no' => 'nullable|string|max:50',
+            'responsible_center' => 'nullable|string|max:255',
             'requested_date' => 'nullable|date',
             'needed_date' => 'nullable|date',
             'items' => 'required|array|min:1',

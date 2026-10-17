@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notification extends Model
 {
+    use MassPrunable;
+
     protected $fillable = [
         'user_id',
         'title',
@@ -34,8 +37,6 @@ class Notification extends Model
     // Relationships
     /**
      * Get the user who owns the notification.
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -58,12 +59,19 @@ class Notification extends Model
         return $this->belongsTo(ResourceRequest::class, 'related_request_id');
     }
 
+    /**
+     * Retain unread notifications and prune only older acknowledged records.
+     */
+    public function prunable(): Builder
+    {
+        return static::query()
+            ->whereNotNull('read_at')
+            ->where('read_at', '<=', now()->subDays(config('retention.read_notification_days')));
+    }
+
     // Scopes
     /**
      * Scope a query to only include unread notifications.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeUnread(Builder $query): Builder
     {
@@ -72,9 +80,6 @@ class Notification extends Model
 
     /**
      * Scope a query to only include read notifications.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeRead(Builder $query): Builder
     {
@@ -83,10 +88,6 @@ class Notification extends Model
 
     /**
      * Scope a query to only include notifications of a specific type.
-     *
-     * @param Builder $query
-     * @param string $type
-     * @return Builder
      */
     public function scopeByType(Builder $query, string $type): Builder
     {
@@ -96,8 +97,6 @@ class Notification extends Model
     // Methods
     /**
      * Update the read_at timestamp for the notification.
-     *
-     * @return void
      */
     public function markAsRead(): void
     {

@@ -1,0 +1,33 @@
+$ composer validate --no-check-publish
+./composer.json is valid
+
+Exit code: 0
+
+$ php artisan migrate:status --no-ansi
+
+  Migration name .............................................. Batch / Status  
+  2026_04_28_000000_create_rms_core_tables ........................... [1] Ran  
+  2026_04_28_000100_extend_users_table ............................... [1] Ran  
+  2026_04_28_000200_enhance_tables_with_soft_deletes ................. [1] Ran  
+  2026_04_28_000300_add_email_verified_to_users ...................... [1] Ran  
+  2026_05_14_032316_create_cache_table ............................... [1] Ran  
+  2026_05_15_000000_add_two_factor_to_users .......................... [1] Ran  
+  2026_05_18_000000_add_rejected_at_to_resource_requests_table ....... [1] Ran  
+  2026_05_24_133549_add_reporting_fields_to_tables ................... [1] Ran  
+  2026_06_30_000000_create_projects_table ............................ [2] Ran  
+  2026_06_30_010000_add_expiry_fields_to_inventory_items_table ....... [3] Ran  
+  2026_07_01_000000_enhance_notifications_and_login_histories ........ [4] Ran  
+  2026_07_01_084120_create_jobs_table ................................ [5] Ran  
+  2026_07_02_000000_remove_field_personnel_role ...................... [6] Ran  
+  2026_07_02_000100_remove_seeded_field_personnel_account ............ [7] Ran  
+  2026_07_23_000000_create_cache_locks_table ......................... [8] Ran  
+  2026_07_27_000000_harden_two_factor_and_inventory_transactions ..... [8] Ran  
+  2026_07_29_000000_add_project_id_to_resource_requests .............. [8] Ran  
+  2026_07_29_010000_add_sidebar_order_to_users ....................... [8] Ran  
+  2026_08_11_000000_add_fulfilled_at_to_resource_requests_table ...... [8] Ran  
+  2026_08_12_232307_create_failed_jobs_table ......................... [8] Ran  
+
+
+Exit code: 0
+
+PHP syntax check: 144 files checked; 0 failed.

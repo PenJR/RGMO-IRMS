@@ -72,27 +72,29 @@ class ResourceRequestService
      */
     public function createRequest(array $data, array $items = []): ResourceRequest
     {
-        $request = ResourceRequest::create($data);
+        $request = DB::transaction(function () use ($data, $items) {
+            $request = ResourceRequest::create($data);
 
-        // Add items to the request
-        foreach ($items as $item) {
-            RequestItem::create([
-                'resource_request_id' => $request->id,
-                'inventory_item_id' => $item['inventory_item_id'],
-                'quantity' => $item['quantity'],
-            ]);
-        }
+            foreach ($items as $item) {
+                RequestItem::create([
+                    'resource_request_id' => $request->id,
+                    'inventory_item_id' => $item['inventory_item_id'],
+                    'quantity' => $item['quantity'],
+                ]);
+            }
 
-        // Log the action
-        AuditLog::log(
-            $data['user_id'],
-            'create',
-            'resource_request',
-            ResourceRequest::class,
-            $request->id,
-            null,
-            $request->toArray()
-        );
+            AuditLog::log(
+                $data['user_id'],
+                'create',
+                'resource_request',
+                ResourceRequest::class,
+                $request->id,
+                null,
+                $request->toArray()
+            );
+
+            return $request;
+        });
 
         $this->notificationService->notifyResourceRequestSubmitted($request);
 
@@ -239,50 +241,60 @@ class ResourceRequestService
      */
     public function fulfillRequest(ResourceRequest $request): void
     {
-        $request->loadMissing('items.item');
-
-        if (! $request->isApproved()) {
-            throw ValidationException::withMessages([
-                'status' => 'Only approved requests can be fulfilled.',
-            ]);
-        }
-
-        if (! $this->canFulfillRequest($request)) {
-            throw ValidationException::withMessages([
-                'items' => 'This request cannot be fulfilled because one or more items do not have enough available stock.',
-            ]);
-        }
-
         DB::transaction(function () use ($request) {
-            $oldValues = $request->toArray();
+            $lockedRequest = ResourceRequest::query()
+                ->lockForUpdate()
+                ->findOrFail($request->id);
 
-            foreach ($request->items as $item) {
+            if (! $lockedRequest->isApproved()) {
+                throw ValidationException::withMessages([
+                    'status' => 'Only approved requests can be fulfilled.',
+                ]);
+            }
+
+            $lockedRequest->load([
+                'items' => fn ($query) => $query->orderBy('inventory_item_id'),
+                'items.item',
+            ]);
+
+            if (! $this->canFulfillRequest($lockedRequest)) {
+                throw ValidationException::withMessages([
+                    'items' => 'This request cannot be fulfilled because one or more items do not have enough available stock.',
+                ]);
+            }
+
+            $oldValues = $lockedRequest->toArray();
+
+            foreach ($lockedRequest->items as $item) {
                 $item->item->recordStockOut(
                     $item->quantity,
-                    'resource_request_'.$request->id,
+                    'resource_request_'.$lockedRequest->id,
                     auth()->id()
                 );
 
                 ResourceUsage::create([
                     'inventory_item_id' => $item->inventory_item_id,
-                    'user_id' => $request->user_id,
-                    'project_id' => $request->project_id,
+                    'user_id' => $lockedRequest->user_id,
+                    'project_id' => $lockedRequest->project_id,
                     'quantity' => $item->quantity,
-                    'notes' => 'Released through resource request #RQ-'.$request->id,
+                    'notes' => 'Released through resource request #RQ-'.$lockedRequest->id,
                 ]);
             }
 
-            $request->update(['status' => ResourceRequest::STATUS_COMPLETED]);
+            $lockedRequest->update([
+                'status' => ResourceRequest::STATUS_COMPLETED,
+                'fulfilled_at' => now(),
+            ]);
 
             AuditLog::log(
                 auth()->id(),
                 'fulfill',
                 'resource_request',
                 ResourceRequest::class,
-                $request->id,
+                $lockedRequest->id,
                 $oldValues,
-                $request->fresh()->toArray()
+                $lockedRequest->fresh()->toArray()
             );
-        });
+        }, attempts: 5);
     }
 }

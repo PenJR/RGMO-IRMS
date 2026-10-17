@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\InventoryItemsExport;
+use App\Http\Requests\StoreInventoryItemRequest;
 use App\Imports\InventoryItemsImport;
 use App\Models\Category;
 use App\Models\InventoryItem;
@@ -11,10 +12,10 @@ use App\Services\InventoryService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InventoryController extends Controller
 {
@@ -80,26 +81,11 @@ class InventoryController extends Controller
      *
      * @throws AuthorizationException
      */
-    public function store(Request $request)
+    public function store(StoreInventoryItemRequest $request)
     {
         $this->authorize('create', InventoryItem::class);
 
-        $units = config('inventory.units', $this->units());
-
-        $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:inventory_items,sku',
-            'stock' => 'required|integer|min:0',
-            'unit' => 'required|in:'.implode(',', $units),
-            'min_stock' => 'required|integer|min:0',
-            'reorder_level' => 'nullable|integer|min:0',
-            'price' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string',
-            'planting_date' => 'nullable|date',
-            'has_expiry' => 'sometimes|boolean',
-            'expiry_date' => 'nullable|required_if:has_expiry,1|date',
-        ]);
+        $validated = $request->validated();
 
         $validated['has_expiry'] = $request->boolean('has_expiry');
         $validated['expiry_date'] = $validated['has_expiry'] ? ($validated['expiry_date'] ?? null) : null;
@@ -239,15 +225,37 @@ class InventoryController extends Controller
             'file' => 'required|file|mimes:csv,xlsx,xls,txt|max:10240',
         ]);
 
-        Excel::import(new InventoryItemsImport($this->inventoryService), $validated['file']);
+        $import = new InventoryItemsImport($this->inventoryService);
 
-        return redirect()->route('inventory.index')->with('success', 'Inventory items imported successfully.');
+        try {
+            Excel::import($import, $validated['file']);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return redirect()->route('inventory.index')->withErrors([
+                'file' => 'The spreadsheet could not be imported. Verify its format and try again.',
+            ]);
+        }
+
+        $summary = $import->summary();
+        $message = "Import finished: {$summary['created']} created, {$summary['updated']} updated";
+        if ($summary['restored'] > 0) {
+            $message .= ", {$summary['restored']} restored";
+        }
+
+        if ($summary['skipped'] > 0) {
+            return redirect()->route('inventory.index')
+                ->with('warning', $message.", {$summary['skipped']} skipped due to validation errors.")
+                ->with('import_failures', $import->failureMessages());
+        }
+
+        return redirect()->route('inventory.index')->with('success', $message.'.');
     }
 
     /**
      * Export the current inventory report to a CSV file.
      *
-     * @return Response
+     * @return StreamedResponse
      *
      * @throws AuthorizationException
      */
@@ -255,34 +263,34 @@ class InventoryController extends Controller
     {
         $this->authorize('export', InventoryItem::class);
 
-        $items = $this->inventoryService->getAllItems(250)->items();
         $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.csv';
-        $handle = fopen('php://memory', 'w');
-        fputcsv($handle, ['Category', 'Name', 'SKU', 'Stock', 'Min Stock', 'Reorder Level', 'Unit', 'Price ('.SystemSetting::currencyCode().')', 'Description', 'Status']);
+        $currencyCode = SystemSetting::currencyCode();
 
-        foreach ($items as $item) {
-            fputcsv($handle, [
-                $item->category->name ?? 'Uncategorized',
-                $item->name,
-                $item->sku,
-                $item->stock,
-                $item->min_stock,
-                $item->reorder_level,
-                $item->unit,
-                $item->price,
-                $item->description,
-                $item->getStockStatus(),
-            ]);
-        }
+        return response()->streamDownload(function () use ($currencyCode): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Category', 'Name', 'SKU', 'Stock', 'Min Stock', 'Reorder Level', 'Unit', 'Price ('.$currencyCode.')', 'Description', 'Status']);
 
-        rewind($handle);
-        $csv = stream_get_contents($handle);
-        fclose($handle);
+            InventoryItem::query()
+                ->with('category')
+                ->chunkById(500, function ($items) use ($handle): void {
+                    foreach ($items as $item) {
+                        fputcsv($handle, [
+                            $item->category->name ?? 'Uncategorized',
+                            $item->name,
+                            $item->sku,
+                            $item->stock,
+                            $item->min_stock,
+                            $item->reorder_level,
+                            $item->unit,
+                            $item->price,
+                            $item->description,
+                            $item->getStockStatus(),
+                        ]);
+                    }
+                });
 
-        return response($csv, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-        ]);
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**
@@ -296,8 +304,9 @@ class InventoryController extends Controller
     {
         $this->authorize('export', InventoryItem::class);
 
-        $items = collect($this->inventoryService->getAllItems(250)->items());
         $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.xlsx';
+
+        $items = InventoryItem::query()->with('category')->orderBy('id');
 
         return Excel::download(new InventoryItemsExport($items, SystemSetting::currencyCode()), $filename);
     }

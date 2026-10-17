@@ -2,37 +2,44 @@
 
 namespace App\Exports;
 
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
-class InventoryItemsExport implements FromCollection, ShouldAutoSize, WithHeadings
+class InventoryItemsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping
 {
     /**
      * Create a new instance.
      */
-    public function __construct(protected Collection $items, protected string $currencyCode = 'PHP') {}
+    public function __construct(protected Builder $items, protected string $currencyCode = 'PHP') {}
 
     /**
      * Handle collection.
      */
-    public function collection(): Collection
+    public function query(): Builder
     {
-        return $this->items->map(function ($item) {
-            return [
-                'Category' => $item->category->name ?? 'Uncategorized',
-                'Name' => $item->name,
-                'SKU' => $item->sku,
-                'Stock' => $item->stock,
-                'Min Stock' => $item->min_stock,
-                'Reorder Level' => $item->reorder_level,
-                'Unit' => $item->unit,
-                "Price ({$this->currencyCode})" => $item->price,
-                'Description' => $item->description,
-                'Status' => $item->getStockStatus(),
-            ];
-        });
+        return $this->items;
+    }
+
+    /**
+     * Map one inventory item into an exported spreadsheet row.
+     */
+    public function map($item): array
+    {
+        return [
+            $item->category->name ?? 'Uncategorized',
+            $item->name,
+            $item->sku,
+            $item->stock,
+            $item->min_stock,
+            $item->reorder_level,
+            $item->unit,
+            $item->price,
+            $item->description,
+            $item->getStockStatus(),
+        ];
     }
 
     /**

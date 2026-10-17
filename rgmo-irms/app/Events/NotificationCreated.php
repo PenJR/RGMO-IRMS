@@ -14,18 +14,21 @@ class NotificationCreated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
+     * Do not queue a notification broadcast until its database transaction commits.
+     */
+    public bool $afterCommit = true;
+
+    /**
      * Create a new instance.
      */
-    public function __construct(public Notification $notification)
-    {
-    }
+    public function __construct(public Notification $notification) {}
 
     /**
      * Handle broadcast on.
      */
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('user.' . $this->notification->user_id);
+        return new PrivateChannel('user.'.$this->notification->user_id);
     }
 
     /**

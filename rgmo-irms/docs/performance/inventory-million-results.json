@@ -1,0 +1,202 @@
+{
+    "database": "/tmp/rgmo-inventory-benchmark-20261003-225327-2.sqlite",
+    "generated_records": 1000000,
+    "scope": "Single-process local SQLite inventory service queries; no browser, concurrent users, full CSV import, or deployment test.",
+    "php_version": "8.3.6",
+    "initial_records": 37,
+    "baseline": {
+        "inventory_first_page": {
+            "runs_ms": [
+                10.31,
+                2.18,
+                1.52,
+                1.37,
+                1.35
+            ],
+            "median_ms": 1.52,
+            "max_ms": 10.31,
+            "total_matches": 37,
+            "returned": 8
+        },
+        "inventory_deep_page": {
+            "runs_ms": [
+                0.73,
+                0.72,
+                0.8,
+                0.67,
+                0.62
+            ],
+            "median_ms": 0.72,
+            "max_ms": 0.8,
+            "total_matches": 37,
+            "returned": 0
+        },
+        "search_matching": {
+            "runs_ms": [
+                0.53,
+                0.55,
+                0.5,
+                0.5,
+                0.45
+            ],
+            "median_ms": 0.5,
+            "max_ms": 0.55,
+            "total_matches": 0,
+            "returned": 0
+        },
+        "search_no_match": {
+            "runs_ms": [
+                0.46,
+                0.49,
+                0.49,
+                0.46,
+                0.48
+            ],
+            "median_ms": 0.48,
+            "max_ms": 0.49,
+            "total_matches": 0,
+            "returned": 0
+        },
+        "low_stock_page": {
+            "runs_ms": [
+                1.53,
+                1.42,
+                1.42,
+                1.91,
+                1.5
+            ],
+            "median_ms": 1.5,
+            "max_ms": 1.91,
+            "total_matches": 3,
+            "returned": 3
+        },
+        "sort_stock": {
+            "runs_ms": [
+                2.1,
+                1.92,
+                2.34,
+                2.48,
+                2.22
+            ],
+            "median_ms": 2.22,
+            "max_ms": 2.48,
+            "total_matches": 37,
+            "returned": 8
+        }
+    },
+    "insertion_seconds": 26.43,
+    "final_records": 1000037,
+    "loaded": {
+        "inventory_first_page": {
+            "runs_ms": [
+                482.07,
+                543.6,
+                553.76,
+                511.27,
+                447.9
+            ],
+            "median_ms": 511.27,
+            "max_ms": 553.76,
+            "total_matches": 1000037,
+            "returned": 8
+        },
+        "inventory_deep_page": {
+            "runs_ms": [
+                2381.26,
+                2387.42,
+                2483.01,
+                2496.24,
+                2392.89
+            ],
+            "median_ms": 2392.89,
+            "max_ms": 2496.24,
+            "total_matches": 1000037,
+            "returned": 8
+        },
+        "search_matching": {
+            "runs_ms": [
+                874.77,
+                881.89,
+                918.74,
+                1022.66,
+                1057.45
+            ],
+            "median_ms": 918.74,
+            "max_ms": 1057.45,
+            "total_matches": 10000,
+            "returned": 8
+        },
+        "search_no_match": {
+            "runs_ms": [
+                474.25,
+                451.64,
+                527.94,
+                522.3,
+                472.07
+            ],
+            "median_ms": 474.25,
+            "max_ms": 527.94,
+            "total_matches": 0,
+            "returned": 0
+        },
+        "low_stock_page": {
+            "runs_ms": [
+                392.98,
+                411.06,
+                441.3,
+                385.58,
+                371.7
+            ],
+            "median_ms": 392.98,
+            "max_ms": 441.3,
+            "total_matches": 108914,
+            "returned": 8
+        },
+        "sort_stock": {
+            "runs_ms": [
+                494.16,
+                482.84,
+                578.06,
+                501.92,
+                473.44
+            ],
+            "median_ms": 494.16,
+            "max_ms": 578.06,
+            "total_matches": 1000037,
+            "returned": 8
+        }
+    },
+    "query_plans": {
+        "default_list": [
+            {
+                "id": 4,
+                "parent": 0,
+                "notused": 0,
+                "detail": "SCAN inventory_items"
+            },
+            {
+                "id": 32,
+                "parent": 0,
+                "notused": 0,
+                "detail": "USE TEMP B-TREE FOR ORDER BY"
+            }
+        ],
+        "search": [
+            {
+                "id": 4,
+                "parent": 0,
+                "notused": 0,
+                "detail": "SCAN inventory_items"
+            },
+            {
+                "id": 41,
+                "parent": 0,
+                "notused": 0,
+                "detail": "USE TEMP B-TREE FOR ORDER BY"
+            }
+        ]
+    },
+    "peak_php_memory_mb": 34,
+    "database_size_mb": 160.54,
+    "completed_at": "2026-10-03T22:54:20+08:00"
+}

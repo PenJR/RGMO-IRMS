@@ -13,7 +13,7 @@ class StoreUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->user()?->isAdmin();
+        return $this->user()?->can('create', User::class) ?? false;
     }
 
     /**
@@ -23,9 +23,9 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|lowercase|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => 'required|in:' . implode(',', User::availableRoles()),
+            'role' => 'required|in:'.implode(',', User::availableRoles()),
             'status' => 'required|in:active,inactive,suspended',
         ];
     }

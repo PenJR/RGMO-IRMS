@@ -1,0 +1,83 @@
+RGMO-IRMS WEEKLY DEVELOPMENT PROGRESS
+Project timeline: May 18, 2026 to August 7, 2026
+Source: GitHub origin/main commit history (75 commits)
+
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week / Date            | Accomplishment                         | Description of Changes Made                                                  |
++========================+========================================+==============================================================================+
+| Week 1 - May 18-24,    | Project foundation and initial         | Initialized the Laravel application and its authentication, inventory,       |
+| 2026                   | operational modules                    | resource requests, dashboards, notifications, reports, user administration,  |
+|                        |                                        | backup, and settings structure. Added administrator login history, grouped   |
+|                        |                                        | sidebar navigation, CMU-branded login and dashboard screens, password        |
+|                        |                                        | visibility controls, code documentation, logic corrections, database         |
+|                        |                                        | reporting fields, and the first agricultural reports.                        |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 2 - May 25-31,    | Printable reports and official         | Added PDF exports for biological assets, supplies issuance, and monthly      |
+| 2026                   | branding                               | inventory. Removed hard-coded signatory names so reports remain reusable,    |
+|                        |                                        | and replaced the placeholder application mark with the project-provided      |
+|                        |                                        | logo.                                                                        |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 3 - June 1-7,     | UI modernization and forecasting       | Added the initial AI Forecasting page and navigation. Applied the CMU        |
+| 2026                   | prototype                              | green-and-gold design system, redesigned the login screen, standardized      |
+|                        |                                        | profile and security forms with Bootstrap 5, added breadcrumbs and modern    |
+|                        |                                        | tables, introduced Chart.js visualizations, and improved inventory and       |
+|                        |                                        | request forms.                                                               |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 4 - June 8-14,    | No recorded repository activity        | No commits were recorded on the main branch during this calendar week. The   |
+| 2026                   |                                        | completed foundation, reporting, interface, and forecasting prototype        |
+|                        |                                        | remained the project baseline.                                               |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 5 - June 15-21,   | Frontend development setup             | Updated the frontend package configuration by adding a Vite start command,   |
+| 2026                   |                                        | making the development asset server available through the standard npm start |
+|                        |                                        | workflow.                                                                    |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 6 - June 22-28,   | Role-based access control and branding | Added centralized roles and permissions, permission middleware, model        |
+| 2026                   | refinement                             | policies, role-aware routes, protected API operations, and a custom          |
+|                        |                                        | forbidden page. Updated seeded users and role assignments, corrected         |
+|                        |                                        | dashboard and report access, strengthened restrictions across modules, and   |
+|                        |                                        | refined the branded application layouts.                                     |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 7 - June 29-July  | Projects, expiry tracking,             | Added project management, manager assignments, policies, resource-usage      |
+| 5, 2026                | notifications, APIs, and stock         | reporting, migrations, pages, seed data, and tests. Added inventory expiry   |
+|                        | thresholds                             | workflows, enhanced notifications and login history, database-backed queues, |
+|                        |                                        | expanded inventory and operations APIs, API smoke tests, per-resource        |
+|                        |                                        | low-stock thresholds, forecasting improvements, and refreshed deployment     |
+|                        |                                        | data. Removed the obsolete field-personnel role.                             |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 8 - July 6-12,    | Authentication and workflow hardening  | Improved API authentication and authorization errors, strengthened login     |
+| 2026                   |                                        | security and password validation, corrected sidebar and export loaders, and  |
+|                        |                                        | introduced the module-health dashboard. Blocked approval when stock is       |
+|                        |                                        | insufficient and added request cancellation reasons, audit timelines,        |
+|                        |                                        | fulfillment transactions, resource-usage recording, and broader tests.       |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 9 - July 13-19,   | Production forecasting, documentation, | Created deployment-readiness and forecasting-formula documentation. Replaced |
+| 2026                   | and themes                             | the forecasting mockup with inventory-based predictions and optional Gemini  |
+|                        |                                        | explanations with caching, failure handling, and tests. Added dark mode,     |
+|                        |                                        | improved contrast, introduced compact pagination, and refined the guest and  |
+|                        |                                        | forecasting interfaces.                                                      |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 10 - July 20-26,  | Backend stabilization and MFA          | Improved inventory controllers, exports, backup result handling,             |
+| 2026                   | hardening                              | notifications, cache locks, dashboards, requests, and responsive layouts.    |
+|                        |                                        | Generated MFA QR codes locally, protected MFA secrets through password       |
+|                        |                                        | confirmation, strengthened recovery-code handling, and restricted unsafe     |
+|                        |                                        | account deletion.                                                            |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 11 - July         | Security, usability, tests, and Render | Hardened users, inventory, authentication, 2FA, transactions, imports, and   |
+| 27-August 2, 2026      | preparation                            | settings. Added forecast periods, inventory filters, project-linked          |
+|                        |                                        | requests, personal sidebar ordering, sortable tables, improved dashboards,   |
+|                        |                                        | AI safeguards, cookie and session controls, responsive design, and           |
+|                        |                                        | accessibility. Expanded automated tests, removed a sensitive SQL artifact,   |
+|                        |                                        | updated dependencies, added Docker and Render configuration, prepared        |
+|                        |                                        | PostgreSQL CI, and stabilized SQLite container startup and recovery.         |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+| Week 12 - August 3-7,  | Production UI, dashboard security,     | Refined login accessibility, corrected role-based dashboard access,          |
+| 2026                   | password management, and dependency    | protected dashboard endpoints, and fixed Render HTTPS, proxy, asset URL, and |
+|                        | security                               | secure-cookie handling. Added admin-only password management with            |
+|                        |                                        | validation, authorization, throttling, session revocation, token rotation,   |
+|                        |                                        | audit logging, UI and API protection, and tests. Updated deployment          |
+|                        |                                        | snapshots, fixed the CommonMark security advisories, pushed to GitHub, and   |
+|                        |                                        | deployed to Render.                                                          |
++------------------------+----------------------------------------+------------------------------------------------------------------------------+
+
+END OF WEEKLY DEVELOPMENT PROGRESS
+

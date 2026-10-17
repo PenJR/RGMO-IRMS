@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreResourceRequestRequest;
 use App\Models\AuditLog;
 use App\Models\InventoryItem;
 use App\Models\Project;
@@ -74,22 +75,11 @@ class ResourceRequestController extends Controller
      *
      * @throws AuthorizationException
      */
-    public function store(Request $request)
+    public function store(StoreResourceRequestRequest $request)
     {
         $this->authorize('create', ResourceRequest::class);
 
-        $validated = $request->validate([
-            'project_id' => ['required', 'integer', new CurrentProject],
-            'purpose' => 'required|string',
-            'remarks' => 'nullable|string',
-            'ris_no' => 'nullable|string|max:50',
-            'responsible_center' => 'nullable|string|max:255',
-            'requested_date' => 'nullable|date',
-            'needed_date' => 'nullable|date',
-            'items' => 'required|array|min:1',
-            'items.*.inventory_item_id' => 'required|exists:inventory_items,id',
-            'items.*.quantity' => 'required|integer|min:1',
-        ]);
+        $validated = $request->validated();
 
         $requestData = [
             'user_id' => auth()->id(),

@@ -91,22 +91,24 @@
     </div>
 
     <script>
-        lucide.createIcons();
-
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const password = document.getElementById('password');
-            const icon = document.getElementById('toggleIcon');
-            
-            if (password.type === 'password') {
-                password.type = 'text';
-                icon.setAttribute('data-lucide', 'eye-off');
-                this.setAttribute('aria-label', 'Hide password');
-            } else {
-                password.type = 'password';
-                icon.setAttribute('data-lucide', 'eye');
-                this.setAttribute('aria-label', 'Show password');
-            }
+        document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+
+            document.getElementById('togglePassword').addEventListener('click', function() {
+                const password = document.getElementById('password');
+                const icon = document.getElementById('toggleIcon');
+
+                if (password.type === 'password') {
+                    password.type = 'text';
+                    icon.setAttribute('data-lucide', 'eye-off');
+                    this.setAttribute('aria-label', 'Hide password');
+                } else {
+                    password.type = 'password';
+                    icon.setAttribute('data-lucide', 'eye');
+                    this.setAttribute('aria-label', 'Show password');
+                }
+                lucide.createIcons();
+            });
         });
     </script>
 </x-guest-layout>

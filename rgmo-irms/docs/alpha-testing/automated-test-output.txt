@@ -1,0 +1,182 @@
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true
+
+   PASS  Tests\Feature\AIForecastingTest
+  ✓ forecasting page renders real inventory predictions                  0.24s  
+  ✓ staff without forecast permission cannot view forecasts              0.02s  
+  ✓ user can select a one week forecast period                           0.05s  
+  ✓ unsupported forecast period falls back to one month                  0.03s  
+  ✓ isolated demand is not reported as a high confidence trend           0.01s  
+  ✓ item without demand history has zero forecast                        0.01s  
+  ✓ gemini can explain and cache the numerical forecast                  0.03s  
+  ✓ gemini failure returns no explanation instead of failing the foreca… 0.01s  
+  ✓ gemini request budget blocks uncached api spending with data set "p… 0.02s  
+  ✓ gemini request budget blocks uncached api spending with data set "d… 0.01s  
+  ✓ forecast page does not wait for gemini                               0.02s  
+
+   PASS  Tests\Feature\AdminPasswordManagementTest
+  ✓ admin can change another users password                              0.03s  
+  ✓ admin user page contains password change form                        0.04s  
+  ✓ non admin roles cannot change another users password                 0.02s  
+  ✓ non admin cannot change password through api                         0.01s  
+  ✓ non admin profile does not offer password change form                0.02s  
+
+   PASS  Tests\Feature\ApiModuleSmokeTest
+  ✓ main api module endpoints respond for admin                          0.05s  
+  ✓ api permission denial returns json                                   0.01s  
+  ✓ api abort forbidden returns json                                     0.01s  
+  ✓ unauthenticated api request returns json                             0.01s  
+
+   PASS  Tests\Feature\Auth\AuthenticationTest
+  ✓ login screen can be rendered                                         0.02s  
+  ✓ users can authenticate using the login screen                        0.02s  
+  ✓ users can not authenticate with invalid password                     0.22s  
+  ✓ users can logout                                                     0.01s  
+
+   PASS  Tests\Feature\Auth\EmailVerificationTest
+  ✓ users without a verified email can access the application            0.03s  
+  ✓ email verification screen is removed                                 0.01s  
+
+   PASS  Tests\Feature\Auth\PasswordConfirmationTest
+  ✓ confirm password screen can be rendered                              0.02s  
+  ✓ password can be confirmed                                            0.02s  
+  ✓ password is not confirmed with invalid password                      0.22s  
+
+   PASS  Tests\Feature\Auth\PasswordResetTest
+  ✓ reset password link screen can be rendered                           0.02s  
+  ✓ reset password link can be requested                                 0.22s  
+  ✓ reset password screen can be rendered                                0.23s  
+  ✓ password can be reset with valid token                               0.23s  
+  ✓ non admin password reset link must be requested by admin             0.03s  
+
+   PASS  Tests\Feature\Auth\PasswordUpdateTest
+  ✓ password can be updated                                              0.07s  
+  ✓ correct password must be provided to update password                 0.03s  
+  ✓ non admin cannot update their own password                           0.02s  
+
+   PASS  Tests\Feature\Auth\RegistrationTest
+  ✓ public registration screen is disabled                               0.02s  
+  ✓ public registration submission is disabled                           0.02s  
+
+   PASS  Tests\Feature\DashboardInventoryDynamicsTest
+  ✓ dashboard shows resource readiness and replenishment suggestions     0.05s  
+  ✓ inventory dynamics can be filtered by item and uses historical stoc… 0.06s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                        0.01s  
+
+   PASS  Tests\Feature\HighPriorityFixesTest
+  ✓ business timezone defaults to manila                                 0.01s  
+  ✓ inventory csv and excel exports include more than 250 items          0.10s  
+  ✓ audit export includes records beyond the first page                  0.03s  
+  ✓ completed request cannot be fulfilled twice and is in issuance repo… 0.05s  
+
+   PASS  Tests\Feature\InventoryExpiryTest
+  ✓ inventory item can be created with expiry enabled                    0.03s  
+  ✓ disabling expiry clears existing expiry date                         0.02s  
+
+   PASS  Tests\Feature\InventoryImprovementTest
+  ✓ inventory can filter items that need reorder                         0.08s  
+  ✓ inventory can filter expiring and expired items                      0.07s  
+  ✓ inventory columns can be sorted server side                          0.03s  
+
+   PASS  Tests\Feature\InventoryLowStockThresholdTest
+  ✓ low stock uses each resource threshold                               0.04s  
+  ✓ resource low stock threshold can be updated                          0.02s  
+
+   PASS  Tests\Feature\MaintenanceCommandTest
+  ✓ low stock command generates an alert                                 0.03s  
+  ✓ manual backup does not report a failed backup as successful          0.02s  
+
+   PASS  Tests\Feature\ModuleHealthDashboardTest
+  ✓ admin can view module health dashboard                               0.05s  
+  ✓ module health json returns summary and modules                       0.03s  
+  ✓ staff cannot view module health dashboard                            0.03s  
+
+   PASS  Tests\Feature\ModulePageSmokeTest
+  ✓ admin can render every primary module page                           0.38s  
+  ✓ report and inventory exports download successfully                   0.77s  
+
+   PASS  Tests\Feature\NotificationFeatureTest
+  ✓ notification entry is a top bar bell instead of a sidebar item       0.03s  
+  ✓ resource request submission notifies admin and rgmo head             0.04s  
+  ✓ request approval and rejection notify requester                      0.03s  
+  ✓ admin login creates login history and authorized notifications       0.04s  
+  ✓ non admin logins create role aware notifications                     0.04s  
+  ✓ notification api lists and marks notifications read                  0.05s  
+
+   PASS  Tests\Feature\ProfileTest
+  ✓ profile page is displayed                                            0.02s  
+  ✓ profile displays cookie settings and active sessions                 0.03s  
+  ✓ user can revoke one owned browser session                            0.02s  
+  ✓ user can revoke all other owned browser sessions                     0.02s  
+  ✓ user cannot revoke another users session                             0.01s  
+  ✓ profile information can be updated                                   0.02s  
+  ✓ email verification status is unchanged when the email address is un… 0.02s  
+  ✓ user can save a personal sidebar order                               0.03s  
+  ✓ sidebar order rejects unknown or duplicate items                     0.04s  
+  ✓ user can restore the default sidebar order                           0.04s  
+  ✓ user cannot delete their own account                                 0.29s  
+  ✓ admin can delete another account                                     0.02s  
+
+   PASS  Tests\Feature\ProjectManagementTest
+  ✓ staff can view projects but not create them                          0.04s  
+  ✓ rgmo head can create project with project manager assignment         0.02s  
+  ✓ project show lists linked resource usage                             0.06s  
+
+   PASS  Tests\Feature\RbacConfigurationTest
+  ✓ every available role has rbac configuration                          0.02s  
+  ✓ role permissions are defined permissions                             0.01s  
+  ✓ admin user forms include all available roles                         0.02s  
+  ✓ sidebar uses permissions for role specific links                     0.03s  
+  ✓ admin can update resource low stock threshold setting                0.01s  
+  ✓ theme control is only rendered on the settings page                  0.03s  
+
+   PASS  Tests\Feature\ReliabilityUsabilityTest
+  ✓ inventory import reports created and invalid rows                    0.03s  
+  ✓ background notification count does not create activity noise         0.03s  
+  ✓ retention prunes old activity and read notifications only            0.02s  
+  ✓ layout uses local frontend assets and logo has alt text              0.02s  
+
+   PASS  Tests\Feature\RequestWorkflowTest
+  ✓ approval is blocked when stock is insufficient                       0.02s  
+  ✓ requester can cancel pending request with reason                     0.02s  
+  ✓ request edit is recorded in the request audit timeline               0.03s  
+  ✓ approved request can be fulfilled and deducts inventory              0.03s  
+  ✓ authorized user can print a withdrawal slip in the supplied format   0.02s  
+  ✓ pending request cannot open or print a withdrawal receipt            0.04s  
+  ✓ completed request cannot print or download a withdrawal receipt      0.02s  
+  ✓ withdrawal receipt can be downloaded after request approval          0.09s  
+  ✓ request list can search projects and sort results                    0.06s  
+  ✓ staff dashboard and request list show only the requesters work       0.03s  
+
+   PASS  Tests\Feature\ResourceRequestProjectTest
+  ✓ only current projects are available on the request form              0.04s  
+  ✓ request cannot be submitted without a current project                0.02s  
+  ✓ request is linked to the selected current project                    0.03s  
+
+   PASS  Tests\Feature\SchedulerConfigurationTest
+  ✓ maintenance commands are scheduled daily                             0.02s  
+
+   PASS  Tests\Feature\SecurityHardeningTest
+  ✓ inventory viewer cannot mutate inventory through api                 0.01s  
+  ✓ forecast viewer cannot change system settings                        0.01s  
+  ✓ staff is redirected away from system dashboard                       0.01s  
+  ✓ staff cannot access system dashboard data                            0.01s  
+  ✓ report authorized user can access system dashboard                   0.04s  
+  ✓ requester cannot access or update another users request              0.02s  
+  ✓ administrator cannot deactivate self or remove final active admin    0.01s  
+  ✓ opening stock is recorded and api idempotency prevents replay        0.03s  
+
+   PASS  Tests\Feature\TwoFactorTest
+  ✓ two factor challenge uses the accessible branded layout              0.03s  
+  ✓ user can enable two factor authentication                            0.01s  
+  ✓ user can confirm two factor authentication                           0.02s  
+  ✓ login requires two factor verification                               0.03s  
+  ✓ api login requires two factor verification and can verify            0.02s  
+  ✓ recovery code can only be used once                                  0.03s  
+
+  Tests:    120 passed (596 assertions)
+  Duration: 6.08s
+

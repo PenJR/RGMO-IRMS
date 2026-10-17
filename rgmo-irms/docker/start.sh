@@ -2,7 +2,7 @@
 
 set -Eeuo pipefail
 
-required_variables=(APP_KEY)
+required_variables=(APP_KEY DB_CONNECTION)
 
 for variable in "${required_variables[@]}"; do
     if [[ -z "${!variable:-}" ]]; then
@@ -22,12 +22,15 @@ if [[ "${DB_CONNECTION:-}" == "sqlite" ]]; then
 
     mkdir -p "$(dirname "${DB_DATABASE}")"
 
-    if [[ ! -f "${DB_DATABASE}" ]]; then
-        echo "SQLite database file is missing at ${DB_DATABASE}" >&2
+    if [[ ! -f "${DB_DATABASE}" && "${APP_ENV:-production}" == "production" && "${ALLOW_EMPTY_SQLITE:-false}" != "true" ]]; then
+        echo "Production SQLite database is missing at ${DB_DATABASE}. Mount persistent storage, use PostgreSQL, or explicitly set ALLOW_EMPTY_SQLITE=true for a new installation." >&2
         exit 1
     fi
 
-    if ! sqlite3 "${DB_DATABASE}" "PRAGMA integrity_check;" | grep -q '^ok$'; then
+    touch "${DB_DATABASE}"
+    chown www-data:www-data "${DB_DATABASE}"
+
+    if [[ -s "${DB_DATABASE}" ]] && ! sqlite3 "${DB_DATABASE}" "PRAGMA integrity_check;" | grep -q '^ok$'; then
         echo "SQLite database file is malformed at ${DB_DATABASE}" >&2
         exit 1
     fi
@@ -61,10 +64,22 @@ envsubst '${PORT}' \
 echo "Clearing stale Laravel config..."
 php artisan config:clear --no-interaction || true
 
-echo "Skipping database migrations during startup because the SQLite database is preloaded."
+echo "Applying pending database migrations..."
+migration_attempt=1
+until php artisan migrate --force --no-interaction; do
+    if (( migration_attempt >= 5 )); then
+        echo "Database migrations failed after ${migration_attempt} attempts." >&2
+        exit 1
+    fi
+
+    echo "Database migration attempt ${migration_attempt} failed; retrying..." >&2
+    migration_attempt=$((migration_attempt + 1))
+    sleep 3
+done
 
 echo "Building Laravel production caches..."
 php artisan config:cache --no-interaction
+php artisan event:cache --no-interaction
 php artisan route:cache --no-interaction
 php artisan view:cache --no-interaction
 

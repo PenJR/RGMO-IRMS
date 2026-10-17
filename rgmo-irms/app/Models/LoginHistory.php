@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LoginHistory extends Model
 {
+    use MassPrunable;
+
     protected $fillable = [
         'user_id',
         'user_role',
@@ -30,8 +33,6 @@ class LoginHistory extends Model
 
     /**
      * Get the user associated with this login history entry.
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -39,11 +40,15 @@ class LoginHistory extends Model
     }
 
     /**
+     * Remove historical session records after the configured retention period.
+     */
+    public function prunable(): Builder
+    {
+        return static::query()->where('login_at', '<=', now()->subDays(config('retention.login_history_days')));
+    }
+
+    /**
      * Scope a query to only include login sessions for a specific user.
-     *
-     * @param Builder $query
-     * @param int $userId
-     * @return Builder
      */
     public function scopeByUser(Builder $query, int $userId): Builder
     {
@@ -52,9 +57,6 @@ class LoginHistory extends Model
 
     /**
      * Scope a query to only include sessions that have not yet been logged out.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     public function scopeOpenSession(Builder $query): Builder
     {
