@@ -77,6 +77,11 @@ until php artisan migrate --force --no-interaction; do
     sleep 3
 done
 
+if [[ "${BOOTSTRAP_ADMIN:-false}" == "true" ]]; then
+    echo "Bootstrapping administrator if the users table is empty..."
+    php artisan db:seed --class=BootstrapAdminSeeder --force --no-interaction
+fi
+
 echo "Building Laravel production caches..."
 php artisan config:cache --no-interaction
 php artisan event:cache --no-interaction
