@@ -197,6 +197,16 @@
                 border-right: none;
             }
 
+            .login-card input[type="email"],
+            .login-card input[type="password"],
+            .login-card input[type="text"] {
+                color: #17251c !important;
+                -webkit-text-fill-color: #17251c !important;
+                background-color: #ffffff !important;
+                caret-color: #17251c;
+                color-scheme: light;
+            }
+
             .form-control {
                 border-radius: 10px;
                 padding: 0.75rem 1rem;
