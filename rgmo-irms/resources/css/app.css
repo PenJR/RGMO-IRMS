@@ -3308,6 +3308,18 @@ body {
     margin-top: 0.65rem;
 }
 
+#sidebar .sidebar-actions a.btn-light,
+#sidebar .sidebar-actions a.btn-light:hover,
+#sidebar .sidebar-actions a.btn-light:focus-visible {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#sidebar .sidebar-actions a.btn-light svg,
+#sidebar .sidebar-actions a.btn-light span {
+    color: inherit;
+}
+
 .sidebar-footer .btn-light,
 .sidebar-footer .btn-outline-light {
     min-height: 38px;
