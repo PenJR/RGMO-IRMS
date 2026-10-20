@@ -3231,8 +3231,8 @@ body {
 }
 
 .sidebar-footer {
-    margin: 0 0.75rem 0.9rem;
-    padding: 0.78rem;
+    margin: 0 0.75rem 0;
+    padding: 0.78rem 0.78rem 0;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 14px;
     background:
@@ -3417,8 +3417,8 @@ body {
     body.sidebar-collapsed #sidebar .nav-badge { visibility: hidden; }
     .sidebar-footer {
         width: 248px;
-        margin: auto 0 12px;
-        padding: 12px;
+        margin: auto 0 0;
+        padding: 12px 12px 0;
         border: 0;
         border-radius: 0;
     }
@@ -3546,4 +3546,49 @@ body {
         padding: 0.25rem 0.45rem;
         font-size: 0.7rem;
     }
+}
+
+/* Header time and calendar */
+.header-clock {
+    position: relative;
+    flex-shrink: 0;
+    color: var(--cmu-text);
+}
+.header-clock > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--ui-line);
+    border-radius: 12px;
+    cursor: pointer;
+    list-style: none;
+    background: var(--ui-surface-soft);
+}
+.header-clock > summary::-webkit-details-marker { display: none; }
+.header-clock > summary > svg { width: 19px; height: 19px; color: var(--cmu-green-2); }
+.header-clock time { display: block; font-size: 0.85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.header-clock-date { display: block; font-size: 0.7rem; color: var(--cmu-muted); }
+.header-calendar {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: min(300px, calc(100vw - 32px));
+    padding: 1rem;
+    border: 1px solid var(--ui-line);
+    border-radius: 14px;
+    background: var(--ui-surface);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    z-index: 1060;
+}
+.header-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.header-calendar-grid > span { display: grid; place-items: center; min-height: 30px; font-size: 0.8rem; }
+.header-calendar-weekday { color: var(--cmu-muted); font-weight: 700; }
+.header-calendar-today { background: var(--cmu-yellow); color: #163024; border-radius: 8px; font-weight: 800; }
+@media (max-width: 575px) {
+    .top-nav { flex-wrap: wrap; }
+    .top-nav .page-header-content { flex-basis: calc(100% - 64px); }
+    .header-clock { margin-left: auto; }
+    .header-clock > summary { padding: 0.3rem 0.55rem; }
+    .header-calendar { position: fixed; top: calc(var(--top-nav-height) + 8px); right: 16px; }
 }

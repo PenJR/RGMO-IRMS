@@ -59,6 +59,7 @@
                         @endif
                     </div>
                     @php $unreadNotificationCount = auth()->user()->notifications()->unread()->count(); @endphp
+                    <x-header-clock />
                     <a
                         href="{{ route('notifications.index') }}"
                         class="top-nav-notifications {{ request()->routeIs('notifications.*') ? 'active' : '' }}"

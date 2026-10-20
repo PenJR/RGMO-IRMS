@@ -321,3 +321,4 @@ const enhanceDataTable = (table) => {
 };
 
 document.querySelectorAll('table[data-enhanced-table]').forEach(enhanceDataTable);
+import './header-clock';
