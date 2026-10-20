@@ -161,7 +161,7 @@
                 <p class="sidebar-user-role">{{ str(Auth::user()->role)->replace('_', ' ')->title() }}</p>
             </div>
         </div>
-        <div class="sidebar-actions d-flex gap-2">
+        <div class="sidebar-actions d-flex gap-0">
             <a href="{{ route('profile.edit') }}" class="btn btn-light w-100 fw-bold">
                 <i data-lucide="user-round" aria-hidden="true"></i>
                 <span>Profile</span>

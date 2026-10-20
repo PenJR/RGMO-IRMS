@@ -2947,6 +2947,11 @@ body {
     min-width: 0;
 }
 
+#sidebar .sidebar-menu {
+    flex-wrap: nowrap;
+    min-height: 0;
+}
+
 .sidebar-menu {
     gap: 0.18rem;
     padding: 0.85rem 0.75rem 1rem;
@@ -2986,6 +2991,8 @@ body {
 }
 
 .sidebar-menu > [data-sidebar-item] {
+    flex-shrink: 0;
+    width: 100%;
     position: relative;
     transition:
         opacity 0.18s ease,

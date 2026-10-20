@@ -1,4 +1,4 @@
-@props(['paginator', 'label' => 'records'])
+@props(['paginator', 'label' => 'records', 'alwaysShow' => false])
 
 @if($paginator->total() > 0)
     <nav class="data-server-pagination d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mt-3" aria-label="{{ ucfirst($label) }} pagination">
@@ -6,7 +6,7 @@
             Showing {{ $paginator->firstItem() }}–{{ $paginator->lastItem() }} of {{ $paginator->total() }} {{ $label }}
         </span>
 
-        @if($paginator->hasPages())
+        @if($alwaysShow || $paginator->hasPages())
             <div class="d-flex align-items-center gap-2">
                 @if($paginator->onFirstPage())
                     <span class="btn btn-sm btn-outline-secondary disabled d-inline-flex align-items-center justify-content-center" aria-disabled="true">

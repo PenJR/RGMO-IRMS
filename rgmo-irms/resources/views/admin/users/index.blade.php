@@ -89,7 +89,7 @@
                         </table>
                     </div>
 
-                    <x-table-pagination :paginator="$users" label="users" />
+                    <x-table-pagination :paginator="$users" label="users" :always-show="true" />
                 @else
                     <div class="text-center py-5">
                         <h5 class="mb-2">No users found</h5>
