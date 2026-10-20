@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -93,9 +94,9 @@ class PasswordResetTest extends TestCase
     }
 
     /**
-     * Verify that non-admin users cannot request self-service reset links.
+     * Verify that non-admin users can request self-service reset links.
      */
-    public function test_non_admin_password_reset_link_must_be_requested_by_admin(): void
+    public function test_non_admin_can_request_password_reset_link(): void
     {
         Notification::fake();
 
@@ -105,8 +106,47 @@ class PasswordResetTest extends TestCase
         ]);
 
         $this->post('/forgot-password', ['email' => $user->email])
-            ->assertSessionHasErrors('email');
+            ->assertSessionHasNoErrors();
 
-        Notification::assertNothingSent();
+        Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_non_admin_can_reset_password_with_valid_token(): void
+    {
+        Notification::fake();
+        $user = User::factory()->create([
+            'role' => User::ROLE_STAFF,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+            $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $user->email,
+                'password' => 'Secure123!',
+                'password_confirmation' => 'Secure123!',
+            ])->assertSessionHasNoErrors()->assertRedirect(route('login'));
+
+            $this->assertTrue(Hash::check('Secure123!', $user->fresh()->password));
+
+            return true;
+        });
+    }
+
+    public function test_non_admin_cannot_reset_password_with_invalid_token(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_STAFF]);
+        $originalPassword = $user->password;
+
+        $this->post('/reset-password', [
+            'token' => 'invalid-token',
+            'email' => $user->email,
+            'password' => 'Secure123!',
+            'password_confirmation' => 'Secure123!',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertSame($originalPassword, $user->fresh()->password);
     }
 }

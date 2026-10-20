@@ -38,14 +38,6 @@ class NewPasswordController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::where('email', $request->email)->first();
-
-        if (! $user || ! $user->isAdmin()) {
-            throw ValidationException::withMessages([
-                'email' => 'Only administrator accounts can reset passwords through this form.',
-            ]);
-        }
-
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user) use ($request) {
