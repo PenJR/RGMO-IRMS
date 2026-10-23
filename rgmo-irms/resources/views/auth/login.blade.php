@@ -1,16 +1,11 @@
 <x-guest-layout>
     <div class="auth-card-heading">
         <h2>Welcome back</h2>
-        <p>Sign in to manage inventory, resource requests, reports, and approvals.</p>
+        <p>Sign in to your RGMO-IRMS account.</p>
     </div>
 
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <div class="auth-notice mb-4">
-        <i data-lucide="shield-check" aria-hidden="true"></i>
-        <span>Authorized RGMO personnel only</span>
-    </div>
 
     <form method="POST" action="{{ route('login') }}" class="auth-form">
         @csrf
@@ -30,7 +25,6 @@
                     autofocus
                     autocomplete="username"
                     inputmode="email"
-                    placeholder="name@example.com"
                     aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}"
                     @error('email') aria-describedby="email-error" @enderror
                 />

@@ -11,9 +11,9 @@ use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
-        /**
-        * Register any application services.
-        */
+    /**
+     * Register any application services.
+     */
     public function register(): void
     {
         //
@@ -30,15 +30,25 @@ class AppServiceProvider extends ServiceProvider
 
         Password::defaults(fn () => Password::min(10)->letters()->mixedCase()->numbers()->symbols());
 
-        View::composer('*', function ($view) {
-            $currency = ['code' => 'PHP', 'symbol' => '₱'];
+        $currencies = new \WeakMap;
 
-            try {
-                if (Schema::hasTable('system_settings')) {
-                    $currency = SystemSetting::currency();
+        View::composer('*', function ($view) use ($currencies) {
+            $request = request();
+            $currency = $currencies[$request] ?? null;
+
+            if ($currency === null) {
+                $currency = ['code' => 'PHP', 'symbol' => '₱'];
+
+                try {
+                    if (Schema::hasTable('system_settings')) {
+                        $currency = SystemSetting::currency();
+                    }
+                } catch (\Throwable) {
+                    // Keep the PHP peso default when settings are unavailable.
                 }
-            } catch (\Throwable) {
-                // Keep the PHP peso default when settings are unavailable.
+
+                // Reuse across components, but reload on the next HTTP request.
+                $currencies[$request] = $currency;
             }
 
             $view->with('currency', $currency);

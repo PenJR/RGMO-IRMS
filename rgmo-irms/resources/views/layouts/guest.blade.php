@@ -543,47 +543,8 @@
                                 <h1 class="auth-title">RGMO-IRMS</h1>
                             </div>
                         </div>
-                        <p class="auth-subtitle">Inventory and resource operations for agricultural assets, supplies issuance, project distribution, monitoring, and reporting.</p>
+                        <p class="auth-subtitle">Inventory and resource management for the Resource Generation Management Office.</p>
 
-                        <div class="auth-panel-title">Core Workflows</div>
-                        <div class="auth-panel">
-                            <div class="feature-card auth-feature-card d-flex align-items-center gap-4 p-3 transition-all">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
-                                    <i data-lucide="package" class="text-success" style="width: 28px; height: 28px;"></i>
-                                </div>
-                                <div>
-                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-green)">Asset Tracking</h5>
-                                    <p class="small mb-0 opacity-75">Precision monitoring of agricultural stocks and nursery equipment.</p>
-                                </div>
-                            </div>
-                            <div class="feature-card auth-feature-card d-flex align-items-center gap-4 p-3 transition-all">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
-                                    <i data-lucide="leaf" class="text-success" style="width: 28px; height: 28px;"></i>
-                                </div>
-                                <div>
-                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-green)">Sustainability Focus</h5>
-                                    <p class="small mb-0 opacity-75">Promoting green initiatives through digital resource optimization.</p>
-                                </div>
-                            </div>
-                            <div class="feature-card auth-feature-card d-flex align-items-center gap-4 p-3 transition-all">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
-                                    <i data-lucide="file-check" class="text-success" style="width: 28px; height: 28px;"></i>
-                                </div>
-                                <div>
-                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-green)">Resource Allocation</h5>
-                                    <p class="small mb-0 opacity-75">Optimized workflow for supplies issuance and project distribution.</p>
-                                </div>
-                            </div>
-                            <div class="feature-card auth-feature-card d-flex align-items-center gap-4 p-3 transition-all">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm brand-mark" style="min-width: 60px;">
-                                    <i data-lucide="sparkles" class="text-success" style="width: 28px; height: 28px;"></i>
-                                </div>
-                                <div>
-                                    <h5 class="fw-bold mb-1" style="color: var(--cmu-green)">AI Insights</h5>
-                                    <p class="small mb-0 opacity-75">Data-driven forecasting to minimize wastage and predict demand.</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 

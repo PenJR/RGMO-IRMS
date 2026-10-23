@@ -1,4 +1,10 @@
 <x-guest-layout>
+    <div class="mb-4">
+        <a href="{{ route('login') }}" class="forgot-link">
+            {{ __('← Back to login') }}
+        </a>
+    </div>
+
     <div class="mb-4 text-sm text-gray-600">
         {{ __('Forgot your password? Enter the email address registered to your account and we will email you a password reset link.') }}
     </div>

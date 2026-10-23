@@ -430,29 +430,6 @@
                 });
             });
 
-            const notificationBadge = document.getElementById('notification-unread-badge');
-            const notificationLink = document.querySelector('.top-nav-notifications');
-            if (notificationBadge) {
-                fetch('{{ route('notifications.unread-count') }}', {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                })
-                    .then((response) => response.ok ? response.json() : null)
-                    .then((payload) => {
-                        if (!payload) return;
-
-                        const count = Number(payload.count ?? 0);
-                        notificationBadge.textContent = count;
-                        notificationBadge.classList.toggle('d-none', count <= 0);
-                        notificationLink?.setAttribute(
-                            'aria-label',
-                            count > 0 ? `Notifications: ${count} unread` : 'Notifications',
-                        );
-                    })
-                    .catch(() => {});
-            }
         </script>
 
         @stack('scripts')

@@ -294,7 +294,7 @@ class ReportService
             'total_users' => User::count(),
             'total_items' => $totalItems,
             'low_stock_count' => $lowStockCount,
-            'pending_requests' => ResourceRequest::pending()->count(),
+            'pending_requests' => (int) ($requestStatusCounts[ResourceRequest::STATUS_PENDING] ?? 0),
             'pending_overdue_count' => ResourceRequest::pending()
                 ->whereNotNull('needed_date')
                 ->whereDate('needed_date', '<', today())
