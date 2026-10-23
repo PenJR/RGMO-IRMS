@@ -56,7 +56,7 @@
                 width: 100%;
                 max-width: 540px;
                 padding: 2.4rem 2rem;
-                background: rgba(255, 255, 255, 0.95);
+                background: #ffffff;
                 border: 2px solid rgba(255, 198, 0, 0.85) !important;
                 border-right-color: rgba(0, 105, 48, 0.75) !important;
                 border-bottom-color: rgba(0, 105, 48, 0.75) !important;
@@ -64,14 +64,6 @@
                 box-shadow:
                     0 24px 70px rgba(0, 25, 10, 0.28),
                     inset 0 0 0 1px rgba(255, 255, 255, 0.7);
-            }
-
-            @supports ((backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px))) {
-                .login-card {
-                    background: rgba(255, 255, 255, 0.45);
-                    -webkit-backdrop-filter: blur(20px) saturate(115%);
-                    backdrop-filter: blur(20px) saturate(115%);
-                }
             }
 
             .auth-brand {
