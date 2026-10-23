@@ -54,7 +54,7 @@
 
             .login-card {
                 width: 100%;
-                max-width: 540px;
+                max-width: 480px;
                 padding: 2.4rem 2rem;
                 background: #ffffff;
                 border: 2px solid rgba(255, 198, 0, 0.85) !important;
