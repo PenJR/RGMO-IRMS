@@ -54,25 +54,39 @@
 
             .login-card {
                 width: 100%;
-                max-width: 450px;
-                padding: 2.4rem 2.75rem;
-                background: #ffffff;
-                border: 0 !important;
+                max-width: 540px;
+                padding: 2.4rem 2rem;
+                background: rgba(255, 255, 255, 0.95);
+                border: 2px solid rgba(255, 198, 0, 0.85) !important;
+                border-right-color: rgba(0, 105, 48, 0.75) !important;
+                border-bottom-color: rgba(0, 105, 48, 0.75) !important;
                 border-radius: 32px !important;
-                box-shadow: 0 20px 70px rgba(0, 25, 10, 0.22);
+                box-shadow:
+                    0 24px 70px rgba(0, 25, 10, 0.28),
+                    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+            }
+
+            @supports ((backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px))) {
+                .login-card {
+                    background: rgba(255, 255, 255, 0.45);
+                    -webkit-backdrop-filter: blur(20px) saturate(115%);
+                    backdrop-filter: blur(20px) saturate(115%);
+                }
             }
 
             .auth-brand {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 0.75rem;
+                gap: 0.85rem;
                 margin-bottom: 1.8rem;
             }
 
-            .auth-brand img { width: 52px; height: 52px; object-fit: contain; }
-            .auth-brand strong { display: block; color: var(--cmu-green); font-size: 1.25rem; }
-            .auth-brand span { display: block; color: #65736b; font-size: 0.7rem; margin-top: 0.15rem; }
+            .auth-brand img { width: 72px; height: 72px; flex-shrink: 0; object-fit: contain; }
+            .auth-brand > div { flex: 1; min-width: 0; }
+            .auth-brand strong { display: block; color: var(--cmu-green); font-size: 2.1rem; line-height: 1.2; }
+            .auth-brand span { display: block; color: #172d20; font-size: 1rem; font-weight: 600; line-height: 1.45; margin-top: 0.25rem; }
+            .auth-brand .auth-office-name { color: #12351e; font-weight: 700; }
 
             .input-group-text {
                 background: transparent;
@@ -119,7 +133,8 @@
             }
 
             .auth-card-heading p {
-                color: #65736b;
+                color: #172d20;
+                font-weight: 600;
                 line-height: 1.55;
                 margin: 0;
             }
@@ -182,22 +197,24 @@
             }
 
             .auth-password-group .form-control {
-                border-top-right-radius: 0 !important;
-                border-bottom-right-radius: 0 !important;
+                padding-right: 3.25rem;
             }
 
             .auth-icon-button {
-                width: 50px;
-                min-height: 50px;
+                position: absolute;
+                right: 5px;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 4;
+                width: 40px;
+                min-height: 40px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                border: 1px solid rgba(0, 73, 30, 0.28);
-                border-left: 0;
+                border: 0;
                 color: #53645b;
-                background: #ffffff;
-                border-top-right-radius: 10px !important;
-                border-bottom-right-radius: 10px !important;
+                background: transparent;
+                border-radius: 6px !important;
             }
 
             .auth-icon-button:hover,
@@ -234,7 +251,8 @@
             }
 
             .auth-options .form-check-label {
-                color: #52645a !important;
+                color: #172d20 !important;
+                font-weight: 600;
                 font-size: 0.86rem;
             }
 
@@ -252,7 +270,8 @@
                 margin-top: 1.4rem;
                 padding-top: 1.2rem;
                 border-top: 1px solid rgba(0, 73, 30, 0.1);
-                color: #69776f;
+                color: #172d20;
+                font-weight: 600;
                 font-size: 0.84rem;
                 text-align: center;
                 flex-wrap: wrap;
@@ -264,11 +283,11 @@
 
 
             .auth-card-heading { text-align: center; }
-            .auth-card-heading h2 { font-size: 1.5rem; font-weight: 600; }
+            .auth-card-heading h2 { font-size: 1.5rem; font-weight: 700; }
             .auth-card-heading p { font-size: 0.86rem; }
-            .auth-label { font-size: 0.82rem; font-weight: 600; }
+            .auth-label { color: #12351e; font-size: 0.88rem; font-weight: 700; }
             .auth-options { flex-wrap: wrap; gap: 0.5rem; }
-            .forgot-link { color: var(--cmu-green); font-size: 0.82rem; text-decoration: underline; }
+            .forgot-link { color: #003716; font-size: 0.88rem; font-weight: 700; text-decoration: underline; }
             .login-card .btn-cmu {
                 background: var(--cmu-green);
                 color: #ffffff;
@@ -279,11 +298,14 @@
             }
             .login-card .btn-cmu:hover { background: #003716; color: #ffffff; }
             .login-card .btn-cmu:focus-visible { outline: 3px solid var(--cmu-yellow); outline-offset: 3px; }
-            .auth-card-footer { font-size: 0.75rem; }
+            .auth-card-footer { font-size: 0.82rem; }
 
             @media (max-width: 480px) {
                 .auth-page-shell { padding: 1.25rem 1rem; }
                 .login-card { padding: 1.8rem 1.4rem; border-radius: 24px !important; }
+                .auth-brand { gap: 0.65rem; }
+                .auth-brand img { width: 60px; height: 60px; }
+                .auth-brand strong { font-size: clamp(1.4rem, 6vw, 2.1rem); }
             }
         </style>
     </head>
@@ -297,6 +319,7 @@
                     <img src="{{ asset('images/logo.png') }}" alt="RGMO logo">
                     <div>
                         <strong>RGMO-IRMS</strong>
+                        <span class="auth-office-name">Resource Generation Management Office</span>
                         <span>Central Mindanao University</span>
                     </div>
                 </div>

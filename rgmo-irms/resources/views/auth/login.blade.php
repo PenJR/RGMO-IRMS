@@ -39,7 +39,7 @@
             <div class="d-flex justify-content-between">
                 <label for="password" class="auth-label">{{ __('Password') }}</label>
             </div>
-            <div class="input-group auth-password-group">
+            <div class="auth-password-group">
                 <span class="auth-password-icon"><i data-lucide="lock-keyhole" aria-hidden="true"></i></span>
                 <input id="password" class="form-control @error('password') is-invalid @enderror"
                                 type="password"

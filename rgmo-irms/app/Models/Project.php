@@ -98,7 +98,7 @@ class Project extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $inner) use ($search) {
+        return $query->where(function (Builder $inner) use ($search) 
             $inner->where('name', 'like', "%{$search}%")
                 ->orWhere('code', 'like', "%{$search}%")
                 ->orWhere('description', 'like', "%{$search}%");
