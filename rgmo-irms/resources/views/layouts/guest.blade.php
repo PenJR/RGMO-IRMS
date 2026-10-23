@@ -26,171 +26,53 @@
             }
 
             body {
-                background:
-                    radial-gradient(circle at 12% 8%, rgba(255, 198, 0, 0.13), transparent 23rem),
-                    radial-gradient(circle at 92% 88%, rgba(145, 159, 2, 0.13), transparent 30rem),
-                    linear-gradient(135deg, #002f13 0%, #00491e 52%, #003716 100%) !important;
-                font-family: 'Inter', system-ui, sans-serif;
-                color: #f4fff6;
+                margin: 0;
                 min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                position: relative;
-                overflow-x: hidden;
+                min-height: 100svh;
+                font-family: 'Inter', system-ui, sans-serif;
+                color: #1f2d27;
+                background: #526c53 url('{{ asset('images/campus-background.jpeg') }}') center center / cover no-repeat fixed !important;
             }
 
             body::before {
                 content: "";
                 position: fixed;
                 inset: 0;
+                background: rgba(12, 32, 22, 0.24);
                 pointer-events: none;
-                z-index: 0;
-                background:
-                    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-                background-size: 56px 56px;
-                -webkit-mask-image: linear-gradient(to right, #000, transparent 72%);
-                mask-image: linear-gradient(to right, #000, transparent 72%);
             }
 
-            .floating-blobs {
-                display: none;
-            }
-
-            .blob {
-                display: none;
-            }
-
-            @keyframes float {
-                from { transform: translate(0, 0) scale(1); }
-                to { transform: translate(100px, 100px) scale(1.2); }
-            }
-
-            .transition-all {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            .feature-card:hover {
-                background: rgba(255, 255, 255, 0.1) !important;
-                transform: translateY(-3px);
-                border-color: rgba(255, 198, 0, 0.5) !important;
-                box-shadow: 0 18px 36px rgba(0, 21, 8, 0.18);
-            }
-
-            .feature-card:hover h5 {
-                color: #ffffff !important;
-            }
-
-            .feature-card:hover p {
-                color: rgba(244, 255, 246, 0.78) !important;
-            }
-
-            .feature-card {
-                border: 1px solid rgba(255, 255, 255, 0.13);
-            }
-
-            .auth-feature-card {
-                align-items: flex-start !important;
-                gap: 0.9rem !important;
-                padding: 1.05rem !important;
-                background: rgba(255, 255, 255, 0.065) !important;
-                border: 1px solid rgba(255, 255, 255, 0.13) !important;
-                border-radius: 14px !important;
-                box-shadow: none !important;
-            }
-
-            .auth-feature-card .brand-mark {
-                width: 42px;
-                height: 42px;
-                min-width: 42px !important;
-                flex: 0 0 42px;
-                color: var(--cmu-yellow);
-                background: rgba(255, 198, 0, 0.13);
-                border: 1px solid rgba(255, 198, 0, 0.2);
-                box-shadow: none !important;
-            }
-
-            .auth-feature-card .brand-mark svg {
-                width: 21px !important;
-                height: 21px !important;
-                color: var(--cmu-yellow) !important;
-            }
-
-            .auth-feature-card h5 {
-                font-size: 0.94rem;
-                line-height: 1.3;
-            }
-
-            .auth-feature-card p {
-                font-size: 0.78rem;
-                line-height: 1.5;
+            .auth-page-shell {
+                position: relative;
+                min-height: 100vh;
+                min-height: 100svh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2.5rem 1rem;
             }
 
             .login-card {
-                background: rgba(253, 254, 251, 0.985);
-                backdrop-filter: blur(18px);
-                border: 1px solid rgba(255, 255, 255, 0.82) !important;
-                border-radius: 24px !important;
-                box-shadow: 0 32px 80px rgba(0, 20, 8, 0.34), 0 4px 18px rgba(0, 20, 8, 0.12);
                 width: 100%;
-                max-width: 470px;
-                padding: 2.6rem;
-                position: relative;
-                overflow: hidden;
+                max-width: 450px;
+                padding: 2.4rem 2.75rem;
+                background: #ffffff;
+                border: 0 !important;
+                border-radius: 32px !important;
+                box-shadow: 0 20px 70px rgba(0, 25, 10, 0.22);
             }
 
-            .login-card::before {
-                content: "";
-                position: absolute;
-                inset: 0 0 auto 0;
-                height: 4px;
-                background: linear-gradient(90deg, var(--cmu-yellow) 0 42%, var(--cmu-accent) 42% 67%, var(--cmu-green-2) 67%);
-            }
-
-            .login-card .brand-mark {
-                width: 64px;
-                height: 64px;
-                background: var(--cmu-green);
-                border: 1px solid rgba(255, 255, 255, 0.14);
-            }
-
-            .auth-mobile-brand {
+            .auth-brand {
                 display: flex;
                 align-items: center;
-                gap: 0.8rem;
-                margin-bottom: 1.25rem;
-                padding-bottom: 1rem;
-                border-bottom: 1px solid rgba(0, 73, 30, 0.1);
+                justify-content: center;
+                gap: 0.75rem;
+                margin-bottom: 1.8rem;
             }
 
-            .auth-mobile-brand img {
-                width: 52px;
-                height: 52px;
-                flex: 0 0 52px;
-                object-fit: contain;
-            }
-
-            .auth-mobile-brand strong,
-            .auth-mobile-brand span {
-                display: block;
-            }
-
-            .auth-mobile-brand strong {
-                color: var(--cmu-green);
-                font-size: 1.05rem;
-                font-weight: 800;
-                line-height: 1.15;
-                letter-spacing: -0.01em;
-            }
-
-            .auth-mobile-brand span {
-                margin-top: 0.2rem;
-                color: #627169;
-                font-size: 0.75rem;
-                font-weight: 700;
-                line-height: 1.25;
-            }
+            .auth-brand img { width: 52px; height: 52px; object-fit: contain; }
+            .auth-brand strong { display: block; color: var(--cmu-green); font-size: 1.25rem; }
+            .auth-brand span { display: block; color: #65736b; font-size: 0.7rem; margin-top: 0.15rem; }
 
             .input-group-text {
                 background: transparent;
@@ -222,87 +104,6 @@
             .form-check-input:checked {
                 background-color: var(--cmu-green);
                 border-color: var(--cmu-green);
-            }
-
-            .auth-shell-copy {
-                color: #f4fff6;
-            }
-
-            .auth-shell-copy p,
-            .auth-shell-copy .small {
-                color: rgba(244, 255, 246, 0.95);
-            }
-
-            .feature-card h5 {
-                color: #ffffff !important;
-            }
-
-            .feature-card p {
-                color: rgba(244, 255, 246, 0.7) !important;
-                opacity: 1 !important;
-            }
-
-            .cmu-logo {
-                filter:
-                    drop-shadow(0 0 1px rgba(255, 255, 255, 0.85))
-                    drop-shadow(0 0 3px rgba(255, 255, 255, 0.55))
-                    drop-shadow(0 0 12px rgba(255, 198, 0, 0.18));
-                transition: transform 0.3s ease;
-            }
-
-            .auth-brand-lockup {
-                display: flex;
-                align-items: center;
-                gap: 1.25rem;
-                margin-bottom: 2rem;
-            }
-
-            .auth-brand-lockup > div {
-                min-width: 0;
-            }
-
-            .auth-brand-lockup img {
-                width: 88px;
-                height: 88px;
-                object-fit: contain;
-            }
-
-            .auth-brand-lockup .office-name {
-                color: rgba(244, 255, 246, 0.86);
-                font-size: 0.72rem;
-                font-weight: 800;
-                letter-spacing: 0.14em;
-                text-transform: uppercase;
-                margin-bottom: 0.35rem;
-            }
-
-            .auth-title {
-                color: #ffffff;
-                font-size: clamp(2.85rem, 4vw, 3.75rem);
-                line-height: 0.95;
-                font-weight: 800;
-                letter-spacing: 0;
-                margin: 0;
-                white-space: nowrap;
-            }
-
-            .auth-subtitle {
-                max-width: 590px;
-                color: rgba(244, 255, 246, 0.9);
-                font-size: 1rem;
-                line-height: 1.65;
-                margin: 0 0 1.8rem;
-                border-left: 3px solid var(--cmu-yellow);
-                padding-left: 1.25rem;
-            }
-
-            .auth-panel-title {
-                color: rgba(244, 255, 246, 0.78);
-                font-size: 0.78rem;
-                font-weight: 800;
-                letter-spacing: 0.12em;
-                text-transform: uppercase;
-                margin: 0 0 0.85rem;
             }
 
             .auth-card-heading {
@@ -461,64 +262,28 @@
                 color: var(--cmu-green);
             }
 
-            @media (max-width: 991.98px) {
-                body {
-                    align-items: flex-start;
-                }
 
-                .login-card {
-                    padding: 2rem;
-                }
+            .auth-card-heading { text-align: center; }
+            .auth-card-heading h2 { font-size: 1.5rem; font-weight: 600; }
+            .auth-card-heading p { font-size: 0.86rem; }
+            .auth-label { font-size: 0.82rem; font-weight: 600; }
+            .auth-options { flex-wrap: wrap; gap: 0.5rem; }
+            .forgot-link { color: var(--cmu-green); font-size: 0.82rem; text-decoration: underline; }
+            .login-card .btn-cmu {
+                background: var(--cmu-green);
+                color: #ffffff;
+                border: 1px solid var(--cmu-green);
+                border-radius: 999px !important;
+                min-height: 44px;
+                box-shadow: none;
             }
+            .login-card .btn-cmu:hover { background: #003716; color: #ffffff; }
+            .login-card .btn-cmu:focus-visible { outline: 3px solid var(--cmu-yellow); outline-offset: 3px; }
+            .auth-card-footer { font-size: 0.75rem; }
 
-            @media (min-width: 992px) {
-                .auth-page-shell {
-                    max-width: 1240px;
-                }
-
-                .auth-panel {
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                    gap: 0.8rem;
-                }
-
-                .auth-feature-card {
-                    min-height: 132px;
-                }
-            }
-
-            @media (max-width: 575.98px) {
-                .container {
-                    padding-left: 1rem;
-                    padding-right: 1rem;
-                }
-
-                .login-card {
-                    padding: 1.5rem 1.35rem;
-                    border-radius: 18px !important;
-                }
-
-                .auth-card-heading h2 {
-                    font-size: 1.7rem;
-                }
-            }
-
-            @media (min-width: 992px) and (max-height: 780px) {
-                .auth-brand-lockup {
-                    margin-bottom: 1.35rem;
-                }
-
-                .auth-subtitle {
-                    margin-bottom: 1.25rem;
-                }
-
-                .auth-feature-card {
-                    min-height: 112px;
-                    padding: 0.85rem !important;
-                }
-
-                .login-card {
-                    padding: 2.1rem 2.35rem;
-                }
+            @media (max-width: 480px) {
+                .auth-page-shell { padding: 1.25rem 1rem; }
+                .login-card { padding: 1.8rem 1.4rem; border-radius: 24px !important; }
             }
         </style>
     </head>
@@ -526,46 +291,19 @@
         <a href="#auth-content" class="skip-link">Skip to form</a>
         <div class="rgmo-progress" data-rgmo-loader role="progressbar" aria-label="Page loading" aria-hidden="false"></div>
 
-        <div class="floating-blobs">
-            <div class="blob" style="top: -10%; left: -10%; background: var(--cmu-yellow); animation-delay: 0s; opacity: 0.16;"></div>
-            <div class="blob" style="bottom: -10%; right: -10%; background: var(--cmu-accent); animation-delay: -5s; opacity: 0.16;"></div>
-        </div>
-
-        <div class="container auth-page-shell py-4">
-            <div class="row align-items-center justify-content-between g-5 min-vh-100">
-                <!-- Info Column (Visible on Desktop) -->
-                <div class="col-lg-7 d-none d-lg-block auth-shell-copy">
-                    <div class="pe-lg-4 pe-xl-5">
-                        <div class="auth-brand-lockup">
-                            <img src="{{ asset('images/logo.png') }}" alt="CMU Logo" class="cmu-logo">
-                            <div>
-                                <div class="office-name">Resource Generation Management Office</div>
-                                <h1 class="auth-title">RGMO-IRMS</h1>
-                            </div>
-                        </div>
-                        <p class="auth-subtitle">Inventory and resource management for the Resource Generation Management Office.</p>
-
+        <div class="auth-page-shell">
+            <main class="login-card" id="auth-content" tabindex="-1">
+                <div class="auth-brand">
+                    <img src="{{ asset('images/logo.png') }}" alt="RGMO logo">
+                    <div>
+                        <strong>RGMO-IRMS</strong>
+                        <span>Central Mindanao University</span>
                     </div>
                 </div>
-
-                <!-- Login Card Column -->
-                <div class="col-lg-5 col-md-8">
-                    <main class="login-card mx-auto" id="auth-content" tabindex="-1">
-                        <div class="auth-mobile-brand d-lg-none">
-                            <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS logo" class="cmu-logo">
-                            <div>
-                                <strong>RGMO-IRMS</strong>
-                                <span>Central Mindanao University</span>
-                            </div>
-                        </div>
-                        
-                        {{ $slot }}
-                    </main>
-                    
-                </div>
-            </div>
+                {{ $slot }}
+            </main>
         </div>
-        
+
         <script>
             document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
         </script>

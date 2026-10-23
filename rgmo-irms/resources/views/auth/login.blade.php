@@ -38,11 +38,6 @@
         <div class="auth-field">
             <div class="d-flex justify-content-between">
                 <label for="password" class="auth-label">{{ __('Password') }}</label>
-                @if (Route::has('password.request'))
-                    <a class="forgot-link" href="{{ route('password.request') }}">
-                        {{ __('Forgot?') }}
-                    </a>
-                @endif
             </div>
             <div class="input-group auth-password-group">
                 <span class="auth-password-icon"><i data-lucide="lock-keyhole" aria-hidden="true"></i></span>
@@ -51,7 +46,6 @@
                                 name="password"
                                 required
                                 autocomplete="current-password"
-                                placeholder="••••••••"
                                 aria-invalid="{{ $errors->has('password') ? 'true' : 'false' }}"
                                 @error('password') aria-describedby="password-error" @enderror />
                 <button class="btn auth-icon-button" type="button" id="togglePassword" aria-label="Show password">
@@ -69,6 +63,11 @@
                 <input id="remember_me" type="checkbox" class="form-check-input" name="remember">
                 <label for="remember_me" class="form-check-label">{{ __('Remember me') }}</label>
             </div>
+            @if (Route::has('password.request'))
+                <a class="forgot-link" href="{{ route('password.request') }}">
+                    {{ __('Forgot password?') }}
+                </a>
+            @endif
         </div>
 
         <div class="d-grid mt-3">
