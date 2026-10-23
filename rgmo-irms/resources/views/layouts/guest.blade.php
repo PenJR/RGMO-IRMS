@@ -96,6 +96,10 @@
             }
 
             .form-control {
+                width: 100%;
+                min-height: 50px;
+                font-size: 1rem;
+                line-height: 1.5;
                 border-radius: 10px;
                 padding: 0.75rem 1rem;
                 border-color: #cad8ce;
@@ -159,6 +163,12 @@
             .auth-field {
                 display: grid;
                 gap: 0.45rem;
+            }
+
+            .auth-description {
+                color: #4b5563;
+                font-size: 1rem;
+                line-height: 1.6;
             }
 
             .auth-input-wrap,
