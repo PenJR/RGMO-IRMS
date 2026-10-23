@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -23,9 +24,13 @@ class AuthenticationTest extends TestCase
     /**
      * Verify that users can authenticate using the login screen.
      */
-    public function test_users_can_authenticate_using_the_login_screen(): void
+    #[DataProvider('loginRoles')]
+    public function test_users_can_authenticate_using_the_login_screen(string $role): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'role' => $role,
+            'status' => User::STATUS_ACTIVE,
+        ]);
 
         $response = $this->post('/login', [
             'email' => $user->email,
@@ -34,6 +39,17 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+        $this->followRedirects($response)->assertOk();
+    }
+
+    public static function loginRoles(): array
+    {
+        return [
+            'admin' => [User::ROLE_ADMIN],
+            'RGMO head' => [User::ROLE_RGMO_HEAD],
+            'project manager' => [User::ROLE_PROJECT_MANAGER],
+            'staff' => [User::ROLE_STAFF],
+        ];
     }
 
     /**

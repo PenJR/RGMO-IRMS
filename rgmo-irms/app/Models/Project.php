@@ -13,8 +13,11 @@ class Project extends Model
     use SoftDeletes;
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_ON_HOLD = 'on_hold';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
@@ -98,7 +101,7 @@ class Project extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $inner) use ($search) 
+        return $query->where(function (Builder $inner) use ($search) {
             $inner->where('name', 'like', "%{$search}%")
                 ->orWhere('code', 'like', "%{$search}%")
                 ->orWhere('description', 'like', "%{$search}%");
