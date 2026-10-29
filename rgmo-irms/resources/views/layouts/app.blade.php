@@ -159,7 +159,6 @@
                 if (sidebarToggle) {
                     sidebarToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
                     sidebarToggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
-                    sidebarToggle.setAttribute('title', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
                 }
             };
 
@@ -169,10 +168,48 @@
             requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add('sidebar-motion-ready')));
             setMobileSidebar(false);
 
-            sidebarToggle?.addEventListener('click', () => {
+            const toggleSidebar = () => {
+                if (mobileSidebarQuery.matches) return;
                 const collapsed = !document.body.classList.contains('sidebar-collapsed');
                 try { localStorage.setItem(sidebarStorageKey, String(collapsed)); } catch {}
                 applySidebarState(collapsed);
+            };
+            sidebarToggle?.addEventListener('click', toggleSidebar);
+            document.addEventListener('keydown', (event) => {
+                if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.code === 'KeyS') {
+                    if (mobileSidebarQuery.matches) return;
+                    event.preventDefault();
+                    toggleSidebar();
+                }
+            });
+
+            // Keep the tooltip outside the sidebar so the collapsed rail cannot clip it.
+            const sidebarToggleTooltip = document.createElement('div');
+            sidebarToggleTooltip.id = 'sidebar-toggle-tooltip';
+            sidebarToggleTooltip.className = 'sidebar-toggle-tooltip';
+            sidebarToggleTooltip.setAttribute('role', 'tooltip');
+            sidebarToggleTooltip.hidden = true;
+            const tooltipLabel = document.createElement('span');
+            tooltipLabel.textContent = 'Toggle sidebar';
+            const tooltipShortcut = document.createElement('kbd');
+            tooltipShortcut.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘+Shift+S' : 'Ctrl+Shift+S';
+            sidebarToggleTooltip.append(tooltipLabel, tooltipShortcut);
+            document.body.appendChild(sidebarToggleTooltip);
+            const hideSidebarToggleTooltip = () => { sidebarToggleTooltip.hidden = true; };
+            const showSidebarToggleTooltip = () => {
+                if (mobileSidebarQuery.matches) return;
+                const rect = sidebarToggle.getBoundingClientRect();
+                sidebarToggleTooltip.hidden = false;
+                sidebarToggleTooltip.style.left = `${rect.right + 8}px`;
+                sidebarToggleTooltip.style.top = `${rect.top + (rect.height - sidebarToggleTooltip.offsetHeight) / 2}px`;
+            };
+            sidebarToggle?.addEventListener('mouseenter', showSidebarToggleTooltip);
+            sidebarToggle?.addEventListener('mouseleave', hideSidebarToggleTooltip);
+            sidebarToggle?.addEventListener('focus', showSidebarToggleTooltip);
+            sidebarToggle?.addEventListener('blur', hideSidebarToggleTooltip);
+            window.addEventListener('resize', hideSidebarToggleTooltip);
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') hideSidebarToggleTooltip();
             });
 
             const sidebarMenu = sidebar?.querySelector('.sidebar-menu');
