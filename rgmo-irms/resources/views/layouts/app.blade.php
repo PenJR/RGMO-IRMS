@@ -74,6 +74,7 @@
                             aria-hidden="true"
                         >{{ $unreadNotificationCount }}</span>
                     </a>
+                    <x-header-account />
                 </header>
 
                 <div class="main-content">

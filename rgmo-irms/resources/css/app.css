@@ -537,10 +537,11 @@ a:hover {
     border-bottom: 1px solid rgba(0, 73, 30, 0.13) !important;
     box-shadow: 0 10px 28px rgba(15, 46, 28, 0.08);
     isolation: isolate;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .top-nav::after {
+    pointer-events: none;
     content: "";
     position: absolute;
     right: 0;
@@ -3674,3 +3675,66 @@ body {
         transition: none;
     }
 }
+
+.header-account { position: relative; flex-shrink: 0; }
+.header-account > summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+    border: 1px solid var(--cmu-border);
+    border-radius: 12px;
+    cursor: pointer;
+    list-style: none;
+    color: var(--cmu-text);
+}
+.header-account > summary::-webkit-details-marker { display: none; }
+.header-account > summary:hover,
+.header-account[open] > summary { background: var(--icon-primary-bg); }
+.header-account > summary:focus-visible,
+.header-account-action:focus-visible { outline: 2px solid var(--cmu-yellow); outline-offset: 2px; }
+.header-account-avatar {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: var(--cmu-yellow);
+    color: var(--cmu-green);
+    font-size: 12px;
+    font-weight: 800;
+}
+.header-account > summary svg { width: 14px; height: 14px; }
+.header-account-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: min(272px, calc(100vw - 24px));
+    padding: 10px;
+    border: 1px solid var(--cmu-border);
+    border-radius: 14px;
+    background: var(--cmu-surface);
+    color: var(--cmu-text);
+    box-shadow: 0 10px 30px rgba(0, 35, 14, 0.2);
+    z-index: 1050;
+}
+.header-account-info { display: flex; flex-direction: column; gap: 3px; padding: 6px 8px 12px; overflow-wrap: anywhere; }
+.header-account-info strong { font-size: 14px; }
+.header-account-info span { font-size: 12px; color: var(--cmu-muted); }
+.header-account-info small { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--icon-primary); }
+.header-account-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--cmu-text);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.header-account-action:hover { background: var(--icon-primary-bg); color: var(--icon-primary); }
+.header-account-action svg { width: 18px; height: 18px; }
