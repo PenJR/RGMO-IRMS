@@ -3348,15 +3348,13 @@ body {
     outline-offset: 2px;
 }
 
-/* Choreographed desktop sidebar. Mobile keeps its existing drawer. */
+/* Responsive desktop sidebar motion. Mobile keeps its existing drawer. */
 @media (min-width: 993px) {
     body {
         --sidebar-width: 248px;
         --sidebar-collapsed-width: 64px;
         --sidebar-spring: cubic-bezier(.16, 1, .3, 1);
-        --sidebar-panel-delay: 0ms;
     }
-    body.sidebar-collapsed { --sidebar-panel-delay: var(--sidebar-collapse-delay, 340ms); }
     .layout-wrapper {
         display: grid !important;
         grid-template-columns: 248px minmax(0, 1fr);
@@ -3376,10 +3374,10 @@ body {
     .top-nav { left: 248px; }
     body.sidebar-collapsed .top-nav { left: 64px; }
     .sidebar-motion-ready .layout-wrapper {
-        transition: grid-template-columns 600ms var(--sidebar-spring) var(--sidebar-panel-delay);
+        transition: grid-template-columns 180ms var(--sidebar-spring);
     }
     .sidebar-motion-ready .top-nav {
-        transition: left 600ms var(--sidebar-spring) var(--sidebar-panel-delay);
+        transition: left 180ms var(--sidebar-spring);
     }
     .sidebar-brand {
         position: relative;
@@ -3438,13 +3436,11 @@ body {
         transform: translateX(0);
     }
     .sidebar-motion-ready #sidebar .sidebar-motion-label {
-        transition: opacity 200ms ease, transform 300ms cubic-bezier(.32,.72,0,1);
-        transition-delay: calc(600ms + var(--reverse-i) * 50ms);
+        transition: opacity 150ms ease, transform 180ms var(--sidebar-spring);
     }
     body.sidebar-collapsed #sidebar .sidebar-motion-label {
         opacity: 0;
         transform: translateX(-10px);
-        transition-delay: calc(var(--i) * 50ms);
         pointer-events: none;
     }
     #sidebar .chevron, #sidebar .sidebar-drag-handle, #sidebar .nav-badge {
@@ -3654,4 +3650,27 @@ body {
     background: color-mix(in srgb, var(--cmu-yellow) 16%, var(--cmu-green));
     color: var(--cmu-yellow);
     font: inherit;
+}
+
+/* Lift navigation rows without moving their submenu or changing their size. */
+#sidebar .sidebar-menu > .nav-link,
+#sidebar .sidebar-menu .nav-group-toggle {
+    transition: transform 160ms ease, box-shadow 160ms ease,
+        background-color 160ms ease, color 160ms ease;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    #sidebar .sidebar-menu:not(.sidebar-reordering) > .nav-link:not(.sidebar-dragging):hover,
+    #sidebar .sidebar-menu:not(.sidebar-reordering) > .nav-group:not(.sidebar-dragging) > summary:hover .nav-group-toggle {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 10px rgba(0, 35, 14, 0.28),
+            inset 0 0 0 1px color-mix(in srgb, var(--cmu-yellow) 20%, transparent);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #sidebar .sidebar-menu > .nav-link,
+    #sidebar .sidebar-menu .nav-group-toggle {
+        transition: none;
+    }
 }

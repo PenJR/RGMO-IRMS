@@ -143,14 +143,8 @@
                 }
             };
             const indexSidebarLabels = () => {
-                const labels = Array.from(sidebar?.querySelectorAll('.sidebar-brand .min-w-0, .nav-label, .sidebar-user-details, .sidebar-actions span') ?? []);
-                labels.forEach((label, index) => {
-                    label.classList.add('sidebar-motion-label');
-                    label.style.setProperty('--i', index);
-                    label.style.setProperty('--reverse-i', labels.length - index - 1);
-                });
-                // Wait for the final label before narrowing, including role-specific links.
-                document.body.style.setProperty('--sidebar-collapse-delay', `${Math.max(340, (labels.length - 1) * 50 + 300)}ms`);
+                sidebar?.querySelectorAll('.sidebar-brand .min-w-0, .nav-label, .sidebar-user-details, .sidebar-actions span')
+                    .forEach((label) => label.classList.add('sidebar-motion-label'));
             };
             const applySidebarState = (collapsed) => {
                 indexSidebarLabels();
