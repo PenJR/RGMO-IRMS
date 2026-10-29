@@ -20,40 +20,7 @@
                 <div class="card border-0 shadow-sm form-glass overflow-hidden">
                     <div class="card-body p-0">
                         <div class="row g-0">
-                            <!-- Left Sidebar: Info -->
-                            <div class="col-md-4 d-none d-lg-block bg-primary bg-opacity-10 p-5">
-                                <div class="mb-4">
-                                    <div class="rounded-pill bg-primary text-white d-inline-flex p-3 mb-3">
-                                        <i data-lucide="file-plus-2" style="width: 24px; height: 24px;"></i>
-                                    </div>
-                                    <h4 class="fw-bold text-dark">Request Details</h4>
-                                    <p class="text-muted small">Provide the purpose and the date the resources are needed to expedite approval.</p>
-                                </div>
-                                <div class="mt-5 pt-4 border-top">
-                                    <h6 class="fw-bold text-uppercase small text-muted mb-3" style="letter-spacing: 0.05em">Guidelines</h6>
-                                    <div class="d-flex gap-3 mb-3">
-                                        <div class="bg-white rounded p-2 shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px">
-                                            <i data-lucide="calendar" class="text-primary" style="width: 16px"></i>
-                                        </div>
-                                        <div>
-                                            <p class="mb-0 fw-bold small">Needed Date</p>
-                                            <p class="text-muted small mb-0">Allow at least 2 days lead time.</p>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex gap-3">
-                                        <div class="bg-white rounded p-2 shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px">
-                                            <i data-lucide="briefcase" class="text-primary" style="width: 16px"></i>
-                                        </div>
-                                        <div>
-                                            <p class="mb-0 fw-bold small">Purpose</p>
-                                            <p class="text-muted small mb-0">Clearly state the project or activity.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right Side: Form -->
-                            <div class="col-md-12 col-lg-8 p-4 p-md-5">
+                            <div class="col-12 p-4 p-md-5">
                                 <form action="{{ route('requests.store') }}" method="POST">
                                     @csrf
 
