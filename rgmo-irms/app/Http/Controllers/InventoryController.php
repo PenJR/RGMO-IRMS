@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Models\SystemSetting;
 use App\Services\InventoryService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -259,38 +260,53 @@ class InventoryController extends Controller
      *
      * @throws AuthorizationException
      */
-    public function exportCsv()
+    public function exportCsv(Request $request)
     {
         $this->authorize('export', InventoryItem::class);
 
         $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.csv';
         $currencyCode = SystemSetting::currencyCode();
 
-        return response()->streamDownload(function () use ($currencyCode): void {
+        $items = $this->inventoryService->itemsQuery($request->only(['category_id', 'search', 'status', 'sort', 'direction']));
+
+        return response()->streamDownload(function () use ($currencyCode, $items): void {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['Category', 'Name', 'SKU', 'Stock', 'Min Stock', 'Reorder Level', 'Unit', 'Price ('.$currencyCode.')', 'Description', 'Status']);
 
-            InventoryItem::query()
-                ->with('category')
-                ->chunkById(500, function ($items) use ($handle): void {
-                    foreach ($items as $item) {
-                        fputcsv($handle, [
-                            $item->category->name ?? 'Uncategorized',
-                            $item->name,
-                            $item->sku,
-                            $item->stock,
-                            $item->min_stock,
-                            $item->reorder_level,
-                            $item->unit,
-                            $item->price,
-                            $item->description,
-                            $item->getStockStatus(),
-                        ]);
-                    }
-                });
+            $items->chunk(500, function ($items) use ($handle): void {
+                foreach ($items as $item) {
+                    fputcsv($handle, [
+                        $item->category->name ?? 'Uncategorized',
+                        $item->name,
+                        $item->sku,
+                        $item->stock,
+                        $item->min_stock,
+                        $item->reorder_level,
+                        $item->unit,
+                        $item->price,
+                        $item->description,
+                        $item->getStockStatus(),
+                    ]);
+                }
+            });
 
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $this->authorize('export', InventoryItem::class);
+
+        $items = $this->inventoryService->itemsQuery(
+            $request->only(['category_id', 'search', 'status', 'sort', 'direction'])
+        )->get();
+
+        return Pdf::loadView('reports.inventory-pdf', [
+            'report' => ['items' => $items],
+            'currencyCode' => SystemSetting::currencyCode(),
+            'currencySymbol' => SystemSetting::currencySymbol(),
+        ])->setPaper('a4', 'landscape')->download('inventory_'.now()->format('Y-m-d_H-i-s').'.pdf');
     }
 
     /**

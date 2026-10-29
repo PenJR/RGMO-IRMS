@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\SystemSetting;
 use App\Services\ReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -63,6 +64,7 @@ class ReportController extends Controller
         return view('reports.audit-trail', [
             'report' => $report,
             'filters' => $filters,
+            'modules' => AuditLog::query()->whereNotNull('module')->where('module', '!=', '')->distinct()->orderBy('module')->pluck('module'),
         ]);
     }
 
@@ -104,8 +106,7 @@ class ReportController extends Controller
      */
     public function suppliesIssuance(Request $request)
     {
-        $month = $request->get('month', now()->month);
-        $year = $request->get('year', now()->year);
+        [$month, $year] = $this->monthlyPeriod($request);
 
         $report = $this->reportService->getSuppliesIssuanceReport($month, $year);
 
@@ -121,8 +122,7 @@ class ReportController extends Controller
      */
     public function monthlyInventory(Request $request)
     {
-        $month = $request->get('month', now()->month);
-        $year = $request->get('year', now()->year);
+        [$month, $year] = $this->monthlyPeriod($request);
 
         $report = $this->reportService->getMonthlyInventoryReport($month, $year);
 
@@ -214,8 +214,7 @@ class ReportController extends Controller
      */
     public function exportSuppliesIssuancePdf(Request $request)
     {
-        $month = $request->get('month', now()->month);
-        $year = $request->get('year', now()->year);
+        [$month, $year] = $this->monthlyPeriod($request);
 
         $report = $this->reportService->getSuppliesIssuanceReport($month, $year);
 
@@ -233,8 +232,7 @@ class ReportController extends Controller
      */
     public function exportMonthlyInventoryPdf(Request $request)
     {
-        $month = $request->get('month', now()->month);
-        $year = $request->get('year', now()->year);
+        [$month, $year] = $this->monthlyPeriod($request);
 
         $report = $this->reportService->getMonthlyInventoryReport($month, $year);
 
@@ -279,6 +277,19 @@ class ReportController extends Controller
 
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function monthlyPeriod(Request $request): array
+    {
+        $validated = $request->validate([
+            'month' => ['sometimes', 'required', 'integer', 'between:1,12'],
+            'year' => ['sometimes', 'required', 'integer', 'between:1,9999'],
+        ], [
+            'month.between' => 'Choose a month from 1 to 12.',
+            'year.between' => 'Enter a year from 1 to 9999.',
+        ]);
+
+        return [(int) ($validated['month'] ?? now()->month), (int) ($validated['year'] ?? now()->year)];
     }
 
     /**

@@ -318,7 +318,7 @@
         <div class="auth-page-shell">
             <main class="login-card" id="auth-content" tabindex="-1">
                 <div class="auth-brand">
-                    <img src="{{ asset('images/logo.png') }}" alt="RGMO logo">
+                    <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS logo">
                     <div>
                         <strong>RGMO-IRMS</strong>
                         <span class="auth-office-name">Resource Generation Management Office</span>

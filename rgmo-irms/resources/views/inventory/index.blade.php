@@ -17,6 +17,13 @@
     <div class="container-fluid py-4">
             <x-breadcrumb :items="['Inventory' => route('inventory.index')]" />
 
+            @can('export', App\Models\InventoryItem::class)
+                <div class="d-flex justify-content-end gap-2 flex-wrap mb-3">
+                    <a href="{{ route('inventory.export-csv', $filters) }}" class="btn btn-outline-success">Export CSV</a>
+                    <a href="{{ route('inventory.export-pdf', $filters) }}" class="btn btn-outline-danger">Export PDF</a>
+                </div>
+            @endcan
+
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
                     <form method="GET" action="{{ route('inventory.index') }}" class="row g-3">

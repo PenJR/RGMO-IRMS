@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
     // Inventory Module
     Route::middleware(['permission:view-inventory,manage-inventory'])->group(function () {
         Route::get('/inventory/low-stock', [InventoryController::class, 'lowStock'])->name('inventory.low-stock');
+        Route::get('/inventory/export-pdf', [InventoryController::class, 'exportPdf'])->name('inventory.export-pdf');
         Route::get('/inventory/export-csv', [InventoryController::class, 'exportCsv'])->name('inventory.export-csv');
         Route::get('/inventory/export-excel', [InventoryController::class, 'exportExcel'])->name('inventory.export-excel');
         Route::post('/inventory/import', [InventoryController::class, 'import'])->name('inventory.import');

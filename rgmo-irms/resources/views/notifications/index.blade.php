@@ -5,25 +5,6 @@
                 <h2 class="fw-bold mb-1">Notifications</h2>
                 <p class="text-muted mb-0">Review alerts and updates sent to your account.</p>
             </div>
-            <div class="d-flex gap-2 flex-wrap">
-                @php
-                    $totalUnreadCount = auth()->user()->notifications()->unread()->count();
-                    $readCount = collect($notifications->items())->whereNotNull('read_at')->count();
-                @endphp
-                @if($totalUnreadCount > 0)
-                    <form method="POST" action="{{ route('notifications.read-all') }}">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-primary">Mark all as read</button>
-                    </form>
-                @endif
-                @if($readCount > 0)
-                    <form method="POST" action="{{ route('notifications.delete-read') }}">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-outline-danger">Delete read</button>
-                    </form>
-                @endif
-            </div>
         </div>
     </x-slot>
 
@@ -37,6 +18,23 @@
             data-csrf-token="{{ csrf_token() }}"
         >
             <div class="card-body p-4">
+                <div class="d-flex justify-content-end gap-2 flex-wrap mb-3">
+                    @php
+                        $totalUnreadCount = auth()->user()->notifications()->unread()->count();
+                        $readCount = collect($notifications->items())->whereNotNull('read_at')->count();
+                    @endphp
+                    <form method="POST" action="{{ route('notifications.read-all') }}">
+                        @csrf
+                        <button id="notifications-mark-all" type="submit" class="btn btn-outline-primary" @disabled($totalUnreadCount === 0)>Mark all as read</button>
+                    </form>
+                    @if($readCount > 0)
+                        <form method="POST" action="{{ route('notifications.delete-read') }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-outline-danger">Delete read</button>
+                        </form>
+                    @endif
+                </div>
                 <div id="notifications-loading" class="text-center py-4 d-none">
                     <div class="spinner-border text-success" role="status" aria-label="Loading notifications"></div>
                     <p class="text-muted mt-3 mb-0">Loading notifications...</p>
@@ -138,6 +136,9 @@
                 }[char]));
 
                 const updateUnreadCount = (count) => {
+                    const markAllButton = document.getElementById('notifications-mark-all');
+                    if (markAllButton) markAllButton.disabled = count <= 0;
+
                     if (badge) {
                         badge.textContent = count;
                         badge.classList.toggle('d-none', count <= 0);
@@ -216,7 +217,7 @@
                     setLoading(true);
 
                     try {
-                        const response = await fetch(panel.dataset.indexUrl, { headers });
+                        const response = await fetch(panel.dataset.indexUrl + window.location.search, { headers });
                         if (!response.ok) throw new Error('Request failed');
                         renderNotifications(await response.json());
                     } catch (e) {

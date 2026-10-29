@@ -17,8 +17,13 @@
                         <input type="text" name="user_id" value="{{ $filters['user_id'] ?? '' }}" class="form-control" placeholder="User ID">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Module</label>
-                        <input type="text" name="module" value="{{ $filters['module'] ?? '' }}" class="form-control" placeholder="Module">
+                        <label for="audit-module" class="form-label">Module</label>
+                        <select name="module" id="audit-module" class="form-select">
+                            <option value="">All Modules</option>
+                            @foreach($modules as $module)
+                                <option value="{{ $module }}" @selected(($filters['module'] ?? '') === $module)>{{ \Illuminate\Support\Str::of($module)->replace('_', ' ')->title() }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Start Date</label>
@@ -65,6 +70,7 @@
                         <p class="text-muted">Use the filters to narrow the audit trail results.</p>
                     </div>
                 @endif
+                {{ $report->withQueryString()->links() }}
             </div>
         </div>
     </div>

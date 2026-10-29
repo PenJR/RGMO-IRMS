@@ -20,15 +20,17 @@
                 <form method="GET" action="{{ route('reports.supplies-issuance') }}" class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Month</label>
-                        <select name="month" class="form-select">
+                        <select name="month" class="form-select @error('month') is-invalid @enderror" required>
                             @foreach(range(1, 12) as $m)
                                 <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ DateTime::createFromFormat('!m', $m)->format('F') }}</option>
                             @endforeach
                         </select>
+                        @error('month')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Year</label>
-                        <input type="number" name="year" value="{{ $year }}" class="form-control">
+                        <input type="number" name="year" value="{{ old('year', $year) }}" min="1" max="9999" step="1" required class="form-control @error('year') is-invalid @enderror">
+                        @error('year')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-4 align-self-end">
                         <button type="submit" class="btn btn-cmu w-100">Filter</button>

@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -25,6 +26,12 @@ class InventoryService
      * @return LengthAwarePaginator
      */
     public function getAllItems(int $perPage = 15, array $filters = [])
+    {
+        return $this->itemsQuery($filters)->paginate($perPage);
+    }
+
+    /** Build the filtered and sorted inventory query for listings and exports. */
+    public function itemsQuery(array $filters = []): Builder
     {
         $query = InventoryItem::query()->with('category');
 
@@ -59,7 +66,7 @@ class InventoryService
         $sort = in_array($filters['sort'] ?? null, $sortableColumns, true) ? $filters['sort'] : 'name';
         $direction = ($filters['direction'] ?? null) === 'desc' ? 'desc' : 'asc';
 
-        return $query->orderBy($sort, $direction)->orderBy('id')->paginate($perPage);
+        return $query->orderBy($sort, $direction)->orderBy('id');
     }
 
     /**
