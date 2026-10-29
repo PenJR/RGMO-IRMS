@@ -27,11 +27,12 @@ class StoreResourceRequestRequest extends FormRequest
             'remarks' => 'nullable|string|max:1000',
             'ris_no' => 'nullable|string|max:50',
             'responsible_center' => 'nullable|string|max:255',
-            'requested_date' => 'nullable|date',
-            'needed_date' => 'nullable|date',
-            'items' => 'required|array|min:1',
-            'items.*.inventory_item_id' => 'required|exists:inventory_items,id',
-            'items.*.quantity' => 'required|integer|min:1',
+            'requested_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
+            'needed_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
+            'items' => 'required|array|list|min:1|max:100',
+            'items.*' => 'required|array:inventory_item_id,quantity',
+            'items.*.inventory_item_id' => 'required|integer|min:1|distinct|exists:inventory_items,id',
+            'items.*.quantity' => 'required|integer|min:1|max:2147483647',
         ];
     }
 

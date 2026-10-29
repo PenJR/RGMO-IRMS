@@ -51,7 +51,7 @@
                                         </div>
                                         <div class="col-md-8">
                                             <label class="form-label">Purpose of Request</label>
-                                            <input type="text" name="purpose" value="{{ old('purpose') }}" placeholder="e.g., Office Supplies Maintenance" class="form-control @error('purpose') is-invalid @enderror" required>
+                                            <input type="text" name="purpose" value="{{ old('purpose') }}" placeholder="e.g., Office Supplies Maintenance" class="form-control @error('purpose') is-invalid @enderror" required maxlength="1000">
                                             @error('purpose')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
                                         <div class="col-md-4">
@@ -61,7 +61,7 @@
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label">Additional Remarks</label>
-                                            <textarea name="remarks" rows="2" placeholder="Optional notes for the admin..." class="form-control @error('remarks') is-invalid @enderror">{{ old('remarks') }}</textarea>
+                                            <textarea name="remarks" rows="2" placeholder="Optional notes for the admin..." class="form-control @error('remarks') is-invalid @enderror" maxlength="1000">{{ old('remarks') }}</textarea>
                                             @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
                                     </div>
@@ -100,7 +100,7 @@
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label class="form-label small text-muted text-uppercase mb-1">Quantity</label>
-                                                            <input type="number" name="items[{{ $index }}][quantity]" class="form-control @error('items.' . $index . '.quantity') is-invalid @enderror" min="1" value="{{ old('items.' . $index . '.quantity', $itemRow['quantity'] ?? 1) }}" required>
+                                                            <input type="number" name="items[{{ $index }}][quantity]" class="form-control @error('items.' . $index . '.quantity') is-invalid @enderror" min="1" value="{{ old('items.' . $index . '.quantity', $itemRow['quantity'] ?? 1) }}" required max="2147483647" step="1">
                                                             @error('items.' . $index . '.quantity')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                                         </div>
                                                         <div class="col-md-2 text-md-end">
@@ -146,7 +146,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-muted text-uppercase mb-1">Quantity</label>
-                    <input type="number" name="items[][quantity]" class="form-control" min="1" value="1" required>
+                    <input type="number" name="items[][quantity]" class="form-control" min="1" value="1" required max="2147483647" step="1">
                 </div>
                 <div class="col-md-2 text-md-end">
                     <button type="button" class="btn btn-link text-danger p-0 mt-md-3" onclick="removeRequestItemRow(this)">

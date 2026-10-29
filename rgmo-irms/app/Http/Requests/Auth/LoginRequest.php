@@ -30,8 +30,9 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['required', 'string', 'max:255'],
+            'remember' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -50,7 +51,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => 'Your account is locked until ' . $user->locked_until->toDateTimeString(),
+                'email' => 'Your account is locked until '.$user->locked_until->toDateTimeString(),
             ]);
         }
 

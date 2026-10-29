@@ -21,18 +21,18 @@ class StoreInventoryItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'required|integer|min:1|exists:categories,id',
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:inventory_items,sku',
-            'stock' => 'required|integer|min:0',
+            'sku' => 'required|string|max:255|unique:inventory_items,sku',
+            'stock' => 'required|integer|min:0|max:2147483647',
             'unit' => 'required|in:'.implode(',', config('inventory.units', [])),
-            'min_stock' => 'required|integer|min:0',
-            'reorder_level' => 'nullable|integer|min:0',
-            'price' => 'nullable|numeric|min:0',
+            'min_stock' => 'required|integer|min:0|max:2147483647',
+            'reorder_level' => 'nullable|integer|min:0|max:2147483647',
+            'price' => 'nullable|numeric|min:0|max:9999999999.99|decimal:0,2',
             'description' => 'nullable|string|max:5000',
-            'planting_date' => 'nullable|date',
+            'planting_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
             'has_expiry' => 'sometimes|boolean',
-            'expiry_date' => 'nullable|required_if:has_expiry,1|date',
+            'expiry_date' => 'nullable|required_if:has_expiry,1|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
         ];
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Models\SystemSetting;
 use App\Services\InventoryService;
+use App\Support\InputRules;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -46,7 +47,7 @@ class InventoryController extends Controller
     {
         $this->authorize('viewAny', InventoryItem::class);
 
-        $filters = $request->only(['category_id', 'search', 'status', 'sort', 'direction']);
+        $filters = $request->validate(InputRules::inventoryFilters());
         $items = $this->inventoryService
             ->getAllItems(8, $filters)
             ->withQueryString();
@@ -154,18 +155,18 @@ class InventoryController extends Controller
         $units = config('inventory.units', $this->units());
 
         $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'required|integer|min:1|exists:categories,id',
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:inventory_items,sku,'.$item->id,
-            'stock' => 'required|integer|min:0',
+            'sku' => 'required|string|max:255|unique:inventory_items,sku,'.$item->id,
+            'stock' => 'required|integer|min:0|max:2147483647',
             'unit' => 'required|in:'.implode(',', $units),
-            'min_stock' => 'required|integer|min:0',
-            'reorder_level' => 'nullable|integer|min:0',
-            'price' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string',
-            'planting_date' => 'nullable|date',
+            'min_stock' => 'required|integer|min:0|max:2147483647',
+            'reorder_level' => 'nullable|integer|min:0|max:2147483647',
+            'price' => 'nullable|numeric|min:0|max:9999999999.99|decimal:0,2',
+            'description' => 'nullable|string|max:5000',
+            'planting_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
             'has_expiry' => 'sometimes|boolean',
-            'expiry_date' => 'nullable|required_if:has_expiry,1|date',
+            'expiry_date' => 'nullable|required_if:has_expiry,1|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
         ]);
 
         $validated['has_expiry'] = $request->boolean('has_expiry');
@@ -267,7 +268,7 @@ class InventoryController extends Controller
         $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.csv';
         $currencyCode = SystemSetting::currencyCode();
 
-        $items = $this->inventoryService->itemsQuery($request->only(['category_id', 'search', 'status', 'sort', 'direction']));
+        $items = $this->inventoryService->itemsQuery($request->validate(InputRules::inventoryFilters()));
 
         return response()->streamDownload(function () use ($currencyCode, $items): void {
             $handle = fopen('php://output', 'w');
@@ -299,7 +300,7 @@ class InventoryController extends Controller
         $this->authorize('export', InventoryItem::class);
 
         $items = $this->inventoryService->itemsQuery(
-            $request->only(['category_id', 'search', 'status', 'sort', 'direction'])
+            $request->validate(InputRules::inventoryFilters())
         )->get();
 
         return Pdf::loadView('reports.inventory-pdf', [
@@ -339,7 +340,7 @@ class InventoryController extends Controller
         $this->authorize('update', $item);
 
         $validated = $request->validate([
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1|max:2147483647',
             'source' => 'required|string|max:255',
             'funding_source' => 'nullable|string|max:255',
             'reference' => 'nullable|string|max:100',
@@ -369,7 +370,7 @@ class InventoryController extends Controller
         $this->authorize('update', $item);
 
         $validated = $request->validate([
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1|max:2147483647',
             'destination' => 'required|string|max:255',
             'funding_source' => 'nullable|string|max:255',
             'reference' => 'nullable|string|max:100',
@@ -400,7 +401,7 @@ class InventoryController extends Controller
 
         $validated = $request->validate([
             'adjustment_type' => 'required|in:stock_in,stock_out',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1|max:2147483647',
             'reason' => 'required|string|max:255',
         ]);
 
@@ -450,7 +451,7 @@ class InventoryController extends Controller
         $this->authorize('update', $item);
 
         $validated = $request->validate([
-            'min_stock' => 'required|integer|min:0',
+            'min_stock' => 'required|integer|min:0|max:2147483647',
         ]);
 
         $this->inventoryService->updateItem($item, [
@@ -467,8 +468,8 @@ class InventoryController extends Controller
     {
         $this->authorize('viewAny', InventoryItem::class);
 
-        $filters = $request->only(['category_id', 'search', 'status']);
-        $perPage = (int) $request->input('per_page', 15);
+        $filters = $request->validate(InputRules::inventoryFilters());
+        $perPage = (int) ($filters['per_page'] ?? 15);
 
         return response()->json($this->inventoryService->getAllItems($perPage, $filters));
     }
@@ -483,18 +484,18 @@ class InventoryController extends Controller
         $units = config('inventory.units', $this->units());
 
         $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'required|integer|min:1|exists:categories,id',
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:inventory_items,sku',
-            'stock' => 'required|integer|min:0',
+            'sku' => 'required|string|max:255|unique:inventory_items,sku',
+            'stock' => 'required|integer|min:0|max:2147483647',
             'unit' => 'required|in:'.implode(',', $units),
-            'min_stock' => 'required|integer|min:0',
-            'reorder_level' => 'nullable|integer|min:0',
-            'price' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string',
-            'planting_date' => 'nullable|date',
+            'min_stock' => 'required|integer|min:0|max:2147483647',
+            'reorder_level' => 'nullable|integer|min:0|max:2147483647',
+            'price' => 'nullable|numeric|min:0|max:9999999999.99|decimal:0,2',
+            'description' => 'nullable|string|max:5000',
+            'planting_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
             'has_expiry' => 'sometimes|boolean',
-            'expiry_date' => 'nullable|required_if:has_expiry,1|date',
+            'expiry_date' => 'nullable|required_if:has_expiry,1|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
         ]);
 
         $validated['has_expiry'] = $request->boolean('has_expiry');
@@ -526,18 +527,18 @@ class InventoryController extends Controller
         $units = config('inventory.units', $this->units());
 
         $validated = $request->validate([
-            'category_id' => 'sometimes|required|exists:categories,id',
+            'category_id' => 'sometimes|required|integer|min:1|exists:categories,id',
             'name' => 'sometimes|required|string|max:255',
-            'sku' => 'sometimes|required|string|unique:inventory_items,sku,'.$item->id,
-            'stock' => 'sometimes|required|integer|min:0',
+            'sku' => 'sometimes|required|string|max:255|unique:inventory_items,sku,'.$item->id,
+            'stock' => 'sometimes|required|integer|min:0|max:2147483647',
             'unit' => 'sometimes|required|in:'.implode(',', $units),
-            'min_stock' => 'sometimes|required|integer|min:0',
-            'reorder_level' => 'nullable|integer|min:0',
-            'price' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string',
-            'planting_date' => 'nullable|date',
+            'min_stock' => 'sometimes|required|integer|min:0|max:2147483647',
+            'reorder_level' => 'nullable|integer|min:0|max:2147483647',
+            'price' => 'nullable|numeric|min:0|max:9999999999.99|decimal:0,2',
+            'description' => 'nullable|string|max:5000',
+            'planting_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
             'has_expiry' => 'sometimes|boolean',
-            'expiry_date' => 'nullable|required_if:has_expiry,1|date',
+            'expiry_date' => 'nullable|required_if:has_expiry,1|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
         ]);
 
         if ($request->has('has_expiry')) {
@@ -599,7 +600,7 @@ class InventoryController extends Controller
         $request->merge(['idempotency_key' => $request->header('Idempotency-Key')]);
 
         $validated = $request->validate([
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1|max:2147483647',
             'source' => 'required|string|max:255',
             'funding_source' => 'nullable|string|max:255',
             'reference' => 'nullable|string|max:100',
@@ -629,7 +630,7 @@ class InventoryController extends Controller
         $request->merge(['idempotency_key' => $request->header('Idempotency-Key')]);
 
         $validated = $request->validate([
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1|max:2147483647',
             'destination' => 'required|string|max:255',
             'funding_source' => 'nullable|string|max:255',
             'reference' => 'nullable|string|max:100',

@@ -145,7 +145,7 @@
 	                                    @csrf
                                     <div class="mb-3">
                                         <label class="form-label">Approval Remarks</label>
-                                        <textarea name="remarks" class="form-control" rows="3"></textarea>
+                                        <textarea name="remarks" class="form-control" rows="3" maxlength="1000"></textarea>
                                     </div>
 	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }}>Approve Request</button>
 	                                </form>
@@ -156,7 +156,7 @@
                                     @csrf
                                     <div class="mb-3">
                                         <label class="form-label">Rejection Notes</label>
-                                        <textarea name="remarks" class="form-control" rows="3" required></textarea>
+                                        <textarea name="remarks" class="form-control" rows="3" required maxlength="1000"></textarea>
                                     </div>
 	                                    <button type="submit" class="btn btn-outline-danger w-100">Reject Request</button>
 	                                </form>
@@ -169,7 +169,7 @@
 	                                    @method('DELETE')
 	                                    <div class="mb-3">
 	                                        <label class="form-label">Cancellation Reason</label>
-	                                        <textarea name="remarks" class="form-control" rows="3" required></textarea>
+	                                        <textarea name="remarks" class="form-control" rows="3" required maxlength="1000"></textarea>
 	                                    </div>
 	                                    <button type="submit" class="btn btn-outline-secondary w-100" onclick="return confirm('Cancel this pending request?')">Cancel Request</button>
 	                                </form>

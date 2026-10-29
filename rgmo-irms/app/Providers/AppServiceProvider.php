@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\SystemSetting;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -26,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
     {
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
+        }
+
+        foreach (['id', 'userId', 'itemId', 'requestId', 'categoryId', 'notificationId'] as $parameter) {
+            Route::pattern($parameter, '[1-9][0-9]{0,17}');
         }
 
         Password::defaults(fn () => Password::min(10)->letters()->mixedCase()->numbers()->symbols());

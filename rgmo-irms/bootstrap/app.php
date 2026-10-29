@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureAdminAccess;
 use App\Http\Middleware\LogUserActivity;
 use App\Http\Middleware\PermissionMiddleware;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SanitizeInput;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -69,7 +70,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'log.activity' => LogUserActivity::class,
         ]);
 
+        $middleware->trimStrings(except: ['new_password', 'new_password_confirmation']);
+
         // Global middleware
+        $middleware->append(SanitizeInput::class);
         $middleware->append(SecurityHeaders::class);
         $middleware->append(LogUserActivity::class);
     })

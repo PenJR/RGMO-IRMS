@@ -41,6 +41,7 @@
                     placeholder="Enter your 6-digit code"
                     aria-describedby="twoFactorHelp{{ $errors->any() ? ' twoFactorError' : '' }}"
                     aria-invalid="{{ $errors->any() ? 'true' : 'false' }}"
+                    maxlength="64"
                 >
             </div>
             <p class="form-text mb-0" id="twoFactorHelp">Recovery codes may contain letters, numbers, and a hyphen.</p>

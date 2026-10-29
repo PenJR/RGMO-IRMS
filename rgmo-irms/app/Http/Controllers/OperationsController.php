@@ -7,6 +7,7 @@ use App\Models\ResourceRequest;
 use App\Models\User;
 use App\Rules\CurrentProject;
 use App\Services\RmsService;
+use App\Support\InputRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -25,7 +26,7 @@ class OperationsController extends Controller
      */
     public function createCategory(Request $request)
     {
-        return response()->json($this->service->createCategory($request->validate(['name' => 'required|string|max:255|unique:categories,name', 'description' => 'nullable|string'])), 201);
+        return response()->json($this->service->createCategory($request->validate(['name' => 'required|string|max:255|unique:categories,name', 'description' => 'nullable|string|max:5000'])), 201);
     }
 
     /**
@@ -35,7 +36,7 @@ class OperationsController extends Controller
      */
     public function updateCategory(Request $request, int $id)
     {
-        return response()->json($this->service->updateCategory($id, $request->validate(['name' => 'sometimes|string|max:255|unique:categories,name,'.$id, 'description' => 'nullable|string'])));
+        return response()->json($this->service->updateCategory($id, $request->validate(['name' => 'sometimes|string|max:255|unique:categories,name,'.$id, 'description' => 'nullable|string|max:5000'])));
     }
 
     /**
@@ -71,8 +72,8 @@ class OperationsController extends Controller
         $this->authorize('create', ResourceRequest::class);
         $data = $request->validate([
             'project_id' => ['required', 'integer', new CurrentProject],
-            'purpose' => 'required|string',
-            'remarks' => 'nullable|string',
+            'purpose' => 'required|string|max:1000',
+            'remarks' => 'nullable|string|max:1000',
         ]);
 
         return response()->json($this->service->createRequest($request->user()->id, $data), 201);
@@ -88,7 +89,7 @@ class OperationsController extends Controller
         $resourceRequest = ResourceRequest::findOrFail($requestId);
         $this->authorize('update', $resourceRequest);
 
-        return response()->json($this->service->addRequestItem($requestId, $request->validate(['inventory_item_id' => 'required|exists:inventory_items,id', 'quantity' => 'required|integer|min:1'])), 201);
+        return response()->json($this->service->addRequestItem($requestId, $request->validate(['inventory_item_id' => 'required|integer|min:1|exists:inventory_items,id', 'quantity' => 'required|integer|min:1|max:2147483647'])), 201);
     }
 
     /**
@@ -101,7 +102,7 @@ class OperationsController extends Controller
         $resourceRequest = ResourceRequest::findOrFail($requestId);
         $this->authorize('update', $resourceRequest);
 
-        return response()->json($this->service->updateRequest($requestId, $request->validate(['purpose' => 'sometimes|string', 'remarks' => 'nullable|string'])));
+        return response()->json($this->service->updateRequest($requestId, $request->validate(['purpose' => 'sometimes|string|max:1000', 'remarks' => 'nullable|string|max:1000'])));
     }
 
     /**
@@ -166,7 +167,7 @@ class OperationsController extends Controller
     {
         $resourceRequest = ResourceRequest::findOrFail($requestId);
         $this->authorize('approve', $resourceRequest);
-        $data = $request->validate(['remarks' => 'nullable|string']);
+        $data = $request->validate(['remarks' => 'nullable|string|max:1000']);
 
         return response()->json($this->service->approveRequest($requestId, $request->user()->id, $data['remarks'] ?? null));
     }
@@ -180,7 +181,7 @@ class OperationsController extends Controller
     {
         $resourceRequest = ResourceRequest::findOrFail($requestId);
         $this->authorize('reject', $resourceRequest);
-        $data = $request->validate(['remarks' => 'nullable|string']);
+        $data = $request->validate(['remarks' => 'nullable|string|max:1000']);
 
         return response()->json($this->service->rejectRequest($requestId, $request->user()->id, $data['remarks'] ?? null));
     }
@@ -205,7 +206,7 @@ class OperationsController extends Controller
         $resourceRequest = ResourceRequest::findOrFail($requestId);
         $this->authorize('view', $resourceRequest);
 
-        $data = $request->validate(['remarks' => 'required|string']);
+        $data = $request->validate(['remarks' => 'required|string|max:1000']);
 
         return response()->json($this->service->addApprovalRemarks($requestId, $data['remarks']));
     }
@@ -230,7 +231,7 @@ class OperationsController extends Controller
      */
     public function recordStockIn(Request $request, int $itemId)
     {
-        $data = $request->validate(['quantity' => 'required|integer|min:1', 'source' => 'nullable|string|max:255']);
+        $data = $request->validate(['quantity' => 'required|integer|min:1|max:2147483647', 'source' => 'nullable|string|max:255']);
 
         return response()->json($this->service->recordStockIn($itemId, $data['quantity'], $data['source'] ?? null));
     }
@@ -242,7 +243,7 @@ class OperationsController extends Controller
      */
     public function recordStockOut(Request $request, int $itemId)
     {
-        $data = $request->validate(['quantity' => 'required|integer|min:1', 'destination' => 'nullable|string|max:255']);
+        $data = $request->validate(['quantity' => 'required|integer|min:1|max:2147483647', 'destination' => 'nullable|string|max:255']);
 
         return response()->json($this->service->recordStockOut($itemId, $data['quantity'], $data['destination'] ?? null));
     }
@@ -254,7 +255,7 @@ class OperationsController extends Controller
      */
     public function logInventoryTransaction(Request $request)
     {
-        return response()->json($this->service->logInventoryTransaction($request->validate(['inventory_item_id' => 'required|exists:inventory_items,id', 'user_id' => 'nullable|exists:users,id', 'transaction_type' => 'required|string', 'quantity' => 'required|integer|min:1', 'source' => 'nullable|string', 'destination' => 'nullable|string', 'meta' => 'nullable|array'])), 201);
+        return response()->json($this->service->logInventoryTransaction($request->validate(['inventory_item_id' => 'required|integer|min:1|exists:inventory_items,id', 'user_id' => 'nullable|integer|min:1|exists:users,id', 'transaction_type' => 'required|string|in:stock_in,stock_out', 'quantity' => 'required|integer|min:1|max:2147483647', 'source' => 'nullable|string|max:255', 'destination' => 'nullable|string|max:255', 'meta' => 'nullable|array|max:50'])), 201);
     }
 
     /**
@@ -325,7 +326,7 @@ class OperationsController extends Controller
      */
     public function exportReportPDF(Request $request)
     {
-        $data = $request->validate(['type' => 'required|string', 'filters' => 'nullable|array']);
+        $data = $request->validate(InputRules::reportExport());
 
         return response()->json($this->service->exportReportPDF($data['type'], $data['filters'] ?? []));
     }
@@ -337,7 +338,7 @@ class OperationsController extends Controller
      */
     public function exportReportExcel(Request $request)
     {
-        $data = $request->validate(['type' => 'required|string', 'filters' => 'nullable|array']);
+        $data = $request->validate(InputRules::reportExport());
 
         return response()->json($this->service->exportReportExcel($data['type'], $data['filters'] ?? []));
     }
@@ -363,12 +364,12 @@ class OperationsController extends Controller
     public function logResourceUsage(Request $request)
     {
         return response()->json($this->service->logResourceUsage($request->validate([
-            'inventory_item_id' => 'required|exists:inventory_items,id',
-            'user_id' => 'nullable|exists:users,id',
-            'project_id' => 'nullable|exists:projects,id',
+            'inventory_item_id' => 'required|integer|min:1|exists:inventory_items,id',
+            'user_id' => 'nullable|integer|min:1|exists:users,id',
+            'project_id' => 'nullable|integer|min:1|exists:projects,id',
             'field_id' => 'nullable|string|max:255',
-            'quantity' => 'required|integer|min:1',
-            'notes' => 'nullable|string',
+            'quantity' => 'required|integer|min:1|max:2147483647',
+            'notes' => 'nullable|string|max:5000',
         ])), 201);
     }
 
@@ -422,7 +423,7 @@ class OperationsController extends Controller
     {
         abort_unless($request->user()?->isAdmin(), 403);
 
-        $data = $request->validate(['user_id' => 'nullable|exists:users,id', 'action' => 'required|string|max:255', 'module' => 'required|string|max:255', 'details' => 'nullable|array']);
+        $data = $request->validate(['user_id' => 'nullable|integer|min:1|exists:users,id', 'action' => 'required|string|max:255', 'module' => 'required|string|max:255', 'details' => 'nullable|array|max:50']);
 
         return response()->json($this->service->logActivity($data['user_id'] ?? null, $data['action'], $data['module'], $data['details'] ?? []), 201);
     }
@@ -454,7 +455,7 @@ class OperationsController extends Controller
      */
     public function filterAuditLogs(Request $request)
     {
-        $data = $request->validate(['date_range.from' => 'nullable|date', 'date_range.to' => 'nullable|date', 'module' => 'nullable|string|max:255']);
+        $data = $request->validate(['date_range' => 'nullable|array:from,to', 'module' => 'nullable|string|max:255'] + InputRules::dates('date_range.from', 'date_range.to'));
 
         return response()->json($this->service->filterAuditLogs($data['date_range'] ?? [], $data['module'] ?? null));
     }
@@ -481,7 +482,7 @@ class OperationsController extends Controller
     {
         abort_unless(auth()->user()?->isAdmin() || auth()->user()?->isRgmoHead(), 403);
 
-        $data = $request->validate(['user_id' => 'required|exists:users,id', 'message' => 'required|string', 'type' => 'required|string|max:100']);
+        $data = $request->validate(['user_id' => 'required|integer|min:1|exists:users,id', 'message' => 'required|string|max:5000', 'type' => 'required|string|max:100']);
 
         return response()->json($this->service->sendNotification($data['user_id'], $data['message'], $data['type']), 201);
     }
@@ -631,7 +632,7 @@ class OperationsController extends Controller
     {
         abort_unless($request->user()?->hasPermission('manage-forecasting-settings'), 403);
 
-        $data = $request->validate(['value' => 'required|integer|min:1']);
+        $data = $request->validate(['value' => 'required|integer|min:1|max:2147483647']);
 
         return response()->json($this->service->setLowStockThreshold($data['value']));
     }
@@ -645,7 +646,7 @@ class OperationsController extends Controller
     {
         abort_unless($request->user()?->hasPermission('manage-forecasting-settings'), 403);
 
-        $data = $request->validate(['settings' => 'required|array']);
+        $data = $request->validate(InputRules::settings());
 
         return response()->json($this->service->updateSystemSettings($data['settings']));
     }

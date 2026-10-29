@@ -102,6 +102,19 @@
                         </div>
                     @endif
 
+                    @if ($errors->any())
+                        <div class="container-fluid mt-4">
+                            <div class="alert alert-danger" role="alert">
+                                <p class="fw-semibold mb-2">Please correct the following entries:</p>
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $message)
+                                        <li>{{ $message }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+
                     {{ $slot }}
                 </div>
             </main>

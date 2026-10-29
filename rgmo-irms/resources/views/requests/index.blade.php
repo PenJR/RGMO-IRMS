@@ -24,7 +24,7 @@
                 <form method="GET" action="{{ route('requests.index') }}" class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">Search</label>
-                        <input type="search" name="search" value="{{ request('search') }}" class="form-control" placeholder="Requester, project, RIS, purpose">
+                        <input type="search" name="search" value="{{ request('search') }}" class="form-control" placeholder="Requester, project, RIS, purpose" maxlength="255">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Status</label>

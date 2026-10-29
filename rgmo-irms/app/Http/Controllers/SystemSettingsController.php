@@ -4,22 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\InventoryItem;
 use App\Services\RmsService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class SystemSettingsController extends Controller
 {
     /**
      * Create a new instance.
      */
-    public function __construct(private readonly RmsService $service)
-    {
-    }
+    public function __construct(private readonly RmsService $service) {}
 
     /**
      * Display the system settings management overview for administrators.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function index()
     {
@@ -37,8 +37,7 @@ class SystemSettingsController extends Controller
     /**
      * Persist updated system settings to the database.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function update(Request $request)
     {
@@ -49,7 +48,7 @@ class SystemSettingsController extends Controller
                 'required',
                 Rule::exists('inventory_items', 'id')->whereNull('deleted_at'),
             ],
-            'min_stock' => 'required|integer|min:0',
+            'min_stock' => 'required|integer|min:0|max:2147483647',
         ]);
 
         $item = InventoryItem::findOrFail($validated['inventory_item_id']);

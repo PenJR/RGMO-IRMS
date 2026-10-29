@@ -6,6 +6,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Models\LoginHistory;
 use App\Models\User;
 use App\Services\UserService;
+use App\Support\InputRules;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class AdminUserController extends Controller
      */
     public function index(Request $request)
     {
+        $request->validate(InputRules::userFilters());
         $this->authorize('viewAny', User::class);
 
         $query = User::query();
@@ -59,6 +61,7 @@ class AdminUserController extends Controller
      */
     public function loginLogs(Request $request)
     {
+        $request->validate(InputRules::userFilters());
         $this->authorize('viewAny', User::class);
 
         $query = LoginHistory::query()->with('user');
@@ -214,7 +217,7 @@ class AdminUserController extends Controller
         $this->authorize('resetPassword', $user);
 
         $validated = $request->validate([
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'password' => ['required', 'string', 'max:255', 'confirmed', Password::defaults()],
         ]);
 
         $this->userService->resetPassword($user, $validated['password'], $request->user()->id);

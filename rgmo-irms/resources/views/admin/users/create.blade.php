@@ -14,20 +14,20 @@
                     <div class="row g-4">
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
-                            <input type="text" name="name" value="{{ old('name') }}" class="form-control" required>
+                            <input type="text" name="name" value="{{ old('name') }}" class="form-control" required maxlength="255">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" value="{{ old('email') }}" class="form-control" required>
+                            <input type="email" name="email" value="{{ old('email') }}" class="form-control" required maxlength="255">
                         </div>
                         <div class="col-md-6">
                             <label for="new-user-password" class="form-label">Password</label>
-                            <input id="new-user-password" type="password" name="password" class="form-control @error('password') is-invalid @enderror" autocomplete="new-password" aria-describedby="new-user-password-error" required>
+                            <input id="new-user-password" type="password" name="password" class="form-control @error('password') is-invalid @enderror" autocomplete="new-password" aria-describedby="new-user-password-error" required maxlength="255">
                             <div id="new-user-password-error" class="invalid-feedback">@error('password'){{ $message }}@enderror</div>
                         </div>
                         <div class="col-md-6">
                             <label for="new-user-password-confirmation" class="form-label">Confirm Password</label>
-                            <input id="new-user-password-confirmation" type="password" name="password_confirmation" class="form-control" autocomplete="new-password" aria-describedby="password-match-feedback" required>
+                            <input id="new-user-password-confirmation" type="password" name="password_confirmation" class="form-control" autocomplete="new-password" aria-describedby="password-match-feedback" required maxlength="255">
                             <div id="password-match-feedback" class="invalid-feedback" aria-live="polite"></div>
                         </div>
                         <div class="col-md-6">

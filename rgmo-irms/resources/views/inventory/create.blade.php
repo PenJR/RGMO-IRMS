@@ -63,13 +63,13 @@
 
                                         <div class="col-md-6">
                                             <label class="form-label">Item Name</label>
-                                            <input type="text" name="name" value="{{ old('name') }}" placeholder="e.g., Office Supplies" class="form-control @error('name') is-invalid @enderror" required>
+                                            <input type="text" name="name" value="{{ old('name') }}" placeholder="e.g., Office Supplies" class="form-control @error('name') is-invalid @enderror" required maxlength="255">
                                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 
                                         <div class="col-md-6">
                                             <label class="form-label">SKU / Code</label>
-                                            <input type="text" name="sku" value="{{ old('sku') }}" placeholder="SKU-XXXXXX" class="form-control @error('sku') is-invalid @enderror" required>
+                                            <input type="text" name="sku" value="{{ old('sku') }}" placeholder="SKU-XXXXXX" class="form-control @error('sku') is-invalid @enderror" required maxlength="255">
                                             @error('sku')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 
@@ -86,26 +86,26 @@
 
                                         <div class="col-md-4">
                                             <label class="form-label">Initial Stock</label>
-                                            <input type="number" name="stock" value="{{ old('stock', 0) }}" class="form-control @error('stock') is-invalid @enderror" required min="0">
+                                            <input type="number" name="stock" value="{{ old('stock', 0) }}" class="form-control @error('stock') is-invalid @enderror" required min="0" max="2147483647" step="1">
                                             @error('stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 
                                         <div class="col-md-4">
                                             <label class="form-label">Low Stock Threshold</label>
-                                            <input type="number" name="min_stock" value="{{ old('min_stock', 5) }}" class="form-control @error('min_stock') is-invalid @enderror" required min="0">
+                                            <input type="number" name="min_stock" value="{{ old('min_stock', 5) }}" class="form-control @error('min_stock') is-invalid @enderror" required min="0" max="2147483647" step="1">
                                             <div class="form-text">This resource is flagged low when stock is at or below this value.</div>
                                             @error('min_stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 
                                         <div class="col-md-4">
                                             <label class="form-label">Price (P)</label>
-                                            <input type="number" name="price" value="{{ old('price', 0) }}" step="0.01" class="form-control @error('price') is-invalid @enderror" required min="0">
+                                            <input type="number" name="price" value="{{ old('price', 0) }}" step="0.01" class="form-control @error('price') is-invalid @enderror" required min="0" max="9999999999.99">
                                             @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 
                                         <div class="col-12">
                                             <label class="form-label">Description</label>
-                                            <textarea name="description" rows="3" class="form-control @error('description') is-invalid @enderror">{{ old('description') }}</textarea>
+                                            <textarea name="description" rows="3" class="form-control @error('description') is-invalid @enderror" maxlength="5000">{{ old('description') }}</textarea>
                                             @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 

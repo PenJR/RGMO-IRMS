@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\SystemSetting;
 use App\Services\ReportService;
+use App\Support\InputRules;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,7 +27,7 @@ class ReportController extends Controller
      */
     public function inventory(Request $request)
     {
-        $filters = $request->only(['category_id', 'low_stock']);
+        $filters = $request->validate(InputRules::reportFilters());
         $report = $this->reportService->getInventoryReport($filters);
 
         return view('reports.inventory', [
@@ -42,7 +43,7 @@ class ReportController extends Controller
      */
     public function resourceUsage(Request $request)
     {
-        $filters = $request->only(['start_date', 'end_date', 'user_id', 'item_id']);
+        $filters = $request->validate(InputRules::reportFilters());
         $report = $this->reportService->getResourceUsageReport($filters);
 
         return view('reports.resource-usage', [
@@ -58,7 +59,7 @@ class ReportController extends Controller
      */
     public function auditTrail(Request $request)
     {
-        $filters = $request->only(['action', 'module', 'user_id', 'start_date', 'end_date']);
+        $filters = $request->validate(InputRules::reportFilters());
         $report = $this->reportService->getAuditTrailReport($filters);
 
         return view('reports.audit-trail', [
@@ -75,7 +76,7 @@ class ReportController extends Controller
      */
     public function requests(Request $request)
     {
-        $filters = $request->only(['status', 'start_date', 'end_date']);
+        $filters = $request->validate(InputRules::reportFilters());
         $report = $this->reportService->getResourceRequestReport($filters);
 
         return view('reports.requests', [
@@ -89,8 +90,9 @@ class ReportController extends Controller
      */
     public function biologicalAssets(Request $request)
     {
-        $startDate = $request->has('start_date') ? Carbon::parse($request->start_date) : now()->startOfWeek();
-        $endDate = $request->has('end_date') ? Carbon::parse($request->end_date) : now()->endOfWeek();
+        $dates = $request->validate(InputRules::dates());
+        $startDate = ! empty($dates['start_date']) ? Carbon::parse($dates['start_date']) : now()->startOfWeek();
+        $endDate = ! empty($dates['end_date']) ? Carbon::parse($dates['end_date']) : $startDate->copy()->endOfWeek();
 
         $report = $this->reportService->getBiologicalAssetsReport($startDate, $endDate);
 
@@ -140,7 +142,7 @@ class ReportController extends Controller
      */
     public function exportInventoryCsv(Request $request)
     {
-        $filters = $request->only(['category_id', 'low_stock']);
+        $filters = $request->validate(InputRules::reportFilters());
         $report = $this->reportService->getInventoryReport($filters);
 
         $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.csv';
@@ -178,7 +180,7 @@ class ReportController extends Controller
      */
     public function exportInventoryPdf(Request $request)
     {
-        $filters = $request->only(['category_id', 'low_stock']);
+        $filters = $request->validate(InputRules::reportFilters());
         $report = $this->reportService->getInventoryReport($filters);
 
         $pdf = Pdf::loadView('reports.inventory-pdf', [
@@ -195,8 +197,9 @@ class ReportController extends Controller
      */
     public function exportBiologicalAssetsPdf(Request $request)
     {
-        $startDate = $request->has('start_date') ? Carbon::parse($request->start_date) : now()->startOfWeek();
-        $endDate = $request->has('end_date') ? Carbon::parse($request->end_date) : now()->endOfWeek();
+        $dates = $request->validate(InputRules::dates());
+        $startDate = ! empty($dates['start_date']) ? Carbon::parse($dates['start_date']) : now()->startOfWeek();
+        $endDate = ! empty($dates['end_date']) ? Carbon::parse($dates['end_date']) : $startDate->copy()->endOfWeek();
 
         $report = $this->reportService->getBiologicalAssetsReport($startDate, $endDate);
 
@@ -252,7 +255,7 @@ class ReportController extends Controller
      */
     public function exportAuditTrailCsv(Request $request): StreamedResponse
     {
-        $filters = $request->only(['action', 'module', 'user_id', 'start_date', 'end_date']);
+        $filters = $request->validate(InputRules::reportFilters());
         $filename = 'audit_trail_'.now()->format('Y-m-d_H-i-s').'.csv';
 
         return response()->streamDownload(function () use ($filters): void {

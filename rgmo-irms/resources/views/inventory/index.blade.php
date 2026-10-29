@@ -31,7 +31,7 @@
                             <label for="search" class="form-label">Search</label>
                             <input type="text" name="search" id="search" value="{{ request('search') }}"
                                    class="form-control"
-                                   placeholder="Search by name, SKU, or description">
+                                   placeholder="Search by name, SKU, or description" maxlength="255">
                         </div>
                         <div class="col-md-4 col-lg-3">
                             <label for="category_id" class="form-label">Category</label>

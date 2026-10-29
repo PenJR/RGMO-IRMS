@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\ResourceRequest;
 use App\Rules\CurrentProject;
 use App\Services\ResourceRequestService;
+use App\Support\InputRules;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -34,7 +35,7 @@ class ResourceRequestController extends Controller
     {
         $this->authorize('viewAny', ResourceRequest::class);
 
-        $filters = $request->only(['search', 'status', 'user_id', 'start_date', 'end_date', 'sort', 'direction']);
+        $filters = $request->validate(InputRules::requestFilters());
         $canReviewAllRequests = $request->user()->hasPermission('review-request')
             || $request->user()->hasPermission('approve-request');
 
@@ -251,9 +252,9 @@ class ResourceRequestController extends Controller
 
         $validated = $httpRequest->validate([
             'project_id' => ['required', 'integer', new CurrentProject],
-            'purpose' => 'required|string',
-            'remarks' => 'nullable|string',
-            'needed_date' => 'nullable|date',
+            'purpose' => 'required|string|max:1000',
+            'remarks' => 'nullable|string|max:1000',
+            'needed_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
         ]);
 
         $this->requestService->updateRequest($request, $validated, (int) auth()->id());
@@ -275,7 +276,7 @@ class ResourceRequestController extends Controller
         $this->authorize('approve', $request);
 
         $validated = $httpRequest->validate([
-            'remarks' => 'nullable|string',
+            'remarks' => 'nullable|string|max:1000',
         ]);
 
         $this->requestService->approveRequest($request, auth()->id(), $validated['remarks'] ?? null);
@@ -297,7 +298,7 @@ class ResourceRequestController extends Controller
         $this->authorize('reject', $request);
 
         $validated = $httpRequest->validate([
-            'remarks' => 'required|string',
+            'remarks' => 'required|string|max:1000',
         ]);
 
         $this->requestService->rejectRequest($request, $validated['remarks']);

@@ -15,7 +15,7 @@
                 <form method="GET" action="{{ route('admin.login-logs.index') }}" class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">Search</label>
-                        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Name or email">
+                        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Name or email" maxlength="255">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Role</label>

@@ -222,6 +222,10 @@ class InventoryService
             }
 
             $lockedItem = InventoryItem::lockForUpdate()->findOrFail($item->id);
+            if ($quantity > 2147483647 - $lockedItem->stock) {
+                throw ValidationException::withMessages(['quantity' => 'The resulting stock cannot exceed 2,147,483,647.']);
+            }
+
             $lockedItem->increment('stock', $quantity);
             $transaction = $lockedItem->transactions()->create([
                 'user_id' => $userId,

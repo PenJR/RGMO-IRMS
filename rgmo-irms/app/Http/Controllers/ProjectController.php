@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Support\InputRules;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +17,7 @@ class ProjectController extends Controller
     {
         $this->authorize('viewAny', Project::class);
 
-        $filters = $request->only(['search', 'status']);
+        $filters = $request->validate(InputRules::projectFilters());
         $projects = Project::query()
             ->with('managers')
             ->withCount('resourceUsages')
@@ -149,14 +150,15 @@ class ProjectController extends Controller
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:50', Rule::unique('projects', 'code')->ignore($project)],
+            'code' => ['required', 'string', 'max:50', 'not_regex:/<[^>]*>/', Rule::unique('projects', 'code')->ignore($project)],
             'status' => ['required', Rule::in(Project::statuses())],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'description' => ['nullable', 'string'],
-            'manager_ids' => ['nullable', 'array'],
+            'start_date' => ['nullable', 'date', 'after_or_equal:0001-01-01', 'before_or_equal:9999-12-31'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:0001-01-01', 'before_or_equal:9999-12-31', Rule::when($request->filled('start_date'), 'after_or_equal:start_date')],
+            'description' => ['nullable', 'string', 'max:5000'],
+            'manager_ids' => ['nullable', 'array', 'max:100'],
             'manager_ids.*' => [
                 'integer',
+                'distinct',
                 Rule::exists('users', 'id')->where(function ($query) {
                     $query->where('role', User::ROLE_PROJECT_MANAGER)
                         ->where('status', User::STATUS_ACTIVE);

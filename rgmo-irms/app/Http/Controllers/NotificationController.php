@@ -4,26 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Models\Notification;
 use App\Services\NotificationService;
+use App\Support\InputRules;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 class NotificationController extends Controller
 {
     /**
      * Create a new instance.
      */
-    public function __construct(private NotificationService $notificationService)
-    {
-    }
+    public function __construct(private NotificationService $notificationService) {}
 
     /**
      * Display a listing of the authenticated user's notifications.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     * @return View|JsonResponse
      */
     public function index(Request $request)
     {
+        $request->validate(InputRules::pagination());
         $user = auth()->user();
         $notifications = $this->notificationService->getAllNotifications($user, 20);
 
@@ -37,7 +39,7 @@ class NotificationController extends Controller
     /**
      * Retrieve the count of unread notifications for the authenticated user.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function unreadCount()
     {
@@ -49,9 +51,7 @@ class NotificationController extends Controller
     /**
      * Mark a specific notification as read.
      *
-     * @param Request $request
-     * @param Notification $notification
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @return RedirectResponse|JsonResponse
      */
     public function markAsRead(Request $request, Notification $notification)
     {
@@ -75,8 +75,7 @@ class NotificationController extends Controller
     /**
      * Mark all notifications for the authenticated user as read.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @return RedirectResponse|JsonResponse
      */
     public function markAllAsRead(Request $request)
     {
@@ -95,9 +94,7 @@ class NotificationController extends Controller
     /**
      * Remove the specified notification from the database.
      *
-     * @param Request $request
-     * @param Notification $notification
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @return RedirectResponse|JsonResponse
      */
     public function destroy(Request $request, Notification $notification)
     {
@@ -117,8 +114,7 @@ class NotificationController extends Controller
     /**
      * Remove all notifications that have already been read.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @return RedirectResponse|JsonResponse
      */
     public function deleteReadNotifications(Request $request)
     {

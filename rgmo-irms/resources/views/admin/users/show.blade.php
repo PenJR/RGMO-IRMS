@@ -44,6 +44,7 @@
                                     class="form-control @error('password') is-invalid @enderror"
                                     autocomplete="new-password"
                                     required
+                                    maxlength="255"
                                 >
                                 @error('password')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -59,6 +60,7 @@
                                     class="form-control"
                                     autocomplete="new-password"
                                     required
+                                    maxlength="255"
                                 >
                             </div>
 

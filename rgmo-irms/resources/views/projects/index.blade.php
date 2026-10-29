@@ -22,7 +22,7 @@
                 <form method="GET" action="{{ route('projects.index') }}" class="row g-3">
                     <div class="col-lg-6">
                         <label class="form-label">Search</label>
-                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control" placeholder="Project name, code, or description">
+                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control" placeholder="Project name, code, or description" maxlength="255">
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <label class="form-label">Status</label>

@@ -15,7 +15,7 @@
 
         <div class="col-md-6">
             <label for="name" class="form-label fw-semibold small">{{ __('Name') }}</label>
-            <input id="name" name="name" type="text" class="form-control" value="{{ old('name', $user->name) }}" required autofocus autocomplete="name" />
+            <input id="name" name="name" type="text" class="form-control" value="{{ old('name', $user->name) }}" required autofocus autocomplete="name" maxlength="255" />
             @if($errors->get('name'))
                 <div class="text-danger small mt-1">{{ $errors->first('name') }}</div>
             @endif
@@ -23,7 +23,7 @@
 
         <div class="col-md-6">
             <label for="email" class="form-label fw-semibold small">{{ __('Email Address') }}</label>
-            <input id="email" name="email" type="email" class="form-control" value="{{ old('email', $user->email) }}" required autocomplete="username" />
+            <input id="email" name="email" type="email" class="form-control" value="{{ old('email', $user->email) }}" required autocomplete="username" maxlength="255" />
             @if($errors->get('email'))
                 <div class="text-danger small mt-1">{{ $errors->first('email') }}</div>
             @endif

@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Services\InventoryService;
+use App\Support\InputSanitizer;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
@@ -15,7 +16,7 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Row;
 
 class InventoryItemsImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure, WithHeadingRow, WithValidation
-{   
+{
     use Importable, SkipsFailures;
 
     private int $created = 0;
@@ -25,6 +26,15 @@ class InventoryItemsImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
     private int $restored = 0;
 
     public function __construct(private readonly InventoryService $inventoryService) {}
+
+    public function prepareForValidation(array $data, int $index): array
+    {
+        foreach ($data as $key => $value) {
+            $data[$key] = InputSanitizer::clean((string) $key, $value);
+        }
+
+        return $data;
+    }
 
     /**
      * Handle model.
@@ -111,12 +121,12 @@ class InventoryItemsImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
             'category' => ['nullable', 'string', 'max:255', 'required_without:category_id'],
             'name' => ['required', 'string', 'max:255'],
             'sku' => ['required', 'string', 'max:255'],
-            'stock' => ['nullable', 'integer', 'min:0'],
+            'stock' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
             'unit' => ['nullable', 'string', 'max:30'],
-            'min_stock' => ['nullable', 'integer', 'min:0'],
-            'reorder_level' => ['nullable', 'integer', 'min:0'],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'description' => ['nullable', 'string'],
+            'min_stock' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
+            'reorder_level' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
+            'price' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99', 'decimal:0,2'],
+            'description' => ['nullable', 'string', 'max:5000'],
         ];
     }
 }

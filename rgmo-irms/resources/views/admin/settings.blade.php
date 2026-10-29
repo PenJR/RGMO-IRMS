@@ -88,7 +88,7 @@
                                     type="number"
                                     id="min_stock"
                                     name="min_stock"
-                                    min="0"
+                                    min="0" max="2147483647" step="1"
                                     value="{{ old('min_stock', $selectedInventoryItem?->min_stock ?? 0) }}"
                                     class="form-control @error('min_stock') is-invalid @enderror"
                                     required

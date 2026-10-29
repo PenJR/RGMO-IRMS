@@ -83,7 +83,7 @@
                                             <form method="POST" action="{{ route('inventory.update-low-stock-threshold', $item) }}" class="d-flex gap-2 align-items-start">
                                                 @csrf
                                                 @method('PATCH')
-                                                <input type="number" name="min_stock" value="{{ old('min_stock', $item->min_stock) }}" min="0" class="form-control form-control-sm" aria-label="Low stock threshold for {{ $item->name }}" required>
+                                                <input type="number" name="min_stock" value="{{ old('min_stock', $item->min_stock) }}" min="0" class="form-control form-control-sm" aria-label="Low stock threshold for {{ $item->name }}" required max="2147483647" step="1">
                                                 <button type="submit" class="btn btn-sm btn-cmu">Save</button>
                                             </form>
                                         @else

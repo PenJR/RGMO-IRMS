@@ -137,7 +137,7 @@ class AIForecastingTest extends TestCase
             );
     }
 
-    public function test_unsupported_forecast_period_falls_back_to_one_month(): void
+    public function test_unsupported_forecast_period_is_rejected(): void
     {
         $manager = User::factory()->create([
             'role' => User::ROLE_PROJECT_MANAGER,
@@ -146,10 +146,9 @@ class AIForecastingTest extends TestCase
         ]);
 
         $this->actingAs($manager)
-            ->get(route('ai-forecasting.index', ['forecast_days' => 365]))
-            ->assertOk()
-            ->assertViewHas('forecast_days', 30)
-            ->assertSee('Projected 30-Day Demand');
+            ->getJson(route('ai-forecasting.index', ['forecast_days' => 365]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('forecast_days');
     }
 
     /**

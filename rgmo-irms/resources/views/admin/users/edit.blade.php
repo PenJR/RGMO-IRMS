@@ -15,11 +15,11 @@
                     <div class="row g-4">
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
-                            <input type="text" name="name" value="{{ old('name', $user->name) }}" class="form-control" required>
+                            <input type="text" name="name" value="{{ old('name', $user->name) }}" class="form-control" required maxlength="255">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" value="{{ old('email', $user->email) }}" class="form-control" required>
+                            <input type="email" name="email" value="{{ old('email', $user->email) }}" class="form-control" required maxlength="255">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Role</label>

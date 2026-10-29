@@ -32,7 +32,7 @@ class TwoFactorController extends Controller
      */
     public function showEnable(Request $request)
     {
-        $validated = $request->validate(['password' => 'required|string']);
+        $validated = $request->validate(['password' => 'required|string|max:255']);
         $user = $request->user();
         if (! $user) {
             abort(403);
@@ -65,7 +65,7 @@ class TwoFactorController extends Controller
      */
     public function revealSecret(Request $request)
     {
-        $validated = $request->validate(['password' => 'required|string']);
+        $validated = $request->validate(['password' => 'required|string|max:255']);
         $user = $request->user();
 
         if (! $user || $user->two_factor_enabled || ! $user->two_factor_secret) {
@@ -89,7 +89,7 @@ class TwoFactorController extends Controller
      */
     public function confirm(Request $request)
     {
-        $request->validate(['code' => 'required|string']);
+        $request->validate(['code' => 'required|string|regex:/^[0-9]{6}$/']);
         $user = $request->user() ?? auth()->user();
         if (! $user) {
             abort(403);
@@ -119,7 +119,7 @@ class TwoFactorController extends Controller
      */
     public function disable(Request $request)
     {
-        $request->validate(['password' => 'required|string']);
+        $request->validate(['password' => 'required|string|max:255']);
         $user = $request->user();
         if (! $user) {
             abort(403);
@@ -160,7 +160,7 @@ class TwoFactorController extends Controller
      */
     public function verify(Request $request)
     {
-        $request->validate(['code' => 'required|string|max:64']);
+        $request->validate(['code' => 'required|string|max:64', 'two_factor_challenge' => 'nullable|string|size:64']);
 
         $pendingUserId = null;
         if ($request->hasSession()) {

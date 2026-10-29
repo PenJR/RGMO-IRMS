@@ -21,7 +21,7 @@
                 <div class="row items-bottom">
                     <div class="col-md-6">
                         <label for="disable-password" class="form-label fw-semibold small">Confirm Password to Disable</label>
-                        <input id="disable-password" name="password" type="password" required class="form-control" />
+                        <input id="disable-password" name="password" type="password" required class="form-control" maxlength="255" />
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
                         <button type="submit" class="btn btn-outline-danger w-100">Disable 2FA</button>
@@ -66,7 +66,7 @@
                 <form id="confirm-2fa-form" class="row g-2">
                     @csrf
                     <div class="col-md-8">
-                        <input id="2fa-code" name="code" type="text" required class="form-control" placeholder="6-digit code" />
+                        <input id="2fa-code" name="code" type="text" required class="form-control" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" />
                     </div>
                     <div class="col-md-4">
                         <button type="submit" class="btn btn-cmu w-100">Confirm</button>

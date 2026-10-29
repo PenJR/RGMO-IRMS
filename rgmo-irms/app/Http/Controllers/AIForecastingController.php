@@ -6,6 +6,7 @@ use App\Services\ForecastExplanationService;
 use App\Services\InventoryForecastingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AIForecastingController extends Controller
@@ -59,10 +60,10 @@ class AIForecastingController extends Controller
 
     private function forecastDays(Request $request): int
     {
-        $forecastDays = $request->integer('forecast_days', InventoryForecastingService::DEFAULT_FORECAST_DAYS);
+        $validated = $request->validate([
+            'forecast_days' => ['sometimes', 'required', 'integer', Rule::in(array_keys(InventoryForecastingService::FORECAST_PERIODS))],
+        ]);
 
-        return array_key_exists($forecastDays, InventoryForecastingService::FORECAST_PERIODS)
-            ? $forecastDays
-            : InventoryForecastingService::DEFAULT_FORECAST_DAYS;
+        return (int) ($validated['forecast_days'] ?? InventoryForecastingService::DEFAULT_FORECAST_DAYS);
     }
 }

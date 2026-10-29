@@ -145,11 +145,11 @@
                             <div>
                                 <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
                                 <input type="number" name="quantity" id="quantity" required min="1"
-                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" max="2147483647" step="1">
                             </div>
                             <div>
                                 <label for="reason" class="block text-sm font-medium text-gray-700">Reason</label>
-                                <input type="text" name="reason" id="reason" required
+                                <input type="text" name="reason" id="reason" required maxlength="255"
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                        placeholder="e.g., Purchase, Usage, Return">
                             </div>

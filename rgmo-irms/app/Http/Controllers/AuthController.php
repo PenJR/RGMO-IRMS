@@ -92,7 +92,7 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:users,email',
-            'password' => ['required', 'string', 'confirmed', Password::defaults()],
+            'password' => ['required', 'string', 'max:255', 'confirmed', Password::defaults()],
             'role' => 'required|in:admin,staff,project_manager,rgmo_head',
         ]);
         $user = $this->service->registerUser($data);
@@ -107,7 +107,7 @@ class AuthController extends Controller
      */
     public function resetPassword(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        $validated = $request->validate(['email' => 'required|string|email|max:255']);
         $user = User::where('email', $request->input('email'))->first();
 
         if (! $user || ! $user->isAdmin()) {
@@ -116,7 +116,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        return response()->json(['status' => $this->service->resetPassword($request->all())]);
+        return response()->json(['status' => $this->service->resetPassword($validated)]);
     }
 
     /**
@@ -129,8 +129,8 @@ class AuthController extends Controller
         $this->authorize('resetPassword', $request->user());
 
         $data = $request->validate([
-            'current_password' => 'required|string',
-            'new_password' => ['required', 'string', 'confirmed', Password::defaults()],
+            'current_password' => 'required|string|max:255',
+            'new_password' => ['required', 'string', 'max:255', 'confirmed', Password::defaults()],
         ]);
         $this->service->changePassword(Auth::id(), $data['current_password'], $data['new_password']);
 

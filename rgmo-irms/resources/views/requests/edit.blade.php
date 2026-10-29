@@ -28,7 +28,7 @@
                         </div>
                         <div class="col-lg-6">
                             <label class="form-label">Purpose</label>
-                            <input type="text" name="purpose" value="{{ old('purpose', $request->purpose) }}" class="form-control" required>
+                            <input type="text" name="purpose" value="{{ old('purpose', $request->purpose) }}" class="form-control" required maxlength="1000">
                         </div>
                         <div class="col-lg-6">
                             <label class="form-label">Needed Date</label>
@@ -36,7 +36,7 @@
                         </div>
                         <div class="col-lg-12">
                             <label class="form-label">Remarks</label>
-                            <textarea name="remarks" rows="4" class="form-control">{{ old('remarks', $request->remarks) }}</textarea>
+                            <textarea name="remarks" rows="4" class="form-control" maxlength="1000">{{ old('remarks', $request->remarks) }}</textarea>
                         </div>
                     </div>
 

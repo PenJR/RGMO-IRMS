@@ -35,7 +35,7 @@
 
                     <div class="mt-4">
                         <label for="password" class="form-label fw-semibold small">{{ __('Password') }}</label>
-                        <input id="password" name="password" type="password" class="form-control" placeholder="{{ __('Password') }}" />
+                        <input id="password" name="password" type="password" class="form-control" placeholder="{{ __('Password') }}" maxlength="255" />
                         @if($errors->userDeletion->get('password'))
                             <div class="text-danger small mt-1">{{ $errors->userDeletion->first('password') }}</div>
                         @endif

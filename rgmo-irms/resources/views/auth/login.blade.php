@@ -27,7 +27,7 @@
                     inputmode="email"
                     aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}"
                     @error('email') aria-describedby="email-error" @enderror
-                />
+                maxlength="255" />
             </div>
             @error('email')
                 <div class="invalid-feedback d-block" id="email-error">{{ $message }}</div>
@@ -47,7 +47,7 @@
                                 required
                                 autocomplete="current-password"
                                 aria-invalid="{{ $errors->has('password') ? 'true' : 'false' }}"
-                                @error('password') aria-describedby="password-error" @enderror />
+                                @error('password') aria-describedby="password-error" @enderror maxlength="255" />
                 <button class="btn auth-icon-button" type="button" id="togglePassword" aria-label="Show password">
                     <i data-lucide="eye" id="toggleIcon"></i>
                 </button>

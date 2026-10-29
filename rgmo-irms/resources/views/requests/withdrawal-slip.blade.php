@@ -358,13 +358,13 @@
                 @if($isPdf ?? false)
                     <span class="field-line">{{ $signatureValues['po_number'] ?: ' ' }}</span>
                 @else
-                    <input type="text" class="field-line" name="po_number" value="{{ $signatureValues['po_number'] }}" placeholder="Enter P.O. number" title="Click to edit the P.O. number" aria-label="P.O. Number">
+                    <input type="text" class="field-line" name="po_number" value="{{ $signatureValues['po_number'] }}" placeholder="Enter P.O. number" title="Click to edit the P.O. number" aria-label="P.O. Number" maxlength="80">
                 @endif
                 <strong>P. R. No.:</strong>
                 @if($isPdf ?? false)
                     <span class="field-line">{{ $signatureValues['pr_number'] ?: ' ' }}</span>
                 @else
-                    <input type="text" class="field-line" name="pr_number" value="{{ $signatureValues['pr_number'] }}" placeholder="Enter P.R. number" title="Click to edit the P.R. number" aria-label="P.R. Number">
+                    <input type="text" class="field-line" name="pr_number" value="{{ $signatureValues['pr_number'] }}" placeholder="Enter P.R. number" title="Click to edit the P.R. number" aria-label="P.R. Number" maxlength="80">
                 @endif
             </div>
         </section>
@@ -433,8 +433,8 @@
                         <p class="signature-name">{{ $signatureValues['requested_by'] }}</p>
                         <p class="signature-title">{{ $signatureValues['requested_by_title'] }}</p>
                     @else
-                        <input type="text" class="signature-name" name="requested_by" value="{{ $signatureValues['requested_by'] }}" aria-label="Requested by name">
-                        <input type="text" class="signature-title" name="requested_by_title" value="{{ $signatureValues['requested_by_title'] }}" aria-label="Requested by title">
+                        <input type="text" class="signature-name" name="requested_by" value="{{ $signatureValues['requested_by'] }}" aria-label="Requested by name" maxlength="120">
+                        <input type="text" class="signature-title" name="requested_by_title" value="{{ $signatureValues['requested_by_title'] }}" aria-label="Requested by title" maxlength="120">
                     @endif
                 </td>
                 <td class="signature-block">
@@ -444,8 +444,8 @@
                         <p class="signature-name">{{ $signatureValues['issued_by'] ?: ' ' }}</p>
                         <p class="signature-title">{{ $signatureValues['issued_by_title'] ?: ' ' }}</p>
                     @else
-                        <input type="text" class="signature-name" name="issued_by" value="{{ $signatureValues['issued_by'] }}" placeholder="Enter name" aria-label="Issued by name">
-                        <input type="text" class="signature-title" name="issued_by_title" value="{{ $signatureValues['issued_by_title'] }}" aria-label="Issued by title">
+                        <input type="text" class="signature-name" name="issued_by" value="{{ $signatureValues['issued_by'] }}" placeholder="Enter name" aria-label="Issued by name" maxlength="120">
+                        <input type="text" class="signature-title" name="issued_by_title" value="{{ $signatureValues['issued_by_title'] }}" aria-label="Issued by title" maxlength="120">
                     @endif
                 </td>
             </tr>
@@ -457,8 +457,8 @@
                         <p class="signature-name">{{ $signatureValues['noted_by'] ?: ' ' }}</p>
                         <p class="signature-title">{{ $signatureValues['noted_by_title'] ?: ' ' }}</p>
                     @else
-                        <input type="text" class="signature-name" name="noted_by" value="{{ $signatureValues['noted_by'] }}" placeholder="Enter name" aria-label="Noted by name">
-                        <input type="text" class="signature-title" name="noted_by_title" value="{{ $signatureValues['noted_by_title'] }}" placeholder="Enter title" aria-label="Noted by title">
+                        <input type="text" class="signature-name" name="noted_by" value="{{ $signatureValues['noted_by'] }}" placeholder="Enter name" aria-label="Noted by name" maxlength="120">
+                        <input type="text" class="signature-title" name="noted_by_title" value="{{ $signatureValues['noted_by_title'] }}" placeholder="Enter title" aria-label="Noted by title" maxlength="120">
                     @endif
                 </td>
                 <td class="signature-block">
@@ -468,8 +468,8 @@
                         <p class="signature-name">{{ $signatureValues['received_by'] ?: ' ' }}</p>
                         <p class="signature-title">{{ $signatureValues['received_by_title'] ?: ' ' }}</p>
                     @else
-                        <input type="text" class="signature-name" name="received_by" value="{{ $signatureValues['received_by'] }}" placeholder="Enter name" aria-label="Received by name">
-                        <input type="text" class="signature-title" name="received_by_title" value="{{ $signatureValues['received_by_title'] }}" placeholder="Enter title" aria-label="Received by title">
+                        <input type="text" class="signature-name" name="received_by" value="{{ $signatureValues['received_by'] }}" placeholder="Enter name" aria-label="Received by name" maxlength="120">
+                        <input type="text" class="signature-title" name="received_by_title" value="{{ $signatureValues['received_by_title'] }}" placeholder="Enter title" aria-label="Received by title" maxlength="120">
                     @endif
                 </td>
             </tr>
