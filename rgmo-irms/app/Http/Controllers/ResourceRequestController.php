@@ -349,6 +349,22 @@ class ResourceRequestController extends Controller
      *
      * @throws AuthorizationException
      */
+    public function releases()
+    {
+        abort_unless(auth()->user()->hasPermission('record-withdrawal'), 403);
+
+        $requests = ResourceRequest::with(['user', 'project'])
+            ->whereIn('status', [ResourceRequest::STATUS_APPROVED, ResourceRequest::STATUS_COMPLETED])
+            ->latest()->paginate(15);
+
+        return view('requests.index', [
+            'requests' => $requests,
+            'filters' => [],
+            'canReviewAllRequests' => false,
+            'releaseQueue' => true,
+        ]);
+    }
+
     public function pending()
     {
         $this->authorize('review', ResourceRequest::class);

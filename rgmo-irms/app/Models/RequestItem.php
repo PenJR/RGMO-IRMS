@@ -4,9 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RequestItem extends Model
 {
+    public function usages(): HasMany
+    {
+        return $this->hasMany(ResourceUsage::class);
+    }
+
     protected $fillable = [
         'resource_request_id',
         'inventory_item_id',

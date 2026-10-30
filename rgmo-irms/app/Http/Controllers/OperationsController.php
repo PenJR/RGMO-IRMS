@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreResourceUsageRequest;
 use App\Models\Notification;
 use App\Models\ResourceRequest;
 use App\Models\User;
 use App\Rules\CurrentProject;
+use App\Services\ResourceUsageService;
 use App\Services\RmsService;
 use App\Support\InputRules;
 use Illuminate\Http\JsonResponse;
@@ -361,16 +363,9 @@ class OperationsController extends Controller
      *
      * @return JsonResponse
      */
-    public function logResourceUsage(Request $request)
+    public function logResourceUsage(StoreResourceUsageRequest $request, ResourceUsageService $service)
     {
-        return response()->json($this->service->logResourceUsage($request->validate([
-            'inventory_item_id' => 'required|integer|min:1|exists:inventory_items,id',
-            'user_id' => 'nullable|integer|min:1|exists:users,id',
-            'project_id' => 'nullable|integer|min:1|exists:projects,id',
-            'field_id' => 'nullable|string|max:255',
-            'quantity' => 'required|integer|min:1|max:2147483647',
-            'notes' => 'nullable|string|max:5000',
-        ])), 201);
+        return response()->json($service->record($request->validated(), $request->user()), 201);
     }
 
     /**

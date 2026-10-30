@@ -106,12 +106,8 @@ class RequestWorkflowTest extends TestCase
             'quantity' => 4,
             'destination' => 'resource_request_'.$request->id,
         ]);
-        $this->assertDatabaseHas('resource_usages', [
-            'inventory_item_id' => $item->id,
-            'user_id' => $request->user_id,
-            'project_id' => $request->project_id,
-            'quantity' => 4,
-        ]);
+        $this->assertDatabaseCount('resource_usages', 0);
+        $this->assertTrue($request->tracks_utilization);
         $this->assertTrue(AuditLog::where('action', 'fulfill')
             ->where('module', 'resource_request')
             ->where('model_id', $request->id)

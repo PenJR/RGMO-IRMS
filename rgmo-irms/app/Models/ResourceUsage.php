@@ -5,10 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class ResourceUsage extends Model
 {
     protected $fillable = [
+        'request_item_id',
+        'used_on',
+        'activity',
         'inventory_item_id',
         'user_id',
         'project_id',
@@ -16,6 +20,16 @@ class ResourceUsage extends Model
         'quantity',
         'notes',
     ];
+
+    protected function casts(): array
+    {
+        return ['used_on' => 'date'];
+    }
+
+    public function requestItem(): BelongsTo
+    {
+        return $this->belongsTo(RequestItem::class);
+    }
 
     /**
      * Handle item.
@@ -39,6 +53,18 @@ class ResourceUsage extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->isProjectManager()) {
+            $query->where(function (Builder $query) use ($user) {
+                $query->whereHas('requestItem.request', fn (Builder $request) => $request->where('user_id', $user->id))
+                    ->orWhere(fn (Builder $legacy) => $legacy->whereNull('request_item_id')->where('user_id', $user->id));
+            });
+        }
+
+        return $query;
     }
 
     // Scopes
@@ -71,6 +97,7 @@ class ResourceUsage extends Model
      */
     public function scopeDateRange(Builder $query, $startDate, $endDate): Builder
     {
-        return $query->whereBetween('created_at', [$startDate, $endDate]);
+        return $query->whereDate(DB::raw('COALESCE(used_on, created_at)'), '>=', $startDate)
+            ->whereDate(DB::raw('COALESCE(used_on, created_at)'), '<=', $endDate);
     }
 }

@@ -22,7 +22,10 @@ class ResourceRequestPolicy
      */
     public function view(User $user, ResourceRequest $request): bool
     {
-        return $user->id === $request->user_id || $user->hasPermission('review-request') || $user->hasPermission('approve-request');
+        return $user->id === $request->user_id
+            || $user->hasPermission(['review-request', 'approve-request'])
+            || ($user->hasPermission('record-withdrawal')
+                && in_array($request->status, [ResourceRequest::STATUS_APPROVED, ResourceRequest::STATUS_COMPLETED], true));
     }
 
     /**

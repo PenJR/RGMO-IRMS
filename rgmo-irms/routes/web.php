@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ResourceRequestController;
+use App\Http\Controllers\ResourceUsageController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\TwoFactorController;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +27,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:generate-reports,view-audit-trail')
         ->name('dashboard.data');
     Route::get('/staff/dashboard', [DashboardController::class, 'staff'])->name('dashboard.staff');
-    Route::middleware(['permission:generate-reports,view-audit-trail'])->group(function () {
+    Route::middleware(['permission:view-audit-trail'])->group(function () {
         Route::get('/dashboard/health', [DashboardController::class, 'health'])->name('dashboard.health');
         Route::get('/dashboard/health/data', [DashboardController::class, 'healthData'])->name('dashboard.health.data');
     });
@@ -73,11 +74,17 @@ Route::middleware('auth')->group(function () {
 
     // Resource Request Module
     Route::middleware(['permission:submit-request,update-pending-request,review-request,approve-request'])->group(function () {
+        Route::get('/requests/releases', [ResourceRequestController::class, 'releases'])->middleware('permission:record-withdrawal')->name('requests.releases');
         Route::get('/requests/pending/list', [ResourceRequestController::class, 'pending'])->name('requests.pending');
         Route::get('/requests/{request}/withdrawal-slip/download', [ResourceRequestController::class, 'downloadWithdrawalSlip'])->name('requests.withdrawal-slip.download');
         Route::get('/requests/{request}/withdrawal-slip', [ResourceRequestController::class, 'withdrawalSlip'])->name('requests.withdrawal-slip');
         Route::post('/requests/{request}/fulfill', [ResourceRequestController::class, 'fulfill'])->name('requests.fulfill');
         Route::resource('requests', ResourceRequestController::class);
+    });
+
+    Route::middleware('permission:record-utilization')->group(function () {
+        Route::get('/utilization', [ResourceUsageController::class, 'index'])->name('utilization.index');
+        Route::post('/utilization', [ResourceUsageController::class, 'store'])->name('utilization.store');
     });
 
     // Project Management
@@ -115,7 +122,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['permission:generate-reports,view-audit-trail'])->group(function () {
         Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
         Route::get('/reports/resource-usage', [ReportController::class, 'resourceUsage'])->name('reports.resource-usage');
-        Route::get('/reports/audit-trail', [ReportController::class, 'auditTrail'])->name('reports.audit-trail');
+        Route::get('/reports/audit-trail', [ReportController::class, 'auditTrail'])->middleware('permission:view-audit-trail')->name('reports.audit-trail');
         Route::get('/reports/requests', [ReportController::class, 'requests'])->name('reports.requests');
 
         // Special Agricultural Reports
@@ -129,7 +136,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/biological-assets/export-pdf', [ReportController::class, 'exportBiologicalAssetsPdf'])->name('reports.biological-assets.export-pdf');
         Route::get('/reports/supplies-issuance/export-pdf', [ReportController::class, 'exportSuppliesIssuancePdf'])->name('reports.supplies-issuance.export-pdf');
         Route::get('/reports/monthly-inventory/export-pdf', [ReportController::class, 'exportMonthlyInventoryPdf'])->name('reports.monthly-inventory.export-pdf');
-        Route::get('/reports/audit-trail/export-csv', [ReportController::class, 'exportAuditTrailCsv'])->name('reports.audit-trail.export-csv');
+        Route::get('/reports/audit-trail/export-csv', [ReportController::class, 'exportAuditTrailCsv'])->middleware('permission:view-audit-trail')->name('reports.audit-trail.export-csv');
     });
 
     // Admin Panel

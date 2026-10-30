@@ -32,7 +32,7 @@ Route::middleware(['auth', 'permission:receive-notifications'])->prefix('notific
     Route::patch('/read-all', [NotificationController::class, 'markAllAsRead']);
 });
 
-Route::middleware(['auth', 'permission:generate-reports,view-audit-trail'])
+Route::middleware(['auth', 'permission:view-audit-trail'])
     ->get('/dashboard/health', [DashboardController::class, 'healthData']);
 
 Route::middleware(['auth', 'permission:manage-users'])->prefix('users')->group(function () {
@@ -84,7 +84,7 @@ Route::middleware('auth')->prefix('ops')->group(function () {
         Route::get('/dashboard/staff/{userId}/requests', [OperationsController::class, 'getStaffRequests']);
     });
 
-    Route::middleware('permission:submit-request,update-pending-request')->group(function () {
+    Route::middleware('permission:submit-request,update-pending-request,monitor-status')->group(function () {
         Route::post('/requests', [OperationsController::class, 'createRequest']);
         Route::post('/requests/{requestId}/items', [OperationsController::class, 'addRequestItem']);
         Route::put('/requests/{requestId}', [OperationsController::class, 'updateRequest']);
@@ -105,12 +105,12 @@ Route::middleware('auth')->prefix('ops')->group(function () {
 
     Route::middleware('permission:generate-reports,view-audit-trail,view-forecasts')->group(function () {
         Route::get('/dashboard/admin/stats', [OperationsController::class, 'getAdminStats']);
-        Route::get('/dashboard/admin/total-users', [OperationsController::class, 'getTotalUsers']);
+        Route::get('/dashboard/admin/total-users', [OperationsController::class, 'getTotalUsers'])->middleware('permission:manage-users');
         Route::get('/dashboard/admin/total-inventory-items', [OperationsController::class, 'getTotalInventoryItems']);
-        Route::get('/dashboard/admin/recent-activities', [OperationsController::class, 'getRecentActivities']);
+        Route::get('/dashboard/admin/recent-activities', [OperationsController::class, 'getRecentActivities'])->middleware('permission:view-audit-trail');
     });
 
-    Route::middleware('permission:record-utilization,record-withdrawal')->group(function () {
+    Route::middleware('permission:record-utilization')->group(function () {
         Route::post('/monitoring/usage', [OperationsController::class, 'logResourceUsage']);
         Route::get('/monitoring/usage/field/{fieldId}', [OperationsController::class, 'getResourceUsageByField']);
         Route::get('/monitoring/usage/item/{itemId}', [OperationsController::class, 'getResourceUsageHistory']);
@@ -125,9 +125,9 @@ Route::middleware('auth')->prefix('ops')->group(function () {
         Route::get('/reports/consumption', [OperationsController::class, 'generateConsumptionReport']);
         Route::post('/reports/export-pdf', [OperationsController::class, 'exportReportPDF']);
         Route::post('/reports/export-excel', [OperationsController::class, 'exportReportExcel']);
-        Route::get('/audit/logs', [OperationsController::class, 'getAuditLogs']);
-        Route::get('/audit/logs/users/{userId}', [OperationsController::class, 'getUserAuditLogs']);
-        Route::post('/audit/logs/filter', [OperationsController::class, 'filterAuditLogs']);
+        Route::get('/audit/logs', [OperationsController::class, 'getAuditLogs'])->middleware('permission:view-audit-trail');
+        Route::get('/audit/logs/users/{userId}', [OperationsController::class, 'getUserAuditLogs'])->middleware('permission:view-audit-trail');
+        Route::post('/audit/logs/filter', [OperationsController::class, 'filterAuditLogs'])->middleware('permission:view-audit-trail');
     });
 
     Route::middleware('permission:receive-notifications')->group(function () {
@@ -138,7 +138,7 @@ Route::middleware('auth')->prefix('ops')->group(function () {
         Route::post('/notifications/requests/{requestId}/status', [OperationsController::class, 'sendRequestStatusNotification']);
     });
 
-    Route::middleware('permission:view-forecasts')->group(function () {
+    Route::middleware('permission:manage-forecasting-settings')->group(function () {
         Route::get('/settings', [OperationsController::class, 'getSystemSettings']);
         Route::get('/settings/roles-permissions', [OperationsController::class, 'manageRolesPermissions']);
     });

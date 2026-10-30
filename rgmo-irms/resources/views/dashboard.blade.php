@@ -359,6 +359,7 @@
             </div>
         </div>
 
+        @if(auth()->user()->hasPermission('view-audit-trail'))
         <details class="dashboard-disclosure dashboard-disclosure--activity">
             <summary>
                 <span class="dashboard-disclosure__icon"><i data-lucide="history" aria-hidden="true"></i></span>
@@ -411,6 +412,7 @@
         </div>
             </div>
         </details>
+        @endif
     </div>
 
     @push('scripts')

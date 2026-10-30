@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\InventoryItem;
+use App\Models\User;
 
 class InventoryItemPolicy
 {
@@ -68,7 +68,7 @@ class InventoryItemPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermission('view-inventory') || $user->hasPermission('generate-reports');
+        return $user->hasPermission('generate-reports');
     }
 
     /**

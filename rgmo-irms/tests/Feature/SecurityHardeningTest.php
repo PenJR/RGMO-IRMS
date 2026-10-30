@@ -33,9 +33,9 @@ class SecurityHardeningTest extends TestCase
 
     public function test_forecast_viewer_cannot_change_system_settings(): void
     {
-        $manager = $this->activeUser(User::ROLE_PROJECT_MANAGER);
+        $head = $this->activeUser(User::ROLE_RGMO_HEAD);
 
-        $this->actingAs($manager)
+        $this->actingAs($head)
             ->putJson('/api/ops/settings', ['settings' => ['low_stock_threshold' => 999]])
             ->assertForbidden();
     }
@@ -60,13 +60,13 @@ class SecurityHardeningTest extends TestCase
 
     public function test_report_authorized_user_can_access_system_dashboard(): void
     {
-        $manager = $this->activeUser(User::ROLE_PROJECT_MANAGER);
+        $head = $this->activeUser(User::ROLE_RGMO_HEAD);
 
-        $this->actingAs($manager)
+        $this->actingAs($head)
             ->get(route('dashboard'))
             ->assertOk();
 
-        $this->actingAs($manager)
+        $this->actingAs($head)
             ->getJson(route('dashboard.data'))
             ->assertOk();
     }

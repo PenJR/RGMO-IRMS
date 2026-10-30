@@ -24,6 +24,9 @@
                         Edit &amp; Download Receipt
                     </a>
                 @endif
+                @if(auth()->user()->hasPermission('record-utilization') && $request->tracks_utilization && $request->fulfilled_at)
+                    <a href="{{ route('utilization.index') }}" class="btn btn-cmu">Record Utilization</a>
+                @endif
                 <a href="{{ route('requests.index') }}" class="btn btn-outline-secondary">Back to Requests</a>
                 @can('update', $request)
                     <a href="{{ route('requests.edit', ['request' => $request->id]) }}" class="btn btn-outline-primary">Edit</a>

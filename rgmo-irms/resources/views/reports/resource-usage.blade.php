@@ -9,6 +9,7 @@
     <div class="container-fluid py-4">
         <x-breadcrumb :items="['Reports' => '#', 'Resource Usage' => route('reports.resource-usage')]" />
 
+        <p class="text-muted">Historical records may represent quantities released. New linked records show actual utilization.</p>
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
                 <form method="GET" action="{{ route('reports.resource-usage') }}" class="row g-3">
@@ -39,7 +40,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
                                 <h5 class="fw-bold mb-0">Resource Consumption Density</h5>
-                                <p class="text-muted small mb-0">Analysis of the most frequently requested items</p>
+                                <p class="text-muted small mb-0">Recorded usage quantities by item</p>
                             </div>
                             <i data-lucide="pie-chart" class="text-primary opacity-50" style="width: 24px"></i>
                         </div>
@@ -53,7 +54,7 @@
 
         <div class="card border-0 shadow-sm bg-transparent shadow-none">
             <div class="card-body p-0">
-                @if(!empty($report['items']) && count($report['items']) > 0)
+                @if(!empty($report['usages']) && count($report['usages']) > 0)
                     <div class="table-responsive">
                         <table class="table table-modern align-middle" data-enhanced-table data-page-size="10" data-table-label="usage records" data-search-placeholder="Search usage records…">
                             <thead>
@@ -66,13 +67,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($report['items'] as $usage)
+                                @foreach($report['usages'] as $usage)
                                     <tr>
-                                        <td>{{ $usage->date?->format('M d, Y') ?? 'N/A' }}</td>
+                                        <td>{{ ($usage->used_on ?? $usage->created_at)?->format('M d, Y') ?? 'N/A' }}</td>
                                         <td>{{ $usage->user?->name ?? 'Unknown' }}</td>
                                         <td>{{ $usage->item?->name ?? 'Unknown' }}</td>
                                         <td>{{ $usage->quantity }}</td>
-                                        <td>{{ Str::limit($usage->purpose ?? 'N/A', 60) }}</td>
+                                        <td>{{ Str::limit($usage->activity ?? $usage->notes ?? 'N/A', 60) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -95,10 +96,10 @@
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Bond Paper', 'Ink Cartridges', 'Envelopes', 'Pens', 'Staples', 'Folders'],
+                    labels: @json($report['usages']->groupBy('inventory_item_id')->map(fn ($rows) => $rows->first()->item?->name ?? 'Unknown')->values()),
                     datasets: [{
                         label: 'Total Quantity Consumed',
-                        data: [150, 45, 80, 200, 60, 95],
+                        data: @json($report['usages']->groupBy('inventory_item_id')->map(fn ($rows) => $rows->sum('quantity'))->values()),
                         backgroundColor: '#FFCC00',
                         borderRadius: 6,
                         maxBarThickness: 40

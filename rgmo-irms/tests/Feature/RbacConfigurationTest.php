@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Category;
 use App\Models\InventoryItem;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -51,7 +51,7 @@ class RbacConfigurationTest extends TestCase
             $response->assertOk();
 
             foreach (User::availableRoles() as $role) {
-                $response->assertSee('value="' . $role . '"', false);
+                $response->assertSee('value="'.$role.'"', false);
             }
         }
     }
@@ -66,21 +66,21 @@ class RbacConfigurationTest extends TestCase
         $this->actingAs($staff)
             ->get(route('dashboard.staff'))
             ->assertOk()
-            ->assertSee('href="' . route('inventory.index') . '"', false)
+            ->assertSee('href="'.route('inventory.index').'"', false)
             ->assertSee('class="rgmo-progress"', false)
             ->assertSee('href="#main-content"', false)
             ->assertDontSee('rgmo-loader__mark', false)
-            ->assertDontSee('href="' . route('reports.inventory') . '"', false)
-            ->assertDontSee('href="' . route('ai-forecasting.index') . '"', false);
+            ->assertDontSee('href="'.route('reports.inventory').'"', false)
+            ->assertDontSee('href="'.route('ai-forecasting.index').'"', false);
 
         $manager = $this->activeUser(User::ROLE_PROJECT_MANAGER);
 
         $this->actingAs($manager)
-            ->get(route('dashboard'))
+            ->get(route('dashboard.staff'))
             ->assertOk()
-            ->assertSee('href="' . route('inventory.index') . '"', false)
-            ->assertSee('href="' . route('reports.inventory') . '"', false)
-            ->assertSee('href="' . route('ai-forecasting.index') . '"', false);
+            ->assertSee('href="'.route('inventory.index').'"', false)
+            ->assertDontSee('href="'.route('reports.inventory').'"', false)
+            ->assertDontSee('href="'.route('ai-forecasting.index').'"', false);
     }
 
     /**

@@ -126,7 +126,7 @@ class HighPriorityFixesTest extends TestCase
 
         $this->assertSame(16, $item->fresh()->stock);
         $this->assertDatabaseCount('inventory_transactions', 1);
-        $this->assertDatabaseCount('resource_usages', 1);
+        $this->assertDatabaseCount('resource_usages', 0);
 
         $this->get(route('reports.supplies-issuance', [
             'month' => $request->fresh()->fulfilled_at->month,

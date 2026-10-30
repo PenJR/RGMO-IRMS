@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center w-100">
             <div>
-                <h2 class="fw-bold mb-1">{{ $canReviewAllRequests ? 'Resource Requests' : 'My Requests' }}</h2>
-                <p class="text-muted mb-0">{{ $canReviewAllRequests ? 'Review all submitted resource requests across the system.' : 'Track the status and needed dates of your submitted requests.' }}</p>
+                <h2 class="fw-bold mb-1">{{ ($releaseQueue ?? false) ? 'Withdrawals' : ($canReviewAllRequests ? 'Resource Requests' : 'My Requests') }}</h2>
+                <p class="text-muted mb-0">{{ ($releaseQueue ?? false) ? 'Release approved requests and view completed withdrawals.' : ($canReviewAllRequests ? 'Review all submitted resource requests across the system.' : 'Track the status and needed dates of your submitted requests.') }}</p>
             </div>
             <div class="d-flex gap-2">
                 @can('review', App\Models\ResourceRequest::class)
@@ -19,6 +19,7 @@
     <div class="container-fluid py-4">
         <x-breadcrumb :items="['Requests' => route('requests.index')]" />
 
+        @unless($releaseQueue ?? false)
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
                 <form method="GET" action="{{ route('requests.index') }}" class="row g-3">
@@ -53,6 +54,7 @@
             </div>
         </div>
 
+        @endunless
         <div class="card border-0 shadow-sm bg-transparent shadow-none">
             <div class="card-body p-0">
                 @if($requests->count() > 0)
@@ -109,7 +111,9 @@
                     <div class="text-center py-5">
                         <h5 class="mb-2">No requests found</h5>
                         <p class="text-muted mb-3">Adjust your filters to locate the request you are looking for.</p>
+                        @can('create', App\Models\ResourceRequest::class)
                         <a href="{{ route('requests.create') }}" class="btn btn-cmu">Create a Request</a>
+                        @endcan
                     </div>
                 @endif
             </div>

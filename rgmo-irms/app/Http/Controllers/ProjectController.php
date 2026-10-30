@@ -20,7 +20,7 @@ class ProjectController extends Controller
         $filters = $request->validate(InputRules::projectFilters());
         $projects = Project::query()
             ->with('managers')
-            ->withCount('resourceUsages')
+            ->withCount(['resourceUsages' => fn ($query) => $query->visibleTo(auth()->user())])
             ->search($filters['search'] ?? null)
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->latest()
@@ -75,6 +75,7 @@ class ProjectController extends Controller
 
         $project->load([
             'managers',
+            'resourceUsages' => fn ($query) => $query->visibleTo(auth()->user()),
             'resourceUsages.item.category',
             'resourceUsages.user',
         ]);

@@ -36,8 +36,8 @@ class AIForecastingTest extends TestCase
      */
     public function test_forecasting_page_renders_real_inventory_predictions(): void
     {
-        $manager = User::factory()->create([
-            'role' => User::ROLE_PROJECT_MANAGER,
+        $head = User::factory()->create([
+            'role' => User::ROLE_RGMO_HEAD,
             'status' => User::STATUS_ACTIVE,
             'email_verified_at' => now(),
         ]);
@@ -54,7 +54,7 @@ class AIForecastingTest extends TestCase
         foreach ([160, 130, 100, 70, 40, 10] as $daysAgo) {
             InventoryTransaction::forceCreate([
                 'inventory_item_id' => $item->id,
-                'user_id' => $manager->id,
+                'user_id' => $head->id,
                 'transaction_type' => 'stock_out',
                 'quantity' => 30,
                 'destination' => 'Field project',
@@ -63,7 +63,7 @@ class AIForecastingTest extends TestCase
             ]);
         }
 
-        $this->actingAs($manager)
+        $this->actingAs($head)
             ->get(route('ai-forecasting.index'))
             ->assertOk()
             ->assertSee('Demand Prediction by Item')
@@ -99,8 +99,8 @@ class AIForecastingTest extends TestCase
 
     public function test_user_can_select_a_one_week_forecast_period(): void
     {
-        $manager = User::factory()->create([
-            'role' => User::ROLE_PROJECT_MANAGER,
+        $head = User::factory()->create([
+            'role' => User::ROLE_RGMO_HEAD,
             'status' => User::STATUS_ACTIVE,
             'email_verified_at' => now(),
         ]);
@@ -117,7 +117,7 @@ class AIForecastingTest extends TestCase
         foreach (range(1, 90) as $daysAgo) {
             InventoryTransaction::forceCreate([
                 'inventory_item_id' => $item->id,
-                'user_id' => $manager->id,
+                'user_id' => $head->id,
                 'transaction_type' => 'stock_out',
                 'quantity' => 1,
                 'destination' => 'Field project',
@@ -126,7 +126,7 @@ class AIForecastingTest extends TestCase
             ]);
         }
 
-        $this->actingAs($manager)
+        $this->actingAs($head)
             ->get(route('ai-forecasting.index', ['forecast_days' => 7]))
             ->assertOk()
             ->assertSee('Projected 7-Day Demand')
@@ -139,13 +139,13 @@ class AIForecastingTest extends TestCase
 
     public function test_unsupported_forecast_period_is_rejected(): void
     {
-        $manager = User::factory()->create([
-            'role' => User::ROLE_PROJECT_MANAGER,
+        $head = User::factory()->create([
+            'role' => User::ROLE_RGMO_HEAD,
             'status' => User::STATUS_ACTIVE,
             'email_verified_at' => now(),
         ]);
 
-        $this->actingAs($manager)
+        $this->actingAs($head)
             ->getJson(route('ai-forecasting.index', ['forecast_days' => 365]))
             ->assertUnprocessable()
             ->assertJsonValidationErrors('forecast_days');
@@ -355,13 +355,13 @@ class AIForecastingTest extends TestCase
                 ]],
             ]),
         ]);
-        $manager = User::factory()->create([
-            'role' => User::ROLE_PROJECT_MANAGER,
+        $head = User::factory()->create([
+            'role' => User::ROLE_RGMO_HEAD,
             'status' => User::STATUS_ACTIVE,
             'email_verified_at' => now(),
         ]);
 
-        $this->actingAs($manager)
+        $this->actingAs($head)
             ->get(route('ai-forecasting.index'))
             ->assertOk()
             ->assertSee('Generating the AI brief');

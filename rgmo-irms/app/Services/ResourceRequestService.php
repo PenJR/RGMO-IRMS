@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\RequestItem;
 use App\Models\ResourceRequest;
-use App\Models\ResourceUsage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -271,19 +270,12 @@ class ResourceRequestService
                     'resource_request_'.$lockedRequest->id,
                     auth()->id()
                 );
-
-                ResourceUsage::create([
-                    'inventory_item_id' => $item->inventory_item_id,
-                    'user_id' => $lockedRequest->user_id,
-                    'project_id' => $lockedRequest->project_id,
-                    'quantity' => $item->quantity,
-                    'notes' => 'Released through resource request #RQ-'.$lockedRequest->id,
-                ]);
             }
 
             $lockedRequest->update([
                 'status' => ResourceRequest::STATUS_COMPLETED,
                 'fulfilled_at' => now(),
+                'tracks_utilization' => true,
             ]);
 
             AuditLog::log(

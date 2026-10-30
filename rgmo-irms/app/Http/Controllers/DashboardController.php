@@ -31,7 +31,9 @@ class DashboardController extends Controller
         $stats = $this->reportService->getDashboardStats();
         $lowStockItems = InventoryItem::lowStock()->orderBy('stock')->limit(5)->get();
         $recentRequests = ResourceRequest::latest()->limit(5)->with('user')->get();
-        $recentActivities = AuditLog::latest()->limit(10)->with('user')->get();
+        $recentActivities = auth()->user()->hasPermission('view-audit-trail')
+            ? AuditLog::latest()->limit(10)->with('user')->get()
+            : collect();
 
         return view('dashboard', [
             'stats' => $stats,

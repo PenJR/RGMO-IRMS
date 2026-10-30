@@ -383,7 +383,10 @@ class RmsService
     /**
      * Log resource usage.
      */
-    public function logResourceUsage(array $data): ResourceUsage { return ResourceUsage::create($data); }
+    public function logResourceUsage(array $data): ResourceUsage
+    {
+        return app(ResourceUsageService::class)->record($data, auth()->user());
+    }
     /**
      * Get resource usage by field.
      */

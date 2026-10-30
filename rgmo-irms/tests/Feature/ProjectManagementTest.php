@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\InventoryItem;
 use App\Models\Project;
 use App\Models\ResourceUsage;
 use App\Models\User;
-use App\Models\Category;
-use App\Models\InventoryItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -42,12 +42,12 @@ class ProjectManagementTest extends TestCase
     }
 
     /**
-     * Verify that rgmo head can create project with project manager assignment.
+     * Verify that admin can create project with project manager assignment.
      */
-    public function test_rgmo_head_can_create_project_with_project_manager_assignment(): void
+    public function test_admin_can_create_project_with_project_manager_assignment(): void
     {
-        $head = User::factory()->create([
-            'role' => User::ROLE_RGMO_HEAD,
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
             'status' => User::STATUS_ACTIVE,
             'email_verified_at' => now(),
         ]);
@@ -58,7 +58,7 @@ class ProjectManagementTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        $response = $this->actingAs($head)->post(route('projects.store'), [
+        $response = $this->actingAs($admin)->post(route('projects.store'), [
             'name' => 'Rice Program',
             'code' => 'PRJ-RICE',
             'status' => Project::STATUS_ACTIVE,

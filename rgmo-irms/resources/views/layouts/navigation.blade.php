@@ -22,7 +22,7 @@
             <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
         </a>
 
-        @if(auth()->user()->hasPermission(['generate-reports', 'view-audit-trail']))
+        @if(auth()->user()->hasPermission('view-audit-trail'))
             <a href="{{ route('dashboard.health') }}" class="nav-link {{ request()->routeIs('dashboard.health*') ? 'active' : '' }}" data-sidebar-item="health" draggable="true" data-sidebar-tooltip="Module Health" aria-label="Module Health">
                 <span class="nav-icon"><i data-lucide="activity"></i></span>
                 <span class="nav-label">Module Health</span>
@@ -59,7 +59,7 @@
         @endcan
 
         @if(auth()->user()->can('viewAny', App\Models\ResourceRequest::class) || auth()->user()->can('create', App\Models\ResourceRequest::class))
-            <details class="nav-group {{ request()->routeIs('requests.*') ? 'active' : '' }}" data-sidebar-item="requests" draggable="true" {{ request()->routeIs('requests.*') ? 'open' : '' }}>
+            <details class="nav-group {{ request()->routeIs('requests.*', 'utilization.*') ? 'active' : '' }}" data-sidebar-item="requests" draggable="true" {{ request()->routeIs('requests.*', 'utilization.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle" data-sidebar-tooltip="Requests" aria-label="Requests">
                         <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
@@ -70,8 +70,14 @@
                 </summary>
                 <div class="nav-submenu">
                     @can('viewAny', App\Models\ResourceRequest::class)
-                        <a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('requests.index') ? 'active' : '' }}">All Requests</a>
+                        <a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('requests.index') ? 'active' : '' }}">{{ auth()->user()->hasPermission(['review-request', 'approve-request']) ? 'All Requests' : 'My Requests' }}</a>
                     @endcan
+                    @if(auth()->user()->hasPermission('record-withdrawal'))
+                        <a href="{{ route('requests.releases') }}" class="nav-link {{ request()->routeIs('requests.releases') ? 'active' : '' }}">Withdrawals</a>
+                    @endif
+                    @if(auth()->user()->hasPermission('record-utilization'))
+                        <a href="{{ route('utilization.index') }}" class="nav-link {{ request()->routeIs('utilization.*') ? 'active' : '' }}">Record Utilization</a>
+                    @endif
                     @can('review', App\Models\ResourceRequest::class)
                         <a href="{{ route('requests.pending') }}" class="nav-link {{ request()->routeIs('requests.pending') ? 'active' : '' }}">Pending List</a>
                     @endcan
@@ -100,7 +106,9 @@
                     <hr class="dropdown-divider bg-white opacity-25 mx-3">
                     <a href="{{ route('reports.resource-usage') }}" class="nav-link {{ request()->routeIs('reports.resource-usage') ? 'active' : '' }}">Resource Usage</a>
                     <a href="{{ route('reports.requests') }}" class="nav-link {{ request()->routeIs('reports.requests') ? 'active' : '' }}">Request Analytics</a>
+                    @if(auth()->user()->hasPermission('view-audit-trail'))
                     <a href="{{ route('reports.audit-trail') }}" class="nav-link {{ request()->routeIs('reports.audit-trail') ? 'active' : '' }}">Audit Trail</a>
+                    @endif
                 </div>
             </details>
         @endif
