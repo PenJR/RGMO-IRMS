@@ -32,7 +32,7 @@ class InventoryController extends Controller
     private function units(): array
     {
         return [
-            'pcs', 'box', 'pack', 'kg', 'g', 'l', 'ml', 'set', 'roll', 'm', 'cm',
+            'pcs', 'box', 'pack', 'sacks', 'kg', 'g', 'l', 'ml', 'set', 'roll', 'm', 'cm',
         ];
     }
 

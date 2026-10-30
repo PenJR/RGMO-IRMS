@@ -12,6 +12,34 @@ class InventoryImprovementTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_inventory_can_be_created_and_updated_with_sacks(): void
+    {
+        $this->actingAs($this->activeAdmin());
+        $category = Category::create(['name' => 'Supplies']);
+        $data = [
+            'category_id' => $category->id,
+            'name' => 'Rice Seeds',
+            'sku' => 'SEEDS-SACKS',
+            'stock' => 10,
+            'unit' => 'sacks',
+            'min_stock' => 2,
+        ];
+
+        $this->get(route('inventory.create'))
+            ->assertOk()->assertSee('value="sacks"', false);
+        $this->post(route('inventory.store'), $data)
+            ->assertSessionHasNoErrors()->assertRedirect();
+        $item = InventoryItem::where('sku', $data['sku'])->firstOrFail();
+        $this->assertSame('sacks', $item->unit);
+
+        $this->get(route('inventory.edit', $item))
+            ->assertOk()->assertSee('value="sacks" selected', false);
+        $this->put(route('inventory.update', $item), [...$data, 'stock' => 12])
+            ->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertSame('sacks', $item->fresh()->unit);
+        $this->assertSame(12, $item->fresh()->stock);
+    }
+
     public function test_inventory_can_filter_items_that_need_reorder(): void
     {
         $admin = $this->activeAdmin();
