@@ -13,7 +13,7 @@
                     </a>
                 @endcan
                 @can('delete', $item)
-                    <form action="{{ route('inventory.destroy', ['inventory' => $item->id]) }}" method="POST" onsubmit="return confirm('Delete this item?');">
+                    <form action="{{ route('inventory.destroy', ['inventory' => $item->id]) }}" method="POST" data-confirm="Delete this item?">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-outline-danger">

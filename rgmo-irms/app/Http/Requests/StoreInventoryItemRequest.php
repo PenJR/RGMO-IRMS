@@ -21,7 +21,8 @@ class StoreInventoryItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => 'required|integer|min:1|exists:categories,id',
+            'category_id' => 'nullable|required_without:category_name|prohibits:category_name|integer|min:1|exists:categories,id,deleted_at,NULL',
+            'category_name' => 'nullable|required_without:category_id|string|max:255',
             'name' => 'required|string|max:255',
             'sku' => 'required|string|max:255|unique:inventory_items,sku',
             'stock' => 'required|integer|min:0|max:2147483647',

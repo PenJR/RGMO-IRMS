@@ -152,14 +152,12 @@ class InventoryController extends Controller
 
         $this->authorize('update', $item);
 
-        $units = config('inventory.units', $this->units());
-
         $validated = $request->validate([
-            'category_id' => 'required|integer|min:1|exists:categories,id',
+            'category_id' => 'sometimes|required|integer|min:1|exists:categories,id',
             'name' => 'required|string|max:255',
             'sku' => 'required|string|max:255|unique:inventory_items,sku,'.$item->id,
             'stock' => 'required|integer|min:0|max:2147483647',
-            'unit' => 'required|in:'.implode(',', $units),
+            'unit' => 'sometimes|required|string|max:30',
             'min_stock' => 'required|integer|min:0|max:2147483647',
             'reorder_level' => 'nullable|integer|min:0|max:2147483647',
             'price' => 'nullable|numeric|min:0|max:9999999999.99|decimal:0,2',
@@ -477,26 +475,9 @@ class InventoryController extends Controller
     /**
      * Create inventory item.
      */
-    public function createInventoryItem(Request $request)
+    public function createInventoryItem(StoreInventoryItemRequest $request)
     {
-        $this->authorize('create', InventoryItem::class);
-
-        $units = config('inventory.units', $this->units());
-
-        $validated = $request->validate([
-            'category_id' => 'required|integer|min:1|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:inventory_items,sku',
-            'stock' => 'required|integer|min:0|max:2147483647',
-            'unit' => 'required|in:'.implode(',', $units),
-            'min_stock' => 'required|integer|min:0|max:2147483647',
-            'reorder_level' => 'nullable|integer|min:0|max:2147483647',
-            'price' => 'nullable|numeric|min:0|max:9999999999.99|decimal:0,2',
-            'description' => 'nullable|string|max:5000',
-            'planting_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
-            'has_expiry' => 'sometimes|boolean',
-            'expiry_date' => 'nullable|required_if:has_expiry,1|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
-        ]);
+        $validated = $request->validated();
 
         $validated['has_expiry'] = $request->boolean('has_expiry');
         $validated['expiry_date'] = $validated['has_expiry'] ? ($validated['expiry_date'] ?? null) : null;
@@ -524,14 +505,13 @@ class InventoryController extends Controller
     {
         $item = InventoryItem::findOrFail($id);
         $this->authorize('update', $item);
-        $units = config('inventory.units', $this->units());
 
         $validated = $request->validate([
             'category_id' => 'sometimes|required|integer|min:1|exists:categories,id',
             'name' => 'sometimes|required|string|max:255',
             'sku' => 'sometimes|required|string|max:255|unique:inventory_items,sku,'.$item->id,
             'stock' => 'sometimes|required|integer|min:0|max:2147483647',
-            'unit' => 'sometimes|required|in:'.implode(',', $units),
+            'unit' => 'sometimes|required|string|max:30',
             'min_stock' => 'sometimes|required|integer|min:0|max:2147483647',
             'reorder_level' => 'nullable|integer|min:0|max:2147483647',
             'price' => 'nullable|numeric|min:0|max:9999999999.99|decimal:0,2',

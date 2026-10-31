@@ -51,14 +51,20 @@
 
                                     <div class="row g-4">
                                         <div class="col-md-6">
-                                            <label class="form-label">Category</label>
-                                            <select name="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
-                                                <option value="">Choose category</option>
+                                            <label class="form-label" for="category_id">Resource Type</label>
+                                            <select id="category_id" name="category_id" class="form-select @error('category_id') is-invalid @enderror">
+                                                <option value="">Add a new resource type…</option>
                                                 @foreach($categories as $category)
                                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                                                 @endforeach
                                             </select>
                                             @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            <div id="new-type-group" class="mt-3">
+                                                <label class="form-label" for="category_name">New Resource Type</label>
+                                                <input id="category_name" name="category_name" value="{{ old('category_name') }}" maxlength="255" placeholder="e.g., Animal Feed" class="form-control @error('category_name') is-invalid @enderror">
+                                                @error('category_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            </div>
+                                            <div class="form-text">Choose an existing type or add your own. Type and unit cannot be changed after saving.</div>
                                         </div>
 
                                         <div class="col-md-6">
@@ -144,6 +150,18 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const typeSelect = document.getElementById('category_id');
+            const typeInput = document.getElementById('category_name');
+            const typeGroup = document.getElementById('new-type-group');
+            const syncType = () => {
+                const isNew = !typeSelect.value;
+                typeGroup.hidden = !isNew;
+                typeInput.disabled = !isNew;
+                typeInput.required = isNew;
+            };
+            typeSelect.addEventListener('change', syncType);
+            syncType();
+
             const toggle = document.getElementById('has_expiry');
             const group = document.getElementById('expiry_date_group');
             const input = document.getElementById('expiry_date');

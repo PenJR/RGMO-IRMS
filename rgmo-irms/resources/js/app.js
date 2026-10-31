@@ -1,4 +1,5 @@
 import './bootstrap';
+import './feedback';
 import Chart from 'chart.js/auto';
 import {
     Activity, AlertCircle, AlertTriangle, ArrowLeft, ArrowUpRight, BadgeCheck,

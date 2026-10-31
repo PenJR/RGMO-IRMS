@@ -127,7 +127,6 @@ class RequestWorkflowTest extends TestCase
         ]);
         $request->items->first()->item->update([
             'name' => 'Empty Sacks Slightly Used',
-            'unit' => 'Piece',
             'price' => 17,
         ]);
         $request->approve($admin->id, 'Approved for withdrawal');

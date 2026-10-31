@@ -21,13 +21,9 @@
 
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <label class="form-label">Category</label>
-                            <select name="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
-                                <option value="">Choose category</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id', $item->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Resource Type</label>
+                            <input class="form-control" value="{{ $item->category?->name }}" readonly aria-describedby="type-locked-help">
+                            <div class="form-text" id="type-locked-help">Resource type is locked after it is set.</div>
                             @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
@@ -58,12 +54,8 @@
 
                         <div class="col-md-3">
                             <label class="form-label">Unit</label>
-                            <select name="unit" class="form-select @error('unit') is-invalid @enderror" required>
-                                <option value="">Choose unit</option>
-                                @foreach($units as $u)
-                                    <option value="{{ $u }}" {{ old('unit', $item->unit) == $u ? 'selected' : '' }}>{{ $u }}</option>
-                                @endforeach
-                            </select>
+                            <input class="form-control" value="{{ $item->unit }}" readonly aria-describedby="unit-locked-help">
+                            <div class="form-text" id="unit-locked-help">Unit is locked after it is set.</div>
                             @error('unit')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 

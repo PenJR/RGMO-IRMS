@@ -7,7 +7,7 @@ class InputSanitizer
     private const TEXT_FIELDS = [
         'site_name', 'symbol', 'name', 'description', 'purpose', 'remarks', 'notes', 'message', 'title',
         'reason', 'action', 'module', 'change_type', 'type', 'unit', 'source', 'destination', 'funding_source', 'reference', 'responsible_center',
-        'ris_no', 'sku', 'category', 'department', 'search', 'q', 'field_id',
+        'ris_no', 'sku', 'category', 'category_name', 'department', 'search', 'q', 'field_id',
         'po_number', 'pr_number', 'requested_by', 'requested_by_title', 'issued_by',
         'issued_by_title', 'noted_by', 'noted_by_title', 'received_by', 'received_by_title',
     ];

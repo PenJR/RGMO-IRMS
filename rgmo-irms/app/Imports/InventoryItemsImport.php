@@ -6,6 +6,8 @@ use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Services\InventoryService;
 use App\Support\InputSanitizer;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
@@ -14,6 +16,7 @@ use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Row;
+use Maatwebsite\Excel\Validators\Failure;
 
 class InventoryItemsImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure, WithHeadingRow, WithValidation
 {
@@ -48,42 +51,58 @@ class InventoryItemsImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
             return;
         }
 
-        $category = null;
+        try {
+            $result = DB::transaction(function () use ($values, $sku) {
+                $category = null;
 
-        if (! empty($values['category_id'])) {
-            $category = Category::find($values['category_id']);
-        }
+                if (! empty($values['category_id'])) {
+                    $category = Category::find($values['category_id']);
+                }
 
-        if (! $category && ! empty($values['category'])) {
-            $category = Category::firstOrCreate(['name' => trim($values['category'])]);
-        }
+                if (! $category && ! empty($values['category'])) {
+                    $category = Category::firstOrCreate(['name' => trim($values['category'])]);
+                }
 
-        $itemData = [
-            'category_id' => $category?->id,
-            'name' => trim($values['name'] ?? ''),
-            'sku' => $sku,
-            'stock' => isset($values['stock']) ? (int) $values['stock'] : 0,
-            'unit' => trim($values['unit'] ?? 'pcs'),
-            'min_stock' => isset($values['min_stock']) ? (int) $values['min_stock'] : 0,
-            'reorder_level' => isset($values['reorder_level']) ? (int) $values['reorder_level'] : null,
-            'price' => isset($values['price']) ? (float) $values['price'] : null,
-            'description' => trim($values['description'] ?? ''),
-        ];
+                $itemData = [
+                    'category_id' => $category?->id,
+                    'name' => trim($values['name'] ?? ''),
+                    'sku' => $sku,
+                    'stock' => isset($values['stock']) ? (int) $values['stock'] : 0,
+                    'unit' => trim($values['unit'] ?? 'pcs'),
+                    'min_stock' => isset($values['min_stock']) ? (int) $values['min_stock'] : 0,
+                    'reorder_level' => isset($values['reorder_level']) ? (int) $values['reorder_level'] : null,
+                    'price' => isset($values['price']) ? (float) $values['price'] : null,
+                    'description' => trim($values['description'] ?? ''),
+                ];
 
-        $item = InventoryItem::withTrashed()->where('sku', $itemData['sku'])->first();
+                $item = InventoryItem::withTrashed()->where('sku', $itemData['sku'])->first();
 
-        if ($item) {
-            if ($item->trashed()) {
-                $item->restore();
+                if ($item) {
+                    $wasTrashed = $item->trashed();
+                    if ($item->trashed()) {
+                        $item->restore();
+
+                    }
+
+                    $this->inventoryService->updateItem($item, $itemData, auth()->id());
+
+                    return $wasTrashed ? 'restored' : 'updated';
+                } else {
+                    $this->inventoryService->createItem($itemData, auth()->id());
+
+                    return 'created';
+                }
+            });
+            if ($result === 'restored') {
                 $this->restored++;
+                $this->updated++;
+            } else {
+                $this->{$result}++;
             }
-
-            $this->inventoryService->updateItem($item, $itemData, auth()->id());
-            $this->updated++;
-        } else {
-            $this->inventoryService->createItem($itemData, auth()->id());
-            $this->created++;
+        } catch (ValidationException $exception) {
+            $this->onFailure(new Failure($row->getIndex(), 'item', $exception->validator->errors()->all(), $values));
         }
+
     }
 
     /**

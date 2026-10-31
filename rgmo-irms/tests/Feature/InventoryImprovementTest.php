@@ -33,7 +33,7 @@ class InventoryImprovementTest extends TestCase
         $this->assertSame('sacks', $item->unit);
 
         $this->get(route('inventory.edit', $item))
-            ->assertOk()->assertSee('value="sacks" selected', false);
+            ->assertOk()->assertSee('value="sacks" readonly', false);
         $this->put(route('inventory.update', $item), [...$data, 'stock' => 12])
             ->assertSessionHasNoErrors()->assertRedirect();
         $this->assertSame('sacks', $item->fresh()->unit);

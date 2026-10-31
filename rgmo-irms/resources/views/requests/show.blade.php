@@ -174,7 +174,7 @@
 	                                        <label class="form-label">Cancellation Reason</label>
 	                                        <textarea name="remarks" class="form-control" rows="3" required maxlength="1000"></textarea>
 	                                    </div>
-	                                    <button type="submit" class="btn btn-outline-secondary w-100" onclick="return confirm('Cancel this pending request?')">Cancel Request</button>
+	                                    <button type="submit" class="btn btn-outline-secondary w-100" data-confirm="Cancel this pending request?">Cancel Request</button>
 	                                </form>
 	                            @endcan
 	                        @elseif($request->status === 'approved')
@@ -186,7 +186,7 @@
 	                                @endunless
 	                                <form action="{{ route('requests.fulfill', $request) }}" method="POST">
 	                                    @csrf
-	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }} onclick="return confirm('Fulfill this request and deduct inventory stock?')">Fulfill Request</button>
+	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }} data-confirm="Fulfill this request and deduct inventory stock?">Fulfill Request</button>
 	                                </form>
 	                            @else
 	                                <p class="text-muted mb-0">This request is approved and waiting for release.</p>

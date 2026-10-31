@@ -1883,6 +1883,90 @@ html[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
     --bs-table-bg-type: rgba(255, 255, 255, 0.025);
 }
 
+html[data-bs-theme="dark"] .table-light {
+    --bs-table-bg: #1c2d23;
+    --bs-table-color: #e8f1eb;
+    --bs-table-border-color: #304239;
+    --bs-table-striped-bg: #24382c;
+    --bs-table-striped-color: #e8f1eb;
+    --bs-table-hover-bg: #2b4033;
+    --bs-table-hover-color: #e8f1eb;
+}
+
+.rgmo-toasts {
+    position: fixed;
+    inset: auto 1.25rem 1.25rem auto;
+    z-index: 1090;
+    display: grid;
+    gap: 0.75rem;
+    width: min(400px, calc(100vw - 2.5rem));
+    max-height: 75dvh;
+    overflow-y: auto;
+}
+
+.rgmo-toast {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--cmu-border);
+    border-left: 4px solid var(--status-info);
+    border-radius: 12px;
+    background: var(--ui-surface, #fff);
+    color: var(--cmu-text);
+    box-shadow: var(--ui-shadow);
+    overflow-wrap: anywhere;
+}
+
+.rgmo-toast--success { border-left-color: var(--status-success); }
+.rgmo-toast--warning { border-left-color: var(--status-warning); }
+.rgmo-toast--error { border-left-color: var(--status-danger); }
+.rgmo-toast strong { display: block; margin-bottom: 0.25rem; }
+.rgmo-toast p { margin: 0; font-size: 0.9rem; }
+.rgmo-toast__close {
+    flex-shrink: 0;
+    align-self: flex-start;
+    border: 0;
+    border-radius: 6px;
+    background: var(--ui-surface-soft);
+    color: var(--cmu-text);
+    width: 32px;
+    height: 32px;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.rgmo-confirm {
+    margin: auto;
+    padding: 1.75rem;
+    width: min(440px, calc(100vw - 2rem));
+    max-height: calc(100dvh - 2rem);
+    border: 1px solid var(--cmu-border);
+    border-radius: 18px;
+    background: var(--ui-surface, #fff);
+    color: var(--cmu-text);
+    box-shadow: 0 24px 80px #0005;
+}
+.rgmo-confirm::backdrop { background: #031109aa; backdrop-filter: blur(4px); }
+.rgmo-confirm__symbol {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    background: var(--status-warning-bg);
+    color: var(--status-warning);
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+.rgmo-confirm h2 { font-size: 1.25rem; font-weight: 700; }
+.rgmo-confirm p { margin: 0.75rem 0 1.5rem; overflow-wrap: anywhere; }
+.rgmo-confirm__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0.75rem; }
+@media print {
+    .rgmo-toasts, .rgmo-confirm { display: none !important; }
+}
+
 html[data-bs-theme="dark"] .table-hover tbody tr:hover {
     --bs-table-hover-bg: rgba(255, 198, 0, 0.045);
     --bs-table-hover-color: var(--cmu-text);

@@ -184,7 +184,7 @@
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="btn btn-sm inventory-action inventory-action--delete"
-                                                                    onclick="return confirm('Are you sure you want to delete this item?')">Delete</button>
+                                                                    data-confirm="Are you sure you want to delete this item?">Delete</button>
                                                         </form>
                                                     @endcan
                                                 </div>

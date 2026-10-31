@@ -78,30 +78,6 @@
                 </header>
 
                 <div class="main-content">
-                    @if (session('success'))
-                        <div class="container-fluid mt-4">
-                            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
-                                <div class="d-flex align-items-center">
-                                    <i data-lucide="check-circle" class="me-2" style="width: 18px"></i>
-                                    <span>{{ session('success') }}</span>
-                                </div>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss notification"></button>
-                            </div>
-                        </div>
-                    @endif
-
-                    @if (session('warning'))
-                        <div class="container-fluid mt-4">
-                            <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm mb-4" role="status" aria-live="polite">
-                                <div class="d-flex align-items-center">
-                                    <i data-lucide="triangle-alert" class="me-2" style="width: 18px" aria-hidden="true"></i>
-                                    <span>{{ session('warning') }}</span>
-                                </div>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss notification"></button>
-                            </div>
-                        </div>
-                    @endif
-
                     @if ($errors->any())
                         <div class="container-fluid mt-4">
                             <div class="alert alert-danger" role="alert">
@@ -119,6 +95,8 @@
                 </div>
             </main>
         </div>
+
+        <x-feedback />
 
         <script>
             document.addEventListener('DOMContentLoaded', () => lucide.createIcons());

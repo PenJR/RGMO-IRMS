@@ -14,6 +14,22 @@ class InventoryItem extends Model
 {
     use SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::updating(function (InventoryItem $item) {
+            $errors = [];
+            foreach (['category_id' => 'Resource type', 'unit' => 'Unit'] as $field => $label) {
+                if (filled($item->getOriginal($field)) && $item->isDirty($field)
+                    && (string) $item->$field !== (string) $item->getOriginal($field)) {
+                    $errors[$field] = "$label cannot be changed once it has been set.";
+                }
+            }
+            if ($errors) {
+                throw ValidationException::withMessages($errors);
+            }
+        });
+    }
+
     protected $fillable = [
         'category_id',
         'name',

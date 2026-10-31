@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -88,6 +89,17 @@ class InventoryService
     public function createItem(array $data, ?int $userId = null): InventoryItem
     {
         return DB::transaction(function () use ($data, $userId) {
+            if (empty($data['category_id']) && ! empty($data['category_name'])) {
+                $name = trim($data['category_name']);
+                $category = Category::withTrashed()->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->first();
+                if ($category?->trashed()) {
+                    $category->restore();
+                }
+                $category ??= Category::create(['name' => $name]);
+                $data['category_id'] = $category->id;
+            }
+            unset($data['category_name']);
+
             $openingStock = (int) ($data['stock'] ?? 0);
             $data['stock'] = 0;
             $item = InventoryItem::create($data);

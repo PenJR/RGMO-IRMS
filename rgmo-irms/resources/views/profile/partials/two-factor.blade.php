@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setupDiv.classList.remove('d-none');
             } catch (error) {
                 console.error('Error enabling 2FA:', error);
-                alert(error.message || 'Unable to start two-factor authentication setup.');
+                window.rgmoToast(error.message || 'Unable to start two-factor authentication setup.', 'error');
             } finally {
                 enableBtn.disabled = false;
             }
@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             const j = await res.json();
             if (!res.ok) {
-                alert(j.message || 'Invalid code');
+                window.rgmoToast(j.message || 'Invalid code', 'error');
                 return;
             }
             const recoveryPanel = document.getElementById('2fa-recovery-codes');
@@ -296,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             const j = await res.json();
             if (!res.ok) { 
-                alert(j.message || 'Unable to disable'); 
+                window.rgmoToast(j.message || 'Unable to disable', 'error');
                 return; 
             }
             location.reload();
