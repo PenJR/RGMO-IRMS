@@ -1893,6 +1893,31 @@ html[data-bs-theme="dark"] .table-light {
     --bs-table-hover-color: #e8f1eb;
 }
 
+.user-name-filter { position: relative; }
+.user-name-filter [data-user-search-wrapper] { position: relative; }
+.user-name-filter__options {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    inset-inline: 0;
+    z-index: 1050;
+    margin: 0;
+    padding: 0.35rem;
+    max-height: 260px;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--cmu-border);
+    border-radius: 10px;
+    background: var(--ui-surface, #fff);
+    color: var(--cmu-text);
+    box-shadow: var(--ui-shadow);
+}
+.user-name-filter__options li { padding: 0.6rem 0.75rem; border-radius: 6px; overflow-wrap: anywhere; }
+.user-name-filter__options [role="option"] { cursor: pointer; }
+.user-name-filter__options [role="option"]:hover,
+.user-name-filter__options [aria-selected="true"] { background: var(--ui-surface-soft); }
+.user-name-filter__options span { display: block; font-weight: 600; }
+.user-name-filter__options small { display: block; color: var(--cmu-muted); }
+
 .rgmo-toasts {
     position: fixed;
     inset: auto 1.25rem 1.25rem auto;

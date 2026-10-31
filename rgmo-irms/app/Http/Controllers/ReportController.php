@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\SystemSetting;
+use App\Models\User;
 use App\Services\ReportService;
 use App\Support\InputRules;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -49,6 +50,7 @@ class ReportController extends Controller
         return view('reports.resource-usage', [
             'report' => $report,
             'filters' => $filters,
+            'users' => User::query()->orderBy('name')->orderBy('email')->get(['id', 'name', 'email']),
         ]);
     }
 

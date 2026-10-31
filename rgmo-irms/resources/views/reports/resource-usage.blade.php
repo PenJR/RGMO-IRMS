@@ -22,8 +22,7 @@
                         <input type="date" name="end_date" value="{{ $filters['end_date'] ?? '' }}" class="form-control">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">User ID</label>
-                        <input type="text" name="user_id" value="{{ $filters['user_id'] ?? '' }}" class="form-control" placeholder="User ID">
+                        <x-user-name-filter :users="$users" :selected="$filters['user_id'] ?? ''" />
                     </div>
                     <div class="col-md-3 align-self-end d-flex gap-2">
                         <button type="submit" class="btn btn-cmu flex-grow-1">Refresh</button>

@@ -1,5 +1,6 @@
 import './bootstrap';
 import './feedback';
+import './user-name-filter';
 import Chart from 'chart.js/auto';
 import {
     Activity, AlertCircle, AlertTriangle, ArrowLeft, ArrowUpRight, BadgeCheck,
