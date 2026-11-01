@@ -6,6 +6,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1
 
 RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && install -d /usr/share/postgresql-common/pgdg \
+    && curl --fail --silent --show-error --location \
+        https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+        --output /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+    && echo 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main' \
+        > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
         gettext-base \
@@ -20,10 +28,11 @@ RUN apt-get update \
         libxml2-dev \
         libzip-dev \
         nginx \
-        postgresql-client \
+        postgresql-client-18 \
         sqlite3 \
         supervisor \
         unzip \
+    && pg_dump --version | grep -E '^pg_dump \(PostgreSQL\) 18\.' \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
         bcmath \
