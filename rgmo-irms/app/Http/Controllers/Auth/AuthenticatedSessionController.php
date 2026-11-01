@@ -62,7 +62,9 @@ class AuthenticatedSessionController extends Controller
             'login_at' => $loginAt->toDateTimeString(),
         ]);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $request->session()->forget('url.intended');
+
+        return redirect()->route('dashboard');
     }
 
     /**

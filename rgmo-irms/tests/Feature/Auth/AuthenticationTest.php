@@ -32,13 +32,14 @@ class AuthenticationTest extends TestCase
             'status' => User::STATUS_ACTIVE,
         ]);
 
-        $response = $this->post('/login', [
+        $response = $this->withSession(['url.intended' => '/inventory'])->post('/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertSessionMissing('url.intended');
         $this->followRedirects($response)->assertOk();
     }
 
