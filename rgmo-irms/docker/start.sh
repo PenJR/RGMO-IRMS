@@ -11,6 +11,14 @@ for variable in "${required_variables[@]}"; do
     fi
 done
 
+# Give libpq explicit client-certificate paths shared by PHP-FPM, workers,
+# the scheduler and pg_dump. Supervisor changes the worker UID but can retain
+# root's environment, making libpq's default /root/.postgresql lookup fail.
+# These optional files may be absent for password-based PostgreSQL connections.
+# Preserve explicitly configured client certificates and TLS verification mode.
+export PGSSLCERT="${PGSSLCERT:-/var/www/html/.postgresql/postgresql.crt}"
+export PGSSLKEY="${PGSSLKEY:-/var/www/html/.postgresql/postgresql.key}"
+
 if [[ "${DB_CONNECTION:-}" == "sqlite" ]]; then
     if [[ -z "${DB_DATABASE:-}" ]]; then
         export DB_DATABASE="/var/www/html/database/database.sqlite"
