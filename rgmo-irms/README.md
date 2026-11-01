@@ -1,59 +1,71 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# RGMO-IRMS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+RGMO-IRMS is a Laravel-based Inventory and Resource Management System for the Research Grants Management Office. It manages inventory, project resource requests, approvals, releases, and actual utilization with access controls for Administrator, RGMO Head, Project Manager, and Staff.
 
-## About Laravel
+## Main features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Inventory records, stock movements, low-stock thresholds, expiry tracking, and spreadsheet import/export.
+- Project records and a request → review → approval → release → utilization workflow.
+- Reports and CSV/PDF exports for authorized roles.
+- Forecasting, personal notifications, and dashboard summaries.
+- Authentication, optional two-factor verification, user administration, and audit history.
+- Administrator-triggered backups and scheduled maintenance.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Stock is deducted when resources are released. Actual utilization is recorded separately against released request items and does not deduct stock again.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Documentation
 
-## Learning Laravel
+| Guide | Purpose |
+|---|---|
+| [Local setup](docs/SETUP.md) | Requirements, installation, first administrator, and development commands. |
+| [Deployment](docs/DEPLOYMENT.md) | Environment configuration, container processes, release checks, and migration. |
+| [Backup and restore](docs/BACKUP-RESTORE.md) | Archive location, troubleshooting, restore rehearsal, and current limitations. |
+| [Roles and permissions](docs/ROLES-PERMISSIONS.md) | Role capabilities, record scope, and request workflow. |
+| [Testing](docs/TESTING.md) | Automated commands, manual role checks, and evidence recording. |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Technology
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Laravel 12, PHP 8.2+ (PHP 8.3 in Docker), Blade, Vite 7, Bootstrap, Tailwind CSS, Alpine.js, and Chart.js. PDF exports use DomPDF, spreadsheet handling uses Maatwebsite Excel, and backups use Spatie Laravel Backup.
 
-## Laravel Sponsors
+Local development defaults to SQLite. The hosted testing environment uses Render and Neon PostgreSQL. The Docker image includes PostgreSQL client 18 for database dumps.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Quick start
 
-### Premium Partners
+The application is in the repository's `rgmo-irms/` directory. From that directory:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+composer install
+npm ci
+```
 
-## Contributing
+Follow [Local setup](docs/SETUP.md) to configure a new `.env`, initialize the database, and create the first administrator, then run:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer run dev
+```
 
-## Code of Conduct
+Open **http://127.0.0.1:8000/login**. Preserve existing environment settings and data when setting up an existing checkout.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Repository layout
 
-## Security Vulnerabilities
+```text
+RGMO-IRMS/
+├── README.md
+├── render.yaml
+└── rgmo-irms/
+    ├── app/          # Controllers, services, models, and commands
+    ├── config/       # Application configuration and role permissions
+    ├── database/     # Migrations, factories, and seeders
+    ├── docker/       # Container startup and process configuration
+    ├── docs/         # Setup, operations, testing, and review notes
+    ├── resources/    # Blade views, CSS, and JavaScript
+    ├── routes/       # Web, API, and console routes
+    ├── tests/        # Automated tests
+    └── Dockerfile
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Current deployment status
 
-## License
+The hosted environment is being used for testing. Backups currently use private local storage inside the application container, and the UI lists successful backup records without a download/restore button. Durable storage and restore validation are part of the planned deployment migration.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+A passing automated test suite, a successful backup notification, and a verified restore are different checks. See the guides above for the validation steps before final deployment.

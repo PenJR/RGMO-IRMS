@@ -1,140 +1,71 @@
 # RGMO-IRMS
 
-RGMO-IRMS is a web-based Inventory and Resource Management System for the Research Grants Management Office. It helps manage inventory items, resource requests, project records, notifications, reports, user access, and administrative settings in one Laravel-based application.
+RGMO-IRMS is a Laravel-based Inventory and Resource Management System for the Research Grants Management Office. It manages inventory, project resource requests, approvals, releases, and actual utilization with access controls for Administrator, RGMO Head, Project Manager, and Staff.
 
-## Features
+## Main features
 
-- Dashboard summaries for inventory, requests, projects, and recent activity
-- Inventory management with stock in/out, adjustments, low-stock thresholds, expiry tracking, CSV/Excel export, and import support
-- Resource request workflow with submission, pending review, approval, rejection, and requester notifications
-- Project management with resource usage tracking
-- Reports for inventory, resource usage, audit trail, requests, biological assets, supplies issuance, and monthly inventory
-- PDF and CSV report exports
-- Role-based access control for admin, RGMO head, field personnel, and staff users
-- Notification center with unread counts and bulk actions
-- Two-factor authentication support
-- Admin tools for user management, login history, system settings, and backups
-- AI forecasting page for inventory prediction insights
+- Inventory records, stock movements, low-stock thresholds, expiry tracking, and spreadsheet import/export.
+- Project records and a request → review → approval → release → utilization workflow.
+- Reports and CSV/PDF exports for authorized roles.
+- Forecasting, personal notifications, and dashboard summaries.
+- Authentication, optional two-factor verification, user administration, and audit history.
+- Administrator-triggered backups and scheduled maintenance.
 
-## Tech Stack
+Stock is deducted when resources are released. Actual utilization is recorded separately against released request items and does not deduct stock again.
 
-- PHP 8.2+
-- Laravel 12
-- Laravel Breeze authentication
-- Blade templates
-- Vite
-- Tailwind CSS
-- Bootstrap 5
-- Alpine.js
-- Chart.js
-- DomPDF for PDF exports
-- Maatwebsite Excel for spreadsheet exports
-- Spatie Laravel Backup
+## Documentation
 
-## Repository Structure
+| Guide | Purpose |
+|---|---|
+| [Local setup](rgmo-irms/docs/SETUP.md) | Requirements, installation, first administrator, and development commands. |
+| [Deployment](rgmo-irms/docs/DEPLOYMENT.md) | Environment configuration, container processes, release checks, and migration. |
+| [Backup and restore](rgmo-irms/docs/BACKUP-RESTORE.md) | Archive location, troubleshooting, restore rehearsal, and current limitations. |
+| [Roles and permissions](rgmo-irms/docs/ROLES-PERMISSIONS.md) | Role capabilities, record scope, and request workflow. |
+| [Testing](rgmo-irms/docs/TESTING.md) | Automated commands, manual role checks, and evidence recording. |
 
-```text
-RGMO-IRMS/
-├── README.md
-└── rgmo-irms/
-    ├── app/
-    ├── config/
-    ├── database/
-    ├── public/
-    ├── resources/
-    ├── routes/
-    ├── tests/
-    ├── composer.json
-    └── package.json
-```
+## Technology
 
-The Laravel application lives inside the `rgmo-irms` directory.
+Laravel 12, PHP 8.2+ (PHP 8.3 in Docker), Blade, Vite 7, Bootstrap, Tailwind CSS, Alpine.js, and Chart.js. PDF exports use DomPDF, spreadsheet handling uses Maatwebsite Excel, and backups use Spatie Laravel Backup.
 
-## Requirements
+Local development defaults to SQLite. The hosted testing environment uses Render and Neon PostgreSQL. The Docker image includes PostgreSQL client 18 for database dumps.
 
-- PHP 8.2 or newer
-- Composer
-- Node.js and npm
-- SQLite, MySQL, PostgreSQL, or another Laravel-supported database
+## Quick start
 
-## Installation
+The application is in the repository's `rgmo-irms/` directory. From that directory:
 
 ```bash
-cd rgmo-irms
 composer install
-npm install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate --seed
-npm run build
+npm ci
 ```
 
-Update `.env` with the correct database, mail, queue, and app settings before running the application in a shared or production environment.
-
-## Running Locally
-
-Start the Laravel server:
-
-```bash
-php artisan serve
-```
-
-Start the Vite development server in another terminal:
-
-```bash
-npm run dev
-```
-
-You can also use the Composer development script:
+Follow [Local setup](rgmo-irms/docs/SETUP.md) to configure a new `.env`, initialize the database, and create the first administrator, then run:
 
 ```bash
 composer run dev
 ```
 
-## Testing
+Open **http://127.0.0.1:8000/login**. Preserve existing environment settings and data when setting up an existing checkout.
 
-Run the automated test suite:
+## Repository layout
 
-```bash
-php artisan test
+```text
+RGMO-IRMS/
+├── README.md
+├── render.yaml
+└── rgmo-irms/
+    ├── app/          # Controllers, services, models, and commands
+    ├── config/       # Application configuration and role permissions
+    ├── database/     # Migrations, factories, and seeders
+    ├── docker/       # Container startup and process configuration
+    ├── docs/         # Setup, operations, testing, and review notes
+    ├── resources/    # Blade views, CSS, and JavaScript
+    ├── routes/       # Web, API, and console routes
+    ├── tests/        # Automated tests
+    └── Dockerfile
 ```
 
-Or use the Composer script:
+## Current deployment status
 
-```bash
-composer test
-```
+The hosted environment is being used for testing. Backups currently use private local storage inside the application container, and the UI lists successful backup records without a download/restore button. Durable storage and restore validation are part of the planned deployment migration.
 
-Build frontend assets:
-
-```bash
-npm run build
-```
-
-## Main Modules
-
-- **Authentication:** login, registration, password reset, email verification, and two-factor authentication
-- **Dashboard:** role-aware summaries and charts
-- **Inventory:** item records, stock movement, thresholds, import/export, and expiry controls
-- **Requests:** resource request creation, review, approval, rejection, and tracking
-- **Projects:** project records and linked resource usage
-- **Reports:** inventory, requests, usage, audit trail, biological assets, supplies issuance, and monthly inventory
-- **Notifications:** user notifications, unread counts, read/delete actions
-- **Admin:** users, roles, login logs, backup tools, and system settings
-- **API:** JSON endpoints for authentication, inventory, users, notifications, operations, reporting, audit, and settings
-
-## Useful Commands
-
-```bash
-php artisan route:list
-php artisan migrate
-php artisan migrate:fresh --seed
-php artisan config:clear
-php artisan cache:clear
-php artisan view:cache
-npm run build
-```
-
-## License
-
-This project is maintained for RGMO-IRMS. Check with the project owner before redistributing or deploying outside the intended environment.
+A passing automated test suite, a successful backup notification, and a verified restore are different checks. See the guides above for the validation steps before final deployment.
