@@ -4,11 +4,12 @@
     <meta charset="utf-8">
     <title>Inventory Report</title>
     <style>
-        body { font-family: Arial, sans-serif; color: #1f2937; }
+        body { font-family: "DejaVu Sans", sans-serif; color: #1f2937; }
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
         th, td { border: 1px solid #ddd; padding: 8px; }
         th { background: #f3f4f6; text-align: left; font-weight: 700; }
         td { font-size: 0.875rem; }
+        .price { text-align: right; white-space: nowrap; }
         h1 { font-size: 1.25rem; margin: 0; }
         .meta { margin-top: 0.5rem; color: #6b7280; font-size: 0.9rem; }
     </style>
@@ -35,9 +36,9 @@
                     <td>{{ $item->name }}</td>
                     <td>{{ $item->sku }}</td>
                     <td>{{ $item->category?->name ?? 'N/A' }}</td>
-                    <td>{{ $item->stock }} {{ $item->unit }}</td>
-                    <td>{{ $item->min_stock }} {{ $item->unit }}</td>
-                    <td>{{ $currencySymbol ?? '₱' }}{{ number_format($item->price, 2) }}</td>
+                    <td>{{ number_format($item->stock) }} {{ $item->unit }}</td>
+                    <td>{{ number_format($item->min_stock) }} {{ $item->unit }}</td>
+                    <td class="price">{{ $currencySymbol ?? '₱' }}{{ number_format($item->price, 2) }}</td>
                     <td>{{ $item->stock <= $item->min_stock ? 'Low' : 'OK' }}</td>
                 </tr>
             @endforeach
