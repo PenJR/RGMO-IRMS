@@ -191,11 +191,11 @@ class RmsService
     /**
      * Update inventory item.
      */
-    public function updateInventoryItem(int $id, array $data): InventoryItem { $i = InventoryItem::findOrFail($id); $i->update($data); return $i; }
+    public function updateInventoryItem(int $id, array $data): InventoryItem { return app(InventoryService::class)->updateItem(InventoryItem::findOrFail($id), $data, Auth::id()); }
     /**
      * Delete inventory item.
      */
-    public function deleteInventoryItem(int $id): void { InventoryItem::findOrFail($id)->delete(); }
+    public function deleteInventoryItem(int $id): void { app(InventoryService::class)->deleteItem(InventoryItem::findOrFail($id), Auth::id()); }
     /**
      * Get all inventory items.
      */
@@ -256,11 +256,26 @@ class RmsService
     /**
      * Handle add request item.
      */
-    public function addRequestItem(int $requestId, array $itemData): RequestItem { $itemData['resource_request_id'] = $requestId; return RequestItem::create($itemData); }
+    public function addRequestItem(int $requestId, array $itemData): RequestItem
+    {
+        return DB::transaction(function () use ($requestId, $itemData) {
+            $request = ResourceRequest::lockForUpdate()->findOrFail($requestId);
+            if (! $request->isPending()) throw ValidationException::withMessages(['status' => 'Only pending requests can be edited.']);
+            return $request->items()->create($itemData);
+        }, 5);
+    }
+
     /**
      * Update request.
      */
-    public function updateRequest(int $requestId, array $data): ResourceRequest { $r = ResourceRequest::findOrFail($requestId); $r->update($data); return $r; }
+    public function updateRequest(int $requestId, array $data): ResourceRequest
+    {
+        return DB::transaction(function () use ($requestId, $data) {
+            $r = ResourceRequest::lockForUpdate()->findOrFail($requestId);
+            if (! $r->isPending()) throw ValidationException::withMessages(['status' => 'Only pending requests can be changed.']);
+            $r->update($data); return $r;
+        }, 5);
+    }
     /**
      * Cancel request.
      */
@@ -283,10 +298,9 @@ class RmsService
      */
     public function approveRequest(int $requestId, int $approverId, ?string $remarks): ResourceRequest
     {
-        $request = $this->updateRequest($requestId, ['status' => 'approved', 'approved_by' => $approverId, 'approved_at' => now(), 'remarks' => $remarks]);
-        $this->notificationService->notifyResourceRequestApproved($request, $approverId);
-
-        return $request;
+        $request = ResourceRequest::findOrFail($requestId);
+        app(ResourceRequestService::class)->approveRequest($request, $approverId, $remarks);
+        return $request->fresh();
     }
     /**
      * Reject request.
@@ -335,8 +349,7 @@ class RmsService
      */
     public function recordStockOut(int $itemId, int $quantity, ?string $destination): InventoryTransaction
     {
-        $this->decreaseStock($itemId, $quantity);
-        return $this->logInventoryTransaction(['inventory_item_id' => $itemId, 'user_id' => Auth::id(), 'transaction_type' => 'stock_out', 'quantity' => $quantity, 'destination' => $destination]);
+        return app(InventoryService::class)->recordStockOut(InventoryItem::findOrFail($itemId), $quantity, $destination ?? 'Manual issue', Auth::id());
     }
     /**
      * Log inventory transaction.
@@ -493,7 +506,7 @@ class RmsService
     /**
      * Get available inventory.
      */
-    public function getAvailableInventory() { return InventoryItem::where('stock', '>', 0)->get(); }
+    public function getAvailableInventory() { return InventoryItem::withReservationBalance()->where('stock', '>', 0)->get()->filter(fn ($item) => $item->available_stock > 0)->values()->each->append(['reserved_quantity', 'available_stock']); }
     /**
      * Get pending approvals.
      */
@@ -546,6 +559,10 @@ class RmsService
             if ($newStock < 0) {
                 throw ValidationException::withMessages(['stock' => 'Insufficient stock.']);
             }
+            if ($newStock < $item->reserved_quantity) {
+                throw ValidationException::withMessages(['stock' => 'Stock is reserved for approved requests.']);
+            }
+            if ($delta < 0) $item->allocateDeliveries(-$delta);
             $item->update(['stock' => $newStock]);
             $this->logInventoryChange($itemId, $changeType);
             return $item;

@@ -1,6 +1,7 @@
 <x-app-layout>
     @php
         $statusBadge = match ($request->status) {
+            'partially_withdrawn' => 'bg-info text-dark',
             'approved' => 'bg-success text-white',
             'rejected' => 'bg-danger text-white',
             'cancelled' => 'bg-secondary text-white',
@@ -10,12 +11,12 @@
     @endphp
 
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div>
-                <h2 class="fw-bold mb-1">Resource Request #RQ-{{ $request->id }}</h2>
-                <p class="text-muted mb-0">Review the request details and manage approvals.</p>
-            </div>
-            <div class="d-flex flex-wrap gap-2">
+        <h2 class="fw-bold mb-1">Resource Request #RQ-{{ $request->id }}</h2>
+        <p class="text-muted mb-0">Review request details, reservations, and withdrawals.</p>
+    </x-slot>
+
+    <div class="container-fluid py-4">
+            <div class="d-flex flex-wrap gap-2 mb-4 d-print-none">
                 @if($request->status === 'approved')
                     <a href="{{ route('requests.withdrawal-slip', $request) }}" class="btn btn-outline-success" target="_blank" rel="noopener">
                         Print Withdrawal Slip
@@ -24,7 +25,7 @@
                         Edit &amp; Download Receipt
                     </a>
                 @endif
-                @if(auth()->user()->hasPermission('record-utilization') && $request->tracks_utilization && $request->fulfilled_at)
+                @if(auth()->user()->hasPermission('record-utilization') && $request->tracks_utilization && $request->withdrawals->isNotEmpty())
                     <a href="{{ route('utilization.index') }}" class="btn btn-cmu">Record Utilization</a>
                 @endif
                 <a href="{{ route('requests.index') }}" class="btn btn-outline-secondary">Back to Requests</a>
@@ -32,19 +33,19 @@
                     <a href="{{ route('requests.edit', ['request' => $request->id]) }}" class="btn btn-outline-primary">Edit</a>
                 @endcan
             </div>
-        </div>
-    </x-slot>
-
-    <div class="container-fluid py-4">
+        @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
         @if($request->status !== 'approved' && auth()->id() === $request->user_id)
             <div class="alert alert-info d-flex align-items-start gap-2" role="status">
                 <div>
                     <strong>Request status: {{ str($request->status)->headline() }}</strong>
-                    <div>Receipt printing is available only while the request status is Approved. You will receive a notification when its status changes.</div>
+                    <div>@if($request->withdrawals->isNotEmpty())Open a saved withdrawal record below to view or print the quantities issued. Any remaining balance stays reserved.@else Receipt printing is available only while the request status is Approved. You will receive a notification when its status changes.@endif</div>
                 </div>
             </div>
         @endif
 
+        @if($request->withdrawals->isNotEmpty())
+        <div class="card mb-4"><div class="card-body"><h3 class="h5">Withdrawal history</h3><div class="table-responsive"><table class="table"><thead><tr><th>Record</th><th>Date</th><th>Issued by</th><th>Received by</th><th>Items released</th></tr></thead><tbody>@foreach($request->withdrawals as $withdrawal)<tr><td><a href="{{ route('requests.withdrawal-record', [$request, $withdrawal]) }}">WD-{{ $withdrawal->id }}</a></td><td>{{ $withdrawal->withdrawn_on->format('M d, Y') }}</td><td>{{ $withdrawal->issuer->name }}</td><td>{{ $withdrawal->received_by }}</td><td>@foreach($withdrawal->items as $line)<div>{{ $line->requestItem->item?->name }}: {{ $line->quantity }}</div>@endforeach</td></tr>@endforeach</tbody></table></div></div></div>
+        @endif
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm">
@@ -54,7 +55,7 @@
                             <h5 class="mb-0">{{ $request->user->name ?? 'Unknown' }}</h5>
                         </div>
 	                        <span class="badge rounded-pill {{ $statusBadge }}">
-	                            {{ ucfirst($request->status) }}
+	                            {{ str($request->status)->headline() }}
 	                        </span>
                     </div>
                     <div class="card-body p-4">
@@ -96,7 +97,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>Item</th>
-                                            <th>Quantity</th>
+                                            <th>Requested</th><th>Withdrawn</th><th>Remaining</th>
                                             <th>Unit</th>
 	                                            <th>Available Stock</th>
 	                                            <th>Availability</th>
@@ -106,13 +107,15 @@
                                         @foreach($request->items as $item)
                                             <tr>
                                                 <td>{{ $item->item?->name ?? 'Unknown item' }}</td>
-	                                                <td>{{ $item->quantity }}</td>
+	                                                <td>{{ $item->quantity }}</td><td>{{ $item->withdrawn_quantity }}</td><td>{{ $item->remaining_quantity }}{{ $request->isReleasable() ? ' reserved' : '' }}</td>
 	                                                <td>{{ $item->item?->unit ?? 'N/A' }}</td>
-	                                                <td>{{ $item->item?->stock ?? 0 }} {{ $item->item?->unit ?? '' }}</td>
+	                                                <td>{{ $item->item?->available_stock ?? 0 }} {{ $item->item?->unit ?? '' }}</td>
 	                                                <td>
 	                                                    @if(! $item->item)
 	                                                        <span class="badge bg-secondary text-white">Missing item</span>
-	                                                    @elseif($item->item->stock < $item->quantity)
+	                                                    @elseif($request->isReleasable())
+                                                            <span class="badge bg-success">Reserved for this project</span>
+                                                        @elseif($item->item->available_stock < $item->remaining_quantity)
 	                                                        <span class="badge bg-danger text-white">Insufficient</span>
 	                                                    @elseif($item->item->stock <= $item->item->min_stock)
 	                                                        <span class="badge bg-warning text-dark">Low after release</span>
@@ -177,7 +180,7 @@
 	                                    <button type="submit" class="btn btn-outline-secondary w-100" data-confirm="Cancel this pending request?">Cancel Request</button>
 	                                </form>
 	                            @endcan
-	                        @elseif($request->status === 'approved')
+	                        @elseif($request->isReleasable())
 	                            @can('fulfill', $request)
 	                                @unless($canFulfill)
 	                                    <div class="alert alert-warning small">
@@ -185,9 +188,17 @@
 	                                    </div>
 	                                @endunless
 	                                <form action="{{ route('requests.fulfill', $request) }}" method="POST">
-	                                    @csrf
-	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }} data-confirm="Fulfill this request and deduct inventory stock?">Fulfill Request</button>
-	                                </form>
+                                    @csrf
+                                    <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">
+                                    <p class="small text-muted">Enter the quantity issued now. Leave 0 for items not collected. The remainder stays reserved.</p>
+                                    @foreach($request->items as $line)
+                                        <div class="mb-3"><label class="form-label" for="release-{{ $line->id }}">{{ $line->item?->name }} ({{ $line->remaining_quantity }} remaining)</label><input id="release-{{ $line->id }}" name="quantities[{{ $line->id }}]" type="number" class="form-control" min="0" max="{{ $line->remaining_quantity }}" value="{{ old('quantities.'.$line->id, $line->remaining_quantity) }}" required></div>
+                                    @endforeach
+                                    <div class="mb-3"><label for="withdrawn-on" class="form-label">Withdrawal date</label><input id="withdrawn-on" name="withdrawn_on" type="date" class="form-control" min="{{ $request->approved_at?->toDateString() }}" max="{{ today()->toDateString() }}" value="{{ old('withdrawn_on', today()->toDateString()) }}" required></div>
+                                    <div class="mb-3"><label for="received-by" class="form-label">Received by</label><input id="received-by" name="received_by" class="form-control" maxlength="255" value="{{ old('received_by') }}" required></div>
+                                    <div class="mb-3"><label for="withdrawal-notes" class="form-label">Withdrawal notes (optional)</label><textarea id="withdrawal-notes" name="notes" class="form-control" maxlength="5000">{{ old('notes') }}</textarea></div>
+                                    <button type="submit" class="btn btn-cmu w-100" data-confirm="Record this withdrawal? Any remaining quantities will stay reserved.">Record Withdrawal</button>
+                                </form>
 	                            @else
 	                                <p class="text-muted mb-0">This request is approved and waiting for release.</p>
 	                            @endcan

@@ -16,6 +16,8 @@ class ResourceRequest extends Model
 
     const STATUS_APPROVED = 'approved';
 
+    const STATUS_PARTIALLY_WITHDRAWN = 'partially_withdrawn';
+
     const STATUS_REJECTED = 'rejected';
 
     const STATUS_CANCELLED = 'cancelled';
@@ -80,6 +82,16 @@ class ResourceRequest extends Model
     public function items(): HasMany
     {
         return $this->hasMany(RequestItem::class, 'resource_request_id');
+    }
+
+    public function withdrawals(): HasMany
+    {
+        return $this->hasMany(Withdrawal::class);
+    }
+
+    public function isReleasable(): bool
+    {
+        return in_array($this->status, [self::STATUS_APPROVED, self::STATUS_PARTIALLY_WITHDRAWN], true);
     }
 
     // Scopes

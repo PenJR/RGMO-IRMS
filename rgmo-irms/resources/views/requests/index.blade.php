@@ -35,7 +35,8 @@
 	                            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
 	                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
 	                            <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-	                            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+	                            <option value="partially_withdrawn" @selected(request('status') === 'partially_withdrawn')>Partially Withdrawn</option>
+                                <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -90,7 +91,7 @@
 	                                                @elseif($request->status === 'cancelled') bg-secondary text-white
 	                                                @elseif($request->status === 'completed') bg-primary text-white
 	                                                @else bg-warning text-dark @endif">
-                                                {{ ucfirst($request->status) }}
+                                                {{ str($request->status)->headline() }}
                                             </span>
                                         </td>
                                         <td data-label="Needed Date">{{ $request->needed_date?->format('M d, Y') ?? 'N/A' }}</td>

@@ -13,10 +13,16 @@ class RequestItem extends Model
         return $this->hasMany(ResourceUsage::class);
     }
 
+    public function getRemainingQuantityAttribute(): int
+    {
+        return max(0, $this->quantity - $this->withdrawn_quantity);
+    }
+
     protected $fillable = [
         'resource_request_id',
         'inventory_item_id',
         'quantity',
+        'withdrawn_quantity',
     ];
 
     /**
@@ -32,7 +38,7 @@ class RequestItem extends Model
      */
     public function item(): BelongsTo
     {
-        return $this->belongsTo(InventoryItem::class, 'inventory_item_id');
+        return $this->belongsTo(InventoryItem::class, 'inventory_item_id')->withTrashed();
     }
 
     /**
@@ -40,6 +46,6 @@ class RequestItem extends Model
      */
     public function inventoryItem(): BelongsTo
     {
-        return $this->belongsTo(InventoryItem::class, 'inventory_item_id');
+        return $this->belongsTo(InventoryItem::class, 'inventory_item_id')->withTrashed();
     }
 }

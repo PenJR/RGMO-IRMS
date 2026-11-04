@@ -64,7 +64,7 @@ class ResourceRequestController extends Controller
         $this->authorize('create', ResourceRequest::class);
 
         return view('requests.create', [
-            'items' => InventoryItem::active()->get(),
+            'items' => InventoryItem::active()->withReservationBalance()->get(),
             'projects' => Project::query()->current()->orderBy('name')->get(),
         ]);
     }
@@ -110,7 +110,7 @@ class ResourceRequestController extends Controller
     {
         $this->authorize('view', $request);
 
-        $request->load('user', 'project', 'approver', 'items.item');
+        $request->load('user', 'project', 'approver', 'items.item', 'withdrawals.issuer', 'withdrawals.items.requestItem.item');
         $workflowLogs = AuditLog::with('user:id,name')
             ->where('model_type', ResourceRequest::class)
             ->where('model_id', $request->id)
@@ -134,7 +134,7 @@ class ResourceRequestController extends Controller
         $this->authorize('view', $request);
         $this->ensureWithdrawalReceiptIsAvailable($request);
 
-        $request->load('user', 'project', 'approver', 'items.item');
+        $request->load('user', 'project', 'approver', 'items.item', 'withdrawals.issuer', 'withdrawals.items.requestItem.item');
 
         return view('requests.withdrawal-slip', [
             'request' => $request,
@@ -153,7 +153,7 @@ class ResourceRequestController extends Controller
         $this->authorize('view', $request);
         $this->ensureWithdrawalReceiptIsAvailable($request);
 
-        $request->load('user', 'project', 'approver', 'items.item');
+        $request->load('user', 'project', 'approver', 'items.item', 'withdrawals.issuer', 'withdrawals.items.requestItem.item');
         $signatureValues = array_replace(
             $this->withdrawalSignatureDefaults($request),
             $httpRequest->validate([
@@ -232,7 +232,7 @@ class ResourceRequestController extends Controller
 
         return view('requests.edit', [
             'request' => $request->load('items'),
-            'items' => InventoryItem::active()->get(),
+            'items' => InventoryItem::active()->withReservationBalance()->get(),
             'projects' => Project::query()->current()->orderBy('name')->get(),
         ]);
     }
@@ -333,13 +333,20 @@ class ResourceRequestController extends Controller
      *
      * @throws AuthorizationException
      */
-    public function fulfill(ResourceRequest $request)
+    public function fulfill(Request $httpRequest, ResourceRequest $request)
     {
         $this->authorize('fulfill', $request);
 
-        $this->requestService->fulfillRequest($request);
+        $data = $httpRequest->validate([
+            'quantities' => 'required|array|min:1|max:100',
+            'quantities.*' => 'required|integer|min:0|max:2147483647',
+            'received_by' => 'required|string|max:255',
+            'withdrawn_on' => 'required|date_format:Y-m-d|before_or_equal:today',
+            'submission_key' => 'required|uuid', 'notes' => 'nullable|string|max:5000',
+        ]);
+        $this->requestService->fulfillRequest($request, $data['quantities'], $data);
 
-        return redirect()->route('requests.show', $request)->with('success', 'Resource request fulfilled and inventory stock deducted.');
+        return redirect()->route('requests.show', $request)->with('success', 'Withdrawal recorded. Any unwithdrawn balance remains reserved.');
     }
 
     /**
@@ -354,7 +361,7 @@ class ResourceRequestController extends Controller
         abort_unless(auth()->user()->hasPermission('record-withdrawal'), 403);
 
         $requests = ResourceRequest::with(['user', 'project'])
-            ->whereIn('status', [ResourceRequest::STATUS_APPROVED, ResourceRequest::STATUS_COMPLETED])
+            ->whereIn('status', [ResourceRequest::STATUS_APPROVED, ResourceRequest::STATUS_PARTIALLY_WITHDRAWN, ResourceRequest::STATUS_COMPLETED])
             ->latest()->paginate(15);
 
         return view('requests.index', [
@@ -363,6 +370,16 @@ class ResourceRequestController extends Controller
             'canReviewAllRequests' => false,
             'releaseQueue' => true,
         ]);
+    }
+
+    public function withdrawalRecord(ResourceRequest $request, \App\Models\Withdrawal $withdrawal)
+    {
+        $this->authorize('view', $request);
+        abort_unless($withdrawal->resource_request_id === $request->id, 404);
+        $withdrawal->load('issuer', 'items.requestItem.item', 'items.transaction');
+        $deliveryIds = $withdrawal->items->flatMap(fn ($line) => collect($line->transaction->meta['deliveries'] ?? [])->pluck('delivery_id'));
+        $deliveries = \App\Models\Delivery::with('procurement')->whereIn('id', $deliveryIds)->get()->keyBy('id');
+        return view('requests.withdrawal-record', compact('request', 'withdrawal', 'deliveries'));
     }
 
     public function pending()

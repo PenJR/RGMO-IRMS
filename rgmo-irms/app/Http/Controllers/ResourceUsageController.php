@@ -14,10 +14,10 @@ class ResourceUsageController extends Controller
     {
         abort_unless(auth()->user()->hasPermission('record-utilization'), 403);
         $lines = RequestItem::with(['item', 'request.user', 'request.project'])
-            ->whereHas('request', fn ($query) => $query->where('status', ResourceRequest::STATUS_COMPLETED)
-                ->where('tracks_utilization', true)->whereNotNull('fulfilled_at'))
+            ->whereHas('request', fn ($query) => $query->whereIn('status', [ResourceRequest::STATUS_PARTIALLY_WITHDRAWN, ResourceRequest::STATUS_COMPLETED])
+                ->where('tracks_utilization', true))
             ->withSum('usages', 'quantity')->orderByDesc('id')->get()
-            ->filter(fn ($line) => $line->quantity > ($line->usages_sum_quantity ?? 0));
+            ->filter(fn ($line) => $line->withdrawn_quantity > ($line->usages_sum_quantity ?? 0));
         $usages = ResourceUsage::with(['item', 'user', 'requestItem.request'])
             ->whereNotNull('request_item_id')->latest()->paginate(20);
 

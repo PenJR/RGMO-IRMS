@@ -34,7 +34,7 @@ class InventoryService
     /** Build the filtered and sorted inventory query for listings and exports. */
     public function itemsQuery(array $filters = []): Builder
     {
-        $query = InventoryItem::query()->with('category');
+        $query = InventoryItem::query()->with('category')->withReservationBalance();
 
         // Apply filters
         if (! empty($filters['category_id'])) {
@@ -147,6 +147,10 @@ class InventoryService
             $newStock = array_key_exists('stock', $data) ? (int) $data['stock'] : (int) $lockedItem->stock;
             unset($data['stock']);
 
+            if ($newStock < $lockedItem->reserved_quantity) {
+                throw ValidationException::withMessages(['stock' => 'Stock is reserved for approved requests.']);
+            }
+            $allocations = $newStock < $lockedItem->stock ? $lockedItem->allocateDeliveries($lockedItem->stock - $newStock) : [];
             $lockedItem->update($data);
 
             $difference = $newStock - (int) $lockedItem->stock;
@@ -159,7 +163,7 @@ class InventoryService
                     'source' => $difference > 0 ? 'Inventory edit adjustment' : null,
                     'destination' => $difference < 0 ? 'Inventory edit adjustment' : null,
                     'reference' => 'EDIT-'.$lockedItem->id.'-'.now()->format('YmdHisv'),
-                    'meta' => ['adjustment' => true],
+                    'meta' => ['adjustment' => true] + $allocations,
                 ]);
             }
 
@@ -184,18 +188,13 @@ class InventoryService
      */
     public function deleteItem(InventoryItem $item, ?int $userId = null): void
     {
-        if ($userId) {
-            AuditLog::log(
-                $userId,
-                'delete',
-                'inventory',
-                InventoryItem::class,
-                $item->id,
-                $item->toArray()
-            );
-        }
-
-        $item->delete();
+        DB::transaction(function () use ($item, $userId) {
+            $locked = InventoryItem::lockForUpdate()->findOrFail($item->id);
+            if ($locked->reserved_quantity > 0) throw ValidationException::withMessages(['item' => 'An item with reserved stock cannot be archived.']);
+            $old = $locked->toArray();
+            $locked->delete();
+            AuditLog::log($userId, 'delete', 'inventory', InventoryItem::class, $item->id, $old, null);
+        });
     }
 
     /**
@@ -280,16 +279,18 @@ class InventoryService
             }
 
             $lockedItem = InventoryItem::lockForUpdate()->findOrFail($item->id);
-            if ($lockedItem->stock < $quantity) {
+            if ($quantity < 1 || $lockedItem->available_stock < $quantity) {
                 throw ValidationException::withMessages(['quantity' => 'Insufficient stock to complete this transaction.']);
             }
 
+            $allocations = $lockedItem->allocateDeliveries($quantity);
             $lockedItem->decrement('stock', $quantity);
             $transaction = $lockedItem->transactions()->create([
                 'user_id' => $userId,
                 'transaction_type' => 'stock_out',
                 'quantity' => $quantity,
                 'destination' => $destination,
+                'meta' => $allocations,
                 'funding_source' => $fundingSource,
                 'reference' => $reference,
                 'idempotency_key' => $idempotencyKey,

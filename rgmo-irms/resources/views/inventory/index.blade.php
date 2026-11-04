@@ -96,6 +96,10 @@
                 </div>
             @endcan
 
+            <div class="alert alert-info mb-3">
+                <strong>First in, first out (FIFO).</strong> Withdrawals use the earliest arrival first.
+                The next delivery and remaining batches appear below. Existing stock without delivery records is used first; its supplier and arrival date are unknown.
+            </div>
             <!-- Inventory Items Table -->
             <div class="card border-0 shadow-sm bg-transparent shadow-none">
                 <div class="card-body p-0">
@@ -107,6 +111,7 @@
                                         <x-sortable-th column="name">Item</x-sortable-th>
                                         <x-sortable-th column="sku">SKU</x-sortable-th>
                                         <th>Category</th>
+                                        <th>Use first · FIFO</th>
                                         <x-sortable-th column="stock">Stock</x-sortable-th>
 	                                        <th>Low / Reorder Point</th>
                                         <x-sortable-th column="price">Price</x-sortable-th>
@@ -133,8 +138,42 @@
                                             </td>
                                             <td data-label="SKU">{{ $item->sku }}</td>
                                             <td data-label="Category">{{ $item->category->name ?? 'N/A' }}</td>
+                                            <td data-label="Use first · FIFO">
+                                                <div style="min-width: 180px; max-width: 240px;">
+                                                @php
+                                                    $lots = $item->fifoDeliveries;
+                                                    $historical = max(0, $item->stock - $lots->sum('remaining_quantity'));
+                                                    $firstLot = $lots->first();
+                                                @endphp
+                                                @if($item->stock <= 0)
+                                                    <span class="text-muted">No stock to issue</span>
+                                                @elseif($historical > 0)
+                                                    <div class="fw-semibold">Existing stock · use first</div>
+                                                    <div class="small">{{ $historical }} {{ $item->unit }} remaining</div>
+                                                    <div class="small text-muted">Arrival / supplier not recorded</div>
+                                                @elseif($firstLot)
+                                                    <div class="fw-semibold">{{ $firstLot->procurement->supplier_name }}</div>
+                                                    <div class="small">Arrived {{ $firstLot->received_on->format('M d, Y') }}</div>
+                                                    <div class="small">{{ $firstLot->remaining_quantity }} {{ $item->unit }} remaining · DEL-{{ $firstLot->id }}</div>
+                                                @endif
+                                                @if($lots->isNotEmpty())
+                                                    <details class="mt-2 small">
+                                                        <summary>Delivery queue ({{ $lots->count() }})</summary>
+                                                        <ol class="ps-3 mt-2 mb-0">
+                                                            @foreach($lots as $lot)
+                                                                <li class="mb-2">
+                                                                    <a href="{{ route('procurements.show', $lot->procurement) }}">{{ $lot->procurement->supplier_name }}</a>
+                                                                    <div>Arrived {{ $lot->received_on->format('M d, Y') }} · DEL-{{ $lot->id }}</div>
+                                                                    <div>{{ $lot->remaining_quantity }} {{ $item->unit }} remaining · OR {{ $lot->procurement->or_number }}</div>
+                                                                </li>
+                                                            @endforeach
+                                                        </ol>
+                                                    </details>
+                                                @endif
+                                                </div>
+                                            </td>
                                             <td data-label="Stock">
-                                                {{ $item->stock }} {{ $item->unit }}
+                                                {{ $item->stock }} {{ $item->unit }} on hand<div class="small text-muted">{{ $item->reserved_quantity }} reserved · {{ $item->available_stock }} available</div>
                                                 @if($item->stock <= $item->min_stock)
                                                     <span class="badge rounded-pill status-badge status-badge--danger ms-2">
                                                         Low

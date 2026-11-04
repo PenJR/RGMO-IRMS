@@ -18,6 +18,9 @@ class InventoryItem extends Model
     {
         static::updating(function (InventoryItem $item) {
             $errors = [];
+            if ($item->isDirty('stock') && $item->stock < $item->reserved_quantity) {
+                $errors['stock'] = 'Stock cannot be reduced below quantities reserved for approved requests.';
+            }
             foreach (['category_id' => 'Resource type', 'unit' => 'Unit'] as $field => $label) {
                 if (filled($item->getOriginal($field)) && $item->isDirty($field)
                     && (string) $item->$field !== (string) $item->getOriginal($field)) {
@@ -29,6 +32,59 @@ class InventoryItem extends Model
             }
         });
     }
+
+    public function scopeWithReservationBalance(Builder $query): Builder
+    {
+        return $query->withSum(['requestItems as reserved_total' => fn ($q) => $q
+            ->whereHas('request', fn ($r) => $r->whereIn('status', ['approved', 'partially_withdrawn']))], DB::raw('quantity - withdrawn_quantity'));
+    }
+
+    public function getReservedQuantityAttribute(): int
+    {
+        if (array_key_exists('reserved_total', $this->attributes)) {
+            return (int) $this->attributes['reserved_total'];
+        }
+
+        return (int) RequestItem::where('inventory_item_id', $this->id)
+            ->whereHas('request', fn ($q) => $q->whereIn('status', ['approved', 'partially_withdrawn']))
+            ->sum(DB::raw('quantity - withdrawn_quantity'));
+    }
+
+    public function getAvailableStockAttribute(): int
+    {
+        return max(0, (int) $this->stock - $this->reserved_quantity);
+    }
+
+    public function fifoDeliveries(): HasMany
+    {
+        return $this->hasMany(Delivery::class)->where('remaining_quantity', '>', 0)
+            ->orderBy('received_on')->orderBy('id');
+    }
+
+    /** Caller holds this item's row lock. Track delivered lots consumed by any stock reduction. */
+    public function allocateDeliveries(int $quantity): array
+    {
+        $allocations = [];
+        $lots = $this->fifoDeliveries()->lockForUpdate()->get();
+        // Historical/unlinked stock is consumed first rather than inventing a supplier for it.
+        $untracked = min($quantity, max(0, (int) $this->stock - $lots->sum('remaining_quantity')));
+        $remaining = $quantity - $untracked;
+        foreach ($lots as $lot) {
+            if ($remaining <= 0) {
+                break;
+            }
+            $take = min($remaining, $lot->remaining_quantity);
+            $lot->decrement('remaining_quantity', $take);
+            $allocations[] = ['delivery_id' => $lot->id, 'quantity' => $take];
+            $remaining -= $take;
+        }
+
+        return ['deliveries' => $allocations, 'historical_quantity' => $untracked];
+    }
+
+    protected $appends = ['reserved_quantity', 'available_stock'];
+
+    protected $hidden = ['reserved_total'];
 
     protected $fillable = [
         'category_id',
@@ -271,18 +327,20 @@ class InventoryItem extends Model
     {
         DB::transaction(function () use ($quantity, $destination, $userId, $fundingSource) {
             $lockedItem = self::lockForUpdate()->findOrFail($this->id);
-            if ($lockedItem->stock < $quantity) {
+            if ($quantity < 1 || $lockedItem->available_stock < $quantity) {
                 throw ValidationException::withMessages([
                     'quantity' => 'Insufficient stock to complete this transaction.',
                 ]);
             }
 
+            $allocations = $lockedItem->allocateDeliveries($quantity);
             $lockedItem->decrement('stock', $quantity);
             $lockedItem->transactions()->create([
                 'user_id' => $userId,
                 'transaction_type' => 'stock_out',
                 'quantity' => $quantity,
                 'destination' => $destination,
+                'meta' => $allocations,
                 'funding_source' => $fundingSource,
             ]);
             $this->setRawAttributes($lockedItem->fresh()->getAttributes(), true);

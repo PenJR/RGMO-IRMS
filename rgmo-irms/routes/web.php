@@ -57,6 +57,16 @@ Route::middleware('auth')->group(function () {
             ->name('ai-forecasting.explanation');
     });
 
+    Route::middleware('permission:view-inventory')->group(function () {
+        Route::get('/procurements', [\App\Http\Controllers\ProcurementController::class, 'index'])->name('procurements.index');
+        Route::get('/procurements/{procurement}', [\App\Http\Controllers\ProcurementController::class, 'show'])->name('procurements.show');
+        Route::get('/procurements/{procurement}/receipt', [\App\Http\Controllers\ProcurementController::class, 'receipt'])->name('procurements.receipt');
+    });
+    Route::middleware('permission:manage-inventory')->group(function () {
+        Route::post('/procurements', [\App\Http\Controllers\ProcurementController::class, 'store'])->name('procurements.store');
+        Route::post('/procurements/{procurement}/receive', [\App\Http\Controllers\ProcurementController::class, 'receive'])->name('procurements.receive');
+    });
+
     // Inventory Module
     Route::middleware(['permission:view-inventory,manage-inventory'])->group(function () {
         Route::get('/inventory/low-stock', [InventoryController::class, 'lowStock'])->name('inventory.low-stock');
@@ -76,6 +86,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['permission:submit-request,update-pending-request,review-request,approve-request'])->group(function () {
         Route::get('/requests/releases', [ResourceRequestController::class, 'releases'])->middleware('permission:record-withdrawal')->name('requests.releases');
         Route::get('/requests/pending/list', [ResourceRequestController::class, 'pending'])->name('requests.pending');
+        Route::get('/requests/{request}/withdrawals/{withdrawal}', [ResourceRequestController::class, 'withdrawalRecord'])->name('requests.withdrawal-record');
         Route::get('/requests/{request}/withdrawal-slip/download', [ResourceRequestController::class, 'downloadWithdrawalSlip'])->name('requests.withdrawal-slip.download');
         Route::get('/requests/{request}/withdrawal-slip', [ResourceRequestController::class, 'withdrawalSlip'])->name('requests.withdrawal-slip');
         Route::post('/requests/{request}/fulfill', [ResourceRequestController::class, 'fulfill'])->name('requests.fulfill');

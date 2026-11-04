@@ -17,6 +17,7 @@
                         <select name="status" class="form-select">
                             <option value="">All</option>
                             <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="partially_withdrawn" @selected(request('status') === 'partially_withdrawn')>Partially Withdrawn</option>
                             <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
                             <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
                         </select>

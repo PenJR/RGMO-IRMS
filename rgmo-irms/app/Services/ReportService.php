@@ -203,6 +203,7 @@ class ReportService
         $requests = ResourceRequest::whereYear('fulfilled_at', $year)
             ->whereMonth('fulfilled_at', $month)
             ->where('status', ResourceRequest::STATUS_COMPLETED)
+            ->whereDoesntHave('withdrawals')
             ->with(['user', 'items.item'])
             ->get();
 
@@ -219,6 +220,19 @@ class ReportService
                     'amount' => $requestItem->item->price * $requestItem->quantity,
                 ];
             }
+        }
+
+        $issued = \App\Models\WithdrawalItem::with(['withdrawal.request.user', 'requestItem.item'])
+            ->whereHas('withdrawal', fn ($q) => $q->whereYear('withdrawn_on', $year)->whereMonth('withdrawn_on', $month))->get();
+        foreach ($issued as $line) {
+            $request = $line->withdrawal->request;
+            $item = $line->requestItem->item;
+            $data[] = (object) [
+                'ris_no' => ($request->ris_no ?? 'RQ-'.$request->id).' / WD-'.$line->withdrawal_id,
+                'responsible_center' => $request->responsible_center ?? ($request->user->department ?? 'N/A'),
+                'stock_no' => $item?->sku ?? '', 'item_name' => $item?->name ?? 'Archived item',
+                'unit_cost' => $line->unit_cost, 'quantity' => $line->quantity, 'amount' => $line->unit_cost * $line->quantity,
+            ];
         }
 
         return $data;
@@ -307,9 +321,10 @@ class ReportService
             'charts' => [
                 'inventory_levels' => $this->getInventoryLevelChartData(),
                 'request_statuses' => [
-                    'labels' => ['Approved', 'Pending', 'Rejected', 'Completed', 'Cancelled'],
+                    'labels' => ['Approved', 'Partially Withdrawn', 'Pending', 'Rejected', 'Completed', 'Cancelled'],
                     'data' => [
                         (int) ($requestStatusCounts[ResourceRequest::STATUS_APPROVED] ?? 0),
+                        (int) ($requestStatusCounts[ResourceRequest::STATUS_PARTIALLY_WITHDRAWN] ?? 0),
                         (int) ($requestStatusCounts[ResourceRequest::STATUS_PENDING] ?? 0),
                         (int) ($requestStatusCounts[ResourceRequest::STATUS_REJECTED] ?? 0),
                         (int) ($requestStatusCounts[ResourceRequest::STATUS_COMPLETED] ?? 0),

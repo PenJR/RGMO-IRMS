@@ -91,7 +91,7 @@ class RequestWorkflowTest extends TestCase
             ->assertRedirect(route('requests.show', $request));
 
         $this->actingAs($admin)
-            ->post(route('requests.fulfill', $request))
+            ->post(route('requests.fulfill', $request), ['quantities' => $request->items->pluck('quantity', 'id')->all(), 'received_by' => 'Test recipient', 'withdrawn_on' => today()->toDateString(), 'submission_key' => (string) \Illuminate\Support\Str::uuid()])
             ->assertRedirect(route('requests.show', $request));
 
         $request->refresh();

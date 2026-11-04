@@ -71,7 +71,7 @@ class ManuscriptAccessControlTest extends TestCase
         $this->get(route('requests.pending'))->assertForbidden();
         $this->post(route('requests.approve', $pending->request))->assertForbidden();
         $this->get(route('requests.show', $approved->request))->assertOk();
-        $this->post(route('requests.fulfill', $approved->request))->assertRedirect();
+        $this->post(route('requests.fulfill', $approved->request), ['quantities' => [$approved->id => $approved->quantity], 'received_by' => 'Test recipient', 'withdrawn_on' => today()->toDateString(), 'submission_key' => (string) \Illuminate\Support\Str::uuid()])->assertRedirect();
         $this->assertSame(15, $approved->item->fresh()->stock);
         $this->assertDatabaseCount('resource_usages', 0);
         $this->assertTrue($approved->request->fresh()->tracks_utilization);

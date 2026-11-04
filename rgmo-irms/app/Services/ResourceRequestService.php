@@ -3,11 +3,15 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\Delivery;
+use App\Models\InventoryItem;
 use App\Models\RequestItem;
 use App\Models\ResourceRequest;
+use App\Models\Withdrawal;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ResourceRequestService
@@ -105,21 +109,28 @@ class ResourceRequestService
      */
     public function updateRequest(ResourceRequest $request, array $data, int $actorId): ResourceRequest
     {
-        $oldValues = $request->only(['project_id', 'purpose', 'remarks', 'needed_date']);
-        $request->update($data);
-        $request->refresh();
+        return DB::transaction(function () use ($request, $data, $actorId) {
+            $request = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            if (! $request->isPending()) {
+                throw ValidationException::withMessages(['status' => 'Only pending requests can be changed.']);
+            }
 
-        AuditLog::log(
-            $actorId,
-            'update',
-            'resource_request',
-            ResourceRequest::class,
-            $request->id,
-            $oldValues,
-            $request->only(['project_id', 'purpose', 'remarks', 'needed_date'])
-        );
+            $oldValues = $request->only(['project_id', 'purpose', 'remarks', 'needed_date']);
+            $request->update($data);
+            $request->refresh();
 
-        return $request;
+            AuditLog::log(
+                $actorId,
+                'update',
+                'resource_request',
+                ResourceRequest::class,
+                $request->id,
+                $oldValues,
+                $request->only(['project_id', 'purpose', 'remarks', 'needed_date'])
+            );
+
+            return $request;
+        }, 5);
     }
 
     /**
@@ -130,26 +141,26 @@ class ResourceRequestService
      */
     public function approveRequest(ResourceRequest $request, int $approverId, ?string $remarks = null): void
     {
-        $request->loadMissing('items.item');
-
-        if (! $this->canFulfillRequest($request)) {
-            throw ValidationException::withMessages([
-                'items' => 'This request cannot be approved because one or more items do not have enough available stock.',
-            ]);
-        }
-
-        $oldValues = $request->toArray();
-        $request->approve($approverId, $remarks);
-
-        AuditLog::log(
-            $approverId,
-            'approve',
-            'resource_request',
-            ResourceRequest::class,
-            $request->id,
-            $oldValues,
-            $request->fresh()->toArray()
-        );
+        DB::transaction(function () use ($request, $approverId, $remarks) {
+            $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            if (! $locked->isPending()) {
+                throw ValidationException::withMessages(['status' => 'Only pending requests may be approved.']);
+            }
+            $lines = $locked->items()->orderBy('inventory_item_id')->get();
+            if ($lines->isEmpty()) {
+                throw ValidationException::withMessages(['items' => 'A request must contain at least one item.']);
+            }
+            foreach ($lines->groupBy('inventory_item_id') as $itemId => $group) {
+                $item = InventoryItem::lockForUpdate()->findOrFail($itemId);
+                if ($item->available_stock < $group->sum('quantity')) {
+                    throw ValidationException::withMessages(['items' => 'Insufficient available stock. Quantities reserved by other projects cannot be used.']);
+                }
+            }
+            $old = $locked->toArray();
+            $locked->approve($approverId, $remarks);
+            AuditLog::log($approverId, 'approve', 'resource_request', ResourceRequest::class, $locked->id, $old, $locked->fresh()->toArray());
+            $request->setRawAttributes($locked->getAttributes(), true);
+        }, 5);
 
         $this->notificationService->notifyResourceRequestApproved($request, $approverId);
     }
@@ -161,20 +172,27 @@ class ResourceRequestService
      */
     public function rejectRequest(ResourceRequest $request, ?string $remarks = null): void
     {
-        $oldValues = $request->toArray();
-        $request->reject($remarks);
+        DB::transaction(function () use ($request, $remarks) {
+            $request = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            if (! $request->isPending()) {
+                throw ValidationException::withMessages(['status' => 'Only pending requests can be changed.']);
+            }
 
-        AuditLog::log(
-            auth()->id(),
-            'reject',
-            'resource_request',
-            ResourceRequest::class,
-            $request->id,
-            $oldValues,
-            $request->fresh()->toArray()
-        );
+            $oldValues = $request->toArray();
+            $request->reject($remarks);
 
-        $this->notificationService->notifyResourceRequestRejected($request, auth()->id());
+            AuditLog::log(
+                auth()->id(),
+                'reject',
+                'resource_request',
+                ResourceRequest::class,
+                $request->id,
+                $oldValues,
+                $request->fresh()->toArray()
+            );
+
+            $this->notificationService->notifyResourceRequestRejected($request, auth()->id());
+        }, 5);
     }
 
     /**
@@ -182,18 +200,25 @@ class ResourceRequestService
      */
     public function cancelRequest(ResourceRequest $request, ?string $remarks = null): void
     {
-        $oldValues = $request->toArray();
-        $request->cancel($remarks);
+        DB::transaction(function () use ($request, $remarks) {
+            $request = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            if (! $request->isPending()) {
+                throw ValidationException::withMessages(['status' => 'Only pending requests can be changed.']);
+            }
 
-        AuditLog::log(
-            auth()->id(),
-            'cancel',
-            'resource_request',
-            ResourceRequest::class,
-            $request->id,
-            $oldValues,
-            $request->fresh()->toArray()
-        );
+            $oldValues = $request->toArray();
+            $request->cancel($remarks);
+
+            AuditLog::log(
+                auth()->id(),
+                'cancel',
+                'resource_request',
+                ResourceRequest::class,
+                $request->id,
+                $oldValues,
+                $request->fresh()->toArray()
+            );
+        }, 5);
     }
 
     /**
@@ -225,9 +250,13 @@ class ResourceRequestService
     public function canFulfillRequest(ResourceRequest $request): bool
     {
         $request->loadMissing('items.item');
-
-        foreach ($request->items as $item) {
-            if (! $item->item || $item->item->stock < $item->quantity) {
+        if ($request->items->isEmpty()) {
+            return false;
+        }
+        foreach ($request->items->groupBy('inventory_item_id') as $lines) {
+            $item = $lines->first()->item;
+            $remaining = $lines->sum(fn ($line) => $line->remaining_quantity);
+            if (! $item || ($request->isReleasable() ? $item->stock < $remaining : $item->available_stock < $remaining)) {
                 return false;
             }
         }
@@ -235,58 +264,65 @@ class ResourceRequestService
         return true;
     }
 
-    /**
-     * Fulfill a resource request by deducting the requested quantities from inventory stock.
-     */
-    public function fulfillRequest(ResourceRequest $request): void
+    /** A null quantity map is retained for internal callers: withdraw the entire remainder. */
+    public function fulfillRequest(ResourceRequest $request, ?array $quantities = null, array $details = []): void
     {
-        DB::transaction(function () use ($request) {
-            $lockedRequest = ResourceRequest::query()
-                ->lockForUpdate()
-                ->findOrFail($request->id);
+        DB::transaction(function () use ($request, $quantities, $details) {
+            $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            $key = $details['submission_key'] ?? (string) Str::uuid();
+            $existing = Withdrawal::where('submission_key', $key)->first();
+            if ($existing) {
+                abort_unless($existing->resource_request_id === $locked->id, 409);
 
-            if (! $lockedRequest->isApproved()) {
-                throw ValidationException::withMessages([
-                    'status' => 'Only approved requests can be fulfilled.',
+                return;
+            }
+            if (! $locked->isReleasable()) {
+                throw ValidationException::withMessages(['status' => 'Only approved or partially withdrawn requests can be released.']);
+            }
+            $lines = $locked->items()->orderBy('inventory_item_id')->get();
+            if ($quantities !== null && array_diff(array_keys($quantities), $lines->modelKeys())) {
+                throw ValidationException::withMessages(['quantities' => 'Choose items belonging to this request.']);
+            }
+            $amounts = $lines->mapWithKeys(fn ($line) => [$line->id => $quantities === null ? $line->remaining_quantity : (int) ($quantities[$line->id] ?? 0)]);
+            if ($amounts->sum() < 1) {
+                throw ValidationException::withMessages(['quantities' => 'Enter a positive quantity for at least one item.']);
+            }
+            $date = $details['withdrawn_on'] ?? today()->toDateString();
+            if ($date > today()->toDateString() || ($locked->approved_at && $date < $locked->approved_at->toDateString())) {
+                throw ValidationException::withMessages(['withdrawn_on' => 'Withdrawal date must be on or after approval and no later than today.']);
+            }
+            $withdrawal = $locked->withdrawals()->create([
+                'issued_by' => auth()->id(), 'received_by' => $details['received_by'] ?? $locked->user->name,
+                'withdrawn_on' => $date, 'submission_key' => $key, 'notes' => $details['notes'] ?? null,
+            ]);
+            foreach ($lines as $line) {
+                $quantity = $amounts[$line->id];
+                if ($quantity < 0 || $quantity > $line->remaining_quantity) {
+                    throw ValidationException::withMessages(['quantities' => 'Withdrawal exceeds the reserved balance.']);
+                }
+                if ($quantity === 0) {
+                    continue;
+                }
+                $item = InventoryItem::lockForUpdate()->findOrFail($line->inventory_item_id);
+                // Release only this line's reservation, inside the same stock transaction.
+                $line->increment('withdrawn_quantity', $quantity);
+                $transaction = app(InventoryService::class)->recordStockOut($item, $quantity, 'resource_request_'.$locked->id, auth()->id(), null, 'WD-'.$withdrawal->id);
+                $deliveryIds = collect($transaction->meta['deliveries'] ?? [])->pluck('delivery_id');
+                if (Delivery::whereIn('id', $deliveryIds)->whereDate('received_on', '>', $date)->exists()) {
+                    throw ValidationException::withMessages(['withdrawn_on' => 'A withdrawal cannot predate the delivery of its stock.']);
+                }
+                $withdrawal->items()->create([
+                    'request_item_id' => $line->id, 'quantity' => $quantity,
+                    'unit_cost' => $item->price ?? 0, 'inventory_transaction_id' => $transaction->id,
                 ]);
             }
-
-            $lockedRequest->load([
-                'items' => fn ($query) => $query->orderBy('inventory_item_id'),
-                'items.item',
+            $remaining = $locked->items()->whereColumn('withdrawn_quantity', '<', 'quantity')->exists();
+            $locked->update([
+                'status' => $remaining ? ResourceRequest::STATUS_PARTIALLY_WITHDRAWN : ResourceRequest::STATUS_COMPLETED,
+                'fulfilled_at' => $remaining ? null : now(), 'tracks_utilization' => true,
             ]);
-
-            if (! $this->canFulfillRequest($lockedRequest)) {
-                throw ValidationException::withMessages([
-                    'items' => 'This request cannot be fulfilled because one or more items do not have enough available stock.',
-                ]);
-            }
-
-            $oldValues = $lockedRequest->toArray();
-
-            foreach ($lockedRequest->items as $item) {
-                $item->item->recordStockOut(
-                    $item->quantity,
-                    'resource_request_'.$lockedRequest->id,
-                    auth()->id()
-                );
-            }
-
-            $lockedRequest->update([
-                'status' => ResourceRequest::STATUS_COMPLETED,
-                'fulfilled_at' => now(),
-                'tracks_utilization' => true,
-            ]);
-
-            AuditLog::log(
-                auth()->id(),
-                'fulfill',
-                'resource_request',
-                ResourceRequest::class,
-                $lockedRequest->id,
-                $oldValues,
-                $lockedRequest->fresh()->toArray()
-            );
-        }, attempts: 5);
+            AuditLog::log(auth()->id(), 'fulfill', 'resource_request', ResourceRequest::class, $locked->id, null, ['withdrawal_id' => $withdrawal->id, 'quantities' => $amounts->all(), 'status' => $locked->status]);
+            $request->setRawAttributes($locked->getAttributes(), true);
+        }, 5);
     }
 }

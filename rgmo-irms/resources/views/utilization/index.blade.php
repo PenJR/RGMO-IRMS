@@ -15,7 +15,7 @@
                         <select id="request_item_id" name="request_item_id" class="form-select" required>
                             <option value="">Choose a withdrawal</option>
                             @foreach($lines as $line)
-                                <option value="{{ $line->id }}" @selected(old('request_item_id') == $line->id)>#RQ-{{ $line->resource_request_id }} — {{ $line->item?->name ?? 'Unavailable item' }} — {{ $line->request->user?->name }} — {{ $line->quantity - ($line->usages_sum_quantity ?? 0) }} {{ $line->item?->unit }} remaining</option>
+                                <option value="{{ $line->id }}" @selected(old('request_item_id') == $line->id)>#RQ-{{ $line->resource_request_id }} — {{ $line->item?->name ?? 'Unavailable item' }} — {{ $line->request->user?->name }} — {{ $line->withdrawn_quantity - ($line->usages_sum_quantity ?? 0) }} {{ $line->item?->unit }} remaining</option>
                             @endforeach
                         </select>
                         @error('request_item_id')<div class="text-danger">{{ $message }}</div>@enderror

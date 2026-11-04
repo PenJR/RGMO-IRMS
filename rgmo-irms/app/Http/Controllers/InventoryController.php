@@ -51,6 +51,7 @@ class InventoryController extends Controller
         $items = $this->inventoryService
             ->getAllItems(8, $filters)
             ->withQueryString();
+        $items->getCollection()->load('fifoDeliveries.procurement');
 
         return view('inventory.index', [
             'items' => $items,
@@ -116,6 +117,7 @@ class InventoryController extends Controller
         return view('inventory.show', [
             'item' => $item,
             'transactions' => $transactions,
+            'procurements' => \App\Models\Procurement::where('inventory_item_id', $item->id)->withSum('deliveries', 'quantity')->latest()->paginate(10, ['*'], 'purchases_page'),
         ]);
     }
 

@@ -83,7 +83,7 @@
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">Current Stock</dt>
                                     <dd class="text-sm text-gray-900">
-                                        {{ $item->stock }} {{ $item->unit }}
+                                        {{ $item->stock }} {{ $item->unit }}<div class="small text-muted">{{ $item->reserved_quantity }} reserved · {{ $item->available_stock }} available</div>
                                         @if($item->isLowStock())
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 ml-2">
                                                 Low Stock
@@ -127,6 +127,7 @@
                 </div>
             </div>
 
+            <div class="card mb-4"><div class="card-body"><h3 class="h5">Purchase &amp; delivery trace</h3><div class="table-responsive"><table class="table"><thead><tr><th>Purchase</th><th>Supplier / Contact</th><th>OR number</th><th>Purchase date</th><th>Ordered</th><th>Received</th></tr></thead><tbody>@forelse($procurements as $purchase)<tr><td><a href="{{ route('procurements.show', $purchase) }}">PRC-{{ $purchase->id }}</a></td><td>{{ $purchase->supplier_name }}<div>{{ $purchase->supplier_number }}</div></td><td>{{ $purchase->or_number }}</td><td>{{ $purchase->purchased_on->format('M d, Y') }}</td><td>{{ $purchase->quantity }}</td><td>{{ $purchase->deliveries_sum_quantity ?? 0 }}</td></tr>@empty<tr><td colspan="6">No linked purchases. Existing stock retains its historical transaction records.</td></tr>@endforelse</tbody></table></div>{{ $procurements->links() }}</div></div>
             <!-- Stock Adjustment -->
             @can('update', $item)
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">

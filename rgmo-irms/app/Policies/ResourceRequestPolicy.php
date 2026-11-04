@@ -25,7 +25,7 @@ class ResourceRequestPolicy
         return $user->id === $request->user_id
             || $user->hasPermission(['review-request', 'approve-request'])
             || ($user->hasPermission('record-withdrawal')
-                && in_array($request->status, [ResourceRequest::STATUS_APPROVED, ResourceRequest::STATUS_COMPLETED], true));
+                && in_array($request->status, [ResourceRequest::STATUS_APPROVED, ResourceRequest::STATUS_PARTIALLY_WITHDRAWN, ResourceRequest::STATUS_COMPLETED], true));
     }
 
     /**
@@ -41,6 +41,8 @@ class ResourceRequestPolicy
      */
     public function update(User $user, ResourceRequest $request): bool
     {
+        if (! $request->isPending()) return false;
+
         if ($user->hasPermission('manage-users')) {
             return true;
         }
@@ -94,6 +96,6 @@ class ResourceRequestPolicy
      */
     public function fulfill(User $user, ResourceRequest $request): bool
     {
-        return $user->hasPermission('record-withdrawal') && $request->isApproved();
+        return $user->hasPermission('record-withdrawal') && $request->isReleasable();
     }
 }
