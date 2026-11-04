@@ -16,6 +16,12 @@ class InventoryItem extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (InventoryItem $item) {
+            if (blank($item->sku)) {
+                $item->sku = 'ITEM-'.(string) \Illuminate\Support\Str::uuid();
+            }
+        });
+
         static::updating(function (InventoryItem $item) {
             $errors = [];
             if ($item->isDirty('stock') && $item->stock < $item->reserved_quantity) {

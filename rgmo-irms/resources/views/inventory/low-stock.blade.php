@@ -74,7 +74,7 @@
                                 <tr>
                                     <td>
                                         <div class="fw-semibold">{{ $item->name }}</div>
-                                        <div class="text-muted small">{{ $item->sku }}</div>
+
                                     </td>
                                     <td>{{ $item->category->name ?? 'N/A' }}</td>
 	                                    <td>{{ $item->stock }} {{ $item->unit }}</td>

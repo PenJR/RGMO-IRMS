@@ -45,10 +45,7 @@
                                     <dt class="text-sm font-medium text-gray-500">Name</dt>
                                     <dd class="text-sm text-gray-900">{{ $item->name }}</dd>
                                 </div>
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500">SKU</dt>
-                                    <dd class="text-sm text-gray-900">{{ $item->sku }}</dd>
-                                </div>
+
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">Category</dt>
                                     <dd class="text-sm text-gray-900">{{ $item->category->name ?? 'N/A' }}</dd>

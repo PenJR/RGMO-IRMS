@@ -213,7 +213,7 @@ class ReportService
                 $data[] = (object) [
                     'ris_no' => $request->ris_no ?? $request->id,
                     'responsible_center' => $request->responsible_center ?? ($request->user->department ?? 'N/A'),
-                    'stock_no' => $requestItem->item->sku,
+                    'stock_no' => 'ITEM-'.$requestItem->item->id,
                     'item_name' => $requestItem->item->name,
                     'unit_cost' => $requestItem->item->price,
                     'quantity' => $requestItem->quantity,
@@ -230,7 +230,7 @@ class ReportService
             $data[] = (object) [
                 'ris_no' => ($request->ris_no ?? 'RQ-'.$request->id).' / WD-'.$line->withdrawal_id,
                 'responsible_center' => $request->responsible_center ?? ($request->user->department ?? 'N/A'),
-                'stock_no' => $item?->sku ?? '', 'item_name' => $item?->name ?? 'Archived item',
+                'stock_no' => $item ? 'ITEM-'.$item->id : '', 'item_name' => $item?->name ?? 'Archived item',
                 'unit_cost' => $line->unit_cost, 'quantity' => $line->quantity, 'amount' => $line->unit_cost * $line->quantity,
             ];
         }

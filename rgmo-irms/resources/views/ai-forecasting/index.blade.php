@@ -104,7 +104,7 @@
                                         <tr data-forecast-row>
                                             <td data-label="Item">
                                                 <div class="fw-semibold">{{ $item->name }}</div>
-                                                <div class="text-muted small">{{ $item->sku }} &middot; {{ $item->category?->name ?? 'Uncategorized' }}</div>
+                                                <div class="text-muted small">{{ $item->category?->name ?? 'Uncategorized' }}</div>
                                             </td>
                                             <td class="text-end" data-label="Stock">{{ number_format($item->stock) }} {{ $item->unit }}</td>
                                             <td class="text-end" data-label="Average / Day">

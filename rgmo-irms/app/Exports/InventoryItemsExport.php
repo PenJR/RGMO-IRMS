@@ -31,7 +31,7 @@ class InventoryItemsExport implements FromQuery, ShouldAutoSize, WithHeadings, W
         return [
             $item->category->name ?? 'Uncategorized',
             $item->name,
-            $item->sku,
+
             $item->stock,
             $item->min_stock,
             $item->reorder_level,
@@ -50,7 +50,6 @@ class InventoryItemsExport implements FromQuery, ShouldAutoSize, WithHeadings, W
         return [
             'Category',
             'Name',
-            'SKU',
             'Stock',
             'Min Stock',
             'Reorder Level',

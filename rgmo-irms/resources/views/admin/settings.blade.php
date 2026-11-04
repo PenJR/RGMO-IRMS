@@ -74,7 +74,7 @@
                                         data-unit="{{ $item->unit }}"
                                         {{ (string) old('inventory_item_id', $inventoryItems->first()?->id) === (string) $item->id ? 'selected' : '' }}
                                     >
-                                        {{ $item->name }} ({{ $item->sku }} • {{ $item->category->name ?? 'N/A' }})
+                                        {{ $item->name }} ({{ $item->category->name ?? 'N/A' }})
                                     </option>
                                 @endforeach
                             </select>

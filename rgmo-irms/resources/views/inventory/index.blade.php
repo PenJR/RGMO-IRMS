@@ -31,7 +31,7 @@
                             <label for="search" class="form-label">Search</label>
                             <input type="text" name="search" id="search" value="{{ request('search') }}"
                                    class="form-control"
-                                   placeholder="Search by name, SKU, or description" maxlength="255">
+                                   placeholder="Search by name or description" maxlength="255">
                         </div>
                         <div class="col-md-4 col-lg-3">
                             <label for="category_id" class="form-label">Category</label>
@@ -79,7 +79,7 @@
                                 <button type="submit" class="btn btn-cmu w-100">Import Items</button>
                             </div>
                             <div class="col-12">
-                                <small class="text-muted" id="inventory-import-help">Supported formats: CSV, XLSX, XLS, TXT. Maximum file size 10MB. Required columns: category or category_id, name, and SKU.</small>
+                                <small class="text-muted" id="inventory-import-help">Supported formats: CSV, XLSX, XLS, TXT. Maximum file size 10MB. Required columns: category or category_id, and name. Rows without a legacy code create new items.</small>
                             </div>
                         </form>
                         @if(session('import_failures'))
@@ -109,7 +109,7 @@
                                 <thead>
                                     <tr>
                                         <x-sortable-th column="name">Item</x-sortable-th>
-                                        <x-sortable-th column="sku">SKU</x-sortable-th>
+
                                         <th>Category</th>
                                         <th>Use first · FIFO</th>
                                         <x-sortable-th column="stock">Stock</x-sortable-th>
@@ -136,7 +136,7 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td data-label="SKU">{{ $item->sku }}</td>
+
                                             <td data-label="Category">{{ $item->category->name ?? 'N/A' }}</td>
                                             <td data-label="Use first · FIFO">
                                                 <div style="min-width: 180px; max-width: 240px;">

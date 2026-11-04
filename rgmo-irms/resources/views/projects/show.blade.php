@@ -42,7 +42,7 @@
                                             <tr>
                                                 <td>
                                                     <div class="fw-semibold">{{ $resource['item']?->name ?? 'Unknown item' }}</div>
-                                                    <div class="text-muted small">{{ $resource['item']?->sku ?? 'No SKU' }}</div>
+
                                                 </td>
                                                 <td>{{ $resource['item']?->category?->name ?? 'N/A' }}</td>
                                                 <td>{{ $resource['quantity'] }} {{ $resource['item']?->unit ?? '' }}</td>

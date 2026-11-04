@@ -22,7 +22,7 @@
         <thead>
             <tr>
                 <th>Item</th>
-                <th>SKU</th>
+
                 <th>Category</th>
                 <th>Stock</th>
                 <th>Min Stock</th>
@@ -34,7 +34,7 @@
             @foreach($report['items'] as $item)
                 <tr>
                     <td>{{ $item->name }}</td>
-                    <td>{{ $item->sku }}</td>
+
                     <td>{{ $item->category?->name ?? 'N/A' }}</td>
                     <td>{{ number_format($item->stock) }} {{ $item->unit }}</td>
                     <td>{{ number_format($item->min_stock) }} {{ $item->unit }}</td>

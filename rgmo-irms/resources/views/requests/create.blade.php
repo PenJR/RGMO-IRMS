@@ -92,7 +92,7 @@
                                                                 <option value="">Search for item...</option>
                                                                 @foreach($items as $item)
                                                                     <option value="{{ $item->id }}" {{ old('items.' . $index . '.inventory_item_id', $itemRow['inventory_item_id'] ?? '') == $item->id ? 'selected' : '' }}>
-                                                                        {{ $item->name }} (SKU: {{ $item->sku }} • {{ $item->available_stock }} remaining)
+                                                                        {{ $item->name }} ({{ $item->available_stock }} remaining)
                                                                     </option>
                                                                 @endforeach
                                                             </select>
@@ -140,7 +140,7 @@
                     <select name="items[][inventory_item_id]" class="form-select" required>
                         <option value="">Search for item...</option>
                         @foreach($items as $item)
-                            <option value="{{ $item->id }}">{{ $item->name }} (SKU: {{ $item->sku }} • {{ $item->available_stock }} remaining)</option>
+                            <option value="{{ $item->id }}">{{ $item->name }} ({{ $item->available_stock }} remaining)</option>
                         @endforeach
                     </select>
                 </div>

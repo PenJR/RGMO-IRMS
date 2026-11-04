@@ -150,12 +150,12 @@ class ReportController extends Controller
         $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.csv';
 
         $handle = fopen('php://memory', 'w');
-        fputcsv($handle, ['Item Name', 'SKU', 'Category', 'Stock', 'Min Stock', 'Unit', 'Price ('.SystemSetting::currencyCode().')', 'Status']);
+        fputcsv($handle, ['Item Name', 'Category', 'Stock', 'Min Stock', 'Unit', 'Price ('.SystemSetting::currencyCode().')', 'Status']);
 
         foreach ($report['items'] as $item) {
             fputcsv($handle, [
                 $item->name,
-                $item->sku,
+
                 $item->category->name,
                 $item->stock,
                 $item->min_stock,

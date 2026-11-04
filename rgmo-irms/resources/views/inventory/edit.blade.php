@@ -33,12 +33,7 @@
                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">SKU</label>
-                            <input type="text" name="sku" value="{{ old('sku', $item->sku) }}" class="form-control @error('sku') is-invalid @enderror" required maxlength="255">
-                            @error('sku')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div class="form-text">Unique identifier for the item</div>
-                        </div>
+
 
                         <div class="col-md-6">
                             <label class="form-label">Description</label>

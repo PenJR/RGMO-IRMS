@@ -129,7 +129,7 @@
                             <div class="px-4 py-3 border-top d-flex align-items-center justify-content-between gap-3">
                                 <div>
                                     <p class="fw-semibold mb-0">{{ $item->name }}</p>
-                                    <p class="text-muted small mb-0">{{ $item->sku }}</p>
+
                                 </div>
                                 <span class="badge bg-danger-subtle text-danger">{{ $item->stock }} / {{ $item->min_stock }} {{ $item->unit }}</span>
                             </div>
@@ -156,7 +156,7 @@
                             <div class="px-4 py-3 border-top d-flex align-items-center justify-content-between gap-3">
                                 <div>
                                     <p class="fw-semibold mb-0">{{ $item->name }}</p>
-                                    <p class="text-muted small mb-0">{{ $item->sku }}</p>
+
                                 </div>
                                 <span class="badge bg-warning-subtle text-warning">{{ $item->expiry_date->format('M d, Y') }}</span>
                             </div>

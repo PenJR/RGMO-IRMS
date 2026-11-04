@@ -157,7 +157,7 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'category_id' => 'sometimes|required|integer|min:1|exists:categories,id',
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:inventory_items,sku,'.$item->id,
+            'sku' => 'sometimes|required|string|max:255|unique:inventory_items,sku,'.$item->id,
             'stock' => 'required|integer|min:0|max:2147483647',
             'unit' => 'sometimes|required|string|max:30',
             'min_stock' => 'required|integer|min:0|max:2147483647',
@@ -272,14 +272,14 @@ class InventoryController extends Controller
 
         return response()->streamDownload(function () use ($currencyCode, $items): void {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Category', 'Name', 'SKU', 'Stock', 'Min Stock', 'Reorder Level', 'Unit', 'Price ('.$currencyCode.')', 'Description', 'Status']);
+            fputcsv($handle, ['Category', 'Name', 'Stock', 'Min Stock', 'Reorder Level', 'Unit', 'Price ('.$currencyCode.')', 'Description', 'Status']);
 
             $items->chunk(500, function ($items) use ($handle): void {
                 foreach ($items as $item) {
                     fputcsv($handle, [
                         $item->category->name ?? 'Uncategorized',
                         $item->name,
-                        $item->sku,
+
                         $item->stock,
                         $item->min_stock,
                         $item->reorder_level,

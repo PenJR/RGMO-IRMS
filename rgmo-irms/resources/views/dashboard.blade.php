@@ -128,7 +128,7 @@
                             <select class="form-select form-select-sm" id="inventoryChartItem" style="width: auto; max-width: 220px;" aria-label="Filter inventory dynamics by item">
                                 <option value="all">All inventory items</option>
                                 @foreach($stats['charts']['inventory_levels']['items'] as $chartItem)
-                                    <option value="{{ $chartItem['id'] }}">{{ $chartItem['name'] }} ({{ $chartItem['sku'] }})</option>
+                                    <option value="{{ $chartItem['id'] }}">{{ $chartItem['name'] }}</option>
                                 @endforeach
                             </select>
                             <div class="d-flex gap-1" role="group" aria-label="Inventory chart period">
@@ -290,7 +290,7 @@
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
                                                 <h6 class="mb-0 fw-bold" style="font-size: 0.9rem;">{{ $item->name }}</h6>
-                                                <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ $item->sku }} · {{ $item->stock }} {{ Str::plural($item->unit, $item->stock) }} available</p>
+                                                <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ $item->stock }} {{ Str::plural($item->unit, $item->stock) }} available</p>
                                             </div>
                                             <div class="text-end">
                                                 <span class="resource-suggestion-quantity">Add {{ number_format($suggestedQuantity) }} {{ Str::plural($item->unit, $suggestedQuantity) }}</span>
@@ -548,7 +548,7 @@
 
                 inventoryRange.textContent = periodData.range_label;
                 inventorySubtitle.textContent = selectedItem
-                    ? `${selectedItem.name} (${selectedItem.sku}) stock level across recent ${activeInventoryPeriod === 'weekly' ? 'weeks' : 'months'}`
+                    ? `${selectedItem.name} stock level across recent ${activeInventoryPeriod === 'weekly' ? 'weeks' : 'months'}`
                     : periodData.subtitle;
             };
 

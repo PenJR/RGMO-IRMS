@@ -27,14 +27,14 @@
                                         <i data-lucide="package-plus" style="width: 24px; height: 24px;"></i>
                                     </div>
                                     <h4 class="fw-bold text-dark">Item Details</h4>
-                                    <p class="text-muted small">Enter the SKU, name, and category to properly categorize the new resource.</p>
+                                    <p class="text-muted small">Enter the name and category to properly categorize the new resource.</p>
                                 </div>
                                 <div class="mt-5 pt-3">
                                     <h6 class="fw-bold text-uppercase small text-muted mb-3" style="letter-spacing: 0.05em">Inventory Tips</h6>
                                     <ul class="list-unstyled small text-muted">
                                         <li class="mb-3 d-flex gap-2">
                                             <i data-lucide="info" class="text-success" style="width:14px"></i> 
-                                            <span>Use **distinct SKUs** for easy tracking.</span>
+                                            <span>Use clear item names and descriptions for easy tracking.</span>
                                         </li>
                                         <li class="mb-3 d-flex gap-2">
                                             <i data-lucide="alert-circle" class="text-success" style="width:14px"></i> 
@@ -73,11 +73,7 @@
                                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 
-                                        <div class="col-md-6">
-                                            <label class="form-label">SKU / Code</label>
-                                            <input type="text" name="sku" value="{{ old('sku') }}" placeholder="SKU-XXXXXX" class="form-control @error('sku') is-invalid @enderror" required maxlength="255">
-                                            @error('sku')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                        </div>
+
 
                                         <div class="col-md-6">
                                             <label class="form-label">Unit of Measure</label>

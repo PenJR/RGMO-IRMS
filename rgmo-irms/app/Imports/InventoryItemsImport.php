@@ -47,10 +47,6 @@ class InventoryItemsImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
         $values = $row->toArray();
         $sku = trim($values['sku'] ?? '');
 
-        if ($sku === '') {
-            return;
-        }
-
         try {
             $result = DB::transaction(function () use ($values, $sku) {
                 $category = null;
@@ -66,7 +62,7 @@ class InventoryItemsImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
                 $itemData = [
                     'category_id' => $category?->id,
                     'name' => trim($values['name'] ?? ''),
-                    'sku' => $sku,
+                    'sku' => $sku ?: 'ITEM-'.(string) \Illuminate\Support\Str::uuid(),
                     'stock' => isset($values['stock']) ? (int) $values['stock'] : 0,
                     'unit' => trim($values['unit'] ?? 'pcs'),
                     'min_stock' => isset($values['min_stock']) ? (int) $values['min_stock'] : 0,
@@ -139,7 +135,7 @@ class InventoryItemsImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'category' => ['nullable', 'string', 'max:255', 'required_without:category_id'],
             'name' => ['required', 'string', 'max:255'],
-            'sku' => ['required', 'string', 'max:255'],
+            'sku' => ['nullable', 'string', 'max:255'],
             'stock' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
             'unit' => ['nullable', 'string', 'max:30'],
             'min_stock' => ['nullable', 'integer', 'min:0', 'max:2147483647'],

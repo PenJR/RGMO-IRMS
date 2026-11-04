@@ -24,7 +24,7 @@ class StoreInventoryItemRequest extends FormRequest
             'category_id' => 'nullable|required_without:category_name|prohibits:category_name|integer|min:1|exists:categories,id,deleted_at,NULL',
             'category_name' => 'nullable|required_without:category_id|string|max:255',
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:inventory_items,sku',
+            'sku' => 'sometimes|required|string|max:255|unique:inventory_items,sku',
             'stock' => 'required|integer|min:0|max:2147483647',
             'unit' => 'required|in:'.implode(',', config('inventory.units', [])),
             'min_stock' => 'required|integer|min:0|max:2147483647',
