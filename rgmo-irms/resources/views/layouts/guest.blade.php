@@ -25,60 +25,20 @@
                 --cmu-yellow-hover: #E5B700;
             }
 
-            body {
-                margin: 0;
-                min-height: 100vh;
-                min-height: 100svh;
-                font-family: 'Inter', system-ui, sans-serif;
-                color: #1f2d27;
-                background: #526c53 url('{{ asset('images/campus-background.jpeg') }}') center center / cover no-repeat fixed !important;
-            }
-
-            body::before {
-                content: "";
-                position: fixed;
-                inset: 0;
-                background: rgba(12, 32, 22, 0.24);
-                pointer-events: none;
-            }
-
-            .auth-page-shell {
-                position: relative;
-                min-height: 100vh;
-                min-height: 100svh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 2.5rem 1rem;
-            }
-
-            .login-card {
-                width: 100%;
-                max-width: 480px;
-                padding: 2.4rem 2rem;
-                background: #ffffff;
-                border: 2px solid rgba(255, 198, 0, 0.85) !important;
-                border-right-color: rgba(0, 105, 48, 0.75) !important;
-                border-bottom-color: rgba(0, 105, 48, 0.75) !important;
-                border-radius: 32px !important;
-                box-shadow:
-                    0 24px 70px rgba(0, 25, 10, 0.28),
-                    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
-            }
-
-            .auth-brand {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.85rem;
-                margin-bottom: 1.8rem;
-            }
-
-            .auth-brand img { width: 72px; height: 72px; flex-shrink: 0; object-fit: contain; }
-            .auth-brand > div { flex: 1; min-width: 0; }
-            .auth-brand strong { display: block; color: var(--cmu-green); font-size: 2.1rem; line-height: 1.2; }
-            .auth-brand span { display: block; color: #172d20; font-size: 1rem; font-weight: 600; line-height: 1.45; margin-top: 0.25rem; }
-            .auth-brand .auth-office-name { color: #12351e; font-weight: 700; }
+            body { margin: 0; min-height: 100svh; font-family: 'Inter', sans-serif; color: #28463a; background: #fff !important; }
+            .auth-page-shell { min-height: 100svh; display: grid; grid-template-columns: 46% 54%; }
+            .auth-panel { display: flex; flex-direction: column; justify-content: center; padding: clamp(2rem, 6vw, 6rem); color: #fff; background: radial-gradient(ellipse at 90% 45%, rgba(2,104,30,.65) 0%, transparent 70%), linear-gradient(145deg, var(--cmu-green), #003716); }
+            .auth-panel { box-shadow: inset -3px 0 0 var(--cmu-yellow); }
+            .auth-panel .auth-motto { color: var(--cmu-yellow); }
+            .auth-card-heading h2::after { content: ""; display: block; width: 38px; height: 3px; margin-top: .7rem; background: var(--cmu-yellow); }
+            .auth-panel img { width: 76px; height: 76px; object-fit: contain; margin-bottom: 1.8rem; }
+            .auth-panel h1 { font-size: clamp(1.8rem, 2.7vw, 2.7rem); font-weight: 700; line-height: 1.2; margin-bottom: .7rem; }
+            .auth-panel p { color: #e0eadc; line-height: 1.7; font-size: .95rem; }
+            .auth-panel .auth-motto { margin-top: 3rem; font-size: .9rem; font-weight: 600; }
+            .auth-panel a { color: #e0eadc; text-decoration: none; margin-top: 2rem; font-size: .85rem; }
+            .auth-form-panel { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 3rem 2rem; }
+            .login-card { width: 100%; max-width: 380px; padding: 0; background: transparent; border: 0 !important; border-radius: 0 !important; box-shadow: none; }
+            .auth-copyright { margin: 2.8rem 0 0; text-align: center; font-size: .72rem; color: #76847b; line-height: 1.9; }
 
             .input-group-text {
                 background: transparent;
@@ -284,30 +244,36 @@
             }
 
 
-            .auth-card-heading { text-align: center; }
-            .auth-card-heading h2 { font-size: 1.5rem; font-weight: 700; }
-            .auth-card-heading p { font-size: 0.86rem; }
-            .auth-label { color: #12351e; font-size: 0.88rem; font-weight: 700; }
-            .auth-options { flex-wrap: wrap; gap: 0.5rem; }
-            .forgot-link { color: #003716; font-size: 0.88rem; font-weight: 700; text-decoration: underline; }
-            .login-card .btn-cmu {
-                background: var(--cmu-green);
-                color: #ffffff;
-                border: 1px solid var(--cmu-green);
-                border-radius: 999px !important;
-                min-height: 44px;
-                box-shadow: none;
-            }
-            .login-card .btn-cmu:hover { background: #003716; color: #ffffff; }
+            .auth-card-heading { text-align: left; margin-bottom: 2rem; }
+            .auth-eyebrow { display: block; text-transform: uppercase; letter-spacing: .22em; font-size: .65rem; font-weight: 700; color: var(--cmu-green-2); margin-bottom: .7rem; }
+            .auth-card-heading h2 { font-size: 2rem; font-weight: 700; color: var(--cmu-green); }
+            .auth-card-heading p { font-size: .85rem; font-weight: 400; color: #69776f; }
+            .auth-label { color: #52675b; font-size: .8rem; font-weight: 600; }
+            .auth-options { flex-wrap: wrap; gap: .5rem; }
+            .auth-options .form-check-label { color: #627468 !important; font-size: .75rem; font-weight: 400; }
+            .forgot-link { color: var(--cmu-green); font-size: .75rem; text-decoration: none; }
+            .forgot-link:hover { text-decoration: underline; }
+            .form-control { border-radius: 6px; font-size: .9rem; }
+            .form-control::placeholder { color: #8a958e; -webkit-text-fill-color: #8a958e; }
+            .login-card .btn-cmu { background: var(--cmu-green); color: white; border: 1px solid var(--cmu-green); border-radius: 5px !important; min-height: 46px; box-shadow: none; font-size: .85rem; }
+            .login-card .btn-cmu:hover { background: var(--cmu-green-2); }
             .login-card .btn-cmu:focus-visible { outline: 3px solid var(--cmu-yellow); outline-offset: 3px; }
-            .auth-card-footer { font-size: 0.82rem; }
+            .auth-card-footer { font-size: .72rem; font-weight: 400; color: #69776f; }
+            @media (min-width: 768px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+                .auth-page-shell--interactive { transition: grid-template-columns 450ms cubic-bezier(.22, 1, .36, 1); }
+                .auth-page-shell--interactive:has(> .auth-panel:hover) { grid-template-columns: 49% 51%; }
+                .auth-page-shell--interactive:has(> .auth-form-panel:hover) { grid-template-columns: 43% 57%; }
+            }
 
-            @media (max-width: 480px) {
-                .auth-page-shell { padding: 1.25rem 1rem; }
-                .login-card { padding: 1.8rem 1.4rem; border-radius: 24px !important; }
-                .auth-brand { gap: 0.65rem; }
-                .auth-brand img { width: 60px; height: 60px; }
-                .auth-brand strong { font-size: clamp(1.4rem, 6vw, 2.1rem); }
+            @media (max-width: 767px) {
+                .auth-page-shell { grid-template-columns: 1fr; }
+                .auth-panel { padding: 2rem 1.5rem; box-shadow: inset 0 -3px 0 var(--cmu-yellow); }
+                .auth-panel img { width: 54px; height: 54px; margin-bottom: 1rem; }
+                .auth-panel h1 { font-size: 1.6rem; }
+                .auth-panel .auth-motto { margin-top: .5rem; }
+                .auth-panel a { margin-top: .5rem; }
+                .auth-panel p { font-size: .8rem; margin-bottom: .5rem; }
+                .auth-form-panel { padding: 2.5rem 1.5rem; }
             }
         </style>
     </head>
@@ -315,18 +281,20 @@
         <a href="#auth-content" class="skip-link">Skip to form</a>
         <div class="rgmo-progress" data-rgmo-loader role="progressbar" aria-label="Page loading" aria-hidden="false"></div>
 
-        <div class="auth-page-shell">
-            <main class="login-card" id="auth-content" tabindex="-1">
-                <div class="auth-brand">
-                    <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS logo">
-                    <div>
-                        <strong>RGMO-IRMS</strong>
-                        <span class="auth-office-name">Resource Generation Management Office</span>
-                        <span>Central Mindanao University</span>
-                    </div>
-                </div>
-                {{ $slot }}
-            </main>
+        <div class="auth-page-shell {{ request()->routeIs('login') ? 'auth-page-shell--interactive' : '' }}">
+            <aside class="auth-panel" aria-label="Central Mindanao University">
+                <img src="{{ asset('images/logo.png') }}" alt="RGMO logo">
+                <h1>Central Mindanao University</h1>
+                <p>Resource Generation Management Office<br>Integrated Resource Management System</p>
+                <p class="auth-motto">Excellence. Integrity. Service.</p>
+                <a href="{{ route('home') }}">← Back to home</a>
+            </aside>
+            <div class="auth-form-panel">
+                <main class="login-card" id="auth-content" tabindex="-1">
+                    {{ $slot }}
+                </main>
+                <p class="auth-copyright">&copy; {{ date('Y') }} Central Mindanao University<br>All rights reserved.</p>
+            </div>
         </div>
 
         <script>

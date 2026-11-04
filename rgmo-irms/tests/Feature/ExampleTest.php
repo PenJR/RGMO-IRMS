@@ -14,7 +14,8 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertStatus(302);
-        $response->assertRedirect(route('login'));
+        $response->assertOk();
+        $response->assertSee('Managing CMU Resources');
+        $response->assertSee(route('login'));
     }
 }

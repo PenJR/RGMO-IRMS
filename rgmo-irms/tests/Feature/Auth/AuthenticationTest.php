@@ -43,6 +43,13 @@ class AuthenticationTest extends TestCase
         $this->followRedirects($response)->assertOk();
     }
 
+    public function test_authenticated_home_redirects_to_dashboard(): void
+    {
+        $user = User::factory()->create(['status' => User::STATUS_ACTIVE]);
+
+        $this->actingAs($user)->get('/')->assertRedirect(route('dashboard'));
+    }
+
     public static function loginRoles(): array
     {
         return [

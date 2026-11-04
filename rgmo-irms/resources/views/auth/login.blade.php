@@ -1,7 +1,8 @@
 <x-guest-layout>
     <div class="auth-card-heading">
-        <h2>Welcome back</h2>
-        <p>Sign in to your RGMO-IRMS account.</p>
+        <span class="auth-eyebrow">Welcome back</span>
+        <h2>Sign In</h2>
+        <p>Enter your credentials to access your account.</p>
     </div>
 
     <!-- Session Status -->
@@ -18,6 +19,7 @@
                 <input
                     id="email"
                     class="form-control @error('email') is-invalid @enderror"
+                    placeholder="Enter your email address"
                     type="email"
                     name="email"
                     value="{{ old('email') }}"
@@ -42,6 +44,7 @@
             <div class="auth-password-group">
                 <span class="auth-password-icon"><i data-lucide="lock-keyhole" aria-hidden="true"></i></span>
                 <input id="password" class="form-control @error('password') is-invalid @enderror"
+                                placeholder="Enter your password"
                                 type="password"
                                 name="password"
                                 required
@@ -73,7 +76,7 @@
         <div class="d-grid mt-3">
             <button type="submit" class="btn btn-cmu d-flex align-items-center justify-content-center gap-2">
                 <i data-lucide="log-in" aria-hidden="true"></i>
-                {{ __('Login') }}
+                {{ __('Sign In') }}
             </button>
         </div>
     </form>
