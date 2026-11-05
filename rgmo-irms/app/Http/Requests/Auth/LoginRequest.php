@@ -4,6 +4,7 @@ namespace App\Http\Requests\Auth;
 
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Services\SecurityEventLogger;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -74,6 +75,11 @@ class LoginRequest extends FormRequest
 
             RateLimiter::hit($this->throttleKey());
 
+            app(SecurityEventLogger::class)->record('login_failed', $this, $user, [
+                'status' => 422,
+                'account_found' => (bool) $user,
+            ]);
+
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
@@ -85,6 +91,7 @@ class LoginRequest extends FormRequest
             $user->resetLoginAttempts();
             $user->update(['last_login_at' => now()]);
             AuditLog::log($user->id, 'login', 'auth', null, null, null, null, ['email' => $user->email]);
+            app(SecurityEventLogger::class)->record('login_succeeded', $this, $user, ['status' => 200]);
         }
     }
 

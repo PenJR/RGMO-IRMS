@@ -32,7 +32,7 @@ Route::middleware(['auth', 'permission:receive-notifications'])->prefix('notific
     Route::patch('/read-all', [NotificationController::class, 'markAllAsRead']);
 });
 
-Route::middleware(['auth', 'permission:generate-reports,view-audit-trail'])
+Route::middleware(['auth', 'permission:view-audit-trail'])
     ->get('/dashboard/health', [DashboardController::class, 'healthData']);
 
 Route::middleware(['auth', 'permission:manage-users'])->prefix('users')->group(function () {
@@ -93,8 +93,10 @@ Route::middleware('auth')->prefix('ops')->group(function () {
         Route::get('/requests/{requestId}', [OperationsController::class, 'getRequestById']);
     });
 
-    Route::middleware('permission:review-request,approve-request')->group(function () {
+    Route::middleware('permission:review-request,verify-request,endorse-request,approve-request')->group(function () {
         Route::get('/requests/pending/list', [OperationsController::class, 'getPendingRequests']);
+        Route::patch('/requests/{requestId}/verify', [OperationsController::class, 'verifyRequest']);
+        Route::patch('/requests/{requestId}/endorse', [OperationsController::class, 'endorseRequest']);
         Route::patch('/requests/{requestId}/approve', [OperationsController::class, 'approveRequest']);
         Route::patch('/requests/{requestId}/reject', [OperationsController::class, 'rejectRequest']);
         Route::get('/approvals/queue', [OperationsController::class, 'getApprovalQueue']);
@@ -103,11 +105,10 @@ Route::middleware('auth')->prefix('ops')->group(function () {
         Route::get('/dashboard/approver/stats', [OperationsController::class, 'getApprovalStats']);
     });
 
-    Route::middleware('permission:generate-reports,view-audit-trail,view-forecasts')->group(function () {
+    Route::middleware('permission:generate-reports,view-forecasts')->group(function () {
         Route::get('/dashboard/admin/stats', [OperationsController::class, 'getAdminStats']);
         Route::get('/dashboard/admin/total-users', [OperationsController::class, 'getTotalUsers']);
         Route::get('/dashboard/admin/total-inventory-items', [OperationsController::class, 'getTotalInventoryItems']);
-        Route::get('/dashboard/admin/recent-activities', [OperationsController::class, 'getRecentActivities']);
     });
 
     Route::middleware('permission:record-utilization,record-withdrawal')->group(function () {
@@ -118,13 +119,17 @@ Route::middleware('auth')->prefix('ops')->group(function () {
         Route::get('/monitoring/fields/activity', [OperationsController::class, 'getFieldActivityLogs']);
     });
 
-    Route::middleware('permission:generate-reports,view-audit-trail')->group(function () {
+    Route::middleware('permission:generate-reports')->group(function () {
         Route::get('/reports/inventory', [OperationsController::class, 'generateInventoryReport']);
         Route::get('/reports/stock-movement', [OperationsController::class, 'generateStockMovementReport']);
         Route::get('/reports/requests', [OperationsController::class, 'generateRequestReport']);
         Route::get('/reports/consumption', [OperationsController::class, 'generateConsumptionReport']);
         Route::post('/reports/export-pdf', [OperationsController::class, 'exportReportPDF']);
         Route::post('/reports/export-excel', [OperationsController::class, 'exportReportExcel']);
+    });
+
+    Route::middleware('permission:view-audit-trail')->group(function () {
+        Route::get('/dashboard/admin/recent-activities', [OperationsController::class, 'getRecentActivities']);
         Route::get('/audit/logs', [OperationsController::class, 'getAuditLogs']);
         Route::get('/audit/logs/users/{userId}', [OperationsController::class, 'getUserAuditLogs']);
         Route::post('/audit/logs/filter', [OperationsController::class, 'filterAuditLogs']);

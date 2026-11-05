@@ -38,13 +38,12 @@ class NotificationFeatureTest extends TestCase
     }
 
     /**
-     * Verify that resource request submission notifies admin and rgmo head.
+     * Verify that resource request submission notifies the Storekeeper first.
      */
-    public function test_resource_request_submission_notifies_admin_and_rgmo_head(): void
+    public function test_resource_request_submission_notifies_storekeeper(): void
     {
         $staff = $this->activeUser(User::ROLE_STAFF, ['name' => 'Maria Staff']);
-        $admin = $this->activeUser(User::ROLE_ADMIN);
-        $head = $this->activeUser(User::ROLE_RGMO_HEAD);
+        $storekeeper = $this->activeUser(User::ROLE_STOREKEEPER);
         $item = $this->inventoryItem('Hybrid Rice Seeds');
         $project = Project::create([
             'name' => 'Rice Demonstration',
@@ -64,17 +63,15 @@ class NotificationFeatureTest extends TestCase
         $resourceRequest = ResourceRequest::firstOrFail();
         $response->assertRedirect(route('requests.show', $resourceRequest));
 
-        foreach ([$admin, $head] as $recipient) {
-            $this->assertDatabaseHas('notifications', [
-                'user_id' => $recipient->id,
-                'title' => 'New Resource Request',
-                'type' => 'resource_request',
-                'message' => 'Maria Staff submitted a request for Hybrid Rice Seeds.',
-                'sender_id' => $staff->id,
-                'related_request_id' => $resourceRequest->id,
-                'read_at' => null,
-            ]);
-        }
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $storekeeper->id,
+            'title' => 'New Resource Request',
+            'type' => 'resource_request',
+            'message' => 'Maria Staff submitted a request for Hybrid Rice Seeds.',
+            'sender_id' => $staff->id,
+            'related_request_id' => $resourceRequest->id,
+            'read_at' => null,
+        ]);
     }
 
     /**
@@ -86,6 +83,12 @@ class NotificationFeatureTest extends TestCase
         $admin = $this->activeUser(User::ROLE_ADMIN);
 
         $approvedRequest = $this->resourceRequestFor($requester);
+        $this->actingAs($admin)
+            ->post(route('requests.verify', $approvedRequest), ['remarks' => 'Stock checked'])
+            ->assertRedirect(route('requests.show', $approvedRequest));
+        $this->actingAs($admin)
+            ->post(route('requests.endorse', $approvedRequest), ['remarks' => 'Unit confirmed'])
+            ->assertRedirect(route('requests.show', $approvedRequest));
         $this->actingAs($admin)
             ->post(route('requests.approve', $approvedRequest), ['remarks' => 'Approved'])
             ->assertRedirect(route('requests.show', $approvedRequest));

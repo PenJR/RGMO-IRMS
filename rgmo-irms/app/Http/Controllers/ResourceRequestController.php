@@ -36,8 +36,7 @@ class ResourceRequestController extends Controller
         $this->authorize('viewAny', ResourceRequest::class);
 
         $filters = $request->validate(InputRules::requestFilters());
-        $canReviewAllRequests = $request->user()->hasPermission('review-request')
-            || $request->user()->hasPermission('approve-request');
+        $canReviewAllRequests = $request->user()->hasPermission(['review-request', 'verify-request', 'endorse-request', 'approve-request']);
 
         if (! $canReviewAllRequests) {
             $filters['user_id'] = $request->user()->id;
@@ -110,7 +109,7 @@ class ResourceRequestController extends Controller
     {
         $this->authorize('view', $request);
 
-        $request->load('user', 'project', 'approver', 'items.item', 'withdrawals.issuer', 'withdrawals.items.requestItem.item');
+        $request->load('user', 'project', 'approver', 'storekeeperChecker', 'unitHeadApprover', 'items.item', 'withdrawals.issuer', 'withdrawals.items.requestItem.item');
         $workflowLogs = AuditLog::with('user:id,name')
             ->where('model_type', ResourceRequest::class)
             ->where('model_id', $request->id)
@@ -284,6 +283,24 @@ class ResourceRequestController extends Controller
         return redirect()->route('requests.show', $request)->with('success', 'Resource request approved.');
     }
 
+    public function verify(Request $httpRequest, ResourceRequest $request)
+    {
+        $this->authorize('verify', $request);
+        $validated = $httpRequest->validate(['remarks' => 'nullable|string|max:1000']);
+        $this->requestService->verifyRequest($request, auth()->id(), $validated['remarks'] ?? null);
+
+        return redirect()->route('requests.show', $request)->with('success', 'Storekeeper verification completed and sent to the Unit Head.');
+    }
+
+    public function endorse(Request $httpRequest, ResourceRequest $request)
+    {
+        $this->authorize('endorse', $request);
+        $validated = $httpRequest->validate(['remarks' => 'nullable|string|max:1000']);
+        $this->requestService->endorseRequest($request, auth()->id(), $validated['remarks'] ?? null);
+
+        return redirect()->route('requests.show', $request)->with('success', 'Unit Head endorsement completed and sent to the RGMO Head.');
+    }
+
     /**
      * Reject a pending resource request.
      *
@@ -386,7 +403,7 @@ class ResourceRequestController extends Controller
     {
         $this->authorize('review', ResourceRequest::class);
 
-        $requests = $this->requestService->getPendingRequests();
+        $requests = $this->requestService->getPendingRequestsFor(auth()->user());
 
         return view('requests.pending', ['requests' => $requests]);
     }

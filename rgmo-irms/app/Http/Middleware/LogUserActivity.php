@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\UserActivityLog;
+use App\Services\SecurityEventLogger;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,7 +31,15 @@ class LogUserActivity
             ]);
         }
 
-        return $next($request);
+        $response = $next($request);
+
+        if (auth()->check() && in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            app(SecurityEventLogger::class)->record('http_activity', $request, auth()->user(), [
+                'status' => $response->getStatusCode(),
+            ]);
+        }
+
+        return $response;
     }
 
     /**

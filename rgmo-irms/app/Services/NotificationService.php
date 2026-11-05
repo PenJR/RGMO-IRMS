@@ -78,7 +78,7 @@ class NotificationService
         $requesterName = $request->user?->name ?? 'A user';
         $message = "{$requesterName} submitted a request for {$resourceName}.";
 
-        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_RGMO_HEAD], 'resource_request', $message, [
+        $this->notifyRoles([User::ROLE_STOREKEEPER], 'resource_request', $message, [
             'title' => 'New Resource Request',
             'sender_id' => $request->user_id,
             'related_request_id' => $request->id,
@@ -87,6 +87,15 @@ class NotificationService
                 'resource_name' => $resourceName,
                 'status' => $request->status,
             ],
+        ]);
+    }
+
+    public function notifyRequestAwaitingRole(ResourceRequest $request, string $role, string $message): void
+    {
+        $this->notifyRoles([$role], 'resource_request_workflow', "Request #RQ-{$request->id}: {$message}", [
+            'title' => 'Resource Request Requires Review',
+            'related_request_id' => $request->id,
+            'data' => ['request_id' => $request->id, 'status' => $request->status],
         ]);
     }
 
@@ -249,6 +258,8 @@ class NotificationService
             User::ROLE_RGMO_HEAD => User::rgmoHead()->active()->get(),
             User::ROLE_PROJECT_MANAGER => User::projectManager()->active()->get(),
             User::ROLE_STAFF => User::staff()->active()->get(),
+            User::ROLE_STOREKEEPER => User::storekeeper()->active()->get(),
+            User::ROLE_UNIT_HEAD => User::unitHead()->active()->get(),
             default => User::where('role', $role)->active()->get(),
         };
     }

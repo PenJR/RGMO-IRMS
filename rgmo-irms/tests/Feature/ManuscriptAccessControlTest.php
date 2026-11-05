@@ -34,7 +34,7 @@ class ManuscriptAccessControlTest extends TestCase
 
     public function test_role_routes_and_navigation_follow_the_manuscript(): void
     {
-        foreach (['admin', 'staff', 'project_manager', 'rgmo_head'] as $role) {
+        foreach (['admin', 'staff', 'project_manager', 'storekeeper', 'unit_head', 'rgmo_head'] as $role) {
             $user = $this->user($role);
             $this->actingAs($user);
             $this->get(route('inventory.index'))->assertOk();
@@ -47,8 +47,8 @@ class ManuscriptAccessControlTest extends TestCase
             $this->getJson('/api/ops/audit/logs')->assertStatus($role === 'admin' ? 200 : 403);
             $this->getJson('/api/ops/audit/logs/users/'.$user->id)->assertStatus($role === 'admin' ? 200 : 403);
             $this->postJson('/api/ops/audit/logs/filter', [])->assertStatus($role === 'admin' ? 200 : 403);
-            $this->get(route('requests.releases'))->assertStatus(in_array($role, ['admin', 'staff']) ? 200 : 403);
-            $this->get(route('utilization.index'))->assertStatus(in_array($role, ['admin', 'staff']) ? 200 : 403);
+            $this->get(route('requests.releases'))->assertStatus(in_array($role, ['admin', 'storekeeper']) ? 200 : 403);
+            $this->get(route('utilization.index'))->assertStatus(in_array($role, ['admin', 'staff', 'storekeeper']) ? 200 : 403);
             $page = $this->get(route('requests.index'))->assertOk();
             if ($role !== 'admin') {
                 $page->assertDontSee('href="'.route('reports.audit-trail').'"', false);
@@ -61,14 +61,14 @@ class ManuscriptAccessControlTest extends TestCase
         }
     }
 
-    public function test_staff_can_release_others_approved_requests_but_not_review_pending_requests(): void
+    public function test_storekeeper_can_release_others_approved_requests_but_not_a_staff_requester(): void
     {
-        $staff = $this->user('staff');
+        $staff = $this->user('storekeeper');
         $owner = $this->user('project_manager');
         $approved = $this->line($owner);
         $pending = $this->line($owner, 'pending');
-        $this->actingAs($staff)->get(route('requests.show', $pending->request))->assertForbidden();
-        $this->get(route('requests.pending'))->assertForbidden();
+        $this->actingAs($staff)->get(route('requests.show', $pending->request))->assertOk();
+        $this->get(route('requests.pending'))->assertOk();
         $this->post(route('requests.approve', $pending->request))->assertForbidden();
         $this->get(route('requests.show', $approved->request))->assertOk();
         $this->post(route('requests.fulfill', $approved->request), ['quantities' => [$approved->id => $approved->quantity], 'received_by' => 'Test recipient', 'withdrawn_on' => today()->toDateString(), 'submission_key' => (string) \Illuminate\Support\Str::uuid()])->assertRedirect();
@@ -118,9 +118,14 @@ class ManuscriptAccessControlTest extends TestCase
     public function test_head_can_decide_requests_but_cannot_release_or_see_audit_data(): void
     {
         $head = $this->user('rgmo_head');
+        $storekeeper = $this->user('storekeeper');
+        $unitHead = $this->user('unit_head');
         $line = $this->line($this->user('staff'), 'pending');
         AuditLog::create(['user_id' => $head->id, 'action' => 'private-audit-marker', 'module' => 'users']);
         $this->actingAs($head)->get(route('requests.pending'))->assertOk();
+        $this->actingAs($storekeeper)->post(route('requests.verify', $line->request), ['remarks' => 'Stock checked'])->assertRedirect();
+        $this->actingAs($unitHead)->post(route('requests.endorse', $line->request), ['remarks' => 'Unit confirmed'])->assertRedirect();
+        $this->actingAs($head);
         $this->post(route('requests.approve', $line->request), ['remarks' => 'Ready for release'])->assertRedirect();
         $this->assertSame('approved', $line->request->fresh()->status);
         $this->post(route('requests.fulfill', $line->request->fresh()))->assertForbidden();

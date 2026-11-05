@@ -16,13 +16,44 @@ class RequestWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_storekeeper_unit_head_and_rgmo_head_must_sign_in_order_before_withdrawal(): void
+    {
+        $requester = $this->activeUser(User::ROLE_STAFF);
+        $storekeeper = $this->activeUser(User::ROLE_STOREKEEPER);
+        $unitHead = $this->activeUser(User::ROLE_UNIT_HEAD);
+        $rgmoHead = $this->activeUser(User::ROLE_RGMO_HEAD);
+        $request = $this->resourceRequestWithItem($requester, stock: 10, quantity: 4);
+
+        $this->actingAs($rgmoHead)->post(route('requests.approve', $request))->assertForbidden();
+        $this->actingAs($unitHead)->post(route('requests.endorse', $request))->assertForbidden();
+        $this->actingAs($storekeeper)->post(route('requests.verify', $request), ['remarks' => 'Stock checked'])
+            ->assertRedirect(route('requests.show', $request));
+        $this->assertSame(ResourceRequest::STATUS_PENDING_UNIT_HEAD, $request->fresh()->status);
+        $this->assertSame($storekeeper->id, $request->fresh()->storekeeper_checked_by);
+        $this->actingAs($unitHead)->get(route('requests.pending'))->assertOk()->assertSee('RQ-'.$request->id);
+        $this->actingAs($unitHead)->post(route('requests.endorse', $request), ['remarks' => 'Unit need confirmed'])
+            ->assertRedirect(route('requests.show', $request));
+        $this->assertSame(ResourceRequest::STATUS_PENDING_RGMO_HEAD, $request->fresh()->status);
+        $this->assertSame($unitHead->id, $request->fresh()->unit_head_approved_by);
+        $this->actingAs($rgmoHead)->post(route('requests.approve', $request), ['remarks' => 'Final approval'])
+            ->assertRedirect(route('requests.show', $request));
+        $this->assertSame(ResourceRequest::STATUS_APPROVED, $request->fresh()->status);
+        $this->assertSame($rgmoHead->id, $request->fresh()->approved_by);
+        $this->actingAs($requester)->post(route('requests.fulfill', $request))->assertForbidden();
+        $this->actingAs($storekeeper)->post(route('requests.fulfill', $request), [
+            'quantities' => $request->items->pluck('quantity', 'id')->all(), 'received_by' => 'Test recipient',
+            'withdrawn_on' => today()->toDateString(), 'submission_key' => (string) \Illuminate\Support\Str::uuid(),
+        ])->assertRedirect();
+        $this->assertSame(ResourceRequest::STATUS_COMPLETED, $request->fresh()->status);
+    }
+
     public function test_approval_is_blocked_when_stock_is_insufficient(): void
     {
         $admin = $this->activeUser(User::ROLE_ADMIN);
         $request = $this->resourceRequestWithItem(stock: 2, quantity: 5);
 
         $this->actingAs($admin)
-            ->post(route('requests.approve', $request), ['remarks' => 'Approved'])
+            ->post(route('requests.verify', $request), ['remarks' => 'Stock checked'])
             ->assertSessionHasErrors('items');
 
         $this->assertSame(ResourceRequest::STATUS_PENDING, $request->fresh()->status);
@@ -86,6 +117,12 @@ class RequestWorkflowTest extends TestCase
         $admin = $this->activeUser(User::ROLE_ADMIN);
         $request = $this->resourceRequestWithItem(stock: 10, quantity: 4);
 
+        $this->actingAs($admin)
+            ->post(route('requests.verify', $request), ['remarks' => 'Stock checked'])
+            ->assertRedirect(route('requests.show', $request));
+        $this->actingAs($admin)
+            ->post(route('requests.endorse', $request), ['remarks' => 'Unit confirmed'])
+            ->assertRedirect(route('requests.show', $request));
         $this->actingAs($admin)
             ->post(route('requests.approve', $request), ['remarks' => 'Ready for release'])
             ->assertRedirect(route('requests.show', $request));

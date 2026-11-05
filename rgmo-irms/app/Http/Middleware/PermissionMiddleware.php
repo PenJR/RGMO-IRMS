@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use App\Services\SecurityEventLogger;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -57,6 +58,11 @@ class PermissionMiddleware
                 return $next($request);
             }
         }
+
+        app(SecurityEventLogger::class)->record('access_denied', $request, $user, [
+            'required_permissions' => $permissions,
+            'status' => 403,
+        ]);
 
         if ($this->shouldReturnJson($request)) {
             return response()->json(['message' => 'Forbidden.'], 403);

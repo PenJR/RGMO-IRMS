@@ -83,7 +83,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Resource Request Module
-    Route::middleware(['permission:submit-request,update-pending-request,review-request,approve-request'])->group(function () {
+    Route::middleware(['permission:submit-request,update-pending-request,review-request,verify-request,endorse-request,approve-request'])->group(function () {
         Route::get('/requests/releases', [ResourceRequestController::class, 'releases'])->middleware('permission:record-withdrawal')->name('requests.releases');
         Route::get('/requests/pending/list', [ResourceRequestController::class, 'pending'])->name('requests.pending');
         Route::get('/requests/{request}/withdrawals/{withdrawal}', [ResourceRequestController::class, 'withdrawalRecord'])->name('requests.withdrawal-record');
@@ -104,7 +104,9 @@ Route::middleware('auth')->group(function () {
     });
 
     // Admin - Approve/Reject Requests
-    Route::middleware(['permission:approve-request'])->group(function () {
+    Route::middleware(['permission:verify-request,endorse-request,approve-request'])->group(function () {
+        Route::post('/requests/{request}/verify', [ResourceRequestController::class, 'verify'])->name('requests.verify');
+        Route::post('/requests/{request}/endorse', [ResourceRequestController::class, 'endorse'])->name('requests.endorse');
         Route::post('/requests/{request}/approve', [ResourceRequestController::class, 'approve'])->name('requests.approve');
         Route::post('/requests/{request}/reject', [ResourceRequestController::class, 'reject'])->name('requests.reject');
     });

@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div>
             <h2 class="fw-bold mb-1">Pending Requests</h2>
-            <p class="text-muted mb-0">Review requests awaiting approval.</p>
+            <p class="text-muted mb-0">Review requests awaiting your stage in the approval workflow.</p>
         </div>
     </x-slot>
 

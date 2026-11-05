@@ -30,7 +30,7 @@ return [
             'label' => 'Staff',
             'permissions' => [
                 'view-inventory', 'view-projects', 'submit-request',
-                'update-pending-request', 'record-withdrawal', 'record-utilization',
+                'update-pending-request', 'record-utilization',
                 'monitor-status', 'view-history', 'receive-notifications',
             ],
         ],
@@ -49,6 +49,20 @@ return [
                 'view-forecasts', 'receive-notifications',
             ],
         ],
+        'storekeeper' => [
+            'label' => 'Storekeeper',
+            'permissions' => [
+                'view-inventory', 'view-projects', 'monitor-status', 'view-history',
+                'verify-request', 'record-withdrawal', 'record-utilization', 'receive-notifications',
+            ],
+        ],
+        'unit_head' => [
+            'label' => 'Unit Head',
+            'permissions' => [
+                'view-inventory', 'view-projects', 'monitor-status', 'view-history',
+                'endorse-request', 'receive-notifications',
+            ],
+        ],
     ],
 
     'permissions' => [
@@ -61,6 +75,8 @@ return [
         'submit-request' => 'Submit resource requests',
         'update-pending-request' => 'Update or cancel pending requests',
         'review-request' => 'Review resource requests',
+        'verify-request' => 'Verify stock availability for resource requests',
+        'endorse-request' => 'Endorse requests after storekeeper verification',
         'approve-request' => 'Approve or reject requests',
         'record-withdrawal' => 'Record item withdrawals',
         'record-utilization' => 'Record resource utilization',

@@ -36,6 +36,8 @@ return [
         'trace' => env('LOG_DEPRECATIONS_TRACE', false),
     ],
 
+    'security_syslog_enabled' => (bool) env('SECURITY_SYSLOG_ENABLED', false),
+
     /*
     |--------------------------------------------------------------------------
     | Log Channels
@@ -110,6 +112,19 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
             'replace_placeholders' => true,
+        ],
+
+        'security_syslog' => [
+            'driver' => 'monolog',
+            'level' => env('SECURITY_SYSLOG_LEVEL', 'notice'),
+            'handler' => SyslogUdpHandler::class,
+            'handler_with' => [
+                'host' => env('SECURITY_SYSLOG_HOST', '127.0.0.1'),
+                'port' => (int) env('SECURITY_SYSLOG_PORT', 514),
+                'facility' => env('SECURITY_SYSLOG_FACILITY', LOG_USER),
+                'ident' => env('SECURITY_SYSLOG_IDENT', 'rgmo-irms'),
+            ],
+            'processors' => [PsrLogMessageProcessor::class],
         ],
 
         'errorlog' => [

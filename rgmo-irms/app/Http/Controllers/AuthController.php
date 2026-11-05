@@ -93,7 +93,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:users,email',
             'password' => ['required', 'string', 'max:255', 'confirmed', Password::defaults()],
-            'role' => 'required|in:admin,staff,project_manager,rgmo_head',
+            'role' => 'required|in:'.implode(',', User::availableRoles()),
         ]);
         $user = $this->service->registerUser($data);
 

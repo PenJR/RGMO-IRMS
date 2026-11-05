@@ -14,6 +14,10 @@ class ResourceRequest extends Model
 
     const STATUS_PENDING = 'pending';
 
+    const STATUS_PENDING_UNIT_HEAD = 'pending_unit_head';
+
+    const STATUS_PENDING_RGMO_HEAD = 'pending_rgmo_head';
+
     const STATUS_APPROVED = 'approved';
 
     const STATUS_PARTIALLY_WITHDRAWN = 'partially_withdrawn';
@@ -36,6 +40,10 @@ class ResourceRequest extends Model
         'needed_date',
         'approved_by',
         'approved_at',
+        'storekeeper_checked_by',
+        'storekeeper_checked_at',
+        'unit_head_approved_by',
+        'unit_head_approved_at',
         'rejected_at',
         'cancelled_at',
         'fulfilled_at',
@@ -46,6 +54,8 @@ class ResourceRequest extends Model
         'requested_date' => 'datetime',
         'needed_date' => 'datetime',
         'approved_at' => 'datetime',
+        'storekeeper_checked_at' => 'datetime',
+        'unit_head_approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'fulfilled_at' => 'datetime',
@@ -74,6 +84,16 @@ class ResourceRequest extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function storekeeperChecker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'storekeeper_checked_by');
+    }
+
+    public function unitHeadApprover(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'unit_head_approved_by');
     }
 
     /**

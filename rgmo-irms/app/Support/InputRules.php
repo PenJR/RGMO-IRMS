@@ -36,7 +36,7 @@ class InputRules
     {
         return self::pagination() + self::dates() + [
             'search' => 'nullable|string|max:255',
-            'status' => 'nullable|string|in:pending,approved,partially_withdrawn,rejected,cancelled,completed',
+            'status' => 'nullable|string|in:pending,pending_unit_head,pending_rgmo_head,approved,partially_withdrawn,rejected,cancelled,completed',
             'user_id' => 'nullable|integer|exists:users,id',
             'sort' => 'nullable|string|in:id,created_at,needed_date,status',
             'direction' => 'nullable|string|in:asc,desc',
@@ -69,7 +69,7 @@ class InputRules
             'item_id' => 'nullable|integer|exists:inventory_items,id',
             'action' => 'nullable|string|max:255',
             'module' => 'nullable|string|max:255',
-            'status' => 'nullable|string|in:pending,approved,partially_withdrawn,rejected,cancelled,completed',
+            'status' => 'nullable|string|in:pending,pending_unit_head,pending_rgmo_head,approved,partially_withdrawn,rejected,cancelled,completed',
         ];
     }
 

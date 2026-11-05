@@ -112,7 +112,7 @@ class ResourceRequestService
         return DB::transaction(function () use ($request, $data, $actorId) {
             $request = ResourceRequest::lockForUpdate()->findOrFail($request->id);
             if (! $request->isPending()) {
-                throw ValidationException::withMessages(['status' => 'Only pending requests can be changed.']);
+                throw ValidationException::withMessages(['status' => 'Only requests awaiting storekeeper verification can be changed.']);
             }
 
             $oldValues = $request->only(['project_id', 'purpose', 'remarks', 'needed_date']);
@@ -133,29 +133,46 @@ class ResourceRequestService
         }, 5);
     }
 
-    /**
-     * Mark a request as approved, log the step, and notify the requester.
-     *
-     * @param  int  $approverId  ID of the admin/staff approving.
-     * @param  string|null  $remarks  Optional approval comments.
-     */
+    public function verifyRequest(ResourceRequest $request, int $storekeeperId, ?string $remarks = null): void
+    {
+        DB::transaction(function () use ($request, $storekeeperId, $remarks) {
+            $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            if (! $locked->isPending()) {
+                throw ValidationException::withMessages(['status' => 'Only requests awaiting storekeeper verification can be checked.']);
+            }
+            $this->ensureItemsAreAvailable($locked);
+            $old = $locked->toArray();
+            $locked->update(['status' => ResourceRequest::STATUS_PENDING_UNIT_HEAD, 'storekeeper_checked_by' => $storekeeperId, 'storekeeper_checked_at' => now(), 'remarks' => $remarks ?? $locked->remarks]);
+            AuditLog::log($storekeeperId, 'storekeeper_verify', 'resource_request', ResourceRequest::class, $locked->id, $old, $locked->fresh()->toArray());
+            $request->setRawAttributes($locked->getAttributes(), true);
+        }, 5);
+        $this->notificationService->notifyRequestAwaitingRole($request, \App\Models\User::ROLE_UNIT_HEAD, 'Storekeeper verification is complete.');
+    }
+
+    public function endorseRequest(ResourceRequest $request, int $unitHeadId, ?string $remarks = null): void
+    {
+        DB::transaction(function () use ($request, $unitHeadId, $remarks) {
+            $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            if ($locked->status !== ResourceRequest::STATUS_PENDING_UNIT_HEAD) {
+                throw ValidationException::withMessages(['status' => 'Only storekeeper-verified requests can be endorsed.']);
+            }
+            $old = $locked->toArray();
+            $locked->update(['status' => ResourceRequest::STATUS_PENDING_RGMO_HEAD, 'unit_head_approved_by' => $unitHeadId, 'unit_head_approved_at' => now(), 'remarks' => $remarks ?? $locked->remarks]);
+            AuditLog::log($unitHeadId, 'unit_head_endorse', 'resource_request', ResourceRequest::class, $locked->id, $old, $locked->fresh()->toArray());
+            $request->setRawAttributes($locked->getAttributes(), true);
+        }, 5);
+        $this->notificationService->notifyRequestAwaitingRole($request, \App\Models\User::ROLE_RGMO_HEAD, 'Unit Head endorsement is complete.');
+    }
+
+    /** Mark an endorsed request as approved and reserve its stock. */
     public function approveRequest(ResourceRequest $request, int $approverId, ?string $remarks = null): void
     {
         DB::transaction(function () use ($request, $approverId, $remarks) {
             $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
-            if (! $locked->isPending()) {
-                throw ValidationException::withMessages(['status' => 'Only pending requests may be approved.']);
+            if ($locked->status !== ResourceRequest::STATUS_PENDING_RGMO_HEAD) {
+                throw ValidationException::withMessages(['status' => 'Only Unit Head-endorsed requests may receive final approval.']);
             }
-            $lines = $locked->items()->orderBy('inventory_item_id')->get();
-            if ($lines->isEmpty()) {
-                throw ValidationException::withMessages(['items' => 'A request must contain at least one item.']);
-            }
-            foreach ($lines->groupBy('inventory_item_id') as $itemId => $group) {
-                $item = InventoryItem::lockForUpdate()->findOrFail($itemId);
-                if ($item->available_stock < $group->sum('quantity')) {
-                    throw ValidationException::withMessages(['items' => 'Insufficient available stock. Quantities reserved by other projects cannot be used.']);
-                }
-            }
+            $this->ensureItemsAreAvailable($locked);
             $old = $locked->toArray();
             $locked->approve($approverId, $remarks);
             AuditLog::log($approverId, 'approve', 'resource_request', ResourceRequest::class, $locked->id, $old, $locked->fresh()->toArray());
@@ -163,6 +180,20 @@ class ResourceRequestService
         }, 5);
 
         $this->notificationService->notifyResourceRequestApproved($request, $approverId);
+    }
+
+    private function ensureItemsAreAvailable(ResourceRequest $request): void
+    {
+        $lines = $request->items()->orderBy('inventory_item_id')->get();
+        if ($lines->isEmpty()) {
+            throw ValidationException::withMessages(['items' => 'A request must contain at least one item.']);
+        }
+        foreach ($lines->groupBy('inventory_item_id') as $itemId => $group) {
+            $item = InventoryItem::lockForUpdate()->findOrFail($itemId);
+            if ($item->available_stock < $group->sum('quantity')) {
+                throw ValidationException::withMessages(['items' => 'Insufficient available stock. Quantities reserved by other projects cannot be used.']);
+            }
+        }
     }
 
     /**
@@ -174,8 +205,8 @@ class ResourceRequestService
     {
         DB::transaction(function () use ($request, $remarks) {
             $request = ResourceRequest::lockForUpdate()->findOrFail($request->id);
-            if (! $request->isPending()) {
-                throw ValidationException::withMessages(['status' => 'Only pending requests can be changed.']);
+            if (! in_array($request->status, [ResourceRequest::STATUS_PENDING, ResourceRequest::STATUS_PENDING_UNIT_HEAD, ResourceRequest::STATUS_PENDING_RGMO_HEAD], true)) {
+                throw ValidationException::withMessages(['status' => 'Only requests still in the approval workflow can be rejected.']);
             }
 
             $oldValues = $request->toArray();
@@ -226,9 +257,14 @@ class ResourceRequestService
      *
      * @return Collection
      */
-    public function getPendingRequests()
+    public function getPendingRequestsFor(\App\Models\User $user)
     {
-        return ResourceRequest::pending()->with('user', 'project', 'items.item')->orderBy('created_at', 'asc')->get();
+        $statuses = [];
+        if ($user->hasPermission('verify-request')) $statuses[] = ResourceRequest::STATUS_PENDING;
+        if ($user->hasPermission('endorse-request')) $statuses[] = ResourceRequest::STATUS_PENDING_UNIT_HEAD;
+        if ($user->hasPermission('approve-request')) $statuses[] = ResourceRequest::STATUS_PENDING_RGMO_HEAD;
+
+        return ResourceRequest::whereIn('status', $statuses)->with('user', 'project', 'items.item')->orderBy('created_at', 'asc')->get();
     }
 
     /**

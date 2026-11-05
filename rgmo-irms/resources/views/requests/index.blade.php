@@ -32,6 +32,8 @@
                         <select name="status" class="form-select">
                             <option value="">All</option>
 	                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+	                            <option value="pending_unit_head" @selected(request('status') === 'pending_unit_head')>Pending Unit Head</option>
+	                            <option value="pending_rgmo_head" @selected(request('status') === 'pending_rgmo_head')>Pending RGMO Head</option>
 	                            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
 	                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
 	                            <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>

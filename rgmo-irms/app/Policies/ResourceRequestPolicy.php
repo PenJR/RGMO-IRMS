@@ -13,7 +13,7 @@ class ResourceRequestPolicy
     public function viewAny(User $user): bool
     {
         return $user->hasPermission('monitor-status')
-            || $user->hasPermission('review-request')
+            || $user->hasPermission(['review-request', 'verify-request', 'endorse-request'])
             || $user->hasPermission('approve-request');
     }
 
@@ -23,7 +23,7 @@ class ResourceRequestPolicy
     public function view(User $user, ResourceRequest $request): bool
     {
         return $user->id === $request->user_id
-            || $user->hasPermission(['review-request', 'approve-request'])
+            || $user->hasPermission(['review-request', 'verify-request', 'endorse-request', 'approve-request'])
             || ($user->hasPermission('record-withdrawal')
                 && in_array($request->status, [ResourceRequest::STATUS_APPROVED, ResourceRequest::STATUS_PARTIALLY_WITHDRAWN, ResourceRequest::STATUS_COMPLETED], true));
     }
@@ -72,7 +72,7 @@ class ResourceRequestPolicy
      */
     public function approve(User $user, ResourceRequest $request): bool
     {
-        return $user->hasPermission('approve-request') && $request->isPending();
+        return $user->hasPermission('approve-request') && $request->status === ResourceRequest::STATUS_PENDING_RGMO_HEAD;
     }
 
     /**
@@ -80,7 +80,9 @@ class ResourceRequestPolicy
      */
     public function reject(User $user, ResourceRequest $request): bool
     {
-        return $user->hasPermission('approve-request') && $request->isPending();
+        return ($user->hasPermission('verify-request') && $request->isPending())
+            || ($user->hasPermission('endorse-request') && $request->status === ResourceRequest::STATUS_PENDING_UNIT_HEAD)
+            || ($user->hasPermission('approve-request') && $request->status === ResourceRequest::STATUS_PENDING_RGMO_HEAD);
     }
 
     /**
@@ -88,7 +90,17 @@ class ResourceRequestPolicy
      */
     public function review(User $user): bool
     {
-        return $user->hasPermission('review-request');
+        return $user->hasPermission(['review-request', 'verify-request', 'endorse-request', 'approve-request']);
+    }
+
+    public function verify(User $user, ResourceRequest $request): bool
+    {
+        return $user->hasPermission('verify-request') && $request->isPending();
+    }
+
+    public function endorse(User $user, ResourceRequest $request): bool
+    {
+        return $user->hasPermission('endorse-request') && $request->status === ResourceRequest::STATUS_PENDING_UNIT_HEAD;
     }
 
     /**

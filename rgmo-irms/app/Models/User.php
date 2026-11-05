@@ -22,6 +22,10 @@ class User extends Authenticatable
 
     const ROLE_RGMO_HEAD = 'rgmo_head';
 
+    const ROLE_STOREKEEPER = 'storekeeper';
+
+    const ROLE_UNIT_HEAD = 'unit_head';
+
     const STATUS_ACTIVE = 'active';
 
     const STATUS_INACTIVE = 'inactive';
@@ -77,6 +81,8 @@ class User extends Authenticatable
             self::ROLE_STAFF,
             self::ROLE_PROJECT_MANAGER,
             self::ROLE_RGMO_HEAD,
+            self::ROLE_STOREKEEPER,
+            self::ROLE_UNIT_HEAD,
         ];
     }
 
@@ -245,6 +251,16 @@ class User extends Authenticatable
         return $query->where('role', self::ROLE_RGMO_HEAD);
     }
 
+    public function scopeStorekeeper(Builder $query): Builder
+    {
+        return $query->where('role', self::ROLE_STOREKEEPER);
+    }
+
+    public function scopeUnitHead(Builder $query): Builder
+    {
+        return $query->where('role', self::ROLE_UNIT_HEAD);
+    }
+
     // Methods
     /**
      * Check if the user has the administrator role.
@@ -276,6 +292,16 @@ class User extends Authenticatable
     public function isRgmoHead(): bool
     {
         return $this->role === self::ROLE_RGMO_HEAD;
+    }
+
+    public function isStorekeeper(): bool
+    {
+        return $this->role === self::ROLE_STOREKEEPER;
+    }
+
+    public function isUnitHead(): bool
+    {
+        return $this->role === self::ROLE_UNIT_HEAD;
     }
 
     /**

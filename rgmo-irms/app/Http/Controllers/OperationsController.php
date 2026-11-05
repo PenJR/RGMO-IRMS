@@ -156,7 +156,7 @@ class OperationsController extends Controller
      */
     public function getPendingRequests()
     {
-        return response()->json($this->service->getPendingRequests());
+        return response()->json(app(\App\Services\ResourceRequestService::class)->getPendingRequestsFor(request()->user()));
     }
 
     // Approval Workflow
@@ -172,6 +172,26 @@ class OperationsController extends Controller
         $data = $request->validate(['remarks' => 'nullable|string|max:1000']);
 
         return response()->json($this->service->approveRequest($requestId, $request->user()->id, $data['remarks'] ?? null));
+    }
+
+    public function verifyRequest(Request $request, int $requestId)
+    {
+        $resourceRequest = ResourceRequest::findOrFail($requestId);
+        $this->authorize('verify', $resourceRequest);
+        $data = $request->validate(['remarks' => 'nullable|string|max:1000']);
+        app(\App\Services\ResourceRequestService::class)->verifyRequest($resourceRequest, $request->user()->id, $data['remarks'] ?? null);
+
+        return response()->json($resourceRequest->fresh());
+    }
+
+    public function endorseRequest(Request $request, int $requestId)
+    {
+        $resourceRequest = ResourceRequest::findOrFail($requestId);
+        $this->authorize('endorse', $resourceRequest);
+        $data = $request->validate(['remarks' => 'nullable|string|max:1000']);
+        app(\App\Services\ResourceRequestService::class)->endorseRequest($resourceRequest, $request->user()->id, $data['remarks'] ?? null);
+
+        return response()->json($resourceRequest->fresh());
     }
 
     /**
@@ -195,7 +215,7 @@ class OperationsController extends Controller
      */
     public function getApprovalQueue()
     {
-        return response()->json($this->service->getApprovalQueue());
+        return response()->json(app(\App\Services\ResourceRequestService::class)->getPendingRequestsFor(request()->user()));
     }
 
     /**
@@ -220,7 +240,7 @@ class OperationsController extends Controller
      */
     public function updateRequestStatus(Request $request, int $requestId)
     {
-        $data = $request->validate(['status' => 'required|in:pending,approved,rejected,cancelled,completed']);
+        $data = $request->validate(['status' => 'required|in:pending,pending_unit_head,pending_rgmo_head,approved,rejected,cancelled,completed']);
 
         return response()->json($this->service->updateRequestStatus($requestId, $data['status']));
     }

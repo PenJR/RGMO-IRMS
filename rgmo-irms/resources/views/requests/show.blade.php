@@ -2,6 +2,7 @@
     @php
         $statusBadge = match ($request->status) {
             'partially_withdrawn' => 'bg-info text-dark',
+            'pending_unit_head', 'pending_rgmo_head' => 'bg-warning text-dark',
             'approved' => 'bg-success text-white',
             'rejected' => 'bg-danger text-white',
             'cancelled' => 'bg-secondary text-white',
@@ -90,6 +91,15 @@
                             <p class="mb-0">{{ $request->remarks ?? 'No remarks provided.' }}</p>
                         </div>
 
+                        <div class="mb-4">
+                            <h6 class="text-uppercase text-muted small mb-2">Approval Workflow</h6>
+                            <div class="table-responsive"><table class="table table-sm mb-0"><tbody>
+                                <tr><th>Storekeeper</th><td>{{ $request->storekeeperChecker?->name ?? 'Awaiting verification' }}</td><td>{{ $request->storekeeper_checked_at?->format('M d, Y H:i') ?? '—' }}</td></tr>
+                                <tr><th>Unit Head</th><td>{{ $request->unitHeadApprover?->name ?? 'Awaiting endorsement' }}</td><td>{{ $request->unit_head_approved_at?->format('M d, Y H:i') ?? '—' }}</td></tr>
+                                <tr><th>RGMO Head</th><td>{{ $request->approver?->name ?? 'Awaiting final approval' }}</td><td>{{ $request->approved_at?->format('M d, Y H:i') ?? '—' }}</td></tr>
+                            </tbody></table></div>
+                        </div>
+
                         <div>
                             <h6 class="text-uppercase text-muted small mb-3">Requested Items</h6>
                             <div class="table-responsive">
@@ -139,12 +149,28 @@
                         <h5 class="mb-0">Approval Actions</h5>
                     </div>
                     <div class="card-body p-4">
-	                        @if($request->status === 'pending')
+	                        @if(in_array($request->status, ['pending', 'pending_unit_head', 'pending_rgmo_head']))
 	                            @unless($canFulfill)
 	                                <div class="alert alert-warning small">
 	                                    This request has insufficient stock for one or more items. Approval is blocked until stock is replenished or the request is edited.
 	                                </div>
 	                            @endunless
+
+	                            @can('verify', $request)
+	                                <form action="{{ route('requests.verify', $request) }}" method="POST" class="mb-3">
+	                                    @csrf
+                                    <div class="mb-3"><label class="form-label">Storekeeper Remarks</label><textarea name="remarks" class="form-control" rows="3" maxlength="1000"></textarea></div>
+	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }}>Verify Stock &amp; Send to Unit Head</button>
+	                                </form>
+	                            @endcan
+
+	                            @can('endorse', $request)
+	                                <form action="{{ route('requests.endorse', $request) }}" method="POST" class="mb-3">
+	                                    @csrf
+                                    <div class="mb-3"><label class="form-label">Unit Head Remarks</label><textarea name="remarks" class="form-control" rows="3" maxlength="1000"></textarea></div>
+	                                    <button type="submit" class="btn btn-cmu w-100">Endorse &amp; Send to RGMO Head</button>
+	                                </form>
+	                            @endcan
 
 	                            @can('approve', $request)
 	                                <form action="{{ route('requests.approve', $request) }}" method="POST" class="mb-3">
@@ -153,7 +179,7 @@
                                         <label class="form-label">Approval Remarks</label>
                                         <textarea name="remarks" class="form-control" rows="3" maxlength="1000"></textarea>
                                     </div>
-	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }}>Approve Request</button>
+	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }}>Final Approve Request</button>
 	                                </form>
 	                            @endcan
 
