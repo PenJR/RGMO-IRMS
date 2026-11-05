@@ -40,6 +40,9 @@ class DashboardController extends Controller
             'lowStockItems' => $lowStockItems,
             'recentRequests' => $recentRequests,
             'recentActivities' => $recentActivities,
+            'leadershipAnalytics' => auth()->user()->isRgmoHead()
+                ? $this->reportService->getLeadershipResourceAnalytics()
+                : null,
         ]);
     }
 

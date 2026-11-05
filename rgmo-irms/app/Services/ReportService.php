@@ -321,11 +321,13 @@ class ReportService
             'charts' => [
                 'inventory_levels' => $this->getInventoryLevelChartData(),
                 'request_statuses' => [
-                    'labels' => ['Approved', 'Partially Withdrawn', 'Pending', 'Rejected', 'Completed', 'Cancelled'],
+                    'labels' => ['Awaiting Storekeeper', 'Awaiting Unit Head', 'Awaiting RGMO Head', 'Approved', 'Partially Withdrawn', 'Rejected', 'Completed', 'Cancelled'],
                     'data' => [
+                        (int) ($requestStatusCounts[ResourceRequest::STATUS_PENDING] ?? 0),
+                        (int) ($requestStatusCounts[ResourceRequest::STATUS_PENDING_UNIT_HEAD] ?? 0),
+                        (int) ($requestStatusCounts[ResourceRequest::STATUS_PENDING_RGMO_HEAD] ?? 0),
                         (int) ($requestStatusCounts[ResourceRequest::STATUS_APPROVED] ?? 0),
                         (int) ($requestStatusCounts[ResourceRequest::STATUS_PARTIALLY_WITHDRAWN] ?? 0),
-                        (int) ($requestStatusCounts[ResourceRequest::STATUS_PENDING] ?? 0),
                         (int) ($requestStatusCounts[ResourceRequest::STATUS_REJECTED] ?? 0),
                         (int) ($requestStatusCounts[ResourceRequest::STATUS_COMPLETED] ?? 0),
                         (int) ($requestStatusCounts[ResourceRequest::STATUS_CANCELLED] ?? 0),
@@ -341,6 +343,60 @@ class ReportService
                 'category_values' => $this->getCategoryValueChartData(),
                 'inventory_movements' => $this->getInventoryMovementChartData(),
                 'top_requested_items' => $this->getTopRequestedItemChartData(),
+            ],
+        ];
+    }
+
+    /** Build the current resource position used by the RGMO Head dashboard. */
+    public function getLeadershipResourceAnalytics(): array
+    {
+        $utilized = ResourceUsage::query()
+            ->whereDate(DB::raw('COALESCE(used_on, created_at)'), '>=', today()->subDays(29))
+            ->select('inventory_item_id', DB::raw('SUM(quantity) as total'))
+            ->groupBy('inventory_item_id')
+            ->pluck('total', 'inventory_item_id');
+
+        $items = InventoryItem::active()
+            ->withSum(['requestItems as reserved_total' => fn ($query) => $query
+                ->whereHas('request', fn ($request) => $request->whereIn('status', [
+                    ResourceRequest::STATUS_APPROVED,
+                    ResourceRequest::STATUS_PARTIALLY_WITHDRAWN,
+                ]))], DB::raw('quantity - withdrawn_quantity'))
+            ->orderBy('name')
+            ->get(['id', 'name', 'stock', 'unit', 'min_stock']);
+
+        $resources = $items->map(function (InventoryItem $item) use ($utilized): array {
+            $reserved = max(0, (int) ($item->reserved_total ?? 0));
+
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'unit' => $item->unit,
+                'available' => max(0, (int) $item->stock - $reserved),
+                'reserved' => $reserved,
+                'utilized_30_days' => (int) ($utilized[$item->id] ?? 0),
+                'stock' => (int) $item->stock,
+            ];
+        });
+
+        $chartResources = $resources
+            ->sortByDesc(fn (array $resource) => $resource['available'] + $resource['reserved'] + $resource['utilized_30_days'])
+            ->take(10)
+            ->values();
+
+        return [
+            'summary' => [
+                'available' => $resources->sum('available'),
+                'reserved' => $resources->sum('reserved'),
+                'utilized_30_days' => $resources->sum('utilized_30_days'),
+                'low_stock_items' => $items->filter->isLowStock()->count(),
+                'awaiting_final_approval' => ResourceRequest::where('status', ResourceRequest::STATUS_PENDING_RGMO_HEAD)->count(),
+            ],
+            'chart' => [
+                'labels' => $chartResources->map(fn (array $resource) => $resource['name'].' ('.$resource['unit'].')')->all(),
+                'available' => $chartResources->pluck('available')->all(),
+                'reserved' => $chartResources->pluck('reserved')->all(),
+                'utilized_30_days' => $chartResources->pluck('utilized_30_days')->all(),
             ],
         ];
     }

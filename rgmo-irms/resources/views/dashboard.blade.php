@@ -108,6 +108,32 @@
             </div>
         </div>
 
+        @if($leadershipAnalytics)
+            <section class="mt-4" aria-labelledby="rgmoResourceOverviewTitle">
+                <div class="dashboard-section-heading dashboard-section-heading--spaced">
+                    <div>
+                        <p class="module-eyebrow mb-1">RGMO Head overview</p>
+                        <h2 id="rgmoResourceOverviewTitle">Resource position and utilization</h2>
+                        <p class="text-muted mb-0">Available stock, approved-request reservations, and recorded utilization from the last 30 days.</p>
+                    </div>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-xl"><div class="card border-0 dashboard-panel h-100"><div class="card-body p-3"><p class="text-muted small mb-1">Available</p><h3 class="mb-0">{{ number_format($leadershipAnalytics['summary']['available']) }}</h3></div></div></div>
+                    <div class="col-6 col-xl"><div class="card border-0 dashboard-panel h-100"><div class="card-body p-3"><p class="text-muted small mb-1">Reserved</p><h3 class="mb-0 text-warning">{{ number_format($leadershipAnalytics['summary']['reserved']) }}</h3></div></div></div>
+                    <div class="col-6 col-xl"><div class="card border-0 dashboard-panel h-100"><div class="card-body p-3"><p class="text-muted small mb-1">Utilized, 30 days</p><h3 class="mb-0 text-success">{{ number_format($leadershipAnalytics['summary']['utilized_30_days']) }}</h3></div></div></div>
+                    <div class="col-6 col-xl"><a class="card border-0 dashboard-panel h-100 text-decoration-none" href="{{ route('inventory.low-stock') }}"><div class="card-body p-3"><p class="text-muted small mb-1">Low-stock items</p><h3 class="mb-0 text-danger">{{ number_format($leadershipAnalytics['summary']['low_stock_items']) }}</h3></div></a></div>
+                    <div class="col-6 col-xl"><a class="card border-0 dashboard-panel h-100 text-decoration-none" href="{{ route('requests.index', ['status' => 'pending_rgmo_head']) }}"><div class="card-body p-3"><p class="text-muted small mb-1">Awaiting final approval</p><h3 class="mb-0">{{ number_format($leadershipAnalytics['summary']['awaiting_final_approval']) }}</h3></div></a></div>
+                </div>
+                <div class="card border-0 dashboard-panel mb-4">
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+                        <h5 class="fw-bold mb-0">Resource availability, reservations, and utilization</h5>
+                        <p class="text-muted small mb-0">Top ten resources by activity. Each label keeps the resource’s own unit.</p>
+                    </div>
+                    <div class="card-body px-4 pb-4" style="height: 380px;"><canvas id="rgmoResourcePositionChart"></canvas></div>
+                </div>
+            </section>
+        @endif
+
         <div class="dashboard-section-heading dashboard-section-heading--spaced">
             <div>
                 <p class="module-eyebrow mb-1">Live overview</p>
@@ -128,7 +154,7 @@
                             <select class="form-select form-select-sm" id="inventoryChartItem" style="width: auto; max-width: 220px;" aria-label="Filter inventory dynamics by item">
                                 <option value="all">All inventory items</option>
                                 @foreach($stats['charts']['inventory_levels']['items'] as $chartItem)
-                                    <option value="{{ $chartItem['id'] }}">{{ $chartItem['name'] }}</option>
+                                    <option value="{{ $chartItem['id'] }}">{{ $chartItem['name'] }}@if($chartItem['sku']) ({{ $chartItem['sku'] }})@endif</option>
                                 @endforeach
                             </select>
                             <div class="d-flex gap-1" role="group" aria-label="Inventory chart period">
@@ -419,6 +445,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const chartData = @json($stats['charts']);
+            const leadershipAnalytics = @json($leadershipAnalytics);
             const hasData = (values) => Array.isArray(values) && values.some(value => Number(value) > 0);
             const fallbackData = (values) => hasData(values) ? values : values.map(() => 0);
             const commonGrid = { color: '#e5e7eb', borderDash: [5, 5] };
@@ -429,6 +456,30 @@
                 bodyFont: { size: 12 },
                 cornerRadius: 6
             };
+
+            const resourcePositionCanvas = document.getElementById('rgmoResourcePositionChart');
+            if (resourcePositionCanvas && leadershipAnalytics) {
+                new Chart(resourcePositionCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: leadershipAnalytics.chart.labels,
+                        datasets: [
+                            { label: 'Available', data: leadershipAnalytics.chart.available, backgroundColor: '#166534', borderRadius: 5 },
+                            { label: 'Reserved', data: leadershipAnalytics.chart.reserved, backgroundColor: '#d97706', borderRadius: 5 },
+                            { label: 'Utilized (30 days)', data: leadershipAnalytics.chart.utilized_30_days, backgroundColor: '#0f766e', borderRadius: 5 },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { tooltip: commonTooltip, legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } } },
+                        scales: {
+                            y: { beginAtZero: true, grid: commonGrid, ticks: { precision: 0 } },
+                            x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 0 } },
+                        },
+                    },
+                });
+            }
             const analyticsDisclosure = document.getElementById('dashboardAnalytics');
 
             const readiness = chartData.resource_readiness ?? { percent: 0, ready_items: 0, total_items: 0 };
