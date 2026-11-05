@@ -17,6 +17,45 @@
     <div class="container-fluid py-4">
         <x-breadcrumb :items="['Projects' => route('projects.index'), $project->name => route('projects.show', $project)]" />
 
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-1">Project Inventory</h5>
+                <p class="text-muted small mb-0">Resources withdrawn for this project and the balance available to withdraw from its approved requests.</p>
+                @if(auth()->user()->isProjectManager())
+                    <p class="text-muted small mb-0">Showing resources from your own requests.</p>
+                @endif
+            </div>
+            <div class="card-body p-0">
+                @if($projectInventory->isNotEmpty())
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Resource</th>
+                                    <th>Unit</th>
+                                    <th class="text-end">Available to Withdraw</th>
+                                    <th class="text-end">Withdrawn</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($projectInventory as $balance)
+                                    <tr>
+                                        <td class="fw-semibold">{{ $balance['item']?->name ?? 'Unknown item' }}</td>
+                                        <td>{{ $balance['item']?->unit ?? '—' }}</td>
+                                        <td class="text-end">{{ number_format($balance['remaining']) }}</td>
+                                        <td class="text-end">{{ number_format($balance['withdrawn']) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="small text-muted px-3 py-2 mb-0">Available to Withdraw = approved quantity minus withdrawn quantity. Pending and rejected requests are excluded. This is the project’s outstanding allocation; actual release still requires sufficient warehouse stock.</p>
+                @else
+                    <p class="p-4 text-muted mb-0">No approved resources for this project yet. Resources appear here when a request is approved.</p>
+                @endif
+            </div>
+        </div>
+
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm mb-4">

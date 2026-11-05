@@ -69,7 +69,7 @@ class ProjectController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Project $project)
+    public function show(Project $project, \App\Services\ProjectInventoryService $inventory)
     {
         $this->authorize('view', $project);
 
@@ -97,6 +97,7 @@ class ProjectController extends Controller
         return view('projects.show', [
             'project' => $project,
             'resourceSummary' => $resourceSummary,
+            'projectInventory' => $inventory->balances($project, auth()->user()),
         ]);
     }
 
