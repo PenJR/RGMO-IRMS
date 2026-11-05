@@ -213,12 +213,12 @@
 	                                        This request was approved, but current stock is no longer enough to fulfill all items.
 	                                    </div>
 	                                @endunless
-	                                <form action="{{ route('requests.fulfill', $request) }}" method="POST">
+	                                <form action="{{ route('requests.fulfill', $request) }}" method="POST" data-withdrawal-summary data-project="{{ $request->project?->name }}" data-request="RQ-{{ $request->id }}" data-confirm="Review the resources below before recording this withdrawal. Any remaining quantities stay reserved.">
                                     @csrf
                                     <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">
-                                    <p class="small text-muted">Enter the quantity issued now. Leave 0 for items not collected. The remainder stays reserved.</p>
+                                    <p class="small text-muted">Enter the quantity issued now. Enter 0 for items not collected. The remainder stays reserved.</p>
                                     @foreach($request->items as $line)
-                                        <div class="mb-3"><label class="form-label" for="release-{{ $line->id }}">{{ $line->item?->name }} ({{ $line->remaining_quantity }} remaining)</label><input id="release-{{ $line->id }}" name="quantities[{{ $line->id }}]" type="number" class="form-control" min="0" max="{{ $line->remaining_quantity }}" value="{{ old('quantities.'.$line->id, $line->remaining_quantity) }}" required></div>
+                                        <div class="mb-3"><label class="form-label" for="release-{{ $line->id }}">{{ $line->item?->name }} ({{ $line->remaining_quantity }} remaining)</label><input id="release-{{ $line->id }}" name="quantities[{{ $line->id }}]" data-resource-name="{{ $line->item?->name }}" data-resource-unit="{{ $line->item?->unit }}" type="number" class="form-control" min="0" max="{{ $line->remaining_quantity }}" data-allocation-limit="{{ $line->item?->name }}: Withdrawal quantity must be less than or equal to the remaining allocation for this project ({{ $line->remaining_quantity }} {{ $line->item?->unit }} remaining on this request)." value="{{ old('quantities.'.$line->id, '') }}" required></div>
                                     @endforeach
                                     <div class="mb-3"><label for="withdrawn-on" class="form-label">Withdrawal date</label><input id="withdrawn-on" name="withdrawn_on" type="date" class="form-control" min="{{ $request->approved_at?->toDateString() }}" max="{{ today()->toDateString() }}" value="{{ old('withdrawn_on', today()->toDateString()) }}" required></div>
                                     <div class="mb-3"><label for="received-by" class="form-label">Received by</label><input id="received-by" name="received_by" class="form-control" maxlength="255" value="{{ old('received_by') }}" required></div>

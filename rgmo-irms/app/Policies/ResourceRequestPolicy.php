@@ -72,7 +72,7 @@ class ResourceRequestPolicy
      */
     public function approve(User $user, ResourceRequest $request): bool
     {
-        return $user->hasPermission('approve-request') && $request->status === ResourceRequest::STATUS_PENDING_RGMO_HEAD;
+        return $user->hasPermission('approve-request') && $request->canReceiveFinalApproval();
     }
 
     /**
@@ -100,7 +100,7 @@ class ResourceRequestPolicy
 
     public function endorse(User $user, ResourceRequest $request): bool
     {
-        return $user->hasPermission('endorse-request') && $request->status === ResourceRequest::STATUS_PENDING_UNIT_HEAD;
+        return $user->hasPermission('endorse-request') && $request->canReceiveUnitHeadEndorsement();
     }
 
     /**

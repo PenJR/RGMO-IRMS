@@ -47,6 +47,55 @@ class RequestWorkflowTest extends TestCase
         $this->assertSame(ResourceRequest::STATUS_COMPLETED, $request->fresh()->status);
     }
 
+    public function test_final_approval_requires_every_prior_signature_even_for_administrators(): void
+    {
+        $admin = $this->activeUser(User::ROLE_ADMIN);
+        $this->actingAs($admin);
+        $service = app(\App\Services\ResourceRequestService::class);
+
+        foreach (['storekeeper_checked_by', 'storekeeper_checked_at', 'unit_head_approved_by', 'unit_head_approved_at'] as $missing) {
+            $request = $this->resourceRequestWithItem();
+            $request->update(array_replace([
+                'status' => ResourceRequest::STATUS_PENDING_RGMO_HEAD,
+                'storekeeper_checked_by' => $admin->id,
+                'storekeeper_checked_at' => now(),
+                'unit_head_approved_by' => $admin->id,
+                'unit_head_approved_at' => now(),
+            ], [$missing => null]));
+
+            $this->post(route('requests.approve', $request))->assertForbidden();
+            $this->patchJson('/api/ops/requests/'.$request->id.'/approve')->assertForbidden();
+            foreach ([fn () => $service->approveRequest($request, $admin->id), fn () => $request->approve($admin->id)] as $approve) {
+                try {
+                    $approve();
+                    $this->fail('Approval bypassed a missing signature: '.$missing);
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    $this->assertArrayHasKey('status', $e->errors());
+                }
+            }
+            $this->assertSame(ResourceRequest::STATUS_PENDING_RGMO_HEAD, $request->fresh()->status);
+            $this->assertNull($request->fresh()->approved_by);
+            $this->assertNull($request->fresh()->approved_at);
+            $this->assertEquals(0, $request->items()->first()->item->reserved_quantity);
+        }
+    }
+
+    public function test_unit_head_cannot_endorse_without_storekeeper_signature(): void
+    {
+        $admin = $this->activeUser(User::ROLE_ADMIN);
+        $request = $this->resourceRequestWithItem();
+        $request->update(['status' => ResourceRequest::STATUS_PENDING_UNIT_HEAD]);
+        $this->actingAs($admin)->post(route('requests.endorse', $request))->assertForbidden();
+        try {
+            app(\App\Services\ResourceRequestService::class)->endorseRequest($request, $admin->id);
+            $this->fail('Endorsement bypassed Storekeeper verification.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertArrayHasKey('status', $e->errors());
+        }
+        $this->assertSame(ResourceRequest::STATUS_PENDING_UNIT_HEAD, $request->fresh()->status);
+        $this->assertNull($request->fresh()->unit_head_approved_by);
+    }
+
     public function test_approval_is_blocked_when_stock_is_insufficient(): void
     {
         $admin = $this->activeUser(User::ROLE_ADMIN);
@@ -129,7 +178,8 @@ class RequestWorkflowTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('requests.fulfill', $request), ['quantities' => $request->items->pluck('quantity', 'id')->all(), 'received_by' => 'Test recipient', 'withdrawn_on' => today()->toDateString(), 'submission_key' => (string) \Illuminate\Support\Str::uuid()])
-            ->assertRedirect(route('requests.show', $request));
+            ->assertRedirect(route('requests.show', $request))
+            ->assertSessionHas('withdrawal_receipt_url', route('requests.withdrawal-slip.download', $request));
 
         $request->refresh();
         $item = $request->items()->firstOrFail()->item()->firstOrFail();
@@ -166,6 +216,8 @@ class RequestWorkflowTest extends TestCase
             'name' => 'Empty Sacks Slightly Used',
             'price' => 17,
         ]);
+        app(\App\Services\ResourceRequestService::class)->verifyRequest($request, $admin->id);
+        app(\App\Services\ResourceRequestService::class)->endorseRequest($request, $admin->id);
         $request->approve($admin->id, 'Approved for withdrawal');
         $request->update(['approved_at' => '2026-08-10']);
 
@@ -237,6 +289,8 @@ class RequestWorkflowTest extends TestCase
         $this->get(route('requests.withdrawal-slip.download', $request))
             ->assertForbidden();
 
+        app(\App\Services\ResourceRequestService::class)->verifyRequest($request, $admin->id);
+        app(\App\Services\ResourceRequestService::class)->endorseRequest($request, $admin->id);
         $request->approve($admin->id, 'Confirmed for release');
 
         $this->get(route('requests.show', $request))

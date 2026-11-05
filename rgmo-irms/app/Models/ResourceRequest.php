@@ -191,6 +191,24 @@ class ResourceRequest extends Model
         return $this->status === self::STATUS_APPROVED;
     }
 
+    public function hasStorekeeperVerification(): bool
+    {
+        return $this->storekeeper_checked_by !== null && $this->storekeeper_checked_at !== null;
+    }
+
+    public function canReceiveUnitHeadEndorsement(): bool
+    {
+        return $this->status === self::STATUS_PENDING_UNIT_HEAD && $this->hasStorekeeperVerification();
+    }
+
+    public function canReceiveFinalApproval(): bool
+    {
+        return $this->status === self::STATUS_PENDING_RGMO_HEAD
+            && $this->hasStorekeeperVerification()
+            && $this->unit_head_approved_by !== null
+            && $this->unit_head_approved_at !== null;
+    }
+
     /**
      * Approve the resource request, setting the approver and timestamp.
      *
@@ -199,6 +217,12 @@ class ResourceRequest extends Model
      */
     public function approve(int $approvedBy, ?string $remarks = null): void
     {
+        if (! $this->canReceiveFinalApproval()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'status' => 'Storekeeper verification and Unit Head endorsement must both be recorded before RGMO Head approval.',
+            ]);
+        }
+
         $this->update([
             'status' => self::STATUS_APPROVED,
             'approved_by' => $approvedBy,

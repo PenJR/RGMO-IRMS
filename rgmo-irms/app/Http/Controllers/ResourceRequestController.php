@@ -184,7 +184,10 @@ class ResourceRequestController extends Controller
     private function ensureWithdrawalReceiptIsAvailable(ResourceRequest $request): void
     {
         abort_unless(
-            $request->status === ResourceRequest::STATUS_APPROVED,
+            $request->status === ResourceRequest::STATUS_APPROVED || (
+                in_array($request->status, [ResourceRequest::STATUS_PARTIALLY_WITHDRAWN, ResourceRequest::STATUS_COMPLETED], true)
+                && $request->withdrawals()->exists()
+            ),
             403,
             'The withdrawal receipt is available only while the resource request status is approved.'
         );
@@ -363,7 +366,9 @@ class ResourceRequestController extends Controller
         ]);
         $this->requestService->fulfillRequest($request, $data['quantities'], $data);
 
-        return redirect()->route('requests.show', $request)->with('success', 'Withdrawal recorded. Any unwithdrawn balance remains reserved.');
+        return redirect()->route('requests.show', $request)
+            ->with('success', 'Withdrawal recorded. Your receipt is ready to download.')
+            ->with('withdrawal_receipt_url', route('requests.withdrawal-slip.download', $request));
     }
 
     /**

@@ -153,7 +153,7 @@ class ResourceRequestService
     {
         DB::transaction(function () use ($request, $unitHeadId, $remarks) {
             $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
-            if ($locked->status !== ResourceRequest::STATUS_PENDING_UNIT_HEAD) {
+            if (! $locked->canReceiveUnitHeadEndorsement()) {
                 throw ValidationException::withMessages(['status' => 'Only storekeeper-verified requests can be endorsed.']);
             }
             $old = $locked->toArray();
@@ -169,8 +169,8 @@ class ResourceRequestService
     {
         DB::transaction(function () use ($request, $approverId, $remarks) {
             $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
-            if ($locked->status !== ResourceRequest::STATUS_PENDING_RGMO_HEAD) {
-                throw ValidationException::withMessages(['status' => 'Only Unit Head-endorsed requests may receive final approval.']);
+            if (! $locked->canReceiveFinalApproval()) {
+                throw ValidationException::withMessages(['status' => 'Storekeeper verification and Unit Head endorsement must both be recorded before RGMO Head approval.']);
             }
             $this->ensureItemsAreAvailable($locked);
             $old = $locked->toArray();
