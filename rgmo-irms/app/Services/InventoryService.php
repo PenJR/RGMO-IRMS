@@ -147,7 +147,7 @@ class InventoryService
             $newStock = array_key_exists('stock', $data) ? (int) $data['stock'] : (int) $lockedItem->stock;
             unset($data['stock']);
 
-            if ($newStock < $lockedItem->reserved_quantity) {
+            if ($newStock < $lockedItem->stock && $newStock < $lockedItem->reserved_quantity) {
                 throw ValidationException::withMessages(['stock' => 'Stock is reserved for approved requests.']);
             }
             $allocations = $newStock < $lockedItem->stock ? $lockedItem->allocateDeliveries($lockedItem->stock - $newStock) : [];

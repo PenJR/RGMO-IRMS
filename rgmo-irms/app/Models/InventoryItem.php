@@ -24,7 +24,8 @@ class InventoryItem extends Model
 
         static::updating(function (InventoryItem $item) {
             $errors = [];
-            if ($item->isDirty('stock') && $item->stock < $item->reserved_quantity) {
+            if ($item->isDirty('stock') && $item->stock < $item->getOriginal('stock')
+                && $item->stock < $item->reserved_quantity) {
                 $errors['stock'] = 'Stock cannot be reduced below quantities reserved for approved requests.';
             }
             foreach (['category_id' => 'Resource type', 'unit' => 'Unit'] as $field => $label) {

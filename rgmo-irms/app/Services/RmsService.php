@@ -559,7 +559,7 @@ class RmsService
             if ($newStock < 0) {
                 throw ValidationException::withMessages(['stock' => 'Insufficient stock.']);
             }
-            if ($newStock < $item->reserved_quantity) {
+            if ($delta < 0 && $newStock < $item->reserved_quantity) {
                 throw ValidationException::withMessages(['stock' => 'Stock is reserved for approved requests.']);
             }
             if ($delta < 0) $item->allocateDeliveries(-$delta);

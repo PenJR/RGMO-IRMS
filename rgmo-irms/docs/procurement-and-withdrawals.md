@@ -52,7 +52,7 @@ Migration: `2026_11_04_100000_add_procurement_and_partial_withdrawals.php`.
 
 - Back up the target database before deploying.
 - Deploy the code and run `php artisan migrate --force` with writes paused during the schema change.
-- Migration preflight refuses to adopt older approved requests whose combined quantities exceed stock. Reconcile those requests with the office before retrying; do not silently reduce their approved quantities.
+- Migration preflight logs a warning when older approved requests exceed stock, then preserves their approved quantities and actual on-hand balances. Available stock is zero for these items; new approvals and withdrawals remain blocked until stock covers outstanding reservations. Partial deliveries and upward stock corrections are allowed even while a shortage remains. Record only actual received stock or verified corrections; the migration does not fabricate inventory or cancel approvals.
 - Build frontend assets and cache views through the normal deployment process.
 - Verify receipt storage, permissions, and the 100 → reserve 30 → issue 20 → issue 10 example on the target environment.
 - The migration's rollback drops the new transaction tables. Use the backup/recovery procedure rather than rolling back after real purchases or withdrawals have been recorded.

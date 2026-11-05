@@ -3,19 +3,20 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        // Older versions did not reserve approvals. Never silently adopt an overcommitted balance.
+        // Preserve historical approvals and stock. Existing shortages must not prevent startup.
         $overcommitted = DB::table('request_items as ri')->join('resource_requests as r', 'r.id', '=', 'ri.resource_request_id')
             ->join('inventory_items as i', 'i.id', '=', 'ri.inventory_item_id')
             ->where('r.status', 'approved')->whereNull('r.deleted_at')
             ->select('i.id')->groupBy('i.id', 'i.stock')->havingRaw('SUM(ri.quantity) > i.stock')->exists();
         if ($overcommitted) {
-            throw new RuntimeException('Approved requests exceed stock. Reconcile existing approvals before enabling reservations.');
+            Log::warning('Existing approved requests exceed stock. Historical approvals are preserved; replenish affected inventory before issuing stock or approving more requests.');
         }
         Schema::table('request_items', function (Blueprint $table) {
             $table->unsignedInteger('withdrawn_quantity')->default(0);

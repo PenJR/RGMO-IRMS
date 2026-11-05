@@ -48,6 +48,66 @@ class ProcurementReservationTest extends TestCase
         return ['submission_key' => (string) Str::uuid(), 'received_by' => 'Field recipient', 'withdrawn_on' => today()->toDateString()];
     }
 
+    public function test_legacy_shortage_migrates_without_rewriting_history_and_can_be_replenished(): void
+    {
+        $admin = $this->actor();
+        $this->actingAs($admin);
+        $item = $this->item(10);
+        $approved = $this->requestFor($item, 30);
+        $approved->update(['status' => 'approved', 'approved_at' => now()]);
+        $completed = $this->requestFor($item, 5);
+        $completed->update(['status' => 'completed']);
+        $pending = $this->requestFor($item, 1);
+
+        // Recreate the pre-deployment schema with the same historical records.
+        $migration = require database_path('migrations/2026_11_04_100000_add_procurement_and_partial_withdrawals.php');
+        $migration->down();
+        $migration->up();
+
+        $this->assertEquals(10, $item->fresh()->stock);
+        $this->assertEquals('approved', $approved->fresh()->status);
+        $this->assertEquals(30, $approved->items()->first()->quantity);
+        $this->assertEquals(0, $approved->items()->first()->withdrawn_quantity);
+        $this->assertEquals(5, $completed->items()->first()->withdrawn_quantity);
+        $this->assertEquals(30, $item->fresh()->reserved_quantity);
+        $this->assertEquals(0, $item->fresh()->available_stock);
+        $this->assertDatabaseCount('inventory_transactions', 0);
+        $this->assertDatabaseCount('withdrawals', 0);
+        $this->patchJson('/api/ops/requests/'.$pending->id.'/approve', [])->assertUnprocessable();
+        $line = $approved->items()->first();
+        $this->post(route('requests.fulfill', $approved), $this->details() + ['quantities' => [$line->id => 1]])
+            ->assertSessionHasErrors('quantity');
+        $this->assertEquals(0, $line->fresh()->withdrawn_quantity);
+        $this->assertEquals(10, $item->fresh()->stock);
+        $this->assertDatabaseCount('withdrawals', 0);
+
+        $purchase = Procurement::create([
+            'inventory_item_id' => $item->id, 'created_by' => $admin->id,
+            'supplier_name' => 'Supplier', 'supplier_number' => '123', 'or_number' => 'OR-LEGACY',
+            'purchased_on' => today(), 'quantity' => 20, 'unit_cost' => 20, 'funding_source' => 'RGMO',
+        ]);
+        app(ProcurementService::class)->receive($purchase, [
+            'quantity' => 5, 'received_on' => today()->toDateString(), 'submission_key' => (string) Str::uuid(),
+        ], $admin);
+        $this->assertEquals(15, $item->fresh()->stock);
+        app(InventoryService::class)->updateItem($item, ['name' => 'Updated rice seed'], $admin->id);
+        app(InventoryService::class)->updateItem($item, ['stock' => 16], $admin->id);
+        app(\App\Services\RmsService::class)->increaseStock($item->id, 1);
+        $this->assertEquals(17, $item->fresh()->stock);
+        $this->assertEquals(0, $item->fresh()->available_stock);
+        try {
+            app(InventoryService::class)->updateItem($item, ['stock' => 16], $admin->id);
+            $this->fail('Legacy shortage allowed stock reduction');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('stock', $e->errors());
+        }
+        app(InventoryService::class)->recordStockIn($item, 13, 'Remaining replenishment', $admin->id);
+        app(ResourceRequestService::class)->fulfillRequest($approved, [$line->id => 30], $this->details());
+        $this->assertEquals('completed', $approved->fresh()->status);
+        $this->assertEquals(0, $item->fresh()->stock);
+        $this->assertEquals(0, $item->fresh()->reserved_quantity);
+    }
+
     public function test_fifo_uses_arrival_order_and_inventory_shows_next_supplier(): void
     {
         $admin = $this->actor();
