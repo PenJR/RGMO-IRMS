@@ -85,11 +85,14 @@ nav {
     font-size: 12px;
 }
 nav>a:not(.button) {
-    padding: 7px 0;
+    padding: 7px 9px;
+    border-radius: 4px;
+    transition: background-color .2s, color .2s;
 }
 nav>a:hover {
     color: var(--deep);
-    text-decoration: underline;
+    background: var(--gold);
+    text-decoration: none;
 }
 nav [aria-current] {
     color: var(--green);

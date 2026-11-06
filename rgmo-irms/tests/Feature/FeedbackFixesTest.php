@@ -74,10 +74,10 @@ class FeedbackFixesTest extends TestCase
         }
         InventoryItem::create(['category_id' => $category->id, 'name' => 'Other', 'sku' => 'OTHER', 'stock' => 50, 'min_stock' => 5, 'unit' => 'kg']);
         $filters = ['search' => 'Rice', 'status' => 'low', 'category_id' => $category->id, 'sort' => 'name', 'direction' => 'desc'];
-        $this->actingAs($this->admin())->get(route('inventory.index', $filters))->assertOk()->assertSee('Export CSV')->assertSee('Export PDF');
+        $this->actingAs($this->admin())->get(route('inventory.index', $filters))->assertOk()->assertDontSee('Export CSV')->assertDontSee('Export PDF');
         $csv = $this->get(route('inventory.export-csv', $filters))->assertOk()->streamedContent();
         $this->assertCount(13, array_filter(explode("\n", trim($csv))));
-        $this->assertStringContainsString('RICE-12', $csv);
+        $this->assertStringContainsString('Rice 12', $csv);
         $this->assertStringNotContainsString('OTHER', $csv);
         $this->get(route('inventory.export-pdf', $filters))->assertOk()->assertDownload()->assertHeader('Content-Type', 'application/pdf');
 

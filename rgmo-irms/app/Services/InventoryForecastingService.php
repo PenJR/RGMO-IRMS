@@ -39,9 +39,7 @@ class InventoryForecastingService
      */
     public function buildForecast(int $forecastDays = self::DEFAULT_FORECAST_DAYS): array
     {
-        if (! array_key_exists($forecastDays, self::FORECAST_PERIODS)) {
-            $forecastDays = self::DEFAULT_FORECAST_DAYS;
-        }
+        $forecastDays = max(1, min(365, $forecastDays));
 
         $asOf = CarbonImmutable::now()->startOfDay();
         $historyStartsAt = $asOf->subDays(self::HISTORY_DAYS - 1);

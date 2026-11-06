@@ -3,30 +3,36 @@
         <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
             <div>
                 <h2 class="h5 fw-bold mb-0">Inventory Forecasting & Analytics</h2>
-                <p class="text-muted mb-0 small">
-                    Demand forecast from the last {{ $history_days }} days of stock movement
-                </p>
+                <p class="text-muted mb-0 small">Select a forecast range, then generate the forecast when you are ready.</p>
             </div>
             <div class="d-flex align-items-end gap-3 flex-wrap">
-                <form method="GET" action="{{ route('ai-forecasting.index') }}" class="d-flex align-items-end gap-2">
+                <form method="GET" action="{{ route('ai-forecasting.index') }}" class="d-flex align-items-end gap-2 flex-wrap">
+                    <input type="hidden" name="generate" value="1">
                     <div>
-                        <label for="forecast-days" class="form-label small fw-semibold mb-1">Forecast period</label>
-                        <select id="forecast-days" name="forecast_days" class="form-select form-select-sm" onchange="this.form.submit()">
-                            @foreach($forecast_periods as $days => $label)
-                                <option value="{{ $days }}" @selected($forecast_days === $days)>{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <label for="forecast-start" class="form-label small fw-semibold mb-1">Forecast start</label>
+                        <input id="forecast-start" name="forecast_start" type="date" class="form-control form-control-sm" value="{{ $forecast_start->toDateString() }}" required>
                     </div>
-                    <noscript><button type="submit" class="btn btn-sm btn-primary">Apply</button></noscript>
+                    <div>
+                        <label for="forecast-end" class="form-label small fw-semibold mb-1">Forecast end</label>
+                        <input id="forecast-end" name="forecast_end" type="date" class="form-control form-control-sm" value="{{ $forecast_end->toDateString() }}" required>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-cmu">Generate Forecast</button>
                 </form>
-                <div class="text-muted small pb-1">
-                    Updated {{ $as_of->format('M d, Y') }}
-                </div>
+                @if($generated)<div class="text-muted small pb-1">Generated {{ $as_of->format('M d, Y') }}</div>@endif
             </div>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
+        @unless($generated)
+            <div class="card shadow-sm border-0">
+                <div class="card-body py-5 text-center">
+                    <i data-lucide="calendar-range" class="text-muted mb-3" style="width: 40px; height: 40px;"></i>
+                    <h3 class="h5 fw-bold">Choose a forecast date range</h3>
+                    <p class="text-muted mb-0">Set the start and end dates above, then select <strong>Generate Forecast</strong>.</p>
+                </div>
+            </div>
+        @else
         <div class="row g-3 mb-4">
             <div class="col-12 col-md-6 col-xl-3">
                 <div class="card shadow-sm border-0 h-100">
@@ -152,10 +158,8 @@
                             <span class="badge text-bg-primary">Gemini</span>
                         </div>
                         <div class="card-body" id="ai-forecast-brief" aria-live="polite">
-                            <div class="d-flex align-items-center gap-2 text-muted small">
-                                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                                <span>Generating the AI brief…</span>
-                            </div>
+                            <p class="small text-muted">Create an optional plain-language summary for this generated forecast.</p>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="generate-ai-brief" data-endpoint="{{ route('ai-forecasting.explanation') }}" data-forecast-start="{{ $forecast_start->toDateString() }}" data-forecast-end="{{ $forecast_end->toDateString() }}">Generate AI Brief</button>
                         </div>
                     </div>
                 </div>
@@ -226,8 +230,9 @@
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const container = document.getElementById('ai-forecast-brief');
+                const generateButton = document.getElementById('generate-ai-brief');
 
-                if (!container) return;
+                if (!container || !generateButton) return;
 
                 const showMessage = (message) => {
                     const paragraph = document.createElement('p');
@@ -236,30 +241,18 @@
                     container.replaceChildren(paragraph);
                 };
 
-                const addList = (title, items, hasBottomMargin) => {
-                    if (!Array.isArray(items) || items.length === 0) return;
+                generateButton.addEventListener('click', () => {
+                    generateButton.disabled = true;
+                    generateButton.textContent = 'Generating…';
+                    const controller = new AbortController();
+                    const timeout = window.setTimeout(() => controller.abort(), 6000);
 
-                    const heading = document.createElement('h6');
-                    heading.className = 'small fw-bold mb-2';
-                    heading.textContent = title;
-
-                    const list = document.createElement('ul');
-                    list.className = `small text-muted ps-3 ${hasBottomMargin ? 'mb-3' : 'mb-0'}`;
-
-                    items.forEach((item) => {
-                        const listItem = document.createElement('li');
-                        listItem.className = 'mb-1';
-                        listItem.textContent = String(item);
-                        list.appendChild(listItem);
-                    });
-
-                    container.append(heading, list);
-                };
-
-                const controller = new AbortController();
-                const timeout = window.setTimeout(() => controller.abort(), 6000);
-
-                fetch(@json(route('ai-forecasting.explanation', ['forecast_days' => $forecast_days])), {
+                const parameters = new URLSearchParams({
+                    generate: '1',
+                    forecast_start: generateButton.dataset.forecastStart,
+                    forecast_end: generateButton.dataset.forecastEnd,
+                });
+                fetch(`${generateButton.dataset.endpoint}?${parameters}`, {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
@@ -280,8 +273,6 @@
                         summary.className = 'small mb-3';
                         summary.textContent = payload.summary;
                         container.replaceChildren(summary);
-                        addList('Priorities', payload.priorities, true);
-                        addList('Warnings', payload.warnings, false);
                     })
                     .catch((error) => {
                         const message = error.name === 'AbortError'
@@ -290,8 +281,10 @@
                         showMessage(message);
                     })
                     .finally(() => window.clearTimeout(timeout));
+                });
             });
         </script>
     @endpush
     @endif
+        @endunless
 </x-app-layout>

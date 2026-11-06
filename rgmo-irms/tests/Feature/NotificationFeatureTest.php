@@ -44,6 +44,9 @@ class NotificationFeatureTest extends TestCase
     {
         $staff = $this->activeUser(User::ROLE_STAFF, ['name' => 'Maria Staff']);
         $storekeeper = $this->activeUser(User::ROLE_STOREKEEPER);
+        $admin = $this->activeUser(User::ROLE_ADMIN);
+        $unitHead = $this->activeUser(User::ROLE_UNIT_HEAD);
+        $rgmoHead = $this->activeUser(User::ROLE_RGMO_HEAD);
         $item = $this->inventoryItem('Hybrid Rice Seeds');
         $project = Project::create([
             'name' => 'Rice Demonstration',
@@ -72,6 +75,12 @@ class NotificationFeatureTest extends TestCase
             'related_request_id' => $resourceRequest->id,
             'read_at' => null,
         ]);
+        foreach ([$staff, $admin, $unitHead, $rgmoHead] as $unrelatedUser) {
+            $this->assertDatabaseMissing('notifications', [
+                'user_id' => $unrelatedUser->id,
+                'related_request_id' => $resourceRequest->id,
+            ]);
+        }
     }
 
     /**
@@ -141,20 +150,20 @@ class NotificationFeatureTest extends TestCase
 
         $this->assertNotNull(LoginHistory::where('user_id', $admin->id)->first()?->login_at);
 
-        foreach ([$admin, $head] as $recipient) {
-            $this->assertDatabaseHas('notifications', [
-                'user_id' => $recipient->id,
-                'title' => 'Admin Login',
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $admin->id,
+            'title' => 'Admin Login',
+            'type' => 'admin_login',
+            'message' => 'Admin Ada Admin logged in to the system.',
+            'sender_id' => $admin->id,
+        ]);
+
+        foreach ([$head, $staff] as $unrelatedUser) {
+            $this->assertDatabaseMissing('notifications', [
+                'user_id' => $unrelatedUser->id,
                 'type' => 'admin_login',
-                'message' => 'Admin Ada Admin logged in to the system.',
-                'sender_id' => $admin->id,
             ]);
         }
-
-        $this->assertDatabaseMissing('notifications', [
-            'user_id' => $staff->id,
-            'type' => 'admin_login',
-        ]);
     }
 
     /**
@@ -177,15 +186,13 @@ class NotificationFeatureTest extends TestCase
             'password' => 'password',
         ])->assertRedirect(route('dashboard', absolute: false));
 
-        foreach ([$admin, $head] as $recipient) {
-            $this->assertDatabaseHas('notifications', [
-                'user_id' => $recipient->id,
-                'title' => 'RGMO Head Login',
-                'type' => 'rgmo_head_login',
-                'message' => 'RGMO Head Rosa Head logged in to the system.',
-                'sender_id' => $head->id,
-            ]);
-        }
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $admin->id,
+            'title' => 'RGMO Head Login',
+            'type' => 'rgmo_head_login',
+            'message' => 'RGMO Head Rosa Head logged in to the system.',
+            'sender_id' => $head->id,
+        ]);
 
         $this->post(route('logout'))->assertRedirect('/');
 
@@ -194,20 +201,51 @@ class NotificationFeatureTest extends TestCase
             'password' => 'password',
         ])->assertRedirect(route('dashboard', absolute: false));
 
-        foreach ([$admin, $head] as $recipient) {
-            $this->assertDatabaseHas('notifications', [
-                'user_id' => $recipient->id,
-                'title' => 'Staff Login',
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $admin->id,
+            'title' => 'Staff Login',
+            'type' => 'staff_login',
+            'message' => 'Staff Sam Staff logged in to the system.',
+            'sender_id' => $staff->id,
+        ]);
+
+        foreach ([$head, $staff] as $unrelatedUser) {
+            $this->assertDatabaseMissing('notifications', [
+                'user_id' => $unrelatedUser->id,
                 'type' => 'staff_login',
-                'message' => 'Staff Sam Staff logged in to the system.',
-                'sender_id' => $staff->id,
             ]);
         }
+    }
 
-        $this->assertDatabaseMissing('notifications', [
-            'user_id' => $staff->id,
-            'type' => 'staff_login',
-        ]);
+    public function test_notification_recipients_follow_the_role_routing_matrix(): void
+    {
+        $admin = $this->activeUser(User::ROLE_ADMIN);
+        $storekeeper = $this->activeUser(User::ROLE_STOREKEEPER);
+        $unitHead = $this->activeUser(User::ROLE_UNIT_HEAD);
+        $rgmoHead = $this->activeUser(User::ROLE_RGMO_HEAD);
+        $staff = $this->activeUser(User::ROLE_STAFF, ['login_attempts' => 5]);
+        $request = $this->resourceRequestFor($staff);
+        $service = app(\App\Services\NotificationService::class);
+
+        $service->notifyRequestAwaitingRole($request, User::ROLE_UNIT_HEAD, 'Storekeeper verification is complete.');
+        $this->assertDatabaseHas('notifications', ['user_id' => $unitHead->id, 'related_request_id' => $request->id]);
+        foreach ([$admin, $storekeeper, $rgmoHead, $staff] as $unrelatedUser) {
+            $this->assertDatabaseMissing('notifications', ['user_id' => $unrelatedUser->id, 'related_request_id' => $request->id]);
+        }
+
+        $service->notifyLowStock('Test fertilizer', 2);
+        foreach ([$admin, $storekeeper] as $recipient) {
+            $this->assertDatabaseHas('notifications', ['user_id' => $recipient->id, 'type' => 'low_stock']);
+        }
+        foreach ([$unitHead, $rgmoHead, $staff] as $unrelatedUser) {
+            $this->assertDatabaseMissing('notifications', ['user_id' => $unrelatedUser->id, 'type' => 'low_stock']);
+        }
+
+        $service->notifyFailedLoginAttempts($staff);
+        $this->assertDatabaseHas('notifications', ['user_id' => $admin->id, 'type' => 'failed_login']);
+        foreach ([$storekeeper, $unitHead, $rgmoHead, $staff] as $unrelatedUser) {
+            $this->assertDatabaseMissing('notifications', ['user_id' => $unrelatedUser->id, 'type' => 'failed_login']);
+        }
     }
 
     /**

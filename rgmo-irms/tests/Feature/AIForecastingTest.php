@@ -64,7 +64,11 @@ class AIForecastingTest extends TestCase
         }
 
         $this->actingAs($head)
-            ->get(route('ai-forecasting.index'))
+            ->get(route('ai-forecasting.index', [
+                'generate' => 1,
+                'forecast_start' => today()->toDateString(),
+                'forecast_end' => today()->addDays(29)->toDateString(),
+            ]))
             ->assertOk()
             ->assertSee('Demand Prediction by Item')
             ->assertSee('NPK 14-14-14')
@@ -97,7 +101,7 @@ class AIForecastingTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_user_can_select_a_one_week_forecast_period(): void
+    public function test_user_can_generate_a_one_week_forecast_from_a_date_range(): void
     {
         $head = User::factory()->create([
             'role' => User::ROLE_RGMO_HEAD,
@@ -127,17 +131,20 @@ class AIForecastingTest extends TestCase
         }
 
         $this->actingAs($head)
-            ->get(route('ai-forecasting.index', ['forecast_days' => 7]))
+            ->get(route('ai-forecasting.index', [
+                'generate' => 1,
+                'forecast_start' => today()->toDateString(),
+                'forecast_end' => today()->addDays(6)->toDateString(),
+            ]))
             ->assertOk()
             ->assertSee('Projected 7-Day Demand')
-            ->assertSee('value="7" selected', false)
             ->assertViewHas('forecast_days', 7)
             ->assertViewHas('forecasts', fn (Collection $forecasts): bool => $forecasts->first()['projected_demand'] > 0
                     && $forecasts->first()['projected_demand'] <= 7
             );
     }
 
-    public function test_unsupported_forecast_period_is_rejected(): void
+    public function test_invalid_forecast_date_range_is_rejected(): void
     {
         $head = User::factory()->create([
             'role' => User::ROLE_RGMO_HEAD,
@@ -146,9 +153,13 @@ class AIForecastingTest extends TestCase
         ]);
 
         $this->actingAs($head)
-            ->getJson(route('ai-forecasting.index', ['forecast_days' => 365]))
+            ->getJson(route('ai-forecasting.index', [
+                'generate' => 1,
+                'forecast_start' => today()->toDateString(),
+                'forecast_end' => today()->subDay()->toDateString(),
+            ]))
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('forecast_days');
+            ->assertJsonValidationErrors('forecast_end');
     }
 
     /**
@@ -364,10 +375,15 @@ class AIForecastingTest extends TestCase
         $this->actingAs($head)
             ->get(route('ai-forecasting.index'))
             ->assertOk()
-            ->assertSee('Generating the AI brief');
+            ->assertSee('Choose a forecast date range')
+            ->assertDontSee('Demand Prediction by Item');
         Http::assertSentCount(0);
 
-        $this->getJson(route('ai-forecasting.explanation'))
+        $this->getJson(route('ai-forecasting.explanation', [
+            'generate' => 1,
+            'forecast_start' => today()->toDateString(),
+            'forecast_end' => today()->addDays(29)->toDateString(),
+        ]))
             ->assertOk()
             ->assertJsonPath('summary', 'The numerical forecast is ready.');
         Http::assertSentCount(1);

@@ -145,7 +145,7 @@ class NotificationService
 
         $notificationType = $user->normalizedRole() . '_login';
 
-        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_RGMO_HEAD], $notificationType, "{$roleLabel} {$user->name} logged in to the system.", [
+        $this->notifyRoles([User::ROLE_ADMIN], $notificationType, "{$roleLabel} {$user->name} logged in to the system.", [
             'title' => "{$roleLabel} Login",
             'sender_id' => $user->id,
             'data' => [
@@ -199,7 +199,7 @@ class NotificationService
     {
         $message = "Item '{$itemName}' is low in stock (Current: {$quantity}).";
 
-        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_RGMO_HEAD], 'low_stock', $message, [
+        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_STOREKEEPER], 'low_stock', $message, [
             'title' => 'Low Stock Alert',
             'data' => [
                 'item_name' => $itemName,
@@ -215,7 +215,7 @@ class NotificationService
     {
         $message = "User '{$user->name}' ({$user->email}) has {$user->login_attempts} failed login attempts.";
 
-        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_RGMO_HEAD], 'failed_login', $message, [
+        $this->notifyRoles([User::ROLE_ADMIN], 'failed_login', $message, [
             'title' => 'Failed Login Attempts',
             'sender_id' => $user->id,
         ]);
