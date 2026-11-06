@@ -76,12 +76,23 @@
     </div>
     @push('scripts')
     <script>
-    @if($errors->any())
     document.addEventListener('DOMContentLoaded', () => {
+        const button = document.querySelector('[data-bs-target="#newPurchaseOrderModal"]');
         const modalElement = document.querySelector('#newPurchaseOrderModal');
-        if (modalElement && window.bootstrap) bootstrap.Modal.getOrCreateInstance(modalElement).show();
+
+        if (button && modalElement && window.bootstrap) {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+            });
+        }
+
+        @if($errors->any())
+        if (modalElement && window.bootstrap) {
+            window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+        @endif
     });
-    @endif
     (() => {
         const tbody = document.querySelector('#po-items tbody');
         const total = document.querySelector('#po-total');

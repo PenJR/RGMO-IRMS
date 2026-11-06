@@ -1,4 +1,5 @@
 import './bootstrap';
+import * as bootstrap from 'bootstrap';
 import './feedback';
 import './user-name-filter';
 import Chart from 'chart.js/auto';
@@ -17,6 +18,7 @@ import {
 } from 'lucide';
 import QRCode from 'qrcode';
 
+window.bootstrap = bootstrap;
 window.Chart = Chart;
 const lucideIcons = {
     Activity, AlertCircle, AlertTriangle, ArrowLeft, ArrowUpRight, BadgeCheck,
