@@ -8,6 +8,26 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Procurement extends Model
 {
+    protected static function booted(): void
+    {
+        static::creating(function (Procurement $procurement) {
+            $poNumber = trim((string) ($procurement->po_number ?? $procurement->or_number ?? ''));
+            if ($poNumber === '') {
+                $poNumber = 'PO-'.strtoupper(str_replace('-', '', (string) \Illuminate\Support\Str::uuid()));
+            }
+
+            if (empty($procurement->po_number)) {
+                $procurement->po_number = $poNumber;
+            }
+            if (empty($procurement->or_number)) {
+                $procurement->or_number = $poNumber;
+            }
+            if (empty($procurement->status)) {
+                $procurement->status = self::STATUS_APPROVED;
+            }
+        });
+    }
+
     public const STATUS_DRAFT = 'draft';
     public const STATUS_PENDING_APPROVAL = 'pending_approval';
     public const STATUS_APPROVED = 'approved';

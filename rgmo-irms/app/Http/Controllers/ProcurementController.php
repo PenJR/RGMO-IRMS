@@ -36,14 +36,14 @@ class ProcurementController extends Controller
                             ->orWhere('supplier_name', 'like', "%{$search}%");
                     });
                 })
-                ->when($includeStatus && ($filters['status'] ?? null), fn ($query, $status) => $query->where('status', $status))
+                ->when($includeStatus && ($filters['status'] ?? null), fn ($query) => $query->where('status', $filters['status']))
                 ->when($filters['supplier_id'] ?? null, fn ($query, $supplierId) => $query->where('supplier_id', $supplierId))
                 ->when($filters['inventory_item_id'] ?? null, fn ($query, $itemId) => $query->whereHas('items', fn ($items) => $items->where('inventory_item_id', $itemId)))
                 ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->where(function ($query) use ($date) {
-                    $query->where('order_date', '>=', $date)->orWhere('purchased_on', '>=', $date);
+                    $query->whereDate('order_date', '>=', $date)->orWhereDate('purchased_on', '>=', $date);
                 }))
                 ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->where(function ($query) use ($date) {
-                    $query->where('order_date', '<=', $date)->orWhere('purchased_on', '<=', $date);
+                    $query->whereDate('order_date', '<=', $date)->orWhereDate('purchased_on', '<=', $date);
                 }));
         };
 
@@ -143,7 +143,7 @@ class ProcurementController extends Controller
 
         $path = $request->file('receipt')?->store('procurement-receipts', 'local');
         try {
-            $purchase = DB::transaction(function () use ($data, $items, $path, $request) {
+            $purchase = DB::transaction(function () use ($data, $items, $path, $request, $legacy) {
                 $purchase = Procurement::create($data + [
                     'created_by' => $request->user()->id,
                     'prepared_by' => $request->user()->id,
@@ -152,6 +152,9 @@ class ProcurementController extends Controller
                     'approved_at' => $legacy ? now() : null,
                 ]);
                 foreach ($items as $item) {
+                    if ($purchase->items()->where('inventory_item_id', $item['inventory_item_id'])->exists()) {
+                        continue;
+                    }
                     $purchase->items()->create([
                         'inventory_item_id' => $item['inventory_item_id'],
                         'ordered_quantity' => $item['ordered_quantity'],

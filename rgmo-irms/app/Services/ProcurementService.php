@@ -163,7 +163,18 @@ class ProcurementService
             if ($data['received_on'] > today()->toDateString() || $data['received_on'] < $purchase->purchased_on->toDateString() || $data['quantity'] < 1 || $data['quantity'] > $purchase->remaining_quantity) {
                 throw ValidationException::withMessages(['quantity' => 'Receive a positive quantity within the undelivered balance, on or after purchase.']);
             }
-            $purchaseItem = $purchase->items()->where('inventory_item_id', $purchase->inventory_item_id)->lockForUpdate()->firstOrFail();
+            $purchaseItem = $purchase->items()->where('inventory_item_id', $purchase->inventory_item_id)->lockForUpdate()->first();
+            if (! $purchaseItem) {
+                $inventoryItem = InventoryItem::lockForUpdate()->findOrFail($purchase->inventory_item_id);
+                $purchaseItem = $purchase->items()->create([
+                    'inventory_item_id' => $inventoryItem->id,
+                    'ordered_quantity' => $purchase->quantity,
+                    'unit_of_measurement' => $inventoryItem->unit,
+                    'unit_cost' => $purchase->unit_cost,
+                    'subtotal' => $this->decimalMultiply((string) $purchase->quantity, (string) $purchase->unit_cost),
+                    'received_quantity' => 0,
+                ]);
+            }
             if ($data['quantity'] > $purchaseItem->remaining_quantity) {
                 throw ValidationException::withMessages(['quantity' => 'Receive quantity cannot exceed this purchase order item balance.']);
             }

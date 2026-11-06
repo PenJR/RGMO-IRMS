@@ -57,7 +57,7 @@ Route::middleware('auth')->group(function () {
             ->name('ai-forecasting.explanation');
     });
 
-    Route::middleware('permission:view-inventory')->group(function () {
+    Route::middleware('permission:manage-inventory,manage-purchase-orders,approve-purchase-orders')->group(function () {
         Route::get('/procurements', [\App\Http\Controllers\ProcurementController::class, 'index'])->name('procurements.index');
         Route::get('/procurements/{procurement}', [\App\Http\Controllers\ProcurementController::class, 'show'])->name('procurements.show');
         Route::get('/procurements/{procurement}/receipt', [\App\Http\Controllers\ProcurementController::class, 'receipt'])->name('procurements.receipt');
