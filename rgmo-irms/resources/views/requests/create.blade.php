@@ -1,19 +1,18 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
             <div>
                 <h2 class="fw-bold mb-1">New Resource Request</h2>
                 <p class="text-muted mb-0 small">Submit a request for inventory items or equipment.</p>
             </div>
-            <a href="{{ route('requests.index') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2 px-3">
-                <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
-                Back to Requests
-            </a>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
-        <x-breadcrumb :items="['Requests' => route('requests.index'), 'New Request' => '#']" />
+        <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+            <x-breadcrumb :items="['Requests' => route('requests.index'), 'New Request' => '#']" compact />
+            <a href="{{ route('requests.index') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2 px-3"><i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>Back to Requests</a>
+        </div>
 
         <div class="row justify-content-center">
             <div class="col-lg-11">

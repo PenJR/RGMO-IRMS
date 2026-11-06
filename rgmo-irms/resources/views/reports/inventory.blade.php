@@ -1,19 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div>
-                <h2 class="fw-bold mb-1">Inventory Report</h2>
-                <p class="text-muted mb-0">View current inventory levels and export the report.</p>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('reports.inventory.export-csv', request()->query()) }}" class="btn btn-outline-secondary">Export CSV</a>
-                <a href="{{ route('reports.inventory.export-pdf', request()->query()) }}" class="btn btn-cmu">Export PDF</a>
-            </div>
+        <div>
+            <h2 class="fw-bold mb-1">Inventory Report</h2>
+            <p class="text-muted mb-0">View current inventory levels and export the report.</p>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
-        <x-breadcrumb :items="['Reports' => '#', 'Inventory Summary' => route('reports.inventory')]" />
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <x-breadcrumb :items="['Reports' => '#', 'Inventory Summary' => route('reports.inventory')]" compact />
+            <div class="d-flex gap-2">
+            <a href="{{ route('reports.inventory.export-csv', request()->query()) }}" class="btn btn-outline-secondary">Export CSV</a>
+            <a href="{{ route('reports.inventory.export-pdf', request()->query()) }}" class="btn btn-cmu">Export PDF</a>
+            </div>
+        </div>
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">

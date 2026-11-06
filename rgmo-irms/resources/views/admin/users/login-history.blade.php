@@ -1,15 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
             <div>
                 <h2 class="fw-bold mb-1">Login History</h2>
                 <p class="text-muted mb-0">View recent login events for {{ $user->name }}.</p>
             </div>
-            <a href="{{ route('admin.users.show', $user) }}" class="btn btn-outline-secondary">Back to Profile</a>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
+        <div class="d-flex justify-content-end mb-4"><a href="{{ route('admin.users.show', $user) }}" class="btn btn-outline-secondary">Back to Profile</a></div>
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 @if($loginHistory->count() > 0)

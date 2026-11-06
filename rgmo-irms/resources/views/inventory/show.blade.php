@@ -1,36 +1,18 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div>
-                <h2 class="fw-bold mb-1">Inventory Item Details</h2>
-                <p class="text-muted mb-0">{{ $item->name }}</p>
-            </div>
-            <div class="d-flex gap-2">
-                @can('update', $item)
-                    <a href="{{ route('inventory.edit', ['inventory' => $item->id]) }}" class="btn btn-cmu d-inline-flex align-items-center gap-2">
-                        <i data-lucide="pencil" style="width: 16px; height: 16px;"></i>
-                        Edit
-                    </a>
-                @endcan
-                @can('delete', $item)
-                    <form action="{{ route('inventory.destroy', ['inventory' => $item->id]) }}" method="POST" data-confirm="Delete this item?">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-outline-danger">
-                            Delete
-                        </button>
-                    </form>
-                @endcan
-                <a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
-                    <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
-                    Back to Inventory
-                </a>
-            </div>
+        <div>
+            <h2 class="fw-bold mb-1">Inventory Item Details</h2>
+            <p class="text-muted mb-0">{{ $item->name }}</p>
         </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
+                @can('update', $item)<a href="{{ route('inventory.edit', ['inventory' => $item->id]) }}" class="btn btn-cmu d-inline-flex align-items-center gap-2"><i data-lucide="pencil" style="width: 16px; height: 16px;"></i>Edit</a>@endcan
+                @can('delete', $item)<form action="{{ route('inventory.destroy', ['inventory' => $item->id]) }}" method="POST" data-confirm="Delete this item?">@csrf @method('DELETE')<button type="submit" class="btn btn-outline-danger">Delete</button></form>@endcan
+                <a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2"><i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>Back to Inventory</a>
+            </div>
 
             <!-- Item Details -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">

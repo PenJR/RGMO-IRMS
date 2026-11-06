@@ -1,21 +1,21 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div>
-                <h2 class="fw-bold mb-1">{{ $project->name }}</h2>
-                <p class="text-muted mb-0">{{ $project->code }} · {{ $project->status_label }}</p>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary">Back to Projects</a>
-                @can('update', $project)
-                    <a href="{{ route('projects.edit', $project) }}" class="btn btn-cmu">Edit Project</a>
-                @endcan
-            </div>
+        <div>
+            <h2 class="fw-bold mb-1">{{ $project->name }}</h2>
+            <p class="text-muted mb-0">{{ $project->code }} · {{ $project->status_label }}</p>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
-        <x-breadcrumb :items="['Projects' => route('projects.index'), $project->name => route('projects.show', $project)]" />
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <x-breadcrumb :items="['Projects' => route('projects.index'), $project->name => route('projects.show', $project)]" compact />
+            <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary">Back to Projects</a>
+            @can('update', $project)
+                <a href="{{ route('projects.edit', $project) }}" class="btn btn-cmu">Edit Project</a>
+            @endcan
+            </div>
+        </div>
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-0">

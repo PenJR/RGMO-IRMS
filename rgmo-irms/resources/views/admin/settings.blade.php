@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap w-100 py-1">
+        <div class="d-flex align-items-center gap-3 py-1">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon flex-shrink-0" aria-hidden="true">
                     <i data-lucide="settings-2"></i>
@@ -11,20 +11,20 @@
                     <p class="text-muted small mb-0">Configure appearance, inventory thresholds, and application preferences.</p>
                 </div>
             </div>
-            <div class="d-flex align-items-center gap-2 ms-md-auto">
-                <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle d-inline-flex align-items-center gap-1 px-3 py-2">
-                    <i data-lucide="shield-check" style="width: 14px; height: 14px;" aria-hidden="true"></i>
-                    Administrator controls
-                </span>
-                <a href="{{ route('admin.backup.index') }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-2 px-3">
-                    <i data-lucide="database-backup" style="width: 15px; height: 15px;" aria-hidden="true"></i>
-                    Backup Center
-                </a>
-            </div>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
+        <div class="d-flex justify-content-end align-items-center gap-2 mb-4">
+            <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle d-inline-flex align-items-center gap-1 px-3 py-2">
+                <i data-lucide="shield-check" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+                Administrator controls
+            </span>
+            <a href="{{ route('admin.backup.index') }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-2 px-3">
+                <i data-lucide="database-backup" style="width: 15px; height: 15px;" aria-hidden="true"></i>
+                Backup Center
+            </a>
+        </div>
         @php
             $selectedInventoryItem = $inventoryItems->firstWhere('id', (int) old('inventory_item_id', $inventoryItems->first()?->id));
         @endphp

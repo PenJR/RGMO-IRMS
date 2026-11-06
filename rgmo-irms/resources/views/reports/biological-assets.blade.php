@@ -1,19 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div>
-                <h2 class="fw-bold mb-1">Weekly Report of Biological Assets and Agricultural Produce</h2>
-                <p class="text-muted mb-0">Period: {{ $startDate->format('M d, Y') }} - {{ $endDate->format('M d, Y') }}</p>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('reports.biological-assets.export-pdf', request()->query()) }}" class="btn btn-cmu d-print-none">Export PDF</a>
-                <button onclick="window.print()" class="btn btn-outline-secondary d-print-none">Print Report</button>
-            </div>
+        <div>
+            <h2 class="fw-bold mb-1">Weekly Report of Biological Assets and Agricultural Produce</h2>
+            <p class="text-muted mb-0">Period: {{ $startDate->format('M d, Y') }} - {{ $endDate->format('M d, Y') }}</p>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
-        <x-breadcrumb :items="['Reports' => '#', 'Biological Assets' => route('reports.biological-assets')]" />
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 d-print-none">
+            <x-breadcrumb :items="['Reports' => '#', 'Biological Assets' => route('reports.biological-assets')]" compact />
+            <div class="d-flex gap-2">
+            <a href="{{ route('reports.biological-assets.export-pdf', request()->query()) }}" class="btn btn-cmu">Export PDF</a>
+            <button onclick="window.print()" class="btn btn-outline-secondary">Print Report</button>
+            </div>
+        </div>
 
         <div class="card border-0 shadow-sm mb-4 d-print-none">
             <div class="card-body p-4">

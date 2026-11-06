@@ -1,18 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
             <div>
                 <h2 class="fw-bold mb-1">Edit Inventory Item</h2>
                 <p class="text-muted mb-0">{{ $item->name }}</p>
             </div>
-            <a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
-                <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
-                Back to Inventory
-            </a>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
+        <div class="d-flex justify-content-end mb-4"><a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2"><i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>Back to Inventory</a></div>
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <form method="POST" action="{{ route('inventory.update', ['inventory' => $item->id]) }}">

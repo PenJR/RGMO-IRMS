@@ -1,15 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
             <div>
                 <h2 class="fw-bold mb-1">Login Logs</h2>
                 <p class="text-muted mb-0">Account sign-in history for admin review and accounting.</p>
             </div>
-            <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">User Management</a>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
+        <div class="d-flex justify-content-end mb-4"><a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">User Management</a></div>
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
                 <form method="GET" action="{{ route('admin.login-logs.index') }}" class="row g-3">

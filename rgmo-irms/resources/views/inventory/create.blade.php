@@ -1,19 +1,18 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
             <div>
                 <h2 class="fw-bold mb-1">Add Inventory Item</h2>
                 <p class="text-muted mb-0 small">Create a new stock record for the university.</p>
             </div>
-            <a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2 px-3">
-                <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
-                Back to Inventory
-            </a>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
-        <x-breadcrumb :items="['Inventory' => route('inventory.index'), 'Add Item' => '#']" />
+        <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+            <x-breadcrumb :items="['Inventory' => route('inventory.index'), 'Add Item' => '#']" compact />
+            <a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2 px-3"><i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>Back to Inventory</a>
+        </div>
 
         <div class="row justify-content-center">
             <div class="col-lg-10">

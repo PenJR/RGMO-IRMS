@@ -1,35 +1,43 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
-            <div>
-                <h2 class="h5 fw-bold mb-0">Inventory Forecasting & Analytics</h2>
-                <p class="text-muted mb-0 small">Select a forecast range, then generate the forecast when you are ready.</p>
-            </div>
-            <div class="d-flex align-items-end gap-3 flex-wrap">
-                <form method="GET" action="{{ route('ai-forecasting.index') }}" class="d-flex align-items-end gap-2 flex-wrap">
-                    <input type="hidden" name="generate" value="1">
-                    <div>
-                        <label for="forecast-start" class="form-label small fw-semibold mb-1">Forecast start</label>
-                        <input id="forecast-start" name="forecast_start" type="date" class="form-control form-control-sm" value="{{ $forecast_start->toDateString() }}" required>
-                    </div>
-                    <div>
-                        <label for="forecast-end" class="form-label small fw-semibold mb-1">Forecast end</label>
-                        <input id="forecast-end" name="forecast_end" type="date" class="form-control form-control-sm" value="{{ $forecast_end->toDateString() }}" required>
-                    </div>
-                    <button type="submit" class="btn btn-sm btn-cmu">Generate Forecast</button>
-                </form>
-                @if($generated)<div class="text-muted small pb-1">Generated {{ $as_of->format('M d, Y') }}</div>@endif
-            </div>
+        <div>
+            <h2 class="h5 fw-bold mb-0">Inventory Forecasting & Analytics</h2>
+            <p class="text-muted mb-0 small">Generate demand forecasts from a selected date range.</p>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1">Forecast setup</h3>
+                        <p class="text-muted small mb-0">Choose the dates to forecast, then generate the results.</p>
+                    </div>
+                    @if($generated)<span class="small text-muted">Generated {{ $as_of->format('M d, Y') }}</span>@endif
+                </div>
+                <form method="GET" action="{{ route('ai-forecasting.index') }}" class="row g-3 align-items-end">
+                    <input type="hidden" name="generate" value="1">
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <label for="forecast-start" class="form-label small fw-semibold mb-1">Forecast start</label>
+                        <input id="forecast-start" name="forecast_start" type="date" class="form-control" value="{{ $forecast_start->toDateString() }}" required>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <label for="forecast-end" class="form-label small fw-semibold mb-1">Forecast end</label>
+                        <input id="forecast-end" name="forecast_end" type="date" class="form-control" value="{{ $forecast_end->toDateString() }}" required>
+                    </div>
+                    <div class="col-12 col-md-auto">
+                        <button type="submit" class="btn btn-cmu w-100">Generate Forecast</button>
+                    </div>
+                </form>
+            </div>
+        </div>
         @unless($generated)
             <div class="card shadow-sm border-0">
                 <div class="card-body py-5 text-center">
                     <i data-lucide="calendar-range" class="text-muted mb-3" style="width: 40px; height: 40px;"></i>
                     <h3 class="h5 fw-bold">Choose a forecast date range</h3>
-                    <p class="text-muted mb-0">Set the start and end dates above, then select <strong>Generate Forecast</strong>.</p>
+                    <p class="text-muted mb-0">Set the dates in Forecast setup, then select <strong>Generate Forecast</strong>.</p>
                 </div>
             </div>
         @else

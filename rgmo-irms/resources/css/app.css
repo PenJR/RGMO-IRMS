@@ -3566,6 +3566,29 @@ body {
     #sidebar .nav-submenu { margin-left: 24px; }
     #sidebar .nav-submenu .nav-link { white-space: normal; line-height: 1.4; }
     body.sidebar-collapsed #sidebar .nav-submenu { display: none; }
+    body.sidebar-collapsed #sidebar .sidebar-menu > .nav-link,
+    body.sidebar-collapsed #sidebar .nav-group,
+    body.sidebar-collapsed #sidebar .nav-group-toggle {
+        width: 48px;
+        max-width: 48px;
+        flex: 0 0 48px;
+        box-sizing: border-box;
+    }
+    body.sidebar-collapsed #sidebar .nav-group-toggle {
+        justify-content: center;
+        gap: 0;
+        overflow: hidden;
+        border-left: 0;
+    }
+    body.sidebar-collapsed #sidebar .nav-group-toggle .nav-label,
+    body.sidebar-collapsed #sidebar .nav-group-toggle .sidebar-drag-handle,
+    body.sidebar-collapsed #sidebar .nav-group-toggle .chevron {
+        display: none;
+    }
+    body.sidebar-collapsed #sidebar .nav-link.active::before,
+    body.sidebar-collapsed #sidebar .nav-group.active > summary .nav-group-toggle::before {
+        display: none;
+    }
     #sidebar .sidebar-motion-label {
         white-space: nowrap;
         opacity: 1;

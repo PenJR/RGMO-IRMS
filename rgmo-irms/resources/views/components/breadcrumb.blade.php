@@ -1,6 +1,6 @@
-@props(['items' => []])
+@props(['items' => [], 'compact' => false])
 
-<nav aria-label="breadcrumb" class="mb-4">
+<nav aria-label="breadcrumb" @class(['mb-4' => ! $compact])>
     <ol class="breadcrumb bg-transparent p-0 mb-0">
         <li class="breadcrumb-item">
             <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted d-flex align-items-center gap-2">

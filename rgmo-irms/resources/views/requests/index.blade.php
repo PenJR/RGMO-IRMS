@@ -1,23 +1,23 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div>
-                <h2 class="fw-bold mb-1">{{ ($releaseQueue ?? false) ? 'Withdrawals' : ($canReviewAllRequests ? 'Resource Requests' : 'My Requests') }}</h2>
-                <p class="text-muted mb-0">{{ ($releaseQueue ?? false) ? 'Release approved requests and view completed withdrawals.' : ($canReviewAllRequests ? 'Review all submitted resource requests across the system.' : 'Track the status and needed dates of your submitted requests.') }}</p>
-            </div>
-            <div class="d-flex gap-2">
-                @can('review', App\Models\ResourceRequest::class)
-                    <a href="{{ route('requests.pending') }}" class="btn btn-outline-secondary">Pending List</a>
-                @endcan
-                @can('create', App\Models\ResourceRequest::class)
-                    <a href="{{ route('requests.create') }}" class="btn btn-cmu">New Request</a>
-                @endcan
-            </div>
+        <div>
+            <h2 class="fw-bold mb-1">{{ ($releaseQueue ?? false) ? 'Withdrawals' : ($canReviewAllRequests ? 'Resource Requests' : 'My Requests') }}</h2>
+            <p class="text-muted mb-0">{{ ($releaseQueue ?? false) ? 'Release approved requests and view completed withdrawals.' : ($canReviewAllRequests ? 'Review all submitted resource requests across the system.' : 'Track the status and needed dates of your submitted requests.') }}</p>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
-        <x-breadcrumb :items="['Requests' => route('requests.index')]" />
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <x-breadcrumb :items="['Requests' => route('requests.index')]" compact />
+            <div class="d-flex flex-wrap gap-2">
+            @can('review', App\Models\ResourceRequest::class)
+                <a href="{{ route('requests.pending') }}" class="btn btn-outline-secondary">Pending List</a>
+            @endcan
+            @can('create', App\Models\ResourceRequest::class)
+                <a href="{{ route('requests.create') }}" class="btn btn-cmu">New Request</a>
+            @endcan
+            </div>
+        </div>
 
         @unless($releaseQueue ?? false)
         <div class="card border-0 shadow-sm mb-4">

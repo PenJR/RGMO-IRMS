@@ -1,6 +1,7 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="fw-bold">Purchase PRC-{{ $procurement->id }}</h2><a href="{{ route('procurements.index') }}">Back to purchases</a></x-slot>
+    <x-slot name="header"><h2 class="fw-bold">Purchase PRC-{{ $procurement->id }}</h2></x-slot>
     <div class="container-fluid py-4">
+        <div class="d-flex justify-content-end mb-4"><a href="{{ route('procurements.index') }}" class="btn btn-outline-secondary">Back to purchases</a></div>
         @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
         <div class="card mb-4"><div class="card-body"><div class="row g-3">
             <div class="col-md-6"><h3 class="h5">{{ $procurement->item->name }}</h3><p>Supplier: <strong>{{ $procurement->supplier_name }}</strong><br>Contact: {{ $procurement->supplier_number }}<br>OR: {{ $procurement->or_number }}<br>Purchased: {{ $procurement->purchased_on->format('M d, Y') }}</p></div>

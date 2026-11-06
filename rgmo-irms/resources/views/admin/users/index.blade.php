@@ -1,16 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div>
-                <h2 class="fw-bold mb-1">User Management</h2>
-                <p class="text-muted mb-0">Manage staff accounts and system access.</p>
-            </div>
-            <a href="{{ route('admin.users.create') }}" class="btn btn-cmu">Add User</a>
+        <div>
+            <h2 class="fw-bold mb-1">User Management</h2>
+            <p class="text-muted mb-0">Manage staff accounts and system access.</p>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
-        <x-breadcrumb :items="['User Management' => route('admin.users.index')]" />
+        <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+            <x-breadcrumb :items="['User Management' => route('admin.users.index')]" compact />
+            <a href="{{ route('admin.users.create') }}" class="btn btn-cmu">Add User</a>
+        </div>
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">

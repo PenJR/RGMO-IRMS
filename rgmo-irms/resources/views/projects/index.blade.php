@@ -1,10 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div>
-                <h2 class="fw-bold mb-1">Project Management</h2>
-                <p class="text-muted mb-0">Monitor projects, assigned managers, and resources currently in use.</p>
-            </div>
+        <div>
+            <h2 class="fw-bold mb-1">Project Management</h2>
+            <p class="text-muted mb-0">Monitor projects, assigned managers, and resources currently in use.</p>
+        </div>
+    </x-slot>
+
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+            <x-breadcrumb :items="['Projects' => route('projects.index')]" compact />
             @can('create', App\Models\Project::class)
                 <a href="{{ route('projects.create') }}" class="btn btn-cmu d-inline-flex align-items-center gap-2">
                     <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
@@ -12,10 +16,6 @@
                 </a>
             @endcan
         </div>
-    </x-slot>
-
-    <div class="container-fluid py-4">
-        <x-breadcrumb :items="['Projects' => route('projects.index')]" />
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">

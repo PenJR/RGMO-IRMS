@@ -1,18 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div>
-                <h2 class="fw-bold mb-1">{{ $user->name }}</h2>
-                <p class="text-muted mb-0">Account details and activity history.</p>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-secondary">Edit</a>
-                <a href="{{ route('admin.users.login-history', $user) }}" class="btn btn-outline-primary">Login History</a>
-            </div>
+        <div>
+            <h2 class="fw-bold mb-1">{{ $user->name }}</h2>
+            <p class="text-muted mb-0">Account details and activity history.</p>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
+        <div class="d-flex justify-content-end gap-2 mb-4">
+            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-secondary">Edit</a>
+            <a href="{{ route('admin.users.login-history', $user) }}" class="btn btn-outline-primary">Login History</a>
+        </div>
         <div class="row g-4">
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm">
