@@ -285,7 +285,7 @@
             <aside class="auth-panel" aria-label="Central Mindanao University">
                 <img src="{{ asset('images/logo.png') }}" alt="RGMO logo">
                 <h1>Central Mindanao University</h1>
-                <p>Resource Generation Management Office<br>Integrated Resource Management System</p>
+                <p>Resource Generation Management Office<br>Inventory Resource Management System</p>
                 <p class="auth-motto">Excellence. Integrity. Service.</p>
                 <a href="{{ route('home') }}">← Back to home</a>
             </aside>
