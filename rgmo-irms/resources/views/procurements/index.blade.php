@@ -10,7 +10,7 @@
             <div class="col-md"><div class="card h-100"><div class="card-body"><div class="text-muted small">Partially received</div><div class="fs-4 fw-bold">{{ $summary['partial_count'] }}</div></div></div></div>
         </div>
         <div class="card mb-4"><div class="card-body">
-            <div class="d-flex flex-wrap justify-content-between gap-3 mb-3"><div><h3 class="h5 mb-1">Purchase orders</h3><p class="text-muted mb-0">Create and track multi-item orders without adding stock.</p></div>@if(auth()->user()->hasPermission(['manage-purchase-orders','manage-inventory']))<button class="btn btn-cmu" type="button" data-bs-toggle="collapse" data-bs-target="#po-create"><i data-lucide="plus" class="me-1" aria-hidden="true"></i>New purchase order</button>@endif</div>
+            <div class="d-flex flex-wrap justify-content-between gap-3 mb-3"><div><h3 class="h5 mb-1">Purchase orders</h3><p class="text-muted mb-0">Create and track multi-item orders without adding stock.</p></div>@if(auth()->user()->hasPermission(['manage-purchase-orders','manage-inventory']))<button class="btn btn-cmu" type="button" id="new-po-button"><i data-lucide="plus" class="me-1" aria-hidden="true"></i>New purchase order</button>@endif</div>
             @if(auth()->user()->hasPermission(['manage-purchase-orders','manage-inventory']))
             <div class="collapse {{ $errors->any() ? 'show' : '' }}" id="po-create"><form method="POST" action="{{ route('procurements.store') }}" enctype="multipart/form-data">@csrf
                 <div class="row g-3">
@@ -49,6 +49,17 @@
     </div>
     @push('scripts')
     <script>
+    (() => {
+        const newOrderButton = document.querySelector('#new-po-button');
+        const createOrderPanel = document.querySelector('#po-create');
+        if (newOrderButton && createOrderPanel) {
+            newOrderButton.addEventListener('click', () => {
+                createOrderPanel.classList.add('show');
+                createOrderPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                createOrderPanel.querySelector('input:not([type="hidden"]), select')?.focus();
+            });
+        }
+    })();
     (() => {
         const tbody = document.querySelector('#po-items tbody');
         const total = document.querySelector('#po-total');
