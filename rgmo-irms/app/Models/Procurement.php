@@ -44,9 +44,9 @@ class Procurement extends Model
 
     public function supplier(): BelongsTo
     {
-        return $this->belongsTo(Supplier::class)->withDefault(function (array $attributes) {
-            $attributes['company_name'] = $this->supplier_name;
-            $attributes['contact_number'] = $this->supplier_number;
+        return $this->belongsTo(Supplier::class)->withDefault(function (Supplier $supplier) {
+            $supplier->company_name = $this->supplier_name;
+            $supplier->contact_number = $this->supplier_number;
         });
     }
 
