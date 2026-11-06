@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Procurement extends Model
 {
@@ -16,6 +17,14 @@ class Procurement extends Model
     public function item()
     {
         return $this->belongsTo(InventoryItem::class, 'inventory_item_id')->withTrashed();
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class)->withDefault(function (array $attributes) {
+            $attributes['company_name'] = $this->supplier_name;
+            $attributes['contact_number'] = $this->supplier_number;
+        });
     }
 
     public function deliveries()

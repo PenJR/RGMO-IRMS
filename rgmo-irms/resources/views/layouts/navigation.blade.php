@@ -31,7 +31,7 @@
         @endif
 
         @can('viewAny', App\Models\InventoryItem::class)
-            <details class="nav-group {{ request()->routeIs('inventory.*', 'procurements.*') ? 'active' : '' }}" data-sidebar-item="inventory" draggable="true" {{ request()->routeIs('inventory.*', 'procurements.*') ? 'open' : '' }}>
+            <details class="nav-group {{ request()->routeIs('inventory.*', 'procurements.*', 'suppliers.*') ? 'active' : '' }}" data-sidebar-item="inventory" draggable="true" {{ request()->routeIs('inventory.*', 'procurements.*', 'suppliers.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle" data-sidebar-tooltip="Inventory" aria-label="Inventory">
                         <span class="nav-icon"><i data-lucide="package"></i></span>
@@ -43,6 +43,9 @@
                 <div class="nav-submenu">
                     <a href="{{ route('inventory.index') }}" class="nav-link {{ request()->routeIs('inventory.index') ? 'active' : '' }}">Items List</a>
                     <a href="{{ route('procurements.index') }}" class="nav-link {{ request()->routeIs('procurements.*') ? 'active' : '' }}">Procurement &amp; Deliveries</a>
+                    @can('viewAny', App\Models\Supplier::class)
+                        <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">Suppliers</a>
+                    @endcan
                     <a href="{{ route('inventory.low-stock') }}" class="nav-link {{ request()->routeIs('inventory.low-stock') ? 'active' : '' }}">Low Stock</a>
                     @can('create', App\Models\InventoryItem::class)
                         <a href="{{ route('inventory.create') }}" class="nav-link {{ request()->routeIs('inventory.create') ? 'active' : '' }}">Add Item</a>

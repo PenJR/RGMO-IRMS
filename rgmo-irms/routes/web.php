@@ -67,6 +67,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/procurements/{procurement}/receive', [\App\Http\Controllers\ProcurementController::class, 'receive'])->name('procurements.receive');
     });
 
+    Route::middleware('permission:view-suppliers,manage-suppliers')->group(function () {
+        Route::resource('suppliers', \App\Http\Controllers\SupplierController::class)->except(['destroy']);
+        Route::patch('/suppliers/{supplier}/deactivate', [\App\Http\Controllers\SupplierController::class, 'deactivate'])->name('suppliers.deactivate');
+    });
+
     // Inventory Module
     Route::middleware(['permission:view-inventory,manage-inventory'])->group(function () {
         Route::get('/inventory/low-stock', [InventoryController::class, 'lowStock'])->name('inventory.low-stock');

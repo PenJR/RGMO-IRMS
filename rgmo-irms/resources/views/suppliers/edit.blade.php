@@ -1,0 +1,1 @@
+<x-app-layout><x-slot name="header"><h2 class="fw-bold">Edit Supplier</h2></x-slot><div class="container-fluid py-4"><div class="card border-0 shadow-sm"><div class="card-body"><form method="POST" action="{{ route('suppliers.update', $supplier) }}">@method('PUT')@include('suppliers._form')</form></div></div></div></x-app-layout>

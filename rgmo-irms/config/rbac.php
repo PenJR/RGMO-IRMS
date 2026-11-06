@@ -8,6 +8,8 @@ return [
                 'manage-users',
                 'assign-roles',
                 'manage-inventory',
+                'view-suppliers',
+                'manage-suppliers',
                 'manage-projects',
                 'view-projects',
                 'view-inventory',
@@ -52,7 +54,7 @@ return [
         'storekeeper' => [
             'label' => 'Storekeeper',
             'permissions' => [
-                'view-inventory', 'view-projects', 'monitor-status', 'view-history',
+                'view-inventory', 'view-suppliers', 'view-projects', 'monitor-status', 'view-history',
                 'verify-request', 'record-withdrawal', 'record-utilization', 'receive-notifications',
             ],
         ],
@@ -69,6 +71,8 @@ return [
         'manage-users' => 'Manage users',
         'assign-roles' => 'Assign roles and permissions',
         'manage-inventory' => 'Manage inventory records',
+        'view-suppliers' => 'View suppliers',
+        'manage-suppliers' => 'Manage suppliers',
         'manage-projects' => 'Manage project records and assignments',
         'view-projects' => 'View project records and resource usage',
         'view-inventory' => 'View inventory availability',
