@@ -15,35 +15,55 @@ use Illuminate\Validation\Rule;
 
 class ProcurementController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, ProcurementService $procurementService)
     {
         $filters = $request->validate([
             'search' => 'nullable|string|max:255',
             'status' => 'nullable|in:draft,pending_approval,approved,rejected,partially_received,completed,cancelled',
             'supplier_id' => 'nullable|integer|exists:suppliers,id',
+            'inventory_item_id' => 'nullable|integer|exists:inventory_items,id',
+            'date_from' => 'nullable|date_format:Y-m-d',
+            'date_to' => 'nullable|date_format:Y-m-d|after_or_equal:date_from',
         ]);
 
-        $procurements = Procurement::query()
-            ->with(['items.inventoryItem', 'supplier'])
-            ->withSum('deliveries', 'quantity')
-            ->when($filters['search'] ?? null, function ($query, $search) {
-                $query->where(function ($query) use ($search) {
-                    $query->where('po_number', 'like', "%{$search}%")
-                        ->orWhere('or_number', 'like', "%{$search}%")
-                        ->orWhere('supplier_name', 'like', "%{$search}%");
-                });
-            })
-            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
-            ->when($filters['supplier_id'] ?? null, fn ($query, $supplierId) => $query->where('supplier_id', $supplierId))
-            ->latest()
-            ->paginate(20)
-            ->withQueryString();
+        $applyFilters = function ($query, bool $includeStatus = true) use ($filters) {
+            return $query->with(['items.inventoryItem', 'supplier', 'deliveries'])
+                ->withCount('deliveries')
+                ->when($filters['search'] ?? null, function ($query, $search) {
+                    $query->where(function ($query) use ($search) {
+                        $query->where('po_number', 'like', "%{$search}%")
+                            ->orWhere('or_number', 'like', "%{$search}%")
+                            ->orWhere('supplier_name', 'like', "%{$search}%");
+                    });
+                })
+                ->when($includeStatus && ($filters['status'] ?? null), fn ($query, $status) => $query->where('status', $status))
+                ->when($filters['supplier_id'] ?? null, fn ($query, $supplierId) => $query->where('supplier_id', $supplierId))
+                ->when($filters['inventory_item_id'] ?? null, fn ($query, $itemId) => $query->whereHas('items', fn ($items) => $items->where('inventory_item_id', $itemId)))
+                ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->where(function ($query) use ($date) {
+                    $query->where('order_date', '>=', $date)->orWhere('purchased_on', '>=', $date);
+                }))
+                ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->where(function ($query) use ($date) {
+                    $query->where('order_date', '<=', $date)->orWhere('purchased_on', '<=', $date);
+                }));
+        };
+
+        $procurements = $applyFilters(Procurement::query())->latest()->paginate(20)->withQueryString();
+        $monitoringCollection = $applyFilters(Procurement::query())->latest()->get();
+        $procurementService->attachMonitoring($monitoringCollection);
+        $procurementService->attachMonitoring($procurements->getCollection());
+        $summary = $procurementService->summary($monitoringCollection);
+        $supplierHistory = $procurementService->supplierHistory($monitoringCollection);
+        $statusCounts = $applyFilters(Procurement::query(), false)->selectRaw('status, COUNT(*) as aggregate')->groupBy('status')->pluck('aggregate', 'status')->toArray();
 
         return view('procurements.index', [
             'procurements' => $procurements,
             'filters' => $filters,
+            'summary' => $summary,
+            'supplierHistory' => $supplierHistory,
+            'statusCounts' => $statusCounts,
             'items' => InventoryItem::orderBy('name')->get(),
-            'suppliers' => Supplier::where('status', Supplier::STATUS_ACTIVE)->orderBy('company_name')->get(),
+            'suppliers' => Supplier::orderBy('company_name')->get(),
+            'activeSuppliers' => Supplier::where('status', Supplier::STATUS_ACTIVE)->orderBy('company_name')->get(),
             'statuses' => Procurement::statuses(),
         ]);
     }
@@ -155,9 +175,10 @@ class ProcurementController extends Controller
         return redirect()->route('procurements.show', $purchase)->with('success', 'Purchase recorded. Stock will increase only when a delivery is received.');
     }
 
-    public function show(Procurement $procurement)
+    public function show(Procurement $procurement, ProcurementService $procurementService)
     {
         $procurement->load(['items.inventoryItem', 'item', 'supplier', 'deliveries.receiver', 'preparedBy', 'approvedBy', 'rejectedBy', 'cancelledBy']);
+        $procurementService->attachMonitoring(collect([$procurement]));
 
         return view('procurements.show', compact('procurement'));
     }
