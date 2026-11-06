@@ -15,12 +15,36 @@ use Illuminate\Validation\Rule;
 
 class ProcurementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $filters = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'status' => 'nullable|in:draft,pending_approval,approved,rejected,partially_received,completed,cancelled',
+            'supplier_id' => 'nullable|integer|exists:suppliers,id',
+        ]);
+
+        $procurements = Procurement::query()
+            ->with(['items.inventoryItem', 'supplier'])
+            ->withSum('deliveries', 'quantity')
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('po_number', 'like', "%{$search}%")
+                        ->orWhere('or_number', 'like', "%{$search}%")
+                        ->orWhere('supplier_name', 'like', "%{$search}%");
+                });
+            })
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['supplier_id'] ?? null, fn ($query, $supplierId) => $query->where('supplier_id', $supplierId))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
         return view('procurements.index', [
-            'procurements' => Procurement::with(['items.inventoryItem', 'supplier'])->withSum('deliveries', 'quantity')->latest()->paginate(20),
+            'procurements' => $procurements,
+            'filters' => $filters,
             'items' => InventoryItem::orderBy('name')->get(),
             'suppliers' => Supplier::where('status', Supplier::STATUS_ACTIVE)->orderBy('company_name')->get(),
+            'statuses' => Procurement::statuses(),
         ]);
     }
 
@@ -133,7 +157,7 @@ class ProcurementController extends Controller
 
     public function show(Procurement $procurement)
     {
-        $procurement->load(['items.inventoryItem', 'item', 'deliveries.receiver', 'preparedBy']);
+        $procurement->load(['items.inventoryItem', 'item', 'supplier', 'deliveries.receiver', 'preparedBy', 'approvedBy', 'rejectedBy', 'cancelledBy']);
 
         return view('procurements.show', compact('procurement'));
     }

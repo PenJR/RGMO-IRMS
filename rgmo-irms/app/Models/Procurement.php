@@ -60,6 +60,21 @@ class Procurement extends Model
         return $this->belongsTo(User::class, 'prepared_by');
     }
 
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
     public function deliveries()
     {
         return $this->hasMany(Delivery::class);
@@ -90,6 +105,11 @@ class Procurement extends Model
         }
 
         return true;
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return ucwords(str_replace('_', ' ', $this->status));
     }
 
     public function getRemainingQuantityAttribute(): int
