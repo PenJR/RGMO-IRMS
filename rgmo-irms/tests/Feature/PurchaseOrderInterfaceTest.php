@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Delivery;
 use App\Models\InventoryItem;
 use App\Models\Procurement;
 use App\Models\Supplier;
@@ -20,7 +21,7 @@ class PurchaseOrderInterfaceTest extends TestCase
         return User::factory()->create(['role' => User::ROLE_ADMIN, 'status' => 'active']);
     }
 
-    private function purchaseOrder(User $preparedBy, Supplier $supplier): Procurement
+    private function purchaseOrder(User $preparedBy, Supplier $supplier, ?string $status = Procurement::STATUS_DRAFT): Procurement
     {
         $category = Category::create(['name' => 'Interface Category '.Str::uuid()]);
         $item = InventoryItem::create([
@@ -46,7 +47,7 @@ class PurchaseOrderInterfaceTest extends TestCase
             'funding_source' => 'RGMO',
             'created_by' => $preparedBy->id,
             'prepared_by' => $preparedBy->id,
-            'status' => Procurement::STATUS_DRAFT,
+            'status' => $status,
         ]);
         $purchase->items()->create([
             'inventory_item_id' => $item->id,
@@ -71,6 +72,46 @@ class PurchaseOrderInterfaceTest extends TestCase
             ->assertOk()
             ->assertSee($purchase->po_number)
             ->assertSee('Interface Supplies');
+    }
+
+    public function test_procurement_index_separates_status_counts_and_preserves_delivery_counts(): void
+    {
+        $admin = $this->admin();
+        $supplier = Supplier::create([
+            'company_name' => 'Status Count Supplies',
+            'supplier_code' => 'SUP-STATUS-COUNT',
+            'status' => Supplier::STATUS_ACTIVE,
+        ]);
+        $draft = $this->purchaseOrder($admin, $supplier, Procurement::STATUS_DRAFT);
+        $approved = $this->purchaseOrder($admin, $supplier, Procurement::STATUS_APPROVED);
+        $this->purchaseOrder($admin, $supplier, Procurement::STATUS_APPROVED);
+
+        $item = $draft->items()->first()->inventoryItem;
+        Delivery::create([
+            'procurement_id' => $draft->id,
+            'inventory_item_id' => $item->id,
+            'received_by' => $admin->id,
+            'received_on' => today(),
+            'quantity' => 1,
+            'remaining_quantity' => 0,
+            'submission_key' => (string) Str::uuid(),
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('procurements.index'));
+
+        $response->assertOk()
+            ->assertSee($draft->po_number)
+            ->assertViewHas('statusCounts', function (array $counts) {
+                return ($counts[Procurement::STATUS_DRAFT] ?? 0) === 1
+                    && ($counts[Procurement::STATUS_APPROVED] ?? 0) === 2;
+            })
+            ->assertViewHas('procurements', function ($procurements) use ($draft) {
+                $listed = $procurements->firstWhere('id', $draft->id);
+
+                return $listed !== null && (int) $listed->deliveries_count === 1;
+            });
+
+        $this->assertNotNull($approved->id);
     }
 
     public function test_purchase_order_detail_shows_items_supplier_and_history_controls(): void

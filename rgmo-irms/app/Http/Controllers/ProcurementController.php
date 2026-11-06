@@ -26,10 +26,13 @@ class ProcurementController extends Controller
             'date_to' => 'nullable|date_format:Y-m-d|after_or_equal:date_from',
         ]);
 
-        $applyFilters = function ($query, bool $includeStatus = true) use ($filters) {
-            return $query->with(['items.inventoryItem', 'supplier', 'deliveries'])
-                ->withCount('deliveries')
-                ->when($filters['search'] ?? null, function ($query, $search) {
+        $applyFilters = function ($query, bool $includeStatus = true, bool $includeRelationships = true) use ($filters) {
+            if ($includeRelationships) {
+                $query->with(['items.inventoryItem', 'supplier', 'deliveries'])
+                    ->withCount('deliveries');
+            }
+
+            return $query->when($filters['search'] ?? null, function ($query, $search) {
                     $query->where(function ($query) use ($search) {
                         $query->where('po_number', 'like', "%{$search}%")
                             ->orWhere('or_number', 'like', "%{$search}%")
@@ -53,7 +56,14 @@ class ProcurementController extends Controller
         $procurementService->attachMonitoring($procurements->getCollection());
         $summary = $procurementService->summary($monitoringCollection);
         $supplierHistory = $procurementService->supplierHistory($monitoringCollection);
-        $statusCounts = $applyFilters(Procurement::query(), false)->selectRaw('status, COUNT(*) as aggregate')->groupBy('status')->pluck('aggregate', 'status')->toArray();
+        $statusCountsQuery = Procurement::query()
+            ->select('procurements.status', DB::raw('COUNT(*) as aggregate'));
+        $statusCountsQuery = $applyFilters($statusCountsQuery, false, false);
+        $statusCounts = $statusCountsQuery
+            ->groupBy('procurements.status')
+            ->pluck('aggregate', 'status')
+            ->map(fn ($count) => (int) $count)
+            ->toArray();
 
         return view('procurements.index', [
             'procurements' => $procurements,
