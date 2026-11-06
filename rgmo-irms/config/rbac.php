@@ -8,6 +8,8 @@ return [
                 'manage-users',
                 'assign-roles',
                 'manage-inventory',
+                'manage-purchase-orders',
+                'approve-purchase-orders',
                 'view-suppliers',
                 'manage-suppliers',
                 'manage-projects',
@@ -46,7 +48,7 @@ return [
         'rgmo_head' => [
             'label' => 'RGMO Head',
             'permissions' => [
-                'view-projects', 'view-inventory', 'review-request', 'approve-request',
+                'view-projects', 'view-inventory', 'approve-purchase-orders', 'review-request', 'approve-request',
                 'monitor-status', 'view-history', 'generate-reports',
                 'view-forecasts', 'receive-notifications',
             ],
@@ -71,6 +73,8 @@ return [
         'manage-users' => 'Manage users',
         'assign-roles' => 'Assign roles and permissions',
         'manage-inventory' => 'Manage inventory records',
+        'manage-purchase-orders' => 'Create, edit, submit, and cancel purchase orders',
+        'approve-purchase-orders' => 'Approve or reject purchase orders',
         'view-suppliers' => 'View suppliers',
         'manage-suppliers' => 'Manage suppliers',
         'manage-projects' => 'Manage project records and assignments',

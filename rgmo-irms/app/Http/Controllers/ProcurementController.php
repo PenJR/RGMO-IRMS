@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
 class ProcurementController extends Controller
 {
@@ -103,6 +104,8 @@ class ProcurementController extends Controller
                     'created_by' => $request->user()->id,
                     'prepared_by' => $request->user()->id,
                     'receipt_path' => $path,
+                    'status' => $legacy ? Procurement::STATUS_APPROVED : Procurement::STATUS_DRAFT,
+                    'approved_at' => $legacy ? now() : null,
                 ]);
                 foreach ($items as $item) {
                     $purchase->items()->create([
@@ -145,6 +148,102 @@ class ProcurementController extends Controller
         $service->receive($procurement, $data, $request->user());
 
         return back()->with('success', 'Delivery received and added to inventory.');
+    }
+
+    public function update(Request $request, Procurement $procurement)
+    {
+        $this->authorize('update', $procurement);
+        $data = $request->validate([
+            'po_number' => ['required', 'string', 'max:100', Rule::unique('procurements', 'po_number')->ignore($procurement->id)],
+            'supplier_id' => ['required', 'integer', 'exists:suppliers,id,status,active'],
+            'order_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'expected_delivery_date' => ['nullable', 'date_format:Y-m-d'],
+            'notes' => ['nullable', 'string', 'max:5000'],
+            'items' => ['required', 'array', 'min:1', 'max:100'],
+            'items.*.inventory_item_id' => ['required', 'integer', 'distinct', 'exists:inventory_items,id,deleted_at,NULL'],
+            'items.*.ordered_quantity' => ['required', 'integer', 'min:1', 'max:2147483647'],
+            'items.*.unit_of_measurement' => ['required', 'string', 'max:30'],
+            'items.*.unit_cost' => ['required', 'numeric', 'min:0', 'max:9999999999.99', 'decimal:0,2'],
+        ]);
+        if (! empty($data['expected_delivery_date']) && $data['expected_delivery_date'] < $data['order_date']) {
+            throw ValidationException::withMessages(['expected_delivery_date' => 'The expected delivery date must be on or after the order date.']);
+        }
+        $total = '0.00';
+        foreach ($data['items'] as &$item) {
+            $item['subtotal'] = $this->decimalMultiply((string) $item['ordered_quantity'], (string) $item['unit_cost']);
+            $total = $this->decimalAdd($total, $item['subtotal']);
+        }
+        unset($item);
+        DB::transaction(function () use ($procurement, $data, $total) {
+            $supplier = Supplier::findOrFail($data['supplier_id']);
+            $procurement->update([
+                'po_number' => $data['po_number'], 'supplier_id' => $supplier->id,
+                'supplier_name' => $supplier->company_name, 'supplier_number' => $supplier->contact_number ?? '',
+                'order_date' => $data['order_date'], 'purchased_on' => $data['order_date'],
+                'expected_delivery_date' => $data['expected_delivery_date'] ?? null, 'notes' => $data['notes'] ?? null,
+                'total_amount' => $total,
+            ]);
+            $procurement->items()->delete();
+            foreach ($data['items'] as $item) {
+                $procurement->items()->create($item + ['received_quantity' => 0]);
+            }
+        }, 5);
+
+        return redirect()->route('procurements.show', $procurement)->with('success', 'Purchase order updated.');
+    }
+
+    public function submit(Procurement $procurement)
+    {
+        $this->authorize('submit', $procurement);
+        if (! $procurement->items()->exists()) {
+            throw ValidationException::withMessages(['items' => 'A purchase order must contain at least one item.']);
+        }
+        $procurement->update(['status' => Procurement::STATUS_PENDING_APPROVAL]);
+
+        return back()->with('success', 'Purchase order submitted for approval.');
+    }
+
+    public function approve(Request $request, Procurement $procurement)
+    {
+        $this->authorize('approve', $procurement);
+        $procurement->update([
+            'status' => Procurement::STATUS_APPROVED,
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+        ]);
+
+        return back()->with('success', 'Purchase order approved.');
+    }
+
+    public function reject(Request $request, Procurement $procurement)
+    {
+        $this->authorize('reject', $procurement);
+        $data = $request->validate(['reason' => 'required|string|max:5000']);
+        $procurement->update([
+            'status' => Procurement::STATUS_REJECTED,
+            'rejected_by' => $request->user()->id,
+            'rejected_at' => now(),
+            'rejection_reason' => $data['reason'],
+        ]);
+
+        return back()->with('success', 'Purchase order rejected.');
+    }
+
+    public function cancel(Request $request, Procurement $procurement)
+    {
+        $this->authorize('cancel', $procurement);
+        $data = $request->validate(['reason' => 'required|string|max:5000']);
+        if (! $procurement->fresh()->canCancel()) {
+            throw ValidationException::withMessages(['status' => 'Orders with received quantities or completed/cancelled orders cannot be cancelled.']);
+        }
+        $procurement->update([
+            'status' => Procurement::STATUS_CANCELLED,
+            'cancelled_by' => $request->user()->id,
+            'cancelled_at' => now(),
+            'cancellation_reason' => $data['reason'],
+        ]);
+
+        return back()->with('success', 'Purchase order cancelled.');
     }
 
     private function legacyProcurementItem(array $data): array

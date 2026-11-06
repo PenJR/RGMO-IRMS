@@ -18,6 +18,9 @@ class ProcurementService
 
         return DB::transaction(function () use ($procurement, $data, $actor) {
             $purchase = Procurement::lockForUpdate()->findOrFail($procurement->id);
+            if (! $purchase->isReceivable()) {
+                throw ValidationException::withMessages(['status' => 'Only approved purchase orders may be received.']);
+            }
             $existing = Delivery::where('submission_key', $data['submission_key'])->first();
             if ($existing) {
                 abort_unless($existing->procurement_id === $purchase->id, 409);
@@ -26,6 +29,10 @@ class ProcurementService
             }
             if ($data['received_on'] > today()->toDateString() || $data['received_on'] < $purchase->purchased_on->toDateString() || $data['quantity'] < 1 || $data['quantity'] > $purchase->remaining_quantity) {
                 throw ValidationException::withMessages(['quantity' => 'Receive a positive quantity within the undelivered balance, on or after purchase.']);
+            }
+            $purchaseItem = $purchase->items()->where('inventory_item_id', $purchase->inventory_item_id)->lockForUpdate()->firstOrFail();
+            if ($data['quantity'] > $purchaseItem->remaining_quantity) {
+                throw ValidationException::withMessages(['quantity' => 'Receive quantity cannot exceed this purchase order item balance.']);
             }
             $item = InventoryItem::lockForUpdate()->findOrFail($purchase->inventory_item_id);
             $delivery = $purchase->deliveries()->create([
@@ -36,6 +43,12 @@ class ProcurementService
             ]);
             $transaction = app(InventoryService::class)->recordStockIn($item, $data['quantity'], 'Delivery #'.$delivery->id.' / '.$purchase->supplier_name, $actor->id, $purchase->funding_source, 'DEL-'.$delivery->id);
             $transaction->update(['meta' => ['delivery_id' => $delivery->id, 'procurement_id' => $purchase->id, 'unit_cost' => $purchase->unit_cost, 'received_on' => $data['received_on']]]);
+            $purchaseItem->increment('received_quantity', $data['quantity']);
+            $purchase->update([
+                'status' => $purchase->items()->whereColumn('received_quantity', '<', 'ordered_quantity')->exists()
+                    ? Procurement::STATUS_PARTIALLY_RECEIVED
+                    : Procurement::STATUS_COMPLETED,
+            ]);
             AuditLog::log($actor->id, 'receive', 'delivery', Delivery::class, $delivery->id, null, $delivery->toArray());
 
             return $delivery;

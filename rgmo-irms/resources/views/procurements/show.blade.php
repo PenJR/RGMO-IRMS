@@ -8,7 +8,19 @@
             <div class="col-md-6"><p>Total order amount: <strong>₱{{ number_format((float) $procurement->total_amount, 2) }}</strong><br>Prepared by: {{ $procurement->preparedBy->name ?? '—' }}<br>Funding: {{ $procurement->funding_source }}</p></div>
         </div>
         <div class="table-responsive mt-3"><table class="table table-sm"><thead><tr><th>Item</th><th>Ordered</th><th>Received</th><th>Remaining</th><th>Unit cost</th><th>Subtotal</th></tr></thead><tbody>@foreach($procurement->items as $poItem)<tr><td>{{ $poItem->inventoryItem->name }}</td><td>{{ $poItem->ordered_quantity }} {{ $poItem->unit_of_measurement }}</td><td>{{ $poItem->received_quantity }} {{ $poItem->unit_of_measurement }}</td><td>{{ $poItem->remaining_quantity }} {{ $poItem->unit_of_measurement }}</td><td>₱{{ number_format((float) $poItem->unit_cost, 2) }}</td><td>₱{{ number_format((float) $poItem->subtotal, 2) }}</td></tr>@endforeach</tbody></table></div>
-        </div><p>{{ $procurement->notes }}</p>@if($procurement->receipt_path)<a class="btn btn-outline-success" href="{{ route('procurements.receipt', $procurement) }}">Download receipt</a>@endif <a class="btn btn-outline-secondary" href="{{ route('inventory.show', $procurement->inventory_item_id) }}">View inventory item</a></div></div>
+        </div><p>{{ $procurement->notes }}</p>
+        <p>Status: <strong>{{ str($procurement->status)->headline() }}</strong></p>
+        @if($procurement->status === \App\Models\Procurement::STATUS_DRAFT && auth()->user()->hasPermission('manage-inventory'))
+        <form method="POST" action="{{ route('procurements.submit', $procurement) }}" class="d-inline">@csrf<button class="btn btn-cmu">Submit for approval</button></form>
+        @endif
+        @if($procurement->status === \App\Models\Procurement::STATUS_PENDING_APPROVAL && auth()->user()->hasPermission('approve-purchase-orders'))
+        <form method="POST" action="{{ route('procurements.approve', $procurement) }}" class="d-inline">@csrf<button class="btn btn-success">Approve</button></form>
+        <form method="POST" action="{{ route('procurements.reject', $procurement) }}" class="d-inline"><input type="hidden" name="reason" value="Rejected by the approving officer">@csrf<button class="btn btn-danger">Reject</button></form>
+        @endif
+        @if(auth()->user()->hasPermission('manage-inventory') && $procurement->canCancel())
+        <form method="POST" action="{{ route('procurements.cancel', $procurement) }}" class="d-inline"><input type="hidden" name="reason" value="Cancelled by inventory administrator">@csrf<button class="btn btn-outline-danger">Cancel</button></form>
+        @endif
+        @if($procurement->receipt_path)<a class="btn btn-outline-success" href="{{ route('procurements.receipt', $procurement) }}">Download receipt</a>@endif <a class="btn btn-outline-secondary" href="{{ route('inventory.show', $procurement->inventory_item_id) }}">View inventory item</a></div></div>
         @if(auth()->user()->hasPermission('manage-inventory') && $procurement->remaining_quantity > 0 && ! $procurement->item->trashed())
         <div class="card mb-4"><div class="card-body"><h3 class="h5">Receive a delivery</h3><form method="POST" action="{{ route('procurements.receive', $procurement) }}">@csrf
             <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">

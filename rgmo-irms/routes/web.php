@@ -62,8 +62,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/procurements/{procurement}', [\App\Http\Controllers\ProcurementController::class, 'show'])->name('procurements.show');
         Route::get('/procurements/{procurement}/receipt', [\App\Http\Controllers\ProcurementController::class, 'receipt'])->name('procurements.receipt');
     });
+    Route::middleware('permission:approve-purchase-orders')->group(function () {
+        Route::post('/procurements/{procurement}/approve', [\App\Http\Controllers\ProcurementController::class, 'approve'])->name('procurements.approve');
+        Route::post('/procurements/{procurement}/reject', [\App\Http\Controllers\ProcurementController::class, 'reject'])->name('procurements.reject');
+    });
     Route::middleware('permission:manage-inventory')->group(function () {
         Route::post('/procurements', [\App\Http\Controllers\ProcurementController::class, 'store'])->name('procurements.store');
+        Route::put('/procurements/{procurement}', [\App\Http\Controllers\ProcurementController::class, 'update'])->name('procurements.update');
+        Route::post('/procurements/{procurement}/submit', [\App\Http\Controllers\ProcurementController::class, 'submit'])->name('procurements.submit');
+        Route::post('/procurements/{procurement}/cancel', [\App\Http\Controllers\ProcurementController::class, 'cancel'])->name('procurements.cancel');
         Route::post('/procurements/{procurement}/receive', [\App\Http\Controllers\ProcurementController::class, 'receive'])->name('procurements.receive');
     });
 
