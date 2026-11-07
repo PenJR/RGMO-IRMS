@@ -100,7 +100,7 @@
                 <p class="mt-2 mb-0">Use earliest expiry first; otherwise, oldest delivery first. Expired stock and batches missing required dates are blocked. Critical levels use usable stock.</p>
             </details>
             <!-- Inventory Items Table -->
-            <div class="card border-0 shadow-sm bg-transparent shadow-none">
+            <div class="card border-0 shadow-sm bg-transparent shadow-none" data-server-sort-region="inventory">
                 <div class="card-body p-0">
                     @if($items->count() > 0)
                         <div class="table-responsive">

@@ -15,7 +15,7 @@
     {{ $attributes->class([$align ? 'text-'.$align : null, 'server-sort-column']) }}
     aria-sort="{{ $active ? ($currentDirection === 'asc' ? 'ascending' : 'descending') : 'none' }}"
 >
-    <a href="{{ $sortUrl }}" class="server-sort-link {{ $active ? 'active' : '' }}">
+    <a href="{{ $sortUrl }}" data-server-sort="{{ $column }}" class="server-sort-link {{ $active ? 'active' : '' }}">
         <span>{{ $slot }}</span>
         <span class="server-sort-indicator" aria-hidden="true">{{ $active ? ($currentDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
     </a>

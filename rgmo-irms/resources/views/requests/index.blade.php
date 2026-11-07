@@ -57,7 +57,7 @@
         </div>
 
         @endunless
-        <div class="card border-0 shadow-sm bg-transparent shadow-none">
+        <div class="card border-0 shadow-sm bg-transparent shadow-none" @unless($releaseQueue ?? false) data-server-sort-region="requests" @endunless>
             <div class="card-body p-0">
                 @if($requests->count() > 0)
                     <div class="table-responsive">

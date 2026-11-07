@@ -3,6 +3,7 @@ import * as bootstrap from 'bootstrap';
 import './feedback';
 import './user-name-filter';
 import './procurement-filters';
+import './server-sort';
 import './batch-receiving';
 import Chart from 'chart.js/auto';
 import {
