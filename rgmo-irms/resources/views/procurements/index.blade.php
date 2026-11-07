@@ -9,7 +9,8 @@
             <div class="col-md"><div class="card h-100 border-warning"><div class="card-body"><div class="text-muted small">Overdue</div><div class="fs-4 fw-bold text-warning">{{ $summary['overdue_count'] }}</div></div></div></div>
             <div class="col-md"><div class="card h-100"><div class="card-body"><div class="text-muted small">Partially received</div><div class="fs-4 fw-bold">{{ $summary['partial_count'] }}</div></div></div></div>
         </div>
-        <div class="d-flex justify-content-end mb-3">
+        <div class="d-flex justify-content-end gap-2 mb-3">
+            <a href="{{ route('procurements.prices') }}" class="btn btn-outline-secondary">Compare supplier prices</a>
             @if(auth()->user()->hasPermission('manage-inventory'))
                 <button type="button" class="btn btn-cmu d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#newPurchaseOrderModal">
                     <i data-lucide="plus" style="width:16px;height:16px"></i> New Purchase Order

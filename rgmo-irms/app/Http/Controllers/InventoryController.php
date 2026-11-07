@@ -6,7 +6,9 @@ use App\Exports\InventoryItemsExport;
 use App\Http\Requests\StoreInventoryItemRequest;
 use App\Imports\InventoryItemsImport;
 use App\Models\Category;
+use App\Models\Delivery;
 use App\Models\InventoryItem;
+use App\Models\Procurement;
 use App\Models\SystemSetting;
 use App\Services\InventoryService;
 use App\Support\InputRules;
@@ -117,7 +119,15 @@ class InventoryController extends Controller
         return view('inventory.show', [
             'item' => $item,
             'transactions' => $transactions,
-            'procurements' => \App\Models\Procurement::where('inventory_item_id', $item->id)->withSum('deliveries', 'quantity')->latest()->paginate(10, ['*'], 'purchases_page'),
+            'procurements' => Procurement::where(function ($query) use ($item) {
+                $query->whereHas('items', fn ($lines) => $lines->where('inventory_item_id', $item->id))
+                    ->orWhere('inventory_item_id', $item->id);
+            })->with(['items' => fn ($lines) => $lines->where('inventory_item_id', $item->id)])
+                ->withSum(['deliveries' => fn ($deliveries) => $deliveries->where('inventory_item_id', $item->id)], 'quantity')
+                ->latest()->paginate(10, ['*'], 'purchases_page'),
+            'deliveries' => Delivery::where('inventory_item_id', $item->id)
+                ->with(['procurement.supplier', 'inventoryItem', 'receiver'])
+                ->orderByDesc('received_on')->orderByDesc('id')->paginate(10, ['*'], 'deliveries_page'),
         ]);
     }
 

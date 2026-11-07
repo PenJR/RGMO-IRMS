@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Delivery extends Model
 {
@@ -10,7 +11,17 @@ class Delivery extends Model
 
     protected function casts(): array
     {
-        return ['received_on' => 'date'];
+        return ['received_on' => 'date', 'unit_cost' => 'decimal:2'];
+    }
+
+    public function procurementItem(): BelongsTo
+    {
+        return $this->belongsTo(ProcurementItem::class);
+    }
+
+    public function inventoryItem(): BelongsTo
+    {
+        return $this->belongsTo(InventoryItem::class)->withTrashed();
     }
 
     public function procurement()

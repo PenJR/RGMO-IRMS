@@ -21,6 +21,7 @@ Stock is deducted when resources are released. Actual utilization is recorded se
 | [Deployment](docs/DEPLOYMENT.md) | Environment configuration, container processes, release checks, and migration. |
 | [Backup and restore](docs/BACKUP-RESTORE.md) | Archive location, troubleshooting, restore rehearsal, and current limitations. |
 | [Roles and permissions](docs/ROLES-PERMISSIONS.md) | Role capabilities, record scope, and request workflow. |
+| [Suppliers and deliveries](docs/SUPPLIERS-DELIVERIES.md) | Supplier profiles, multi-item receiving, receipt history, and price comparisons. |
 | [Testing](docs/TESTING.md) | Automated commands, manual role checks, and evidence recording. |
 
 ## Technology

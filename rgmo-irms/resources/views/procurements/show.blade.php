@@ -28,11 +28,33 @@
             @if($procurement->cancelled_at)<li>Cancelled by {{ $procurement->cancelledBy?->name }} on {{ $procurement->cancelled_at->format('M d, Y g:i A') }}: {{ $procurement->cancellation_reason }}</li>@endif
         </ul></div>@endif
         @if($procurement->receipt_path)<a class="btn btn-outline-success" href="{{ route('procurements.receipt', $procurement) }}">Download receipt</a>@endif <a class="btn btn-outline-secondary" href="{{ route('inventory.show', $procurement->inventory_item_id) }}">View inventory item</a></div></div>
-        @if(auth()->user()->hasPermission('manage-inventory') && $procurement->isReceivable() && $procurement->remaining_quantity > 0 && $procurement->item && ! $procurement->item->trashed())
+        @if(auth()->user()->hasPermission('manage-inventory') && $procurement->isReceivable() && $procurement->monitoring['remaining'] > 0)
         <div class="card mb-4"><div class="card-body"><h3 class="h5">Receive a delivery</h3><form method="POST" action="{{ route('procurements.receive', $procurement) }}">@csrf
             <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">
-            <div class="row g-3"><div class="col-md-4"><label for="received-on" class="form-label">Date received</label><input id="received-on" type="date" name="received_on" class="form-control" min="{{ $procurement->purchased_on->toDateString() }}" max="{{ today()->toDateString() }}" value="{{ old('received_on', today()->toDateString()) }}" required></div><div class="col-md-4"><label for="received-quantity" class="form-label">Quantity received</label><input id="received-quantity" type="number" name="quantity" class="form-control" min="1" max="{{ $procurement->remaining_quantity }}" value="{{ old('quantity') }}" required></div><div class="col-md-4"><label for="delivery-reference" class="form-label">Delivery reference (optional)</label><input id="delivery-reference" name="reference" class="form-control" maxlength="100" value="{{ old('reference') }}"></div></div><button class="btn btn-cmu mt-3" data-confirm="Confirm the received quantity and add it to inventory?">Receive into Inventory</button>
+            <p class="small text-muted">Enter what arrived for each item. Enter 0 for items not delivered. Prices default to the PO price; enter the actual unit price from the delivery documents.</p>
+            <div class="row g-3 mb-3">
+                <div class="col-md-4"><label for="received-on" class="form-label">Date received</label><input id="received-on" type="date" name="received_on" class="form-control" min="{{ $procurement->purchased_on->toDateString() }}" max="{{ today()->toDateString() }}" value="{{ old('received_on', today()->toDateString()) }}" required></div>
+                <div class="col-md-4"><label for="delivery-receipt-number" class="form-label">Delivery receipt number</label><input id="delivery-receipt-number" name="delivery_receipt_number" class="form-control" maxlength="100" value="{{ old('delivery_receipt_number') }}" required></div>
+                <div class="col-md-4"><label for="invoice-number" class="form-label">Invoice number (if applicable)</label><input id="invoice-number" name="invoice_number" class="form-control" maxlength="100" value="{{ old('invoice_number') }}"></div>
+                <div class="col-md-6"><label for="delivery-reference" class="form-label">Additional reference (optional)</label><input id="delivery-reference" name="reference" class="form-control" maxlength="100" value="{{ old('reference') }}"></div>
+                <div class="col-md-6"><span class="form-label d-block">Received by</span><div class="form-control bg-light">{{ auth()->user()->name }}</div></div>
+            </div>
+            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Item / Unit</th><th>Ordered</th><th>Received so far</th><th>Remaining</th><th>Quantity received now</th><th>Actual unit price ({{ $currencyCode }})</th></tr></thead><tbody>
+                @foreach($procurement->items as $poItem)
+                    @if($poItem->remaining_quantity > 0)
+                        <tr><td>{{ $poItem->inventoryItem?->name }}<div class="small text-muted">{{ $poItem->unit_of_measurement }}</div></td><td>{{ $poItem->ordered_quantity }}</td><td>{{ $poItem->received_quantity }}</td><td>{{ $poItem->remaining_quantity }}</td>
+                            @if($poItem->inventoryItem && ! $poItem->inventoryItem->trashed())
+                                <td><label class="visually-hidden" for="received-{{ $poItem->id }}">Quantity received: {{ $poItem->inventoryItem->name }}</label><input id="received-{{ $poItem->id }}" name="items[{{ $poItem->id }}][quantity]" type="number" class="form-control" min="0" max="{{ $poItem->remaining_quantity }}" value="{{ old('items.'.$poItem->id.'.quantity', 0) }}" required></td>
+                                <td><label class="visually-hidden" for="cost-{{ $poItem->id }}">Unit price: {{ $poItem->inventoryItem->name }}</label><input id="cost-{{ $poItem->id }}" name="items[{{ $poItem->id }}][unit_cost]" type="number" class="form-control" min="0" max="9999999999.99" step="0.01" value="{{ old('items.'.$poItem->id.'.unit_cost', $poItem->unit_cost) }}" required></td>
+                            @else
+                                <td colspan="2" class="text-danger">Item archived. Restore it before receiving.</td>
+                            @endif
+                        </tr>
+                    @endif
+                @endforeach
+            </tbody></table></div>
+            <button class="btn btn-cmu mt-3" data-confirm="Confirm the received quantities and prices, and add them to inventory?">Receive into Inventory</button>
         </form></div></div>@endif
-        <div class="card"><div class="card-body"><h3 class="h5">Delivery history</h3><p class="small text-muted">Stock issues use historical/unlinked stock first, then received deliveries in date order. Each withdrawal keeps its delivery references.</p><div class="table-responsive"><table class="table"><thead><tr><th>Delivery</th><th>Date received</th><th>Supplier / Contact</th><th>Quantity</th><th>Remaining in stock</th><th>Received by</th><th>Reference</th></tr></thead><tbody>@forelse($procurement->deliveries as $delivery)<tr><td>DEL-{{ $delivery->id }}</td><td>{{ $delivery->received_on->format('M d, Y') }}</td><td>{{ $procurement->supplier_name }}<div class="small">{{ $procurement->supplier_number }}</div></td><td>{{ $delivery->quantity }}</td><td>{{ $delivery->remaining_quantity }}</td><td>{{ $delivery->receiver->name }}</td><td>{{ $delivery->reference ?? '—' }}</td></tr>@empty<tr><td colspan="7">No deliveries received yet. This purchase has not added any stock.</td></tr>@endforelse</tbody></table></div></div></div>
+        <div class="card"><div class="card-body"><h3 class="h5">Delivery history</h3><p class="small text-muted">Stock issues use historical/unlinked stock first, then received deliveries in date order. Each withdrawal keeps its delivery references.</p>@include('deliveries._history', ['deliveries' => $procurement->deliveries])</div></div>
     </div>
 </x-app-layout>

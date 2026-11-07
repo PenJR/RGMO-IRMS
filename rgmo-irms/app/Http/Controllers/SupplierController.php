@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
+use App\Models\Delivery;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -37,6 +39,7 @@ class SupplierController extends Controller
     {
         $this->authorize('create', Supplier::class);
         $supplier = Supplier::create($this->validateSupplier($request));
+        AuditLog::log($request->user()->id, 'create', 'suppliers', Supplier::class, $supplier->id, null, $supplier->toArray());
 
         return redirect()->route('suppliers.show', $supplier)->with('success', 'Supplier created successfully.');
     }
@@ -44,9 +47,13 @@ class SupplierController extends Controller
     public function show(Supplier $supplier)
     {
         $this->authorize('view', $supplier);
-        $supplier->load(['procurements' => fn ($query) => $query->with('item')->latest()->limit(25)]);
+        $procurements = $supplier->procurements()->with('items.inventoryItem')
+            ->latest()->paginate(10, ['*'], 'purchases_page');
+        $deliveries = Delivery::whereHas('procurement', fn ($query) => $query->where('supplier_id', $supplier->id))
+            ->with(['procurement.supplier', 'inventoryItem', 'receiver'])
+            ->orderByDesc('received_on')->orderByDesc('id')->paginate(15, ['*'], 'deliveries_page');
 
-        return view('suppliers.show', compact('supplier'));
+        return view('suppliers.show', compact('supplier', 'procurements', 'deliveries'));
     }
 
     public function edit(Supplier $supplier)
@@ -59,7 +66,9 @@ class SupplierController extends Controller
     public function update(Request $request, Supplier $supplier)
     {
         $this->authorize('update', $supplier);
+        $oldValues = $supplier->toArray();
         $supplier->update($this->validateSupplier($request, $supplier));
+        AuditLog::log($request->user()->id, 'update', 'suppliers', Supplier::class, $supplier->id, $oldValues, $supplier->fresh()->toArray());
 
         return redirect()->route('suppliers.show', $supplier)->with('success', 'Supplier updated successfully.');
     }
@@ -67,7 +76,9 @@ class SupplierController extends Controller
     public function deactivate(Supplier $supplier)
     {
         $this->authorize('deactivate', $supplier);
+        $oldValues = $supplier->toArray();
         $supplier->update(['status' => Supplier::STATUS_INACTIVE]);
+        AuditLog::log(auth()->id(), 'deactivate', 'suppliers', Supplier::class, $supplier->id, $oldValues, $supplier->fresh()->toArray());
 
         return back()->with('success', 'Supplier deactivated successfully. Historical procurement records are preserved.');
     }

@@ -106,7 +106,19 @@
                 </div>
             </div>
 
-            <div class="card mb-4"><div class="card-body"><h3 class="h5">Purchase &amp; delivery trace</h3><div class="table-responsive"><table class="table"><thead><tr><th>Purchase</th><th>Supplier / Contact</th><th>OR number</th><th>Purchase date</th><th>Ordered</th><th>Received</th></tr></thead><tbody>@forelse($procurements as $purchase)<tr><td><a href="{{ route('procurements.show', $purchase) }}">PRC-{{ $purchase->id }}</a></td><td>{{ $purchase->supplier_name }}<div>{{ $purchase->supplier_number }}</div></td><td>{{ $purchase->or_number }}</td><td>{{ $purchase->purchased_on->format('M d, Y') }}</td><td>{{ $purchase->quantity }}</td><td>{{ $purchase->deliveries_sum_quantity ?? 0 }}</td></tr>@empty<tr><td colspan="6">No linked purchases. Existing stock retains its historical transaction records.</td></tr>@endforelse</tbody></table></div>{{ $procurements->links() }}</div></div>
+            <div class="card mb-4"><div class="card-body">
+                <div class="d-flex justify-content-between gap-2 mb-3"><h3 class="h5">Purchase &amp; delivery trace</h3>
+                    @if(auth()->user()->hasPermission(['manage-inventory', 'manage-purchase-orders', 'approve-purchase-orders']))
+                        <a href="{{ route('procurements.prices', ['inventory_item_id' => $item->id]) }}" class="btn btn-sm btn-outline-secondary">Compare supplier prices</a>
+                    @endif
+                </div>
+                <div class="table-responsive"><table class="table"><thead><tr><th>Purchase</th><th>Supplier / Contact</th><th>OR number</th><th>Purchase date</th><th>Ordered for this item</th><th>Received for this item</th></tr></thead><tbody>
+                    @forelse($procurements as $purchase)
+                        <tr><td>{{ $purchase->po_number ?: 'PRC-'.$purchase->id }}</td><td>{{ $purchase->supplier_name }}<div>{{ $purchase->supplier_number }}</div></td><td>{{ $purchase->or_number }}</td><td>{{ $purchase->purchased_on->format('M d, Y') }}</td><td>{{ $purchase->items->first()?->ordered_quantity ?? $purchase->quantity }}</td><td>{{ $purchase->deliveries_sum_quantity ?? 0 }}</td></tr>
+                    @empty<tr><td colspan="6">No linked purchases. Existing stock retains its historical transaction records.</td></tr>@endforelse
+                </tbody></table></div>{{ $procurements->links() }}
+            </div></div>
+            <div class="card mb-4"><div class="card-body"><h3 class="h5">Delivery history</h3>@include('deliveries._history', ['deliveries' => $deliveries])<div class="mt-3">{{ $deliveries->links() }}</div></div></div>
             <!-- Stock Adjustment -->
             @can('update', $item)
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">

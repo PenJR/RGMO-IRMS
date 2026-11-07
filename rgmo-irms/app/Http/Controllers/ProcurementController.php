@@ -10,8 +10,8 @@ use App\Services\ProcurementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ProcurementController extends Controller
 {
@@ -33,12 +33,12 @@ class ProcurementController extends Controller
             }
 
             return $query->when($filters['search'] ?? null, function ($query, $search) {
-                    $query->where(function ($query) use ($search) {
-                        $query->where('po_number', 'like', "%{$search}%")
-                            ->orWhere('or_number', 'like', "%{$search}%")
-                            ->orWhere('supplier_name', 'like', "%{$search}%");
-                    });
-                })
+                $query->where(function ($query) use ($search) {
+                    $query->where('po_number', 'like', "%{$search}%")
+                        ->orWhere('or_number', 'like', "%{$search}%")
+                        ->orWhere('supplier_name', 'like', "%{$search}%");
+                });
+            })
                 ->when($includeStatus && ($filters['status'] ?? null), fn ($query) => $query->where('status', $filters['status']))
                 ->when($filters['supplier_id'] ?? null, fn ($query, $supplierId) => $query->where('supplier_id', $supplierId))
                 ->when($filters['inventory_item_id'] ?? null, fn ($query, $itemId) => $query->whereHas('items', fn ($items) => $items->where('inventory_item_id', $itemId)))
@@ -85,7 +85,7 @@ class ProcurementController extends Controller
         }
         $legacy = ! $request->has('items');
         $data = $request->validate(array_merge([
-            'supplier_id' => 'nullable|required_without_all:supplier_name,supplier_number|integer|exists:suppliers,id,status,active',
+            'supplier_id' => ($legacy ? 'nullable|required_without_all:supplier_name,supplier_number' : 'required').'|integer|exists:suppliers,id,status,active',
             'supplier_name' => 'nullable|required_without:supplier_id|string|max:255', 'supplier_number' => 'nullable|required_without:supplier_id|string|max:80',
             'po_number' => 'required_without:or_number|nullable|string|max:100|unique:procurements,po_number',
             'or_number' => 'nullable|required_without:po_number|string|max:100',
@@ -112,6 +112,9 @@ class ProcurementController extends Controller
             $data['supplier_number'] = $supplier->contact_number ?? '';
         } else {
             $supplier = Supplier::where('company_name', $data['supplier_name'])->first();
+            if ($supplier && ! $supplier->isActive()) {
+                throw ValidationException::withMessages(['supplier_name' => 'This supplier is inactive. Select an active registered supplier.']);
+            }
             if (! $supplier) {
                 $supplier = Supplier::create([
                     'company_name' => $data['supplier_name'],
@@ -190,7 +193,7 @@ class ProcurementController extends Controller
 
     public function show(Procurement $procurement, ProcurementService $procurementService)
     {
-        $procurement->load(['items.inventoryItem', 'item', 'supplier', 'deliveries.receiver', 'preparedBy', 'approvedBy', 'rejectedBy', 'cancelledBy']);
+        $procurement->load(['items.inventoryItem', 'item', 'supplier', 'deliveries.receiver', 'deliveries.inventoryItem', 'preparedBy', 'approvedBy', 'rejectedBy', 'cancelledBy']);
         $procurementService->attachMonitoring(collect([$procurement]));
 
         return view('procurements.show', compact('procurement'));
@@ -199,8 +202,13 @@ class ProcurementController extends Controller
     public function receive(Request $request, Procurement $procurement, ProcurementService $service)
     {
         $data = $request->validate([
-            'quantity' => 'required|integer|min:1|max:2147483647',
+            'quantity' => 'prohibits:items|required_without:items|integer|min:1|max:2147483647',
+            'items' => 'prohibits:quantity|required_without:quantity|array|min:1|max:100',
+            'items.*.quantity' => 'required|integer|min:0|max:2147483647',
+            'items.*.unit_cost' => 'nullable|numeric|min:0|max:9999999999.99|decimal:0,2',
             'received_on' => 'required|date_format:Y-m-d|before_or_equal:today',
+            'delivery_receipt_number' => 'nullable|required_with:items|string|max:100',
+            'invoice_number' => 'nullable|string|max:100',
             'reference' => 'nullable|string|max:100', 'submission_key' => 'required|uuid',
         ]);
         $service->receive($procurement, $data, $request->user());
