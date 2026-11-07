@@ -22,6 +22,7 @@ Stock is deducted when resources are released. Actual utilization is recorded se
 | [Backup and restore](docs/BACKUP-RESTORE.md) | Archive location, troubleshooting, restore rehearsal, and current limitations. |
 | [Roles and permissions](docs/ROLES-PERMISSIONS.md) | Role capabilities, record scope, and request workflow. |
 | [Suppliers and deliveries](docs/SUPPLIERS-DELIVERIES.md) | Supplier profiles, multi-item receiving, receipt history, and price comparisons. |
+| [Controlled stock adjustments](docs/CONTROLLED-STOCK-ADJUSTMENTS.md) | Administrator discrepancy corrections, incident references, and adjustment history. |
 | [Testing](docs/TESTING.md) | Automated commands, manual role checks, and evidence recording. |
 
 ## Technology

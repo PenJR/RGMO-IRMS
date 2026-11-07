@@ -215,11 +215,21 @@ class RmsService
     /**
      * Increase stock.
      */
-    public function increaseStock(int $itemId, int $quantity): InventoryItem { return $this->adjustStock($itemId, $quantity, 'in'); }
+    public function increaseStock(int $itemId, int $quantity, ?string $reason = null, ?string $incidentReportReference = null, ?string $idempotencyKey = null): InventoryItem
+    {
+        $this->controlledAdjustment($itemId, $quantity, 'stock_in', $reason, $incidentReportReference, $idempotencyKey);
+
+        return InventoryItem::findOrFail($itemId);
+    }
     /**
      * Decrease stock.
      */
-    public function decreaseStock(int $itemId, int $quantity): InventoryItem { return $this->adjustStock($itemId, -$quantity, 'out'); }
+    public function decreaseStock(int $itemId, int $quantity, ?string $reason = null, ?string $incidentReportReference = null, ?string $idempotencyKey = null): InventoryItem
+    {
+        $this->controlledAdjustment($itemId, $quantity, 'stock_out', $reason, $incidentReportReference, $idempotencyKey);
+
+        return InventoryItem::findOrFail($itemId);
+    }
     /**
      * Get low stock items.
      */
@@ -339,22 +349,24 @@ class RmsService
     /**
      * Record stock in.
      */
-    public function recordStockIn(int $itemId, int $quantity, ?string $source): InventoryTransaction
+    public function recordStockIn(int $itemId, int $quantity, ?string $source, ?string $incidentReportReference = null, ?string $idempotencyKey = null): InventoryTransaction
     {
-        $this->increaseStock($itemId, $quantity);
-        return $this->logInventoryTransaction(['inventory_item_id' => $itemId, 'user_id' => Auth::id(), 'transaction_type' => 'stock_in', 'quantity' => $quantity, 'source' => $source]);
+        return $this->controlledAdjustment($itemId, $quantity, 'stock_in', $source, $incidentReportReference, $idempotencyKey);
     }
     /**
      * Record stock out.
      */
-    public function recordStockOut(int $itemId, int $quantity, ?string $destination): InventoryTransaction
+    public function recordStockOut(int $itemId, int $quantity, ?string $destination, ?string $incidentReportReference = null, ?string $idempotencyKey = null): InventoryTransaction
     {
-        return app(InventoryService::class)->recordStockOut(InventoryItem::findOrFail($itemId), $quantity, $destination ?? 'Manual issue', Auth::id());
+        return $this->controlledAdjustment($itemId, $quantity, 'stock_out', $destination, $incidentReportReference, $idempotencyKey);
     }
     /**
      * Log inventory transaction.
      */
-    public function logInventoryTransaction(array $data): InventoryTransaction { return InventoryTransaction::create($data); }
+    public function logInventoryTransaction(array $data): InventoryTransaction
+    {
+        throw ValidationException::withMessages(['transaction' => 'Stock history is recorded automatically. Use a controlled stock adjustment.']);
+    }
     /**
      * Get inventory transactions.
      */
@@ -546,27 +558,18 @@ class RmsService
      * Internal helper to adjust inventory stock levels atomically within a database transaction.
      *
      * @param int $itemId
-     * @param int $delta Positive for increase, negative for decrease.
-     * @param string $changeType String descriptor for audit logging.
-     * @return InventoryItem
+     * Preserve the legacy service entry points while enforcing the controlled workflow.
      * @throws ValidationException
      */
-    private function adjustStock(int $itemId, int $delta, string $changeType): InventoryItem
+    private function controlledAdjustment(int $itemId, int $quantity, string $type, ?string $reason, ?string $incidentReportReference, ?string $idempotencyKey): InventoryTransaction
     {
-        return DB::transaction(function () use ($itemId, $delta, $changeType) {
-            $item = InventoryItem::lockForUpdate()->findOrFail($itemId);
-            $newStock = $item->stock + $delta;
-            if ($newStock < 0) {
-                throw ValidationException::withMessages(['stock' => 'Insufficient stock.']);
-            }
-            if ($delta < 0 && $newStock < $item->reserved_quantity) {
-                throw ValidationException::withMessages(['stock' => 'Stock is reserved for approved requests.']);
-            }
-            if ($delta < 0) $item->allocateDeliveries(-$delta);
-            $item->update(['stock' => $newStock]);
-            $this->logInventoryChange($itemId, $changeType);
-            return $item;
-        });
+        $actor = Auth::user();
+        abort_unless($actor, 403);
+
+        return app(StockAdjustmentService::class)->adjust(InventoryItem::findOrFail($itemId), [
+            'adjustment_type' => $type, 'quantity' => $quantity, 'reason' => $reason,
+            'incident_report_reference' => $incidentReportReference, 'idempotency_key' => $idempotencyKey,
+        ], $actor);
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Models\InventoryItem;
 use App\Services\InventoryService;
 use App\Support\InputSanitizer;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\OnEachRow;
@@ -62,7 +63,7 @@ class InventoryItemsImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
                 $itemData = [
                     'category_id' => $category?->id,
                     'name' => trim($values['name'] ?? ''),
-                    'sku' => $sku ?: 'ITEM-'.(string) \Illuminate\Support\Str::uuid(),
+                    'sku' => $sku ?: 'ITEM-'.(string) Str::uuid(),
                     'stock' => isset($values['stock']) ? (int) $values['stock'] : 0,
                     'unit' => trim($values['unit'] ?? 'pcs'),
                     'min_stock' => isset($values['min_stock']) ? (int) $values['min_stock'] : 0,
@@ -74,6 +75,9 @@ class InventoryItemsImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
                 $item = InventoryItem::withTrashed()->where('sku', $itemData['sku'])->first();
 
                 if ($item) {
+                    if (! isset($values['stock']) || $values['stock'] === '') {
+                        unset($itemData['stock']);
+                    }
                     $wasTrashed = $item->trashed();
                     if ($item->trashed()) {
                         $item->restore();

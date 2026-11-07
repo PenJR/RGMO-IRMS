@@ -3,15 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreResourceUsageRequest;
+use App\Models\InventoryItem;
+use App\Models\InventoryTransaction;
 use App\Models\Notification;
 use App\Models\ResourceRequest;
 use App\Models\User;
 use App\Rules\CurrentProject;
+use App\Services\ResourceRequestService;
 use App\Services\ResourceUsageService;
 use App\Services\RmsService;
+use App\Services\StockAdjustmentService;
 use App\Support\InputRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class OperationsController extends Controller
 {
@@ -156,7 +161,7 @@ class OperationsController extends Controller
      */
     public function getPendingRequests()
     {
-        return response()->json(app(\App\Services\ResourceRequestService::class)->getPendingRequestsFor(request()->user()));
+        return response()->json(app(ResourceRequestService::class)->getPendingRequestsFor(request()->user()));
     }
 
     // Approval Workflow
@@ -179,7 +184,7 @@ class OperationsController extends Controller
         $resourceRequest = ResourceRequest::findOrFail($requestId);
         $this->authorize('verify', $resourceRequest);
         $data = $request->validate(['remarks' => 'nullable|string|max:1000']);
-        app(\App\Services\ResourceRequestService::class)->verifyRequest($resourceRequest, $request->user()->id, $data['remarks'] ?? null);
+        app(ResourceRequestService::class)->verifyRequest($resourceRequest, $request->user()->id, $data['remarks'] ?? null);
 
         return response()->json($resourceRequest->fresh());
     }
@@ -189,7 +194,7 @@ class OperationsController extends Controller
         $resourceRequest = ResourceRequest::findOrFail($requestId);
         $this->authorize('endorse', $resourceRequest);
         $data = $request->validate(['remarks' => 'nullable|string|max:1000']);
-        app(\App\Services\ResourceRequestService::class)->endorseRequest($resourceRequest, $request->user()->id, $data['remarks'] ?? null);
+        app(ResourceRequestService::class)->endorseRequest($resourceRequest, $request->user()->id, $data['remarks'] ?? null);
 
         return response()->json($resourceRequest->fresh());
     }
@@ -215,7 +220,7 @@ class OperationsController extends Controller
      */
     public function getApprovalQueue()
     {
-        return response()->json(app(\App\Services\ResourceRequestService::class)->getPendingRequestsFor(request()->user()));
+        return response()->json(app(ResourceRequestService::class)->getPendingRequestsFor(request()->user()));
     }
 
     /**
@@ -253,9 +258,7 @@ class OperationsController extends Controller
      */
     public function recordStockIn(Request $request, int $itemId)
     {
-        $data = $request->validate(['quantity' => 'required|integer|min:1|max:2147483647', 'source' => 'nullable|string|max:255']);
-
-        return response()->json($this->service->recordStockIn($itemId, $data['quantity'], $data['source'] ?? null));
+        return response()->json($this->recordAdjustment($request, $itemId, 'stock_in'));
     }
 
     /**
@@ -265,9 +268,20 @@ class OperationsController extends Controller
      */
     public function recordStockOut(Request $request, int $itemId)
     {
-        $data = $request->validate(['quantity' => 'required|integer|min:1|max:2147483647', 'destination' => 'nullable|string|max:255']);
+        return response()->json($this->recordAdjustment($request, $itemId, 'stock_out'));
+    }
 
-        return response()->json($this->service->recordStockOut($itemId, $data['quantity'], $data['destination'] ?? null));
+    private function recordAdjustment(Request $request, int $itemId, string $type): InventoryTransaction
+    {
+        $item = InventoryItem::findOrFail($itemId);
+        $this->authorize('adjustStock', $item);
+
+        return app(StockAdjustmentService::class)->adjust($item, [
+            'adjustment_type' => $type, 'quantity' => $request->input('quantity'),
+            'reason' => $request->input('reason') ?? $request->input('source') ?? $request->input('destination'),
+            'incident_report_reference' => $request->input('incident_report_reference'),
+            'idempotency_key' => $request->header('Idempotency-Key') ?? $request->input('idempotency_key'),
+        ], $request->user());
     }
 
     /**
@@ -277,7 +291,8 @@ class OperationsController extends Controller
      */
     public function logInventoryTransaction(Request $request)
     {
-        return response()->json($this->service->logInventoryTransaction($request->validate(['inventory_item_id' => 'required|integer|min:1|exists:inventory_items,id', 'user_id' => 'nullable|integer|min:1|exists:users,id', 'transaction_type' => 'required|string|in:stock_in,stock_out', 'quantity' => 'required|integer|min:1|max:2147483647', 'source' => 'nullable|string|max:255', 'destination' => 'nullable|string|max:255', 'meta' => 'nullable|array|max:50'])), 201);
+        $this->authorize('adjustStock', InventoryItem::class);
+        throw ValidationException::withMessages(['transaction' => 'Stock history is recorded automatically. Use the administrator stock adjustment form with an incident report reference.']);
     }
 
     /**

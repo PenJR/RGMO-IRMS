@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class InventoryItem extends Model
@@ -18,7 +19,7 @@ class InventoryItem extends Model
     {
         static::creating(function (InventoryItem $item) {
             if (blank($item->sku)) {
-                $item->sku = 'ITEM-'.(string) \Illuminate\Support\Str::uuid();
+                $item->sku = 'ITEM-'.(string) Str::uuid();
             }
         });
 
@@ -36,6 +37,12 @@ class InventoryItem extends Model
             }
             if ($errors) {
                 throw ValidationException::withMessages($errors);
+            }
+        });
+
+        static::forceDeleting(function (InventoryItem $item) {
+            if ($item->transactions()->where('is_adjustment', true)->exists()) {
+                throw ValidationException::withMessages(['item' => 'Items with stock adjustment history can be archived, but cannot be permanently deleted.']);
             }
         });
     }

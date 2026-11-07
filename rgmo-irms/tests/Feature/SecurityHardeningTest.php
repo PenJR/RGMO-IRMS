@@ -129,7 +129,7 @@ class SecurityHardeningTest extends TestCase
             'source' => 'Opening balance',
         ]);
 
-        $payload = ['quantity' => 2, 'source' => 'Delivery', 'reference' => 'DR-1001'];
+        $payload = ['quantity' => 2, 'source' => 'Physical count reconciliation', 'incident_report_reference' => 'IR-1001'];
         $headers = ['Idempotency-Key' => 'stock-in-replay-test'];
 
         $this->actingAs($admin)->patchJson("/api/inventory/{$item->id}/increase", $payload, $headers)->assertOk();

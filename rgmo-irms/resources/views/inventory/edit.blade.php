@@ -40,7 +40,10 @@
 
                         <div class="col-md-3">
                             <label class="form-label">Current Stock</label>
-                            <input type="number" name="stock" value="{{ old('stock', $item->stock) }}" min="0" class="form-control @error('stock') is-invalid @enderror" required max="2147483647" step="1">
+                            <input value="{{ $item->stock }} {{ $item->unit }}" class="form-control" readonly aria-describedby="stock-adjustment-help">
+                            <div class="form-text" id="stock-adjustment-help">Stock balances change through recorded movements.
+                                @can('adjustStock', $item)<a href="{{ route('inventory.show', $item) }}#stock-adjustment">Record an administrator stock adjustment</a>.@endcan
+                            </div>
                             @error('stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 

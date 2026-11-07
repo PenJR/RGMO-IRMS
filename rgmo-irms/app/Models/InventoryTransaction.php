@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Validation\ValidationException;
 
 class InventoryTransaction extends Model
 {
@@ -19,17 +20,45 @@ class InventoryTransaction extends Model
         'reference',
         'idempotency_key',
         'meta',
+        'is_adjustment',
+        'reason',
+        'incident_report_reference',
+        'stock_before',
+        'stock_after',
     ];
 
     protected $casts = [
         'meta' => 'array',
+        'is_adjustment' => 'boolean',
+        'stock_before' => 'integer',
+        'stock_after' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::updating(function (InventoryTransaction $transaction) {
+            if ($transaction->getOriginal('is_adjustment')) {
+                throw ValidationException::withMessages(['adjustment' => 'Adjustment history cannot be edited. Record a new adjustment to correct a mistake.']);
+            }
+        });
+        static::deleting(function (InventoryTransaction $transaction) {
+            if ($transaction->getOriginal('is_adjustment') || $transaction->is_adjustment) {
+                throw ValidationException::withMessages(['adjustment' => 'Adjustment history cannot be deleted.']);
+            }
+        });
+    }
 
     /**
      * Compute a readable detail string based on the transaction type and its source/destination.
      */
     public function getDetailsAttribute(): string
     {
+        if ($this->is_adjustment) {
+            return 'Stock adjustment: '.($this->reason ?: $this->source ?: $this->destination ?: 'Historical adjustment')
+                .' | Incident report: '.($this->incident_report_reference ?: 'Not recorded')
+                .($this->stock_before !== null ? ' | Balance: '.$this->stock_before.' → '.$this->stock_after : '')
+                .' | Reference: '.($this->reference ?: 'Not recorded');
+        }
         if ($this->transaction_type === 'stock_in') {
             return $this->source ? 'Source: '.$this->source : ($this->meta ? json_encode($this->meta) : 'N/A');
         }

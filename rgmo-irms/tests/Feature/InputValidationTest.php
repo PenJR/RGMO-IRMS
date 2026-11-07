@@ -139,7 +139,12 @@ class InputValidationTest extends TestCase
     public function test_stock_in_rejects_resulting_integer_overflow(): void
     {
         $item = InventoryItem::create($this->inventoryData());
-        $this->actingAs($this->admin())->postJson(route('inventory.stock-in', $item), ['quantity' => 2147483647, 'source' => 'Supplier'])
+        $this->actingAs($this->admin())->postJson(route('inventory.stock-in', $item), [
+            'quantity' => 2147483647,
+            'source' => 'Physical count reconciliation',
+            'incident_report_reference' => 'IR-OVERFLOW-001',
+            'idempotency_key' => 'overflow-stock-adjustment',
+        ])
             ->assertUnprocessable()->assertJsonValidationErrors('quantity');
         $this->assertSame(5, $item->fresh()->stock);
         $this->assertDatabaseCount('inventory_transactions', 0);

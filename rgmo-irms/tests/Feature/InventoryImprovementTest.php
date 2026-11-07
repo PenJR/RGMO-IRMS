@@ -35,7 +35,15 @@ class InventoryImprovementTest extends TestCase
         $this->get(route('inventory.edit', $item))
             ->assertOk()->assertSee('value="sacks" readonly', false);
         $this->put(route('inventory.update', $item), [...$data, 'stock' => 12])
-            ->assertSessionHasNoErrors()->assertRedirect();
+            ->assertSessionHasErrors('stock')->assertRedirect();
+        $this->assertSame(10, $item->fresh()->stock);
+        $this->post(route('inventory.adjust-stock', $item), [
+            'adjustment_type' => 'stock_in',
+            'quantity' => 2,
+            'reason' => 'Count discrepancy confirmed during reconciliation',
+            'incident_report_reference' => 'IR-SACKS-001',
+            'idempotency_key' => 'sacks-count-adjustment',
+        ])->assertSessionHasNoErrors()->assertRedirect();
         $this->assertSame('sacks', $item->fresh()->unit);
         $this->assertSame(12, $item->fresh()->stock);
     }

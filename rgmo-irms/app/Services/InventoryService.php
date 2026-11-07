@@ -147,25 +147,10 @@ class InventoryService
             $newStock = array_key_exists('stock', $data) ? (int) $data['stock'] : (int) $lockedItem->stock;
             unset($data['stock']);
 
-            if ($newStock < $lockedItem->stock && $newStock < $lockedItem->reserved_quantity) {
-                throw ValidationException::withMessages(['stock' => 'Stock is reserved for approved requests.']);
+            if ($newStock !== (int) $lockedItem->stock) {
+                throw ValidationException::withMessages(['stock' => 'Use the administrator stock adjustment form with a reason and incident report reference to change an existing balance.']);
             }
-            $allocations = $newStock < $lockedItem->stock ? $lockedItem->allocateDeliveries($lockedItem->stock - $newStock) : [];
             $lockedItem->update($data);
-
-            $difference = $newStock - (int) $lockedItem->stock;
-            if ($difference !== 0) {
-                $lockedItem->update(['stock' => $newStock]);
-                $lockedItem->transactions()->create([
-                    'user_id' => $userId,
-                    'transaction_type' => $difference > 0 ? 'stock_in' : 'stock_out',
-                    'quantity' => abs($difference),
-                    'source' => $difference > 0 ? 'Inventory edit adjustment' : null,
-                    'destination' => $difference < 0 ? 'Inventory edit adjustment' : null,
-                    'reference' => 'EDIT-'.$lockedItem->id.'-'.now()->format('YmdHisv'),
-                    'meta' => ['adjustment' => true] + $allocations,
-                ]);
-            }
 
             if ($userId) {
                 AuditLog::log(
@@ -190,7 +175,9 @@ class InventoryService
     {
         DB::transaction(function () use ($item, $userId) {
             $locked = InventoryItem::lockForUpdate()->findOrFail($item->id);
-            if ($locked->reserved_quantity > 0) throw ValidationException::withMessages(['item' => 'An item with reserved stock cannot be archived.']);
+            if ($locked->reserved_quantity > 0) {
+                throw ValidationException::withMessages(['item' => 'An item with reserved stock cannot be archived.']);
+            }
             $old = $locked->toArray();
             $locked->delete();
             AuditLog::log($userId, 'delete', 'inventory', InventoryItem::class, $item->id, $old, null);
@@ -338,6 +325,6 @@ class InventoryService
      */
     public function getTransactionHistory(InventoryItem $item, int $perPage = 15)
     {
-        return $item->transactions()->with('user')->orderBy('created_at', 'desc')->paginate($perPage);
+        return $item->transactions()->with('user')->orderByDesc('created_at')->orderByDesc('id')->paginate($perPage);
     }
 }

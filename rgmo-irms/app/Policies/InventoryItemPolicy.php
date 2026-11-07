@@ -39,6 +39,11 @@ class InventoryItemPolicy
         return $user->hasPermission('manage-inventory');
     }
 
+    public function adjustStock(User $user, ?InventoryItem $item = null): bool
+    {
+        return $user->isAdmin() && $user->status === User::STATUS_ACTIVE;
+    }
+
     /**
      * Determine if the user can delete the model.
      */

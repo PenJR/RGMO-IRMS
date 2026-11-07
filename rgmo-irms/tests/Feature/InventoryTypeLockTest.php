@@ -65,7 +65,15 @@ class InventoryTypeLockTest extends TestCase
         $data = $this->data();
         unset($data['unit']);
         $this->put(route('inventory.update', $item), array_replace($data, ['stock' => 12]))
-            ->assertSessionHasNoErrors()->assertRedirect();
+            ->assertSessionHasErrors('stock')->assertRedirect();
+        $this->assertSame(10, $item->fresh()->stock);
+        $this->post(route('inventory.adjust-stock', $item), [
+            'adjustment_type' => 'stock_in',
+            'quantity' => 2,
+            'reason' => 'Physical count reconciliation',
+            'incident_report_reference' => 'IR-TYPE-001',
+            'idempotency_key' => 'locked-type-count-adjustment',
+        ])->assertSessionHasNoErrors()->assertRedirect();
         $this->assertSame(12, $item->fresh()->stock);
         $this->assertSame('sacks', $item->fresh()->unit);
     }
@@ -75,7 +83,7 @@ class InventoryTypeLockTest extends TestCase
         $item = $this->item();
         $other = Category::create(['name' => 'Tools']);
         $this->put(route('inventory.update', $item), array_replace($this->data(), [
-            'category_id' => $other->id, 'unit' => 'kg', 'stock' => 99,
+            'category_id' => $other->id, 'unit' => 'kg', 'name' => 'Rejected name change',
         ]))->assertSessionHasErrors(['category_id', 'unit']);
         $this->assertSame(10, $item->fresh()->stock);
         $this->assertSame('sacks', $item->fresh()->unit);

@@ -8,9 +8,11 @@ use App\Imports\InventoryItemsImport;
 use App\Models\Category;
 use App\Models\Delivery;
 use App\Models\InventoryItem;
+use App\Models\InventoryTransaction;
 use App\Models\Procurement;
 use App\Models\SystemSetting;
 use App\Services\InventoryService;
+use App\Services\StockAdjustmentService;
 use App\Support\InputRules;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -113,7 +115,7 @@ class InventoryController extends Controller
 
         $this->authorize('view', $item);
 
-        $item->load('category', 'transactions.user');
+        $item->load('category');
         $transactions = $this->inventoryService->getTransactionHistory($item, 10);
 
         return view('inventory.show', [
@@ -168,7 +170,7 @@ class InventoryController extends Controller
             'category_id' => 'sometimes|required|integer|min:1|exists:categories,id',
             'name' => 'required|string|max:255',
             'sku' => 'sometimes|required|string|max:255|unique:inventory_items,sku,'.$item->id,
-            'stock' => 'required|integer|min:0|max:2147483647',
+            'stock' => 'sometimes|required|integer|min:0|max:2147483647',
             'unit' => 'sometimes|required|string|max:30',
             'min_stock' => 'required|integer|min:0|max:2147483647',
             'reorder_level' => 'nullable|integer|min:0|max:2147483647',
@@ -347,23 +349,7 @@ class InventoryController extends Controller
      */
     public function stockIn(Request $request, InventoryItem $item)
     {
-        $this->authorize('update', $item);
-
-        $validated = $request->validate([
-            'quantity' => 'required|integer|min:1|max:2147483647',
-            'source' => 'required|string|max:255',
-            'funding_source' => 'nullable|string|max:255',
-            'reference' => 'nullable|string|max:100',
-        ]);
-
-        $this->inventoryService->recordStockIn(
-            $item,
-            $validated['quantity'],
-            $validated['source'],
-            auth()->id(),
-            $validated['funding_source'] ?? null,
-            $validated['reference'] ?? null
-        );
+        $this->recordAdjustment($request, $item, 'stock_in');
 
         return redirect()->route('inventory.show', $item)->with('success', 'Stock in recorded successfully.');
     }
@@ -377,23 +363,7 @@ class InventoryController extends Controller
      */
     public function stockOut(Request $request, InventoryItem $item)
     {
-        $this->authorize('update', $item);
-
-        $validated = $request->validate([
-            'quantity' => 'required|integer|min:1|max:2147483647',
-            'destination' => 'required|string|max:255',
-            'funding_source' => 'nullable|string|max:255',
-            'reference' => 'nullable|string|max:100',
-        ]);
-
-        $this->inventoryService->recordStockOut(
-            $item,
-            $validated['quantity'],
-            $validated['destination'],
-            auth()->id(),
-            $validated['funding_source'] ?? null,
-            $validated['reference'] ?? null
-        );
+        $this->recordAdjustment($request, $item, 'stock_out');
 
         return redirect()->route('inventory.show', $item)->with('success', 'Stock out recorded successfully.');
     }
@@ -407,31 +377,20 @@ class InventoryController extends Controller
      */
     public function adjustStock(Request $request, InventoryItem $item)
     {
-        $this->authorize('update', $item);
-
-        $validated = $request->validate([
-            'adjustment_type' => 'required|in:stock_in,stock_out',
-            'quantity' => 'required|integer|min:1|max:2147483647',
-            'reason' => 'required|string|max:255',
-        ]);
-
-        if ($validated['adjustment_type'] === 'stock_in') {
-            $this->inventoryService->recordStockIn(
-                $item,
-                $validated['quantity'],
-                $validated['reason'],
-                auth()->id()
-            );
-        } else {
-            $this->inventoryService->recordStockOut(
-                $item,
-                $validated['quantity'],
-                $validated['reason'],
-                auth()->id()
-            );
-        }
+        $this->recordAdjustment($request, $item);
 
         return redirect()->route('inventory.show', $item)->with('success', 'Stock adjusted successfully.');
+    }
+
+    private function recordAdjustment(Request $request, InventoryItem $item, ?string $type = null): InventoryTransaction
+    {
+        $this->authorize('adjustStock', $item);
+        $data = $request->all();
+        $data['adjustment_type'] = $type ?? $request->input('adjustment_type');
+        $data['reason'] = $request->input('reason') ?? $request->input('source') ?? $request->input('destination');
+        $data['idempotency_key'] = $request->header('Idempotency-Key') ?? $request->input('idempotency_key');
+
+        return app(StockAdjustmentService::class)->adjust($item, $data, $request->user());
     }
 
     /**
@@ -588,26 +547,7 @@ class InventoryController extends Controller
     public function increaseStock(Request $request, int $itemId)
     {
         $item = InventoryItem::findOrFail($itemId);
-        $this->authorize('update', $item);
-        $request->merge(['idempotency_key' => $request->header('Idempotency-Key')]);
-
-        $validated = $request->validate([
-            'quantity' => 'required|integer|min:1|max:2147483647',
-            'source' => 'required|string|max:255',
-            'funding_source' => 'nullable|string|max:255',
-            'reference' => 'nullable|string|max:100',
-            'idempotency_key' => 'nullable|string|max:100',
-        ]);
-
-        $this->inventoryService->recordStockIn(
-            $item,
-            $validated['quantity'],
-            $validated['source'],
-            auth()->id(),
-            $validated['funding_source'] ?? null,
-            $validated['reference'] ?? null,
-            $validated['idempotency_key'] ?? null
-        );
+        $this->recordAdjustment($request, $item, 'stock_in');
 
         return response()->json($item->fresh(['category', 'transactions']));
     }
@@ -618,26 +558,7 @@ class InventoryController extends Controller
     public function decreaseStock(Request $request, int $itemId)
     {
         $item = InventoryItem::findOrFail($itemId);
-        $this->authorize('update', $item);
-        $request->merge(['idempotency_key' => $request->header('Idempotency-Key')]);
-
-        $validated = $request->validate([
-            'quantity' => 'required|integer|min:1|max:2147483647',
-            'destination' => 'required|string|max:255',
-            'funding_source' => 'nullable|string|max:255',
-            'reference' => 'nullable|string|max:100',
-            'idempotency_key' => 'nullable|string|max:100',
-        ]);
-
-        $this->inventoryService->recordStockOut(
-            $item,
-            $validated['quantity'],
-            $validated['destination'],
-            auth()->id(),
-            $validated['funding_source'] ?? null,
-            $validated['reference'] ?? null,
-            $validated['idempotency_key'] ?? null
-        );
+        $this->recordAdjustment($request, $item, 'stock_out');
 
         return response()->json($item->fresh(['category', 'transactions']));
     }

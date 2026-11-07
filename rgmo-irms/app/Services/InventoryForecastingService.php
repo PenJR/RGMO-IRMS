@@ -128,6 +128,7 @@ class InventoryForecastingService
     {
         return InventoryTransaction::query()
             ->stockOut()
+            ->where('is_adjustment', false)
             ->whereBetween('created_at', [$from, $to])
             ->get(['inventory_item_id', 'quantity', 'created_at'])
             ->groupBy('inventory_item_id')
