@@ -3,7 +3,6 @@
         <div class="d-flex align-items-center justify-content-between gap-3">
             <div>
                 <h2 class="h5 fw-bold mb-0">Module Health</h2>
-                <p class="text-muted mb-0 small">Operational status across inventory, requests, security, and audit activity.</p>
             </div>
             <span
                 @class([
@@ -35,7 +34,7 @@
                             <i data-lucide="check-circle-2"></i>
                         </div>
                         <div>
-                            <p class="text-muted text-uppercase fw-bold small mb-1">Healthy Modules</p>
+                            <p class="text-muted text-uppercase fw-bold small mb-1">Healthy</p>
                             <h3 class="fw-bold mb-0">{{ $health['summary']['healthy_modules'] }}</h3>
                         </div>
                     </div>
@@ -48,7 +47,7 @@
                             <i data-lucide="alert-triangle"></i>
                         </div>
                         <div>
-                            <p class="text-muted text-uppercase fw-bold small mb-1">Watch Modules</p>
+                            <p class="text-muted text-uppercase fw-bold small mb-1">Watch</p>
                             <h3 class="fw-bold mb-0">{{ $health['summary']['warning_modules'] }}</h3>
                         </div>
                     </div>
@@ -61,7 +60,7 @@
                             <i data-lucide="circle-alert"></i>
                         </div>
                         <div>
-                            <p class="text-muted text-uppercase fw-bold small mb-1">Critical Modules</p>
+                            <p class="text-muted text-uppercase fw-bold small mb-1">Critical</p>
                             <h3 class="fw-bold mb-0">{{ $health['summary']['critical_modules'] }}</h3>
                         </div>
                     </div>
@@ -136,7 +135,7 @@
                         @empty
                             <div class="text-center py-5">
                                 <i data-lucide="check-circle-2" class="text-success health-empty-icon mb-2" style="width: 44px; height: 44px;"></i>
-                                <p class="text-muted mb-0 small">No low-stock items right now.</p>
+                                <p class="text-muted mb-0 small">No low-stock items.</p>
                             </div>
                         @endforelse
                     </div>
@@ -194,7 +193,7 @@
                         @empty
                             <div class="text-center py-5">
                                 <i data-lucide="check-circle-2" class="text-success health-empty-icon mb-2" style="width: 44px; height: 44px;"></i>
-                                <p class="text-muted mb-0 small">No pending requests in the queue.</p>
+                                <p class="text-muted mb-0 small">No pending requests.</p>
                             </div>
                         @endforelse
                     </div>
@@ -221,7 +220,7 @@
                         @empty
                             <div class="text-center py-5">
                                 <i data-lucide="info" class="text-muted health-empty-icon mb-2" style="width: 44px; height: 44px;"></i>
-                                <p class="text-muted mb-0 small">No audit activity has been recorded yet.</p>
+                                <p class="text-muted mb-0 small">No audit activity yet.</p>
                             </div>
                         @endforelse
                     </div>

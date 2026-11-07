@@ -38,12 +38,12 @@ class ProjectInventoryTest extends TestCase
         ResourceUsage::create(['inventory_item_id' => $item->id, 'project_id' => $project->id,
             'user_id' => $admin->id, 'quantity' => 99]);
         $this->actingAs($admin)->get(route('projects.show', $project))->assertOk()
-            ->assertSee('Project Inventory')->assertSee('Available to Withdraw')
+            ->assertSee('Inventory')->assertSee('Remaining')
             ->assertViewHas('projectInventory', fn ($rows) => $rows->count() === 1
                 && $rows[0]['remaining'] == 20
                 && $rows[0]['withdrawn'] == 25);
         $this->actingAs($manager)->get(route('projects.show', $project))->assertOk()
-            ->assertSee('Showing resources from your own requests.')
+            ->assertSee('Your requests only.')
             ->assertViewHas('projectInventory', fn ($rows) => $rows[0]['remaining'] == 10 && $rows[0]['withdrawn'] == 20);
         $this->assertEquals(100, $item->fresh()->stock);
     }

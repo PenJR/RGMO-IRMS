@@ -1,11 +1,11 @@
 <x-app-layout>
     <x-slot name="header"><h2 class="fw-bold">Purchase PRC-{{ $procurement->id }}</h2></x-slot>
     <div class="container-fluid py-4">
-        <div class="d-flex justify-content-end mb-4"><a href="{{ route('procurements.index') }}" class="btn btn-outline-secondary">Back to purchases</a></div>
+        <div class="d-flex justify-content-end mb-4"><a href="{{ route('procurements.index') }}" class="btn btn-outline-secondary">Back</a></div>
         @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
         <div class="card mb-4"><div class="card-body"><div class="row g-3">
             <div class="col-md-6"><h3 class="h5">PO {{ $procurement->po_number ?? $procurement->or_number }}</h3><p><strong>{{ $procurement->supplier?->company_name ?: $procurement->supplier_name }}</strong><br>{{ $procurement->supplier?->contact_person }}<br>{{ $procurement->supplier?->contact_number ?: $procurement->supplier_number }}<br>{{ $procurement->supplier?->email }}<br>{{ $procurement->supplier?->business_address }}<br>OR: {{ $procurement->or_number ?? '—' }}<br>Ordered: {{ $procurement->order_date?->format('M d, Y') ?? $procurement->purchased_on->format('M d, Y') }}<br>Expected: {{ $procurement->expected_delivery_date?->format('M d, Y') ?? 'Not specified' }}</p></div>
-            <div class="col-md-6"><p>Total order amount: <strong>₱{{ number_format((float) $procurement->total_amount, 2) }}</strong><br>Prepared by: {{ $procurement->preparedBy->name ?? '—' }}<br>Funding: {{ $procurement->funding_source }}</p></div>
+            <div class="col-md-6"><p>Total: <strong>₱{{ number_format((float) $procurement->total_amount, 2) }}</strong><br>Prepared by: {{ $procurement->preparedBy->name ?? '—' }}<br>Funding: {{ $procurement->funding_source }}</p></div>
         </div>
         <div class="table-responsive mt-3"><h4 class="h6">Ordered items</h4><table class="table table-sm"><thead><tr><th>Item</th><th>Ordered</th><th>Received</th><th>Remaining</th><th>Unit cost</th><th>Subtotal</th></tr></thead><tbody>@foreach($procurement->items as $poItem)<tr><td>{{ $poItem->inventoryItem->name }}</td><td>{{ $poItem->ordered_quantity }} {{ $poItem->unit_of_measurement }}</td><td>{{ $poItem->received_quantity }} {{ $poItem->unit_of_measurement }}</td><td>{{ $poItem->remaining_quantity }} {{ $poItem->unit_of_measurement }}</td><td>₱{{ number_format((float) $poItem->unit_cost, 2) }}</td><td>₱{{ number_format((float) $poItem->subtotal, 2) }}</td></tr>@endforeach</tbody></table></div>
         </div><p>{{ $procurement->notes }}</p>
@@ -27,19 +27,20 @@
             @if($procurement->rejected_at)<li>Rejected by {{ $procurement->rejectedBy?->name }} on {{ $procurement->rejected_at->format('M d, Y g:i A') }}: {{ $procurement->rejection_reason }}</li>@endif
             @if($procurement->cancelled_at)<li>Cancelled by {{ $procurement->cancelledBy?->name }} on {{ $procurement->cancelled_at->format('M d, Y g:i A') }}: {{ $procurement->cancellation_reason }}</li>@endif
         </ul></div>@endif
-        @if($procurement->receipt_path)<a class="btn btn-outline-success" href="{{ route('procurements.receipt', $procurement) }}">Download receipt</a>@endif <a class="btn btn-outline-secondary" href="{{ route('inventory.show', $procurement->inventory_item_id) }}">View inventory item</a></div></div>
+        @if($procurement->receipt_path)<a class="btn btn-outline-success" href="{{ route('procurements.receipt', $procurement) }}">Download receipt</a>@endif <a class="btn btn-outline-secondary" href="{{ route('inventory.show', $procurement->inventory_item_id) }}">View item</a></div></div>
         @if(auth()->user()->hasPermission('manage-inventory') && $procurement->isReceivable() && $procurement->monitoring['remaining'] > 0)
-        <div class="card mb-4"><div class="card-body"><h3 class="h5">Receive a delivery</h3><form method="POST" action="{{ route('procurements.receive', $procurement) }}">@csrf
+        <div class="card mb-4"><div class="card-body"><h3 class="h5">Receive delivery</h3><form method="POST" action="{{ route('procurements.receive', $procurement) }}">@csrf
             <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">
-            <p class="small text-muted">Enter what arrived for each item. Enter 0 for items not delivered. Split tracked items into their batch / lot numbers; the received total is calculated from those quantities. Prices default to the PO price; enter the actual unit price from the delivery documents.</p>
+            <p class="small text-muted">0 = not received. Enter actual unit prices.</p>
+            <details class="small text-muted mb-3"><summary>Help</summary><p class="mb-0">Split tracked items by batch / lot; quantities add up automatically. Prices default to the PO price. Check them against the delivery documents.</p></details>
             <div class="row g-3 mb-3">
                 <div class="col-md-4"><label for="received-on" class="form-label">Date received</label><input id="received-on" type="date" name="received_on" class="form-control" min="{{ $procurement->purchased_on->toDateString() }}" max="{{ today()->toDateString() }}" value="{{ old('received_on', today()->toDateString()) }}" required></div>
                 <div class="col-md-4"><label for="delivery-receipt-number" class="form-label">Delivery receipt number</label><input id="delivery-receipt-number" name="delivery_receipt_number" class="form-control" maxlength="100" value="{{ old('delivery_receipt_number') }}" required></div>
-                <div class="col-md-4"><label for="invoice-number" class="form-label">Invoice number (if applicable)</label><input id="invoice-number" name="invoice_number" class="form-control" maxlength="100" value="{{ old('invoice_number') }}"></div>
-                <div class="col-md-6"><label for="delivery-reference" class="form-label">Additional reference (optional)</label><input id="delivery-reference" name="reference" class="form-control" maxlength="100" value="{{ old('reference') }}"></div>
+                <div class="col-md-4"><label for="invoice-number" class="form-label">Invoice number (optional)</label><input id="invoice-number" name="invoice_number" class="form-control" maxlength="100" value="{{ old('invoice_number') }}"></div>
+                <div class="col-md-6"><label for="delivery-reference" class="form-label">Reference (optional)</label><input id="delivery-reference" name="reference" class="form-control" maxlength="100" value="{{ old('reference') }}"></div>
                 <div class="col-md-6"><span class="form-label d-block">Received by</span><div class="form-control bg-light">{{ auth()->user()->name }}</div></div>
             </div>
-            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Item / Unit</th><th>Ordered</th><th>Received so far</th><th>Remaining</th><th>Quantity received now</th><th>Actual unit price ({{ $currencyCode }})</th></tr></thead><tbody>
+            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Item / Unit</th><th>Ordered</th><th>Received</th><th>Remaining</th><th>Received now</th><th>Unit price ({{ $currencyCode }})</th></tr></thead><tbody>
                 @foreach($procurement->items as $poItem)
                     @if($poItem->remaining_quantity > 0)
                         @php
@@ -62,7 +63,7 @@
                                 <td colspan="6" class="bg-light">
                                     <div class="border rounded p-3">
                                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2"><strong class="small">Batches received · {{ $poItem->inventoryItem->name }}</strong><button type="button" class="btn btn-sm btn-outline-primary" data-add-receiving-batch>Add batch</button></div>
-                                        <p class="small text-muted mb-2">Record each batch separately. Use 0 for an unused row.{{ $poItem->inventoryItem->has_expiry ? ' Each received batch needs an expiry date.' : '' }}</p>
+                                        <p class="small text-muted mb-2">One row per batch. 0 = not received.{{ $poItem->inventoryItem->has_expiry ? ' Each received batch needs an expiry date.' : '' }}</p>
                                         @error('items.'.$poItem->id.'.batches')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
                                         <div data-receiving-batch-rows>
                                             @foreach($receivingBatches as $batchIndex => $receivingBatch)
@@ -90,8 +91,8 @@
                     @endif
                 @endforeach
             </tbody></table></div>
-            <button class="btn btn-cmu mt-3" data-confirm="Confirm the received quantities and prices, and add them to inventory?">Receive into Inventory</button>
+            <button class="btn btn-cmu mt-3" data-confirm="Add this delivery to stock?">Add to stock</button>
         </form></div></div>@endif
-        <div class="card"><div class="card-body"><h3 class="h5">Delivery history</h3><p class="small text-muted">Expiry-tracked stock issues by earliest valid expiry (FEFO); other stock uses arrival order (FIFO). Each withdrawal keeps its batch and delivery references.</p>@include('deliveries._history', ['deliveries' => $procurement->deliveries])</div></div>
+        <div class="card"><div class="card-body"><h3 class="h5">Delivery history</h3><details class="small text-muted mb-3"><summary>Help</summary><p class="mb-0">Stock with expiry dates is issued by earliest valid expiry; other stock by arrival date. Withdrawals keep batch and delivery references.</p></details>@include('deliveries._history', ['deliveries' => $procurement->deliveries])</div></div>
     </div>
 </x-app-layout>

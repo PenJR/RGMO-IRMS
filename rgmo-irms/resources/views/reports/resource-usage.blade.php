@@ -2,14 +2,13 @@
     <x-slot name="header">
         <div>
             <h2 class="fw-bold mb-1">Resource Usage Report</h2>
-            <p class="text-muted mb-0">See how inventory resources have been used over time.</p>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
         <x-breadcrumb :items="['Reports' => '#', 'Resource Usage' => route('reports.resource-usage')]" />
 
-        <p class="text-muted">Historical records may represent quantities released. New linked records show actual utilization.</p>
+        <p class="text-muted">Older records may show released quantities. Linked records show actual usage.</p>
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
                 <form method="GET" action="{{ route('reports.resource-usage') }}" class="row g-3">
@@ -38,8 +37,7 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
-                                <h5 class="fw-bold mb-0">Resource Consumption Density</h5>
-                                <p class="text-muted small mb-0">Recorded usage quantities by item</p>
+                                <h5 class="fw-bold mb-0">Usage by Item</h5>
                             </div>
                             <i data-lucide="pie-chart" class="text-primary opacity-50" style="width: 24px"></i>
                         </div>
@@ -81,7 +79,7 @@
                 @else
                     <div class="text-center py-5">
                         <h5 class="mb-2">No usage records found</h5>
-                        <p class="text-muted">Adjust the date range or user filter to view records.</p>
+                        <p class="text-muted">Try different dates or users.</p>
                     </div>
                 @endif
             </div>

@@ -3,7 +3,6 @@
         <div class="d-flex justify-content-between align-items-center w-100 gap-3 flex-wrap">
             <div>
                 <h2 class="fw-bold mb-1">Notifications</h2>
-                <p class="text-muted mb-0">Review alerts and updates sent to your account.</p>
             </div>
         </div>
     </x-slot>
@@ -99,7 +98,6 @@
                     <div id="notifications-list" class="list-group list-group-flush"></div>
                     <div id="notifications-empty" class="text-center py-5">
                         <h5 class="mb-2">No notifications yet</h5>
-                        <p class="text-muted mb-3">You will receive updates when there are new alerts or system actions.</p>
                     </div>
                 @endif
             </div>

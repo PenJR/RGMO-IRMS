@@ -108,7 +108,7 @@ class DashboardInventoryDynamicsTest extends TestCase
         $this->actingAs($admin)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Filter inventory dynamics by item')
+            ->assertSee('Filter stock levels by item')
             ->assertSee('Hybrid Corn Seed (SEED-HYBRID-DYN)');
 
         Carbon::setTestNow();
@@ -139,8 +139,8 @@ class DashboardInventoryDynamicsTest extends TestCase
         $this->assertSame(['Organic Fertilizer (sacks)'], $analytics['chart']['labels']);
 
         $this->actingAs($head)->get(route('dashboard'))->assertOk()
-            ->assertSee('RGMO Head overview')
-            ->assertSee('Resource position and utilization')
+            ->assertSee('id="rgmoResourceOverviewTitle"', false)
+            ->assertSee('Resources & usage')
             ->assertSee('rgmoResourcePositionChart', false)
             ->assertSee('Awaiting final approval');
     }

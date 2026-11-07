@@ -1,8 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="fw-bold mb-1">Project Management</h2>
-            <p class="text-muted mb-0">Monitor projects, assigned managers, and resources currently in use.</p>
+            <h2 class="fw-bold mb-1">Projects</h2>
         </div>
     </x-slot>
 
@@ -22,12 +21,12 @@
                 <form method="GET" action="{{ route('projects.index') }}" class="row g-3">
                     <div class="col-lg-6">
                         <label class="form-label">Search</label>
-                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control" placeholder="Project name, code, or description" maxlength="255">
+                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control" placeholder="Name, code, description" maxlength="255">
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <label class="form-label">Status</label>
                         <select name="status" class="form-select">
-                            <option value="">All Statuses</option>
+                            <option value="">All</option>
                             @foreach($statuses as $status)
                                 <option value="{{ $status }}" {{ ($filters['status'] ?? '') === $status ? 'selected' : '' }}>
                                     {{ Str::of($status)->replace('_', ' ')->title() }}
@@ -52,8 +51,8 @@
                                 <tr>
                                     <th>Project</th>
                                     <th>Status</th>
-                                    <th>Project Managers</th>
-                                    <th>Resources In Use</th>
+                                    <th>Managers</th>
+                                    <th>Usage Records</th>
                                     <th>Timeline</th>
                                     <th class="text-end">Actions</th>
                                 </tr>
@@ -81,10 +80,10 @@
                                             @forelse($project->managers as $manager)
                                                 <span class="badge rounded-pill bg-light text-dark border me-1 mb-1">{{ $manager->name }}</span>
                                             @empty
-                                                <span class="text-muted small">No managers assigned</span>
+                                                <span class="text-muted small">Unassigned</span>
                                             @endforelse
                                         </td>
-                                        <td>{{ $project->resource_usages_count }} usage records</td>
+                                        <td>{{ $project->resource_usages_count }}</td>
                                         <td class="text-muted small">
                                             {{ $project->start_date?->format('M d, Y') ?? 'No start' }}
                                             -
@@ -112,7 +111,6 @@
                         <div class="card-body p-5 text-center">
                             <i data-lucide="folder-kanban" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
                             <h5 class="fw-bold">No projects found</h5>
-                            <p class="text-muted mb-0">Create a project to start tracking assigned managers and resource usage.</p>
                         </div>
                     </div>
                 @endif

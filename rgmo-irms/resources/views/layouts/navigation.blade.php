@@ -41,8 +41,9 @@
                     </span>
                 </summary>
                 <div class="nav-submenu">
-                    <a href="{{ route('inventory.index') }}" class="nav-link {{ request()->routeIs('inventory.index') ? 'active' : '' }}">Items List</a>
-                    <a href="{{ route('procurements.index') }}" class="nav-link {{ request()->routeIs('procurements.*') ? 'active' : '' }}">Procurement &amp; Deliveries</a>
+                    <a href="{{ route('inventory.index') }}" class="nav-link {{ request()->routeIs('inventory.index') ? 'active' : '' }}">Items</a>
+                    <a href="{{ route('inventory.batches.index') }}" class="nav-link {{ request()->routeIs('inventory.batches.*') ? 'active' : '' }}">Batches</a>
+                    <a href="{{ route('procurements.index') }}" class="nav-link {{ request()->routeIs('procurements.*') ? 'active' : '' }}">Purchases</a>
                     @can('viewAny', App\Models\Supplier::class)
                         <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">Suppliers</a>
                     @endcan
@@ -80,10 +81,10 @@
                         <a href="{{ route('requests.releases') }}" class="nav-link {{ request()->routeIs('requests.releases') ? 'active' : '' }}">Withdrawals</a>
                     @endif
                     @if(auth()->user()->hasPermission('record-utilization'))
-                        <a href="{{ route('utilization.index') }}" class="nav-link {{ request()->routeIs('utilization.*') ? 'active' : '' }}">Record Utilization</a>
+                        <a href="{{ route('utilization.index') }}" class="nav-link {{ request()->routeIs('utilization.*') ? 'active' : '' }}">Usage</a>
                     @endif
                     @can('review', App\Models\ResourceRequest::class)
-                        <a href="{{ route('requests.pending') }}" class="nav-link {{ request()->routeIs('requests.pending') ? 'active' : '' }}">Pending List</a>
+                        <a href="{{ route('requests.pending') }}" class="nav-link {{ request()->routeIs('requests.pending') ? 'active' : '' }}">Pending</a>
                     @endcan
                     @can('create', App\Models\ResourceRequest::class)
                         <a href="{{ route('requests.create') }}" class="nav-link {{ request()->routeIs('requests.create') ? 'active' : '' }}">New Request</a>
@@ -118,9 +119,9 @@
         @endif
 
         @if(auth()->user()->hasPermission('view-forecasts'))
-            <a href="{{ route('ai-forecasting.index') }}" class="nav-link {{ request()->routeIs('ai-forecasting.*') ? 'active' : '' }}" data-sidebar-item="forecasting" draggable="true" data-sidebar-tooltip="AI Forecasting" aria-label="AI Forecasting">
+            <a href="{{ route('ai-forecasting.index') }}" class="nav-link {{ request()->routeIs('ai-forecasting.*') ? 'active' : '' }}" data-sidebar-item="forecasting" draggable="true" data-sidebar-tooltip="Forecasts" aria-label="Forecasts">
                 <span class="nav-icon"><i data-lucide="sparkles"></i></span>
-                <span class="nav-label">AI Forecasting</span>
+                <span class="nav-label">Forecasts</span>
                 <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
             </a>
         @endif
@@ -128,15 +129,15 @@
         @can('viewAny', App\Models\User::class)
             <details class="nav-group {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'active' : '' }}" data-sidebar-item="users" draggable="true" {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.login-logs.*') ? 'open' : '' }}>
                 <summary>
-                    <span class="nav-group-toggle" data-sidebar-tooltip="User Management" aria-label="User Management">
+                    <span class="nav-group-toggle" data-sidebar-tooltip="Users" aria-label="Users">
                         <span class="nav-icon"><i data-lucide="users"></i></span>
-                        <span class="nav-label">User Management</span>
+                        <span class="nav-label">Users</span>
                         <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </span>
                 </summary>
                 <div class="nav-submenu">
-                    <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">Account Management</a>
+                    <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">Accounts</a>
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('admin.login-logs.index') }}" class="nav-link {{ request()->routeIs('admin.login-logs.*') ? 'active' : '' }}">Login Logs</a>
                     @endif

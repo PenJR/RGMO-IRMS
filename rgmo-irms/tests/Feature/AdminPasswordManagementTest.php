@@ -97,7 +97,7 @@ class AdminPasswordManagementTest extends TestCase
         $this->actingAs($staff)
             ->get(route('profile.edit'))
             ->assertOk()
-            ->assertSee('Password Managed by Administrator')
+            ->assertSee('Contact an administrator to change your password.')
             ->assertDontSee('action="'.route('password.update').'"', false);
     }
 

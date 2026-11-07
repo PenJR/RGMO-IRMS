@@ -119,6 +119,6 @@ class PurchaseOrderMonitoringTest extends TestCase
         ]))->assertOk()
           ->assertSee($purchase->po_number)
           ->assertSee('Filtered Supplier')
-          ->assertSee('Supplier purchase history');
+          ->assertSee('Supplier history');
     }
 }

@@ -10,19 +10,18 @@
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <x-breadcrumb :items="['Projects' => route('projects.index'), $project->name => route('projects.show', $project)]" compact />
             <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary">Back to Projects</a>
+            <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary">Projects</a>
             @can('update', $project)
-                <a href="{{ route('projects.edit', $project) }}" class="btn btn-cmu">Edit Project</a>
+                <a href="{{ route('projects.edit', $project) }}" class="btn btn-cmu">Edit</a>
             @endcan
             </div>
         </div>
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-1">Project Inventory</h5>
-                <p class="text-muted small mb-0">Resources withdrawn for this project and the balance available to withdraw from its approved requests.</p>
+                <h5 class="mb-1">Inventory</h5>
                 @if(auth()->user()->isProjectManager())
-                    <p class="text-muted small mb-0">Showing resources from your own requests.</p>
+                    <p class="text-muted small mb-0">Your requests only.</p>
                 @endif
             </div>
             <div class="card-body p-0">
@@ -33,7 +32,7 @@
                                 <tr>
                                     <th>Resource</th>
                                     <th>Unit</th>
-                                    <th class="text-end">Available to Withdraw</th>
+                                    <th class="text-end">Remaining</th>
                                     <th class="text-end">Withdrawn</th>
                                 </tr>
                             </thead>
@@ -49,9 +48,12 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="small text-muted px-3 py-2 mb-0">Available to Withdraw = approved quantity minus withdrawn quantity. Pending and rejected requests are excluded. This is the project’s outstanding allocation; actual release still requires sufficient warehouse stock.</p>
+                    <details class="small text-muted px-3 py-2">
+                        <summary>Help</summary>
+                        <p class="mt-2 mb-0">Remaining = approved minus withdrawn. Pending and rejected requests are excluded. Release requires enough warehouse stock.</p>
+                    </details>
                 @else
-                    <p class="p-4 text-muted mb-0">No approved resources for this project yet. Resources appear here when a request is approved.</p>
+                    <p class="p-4 text-muted mb-0">No approved resources yet.</p>
                 @endif
             </div>
         </div>
@@ -60,8 +62,8 @@
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Resources Currently Used</h5>
-                        <span class="badge rounded-pill bg-light text-dark border">{{ $project->resourceUsages->count() }} usage records</span>
+                        <h5 class="mb-0">Resource Use</h5>
+                        <span class="badge rounded-pill bg-light text-dark border">{{ $project->resourceUsages->count() }} records</span>
                     </div>
                     <div class="card-body p-0">
                         @if($resourceSummary->count() > 0)
@@ -71,8 +73,8 @@
                                         <tr>
                                             <th>Resource</th>
                                             <th>Category</th>
-                                            <th>Total Quantity Used</th>
-                                            <th>Usage Records</th>
+                                            <th>Used</th>
+                                            <th>Records</th>
                                             <th>Last Used</th>
                                         </tr>
                                     </thead>
@@ -93,14 +95,14 @@
                                 </table>
                             </div>
                         @else
-                            <div class="p-4 text-muted">No resource usage has been linked to this project yet.</div>
+                            <div class="p-4 text-muted">No resource use yet.</div>
                         @endif
                     </div>
                 </div>
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Recent Usage Logs</h5>
+                        <h5 class="mb-0">Recent Use</h5>
                     </div>
                     <div class="card-body p-0">
                         @if($project->resourceUsages->count() > 0)
@@ -129,7 +131,7 @@
                                 </table>
                             </div>
                         @else
-                            <div class="p-4 text-muted">No usage logs available.</div>
+                            <div class="p-4 text-muted">No usage records.</div>
                         @endif
                     </div>
                 </div>
@@ -138,7 +140,7 @@
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Project Details</h5>
+                        <h5 class="mb-0">Details</h5>
                     </div>
                     <div class="card-body p-4">
                         <dl class="row mb-0">
@@ -158,7 +160,7 @@
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Assigned Project Managers</h5>
+                        <h5 class="mb-0">Project Managers</h5>
                     </div>
                     <div class="card-body p-4">
                         @forelse($project->managers as $manager)
@@ -172,7 +174,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-muted mb-0">No project managers assigned.</p>
+                            <p class="text-muted mb-0">No managers assigned.</p>
                         @endforelse
                     </div>
                 </div>

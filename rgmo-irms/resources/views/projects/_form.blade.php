@@ -6,13 +6,13 @@
             <div class="card-body p-4">
                 <div class="row g-3">
                     <div class="col-md-8">
-                        <label class="form-label">Project Name</label>
+                        <label class="form-label">Name</label>
                         <input type="text" name="name" value="{{ old('name', $project->name) }}" class="form-control @error('name') is-invalid @enderror" required maxlength="255">
                         @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Project Code</label>
+                        <label class="form-label">Code</label>
                         <input type="text" name="code" value="{{ old('code', $project->code) }}" class="form-control @error('code') is-invalid @enderror" required maxlength="50">
                         @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
@@ -54,7 +54,7 @@
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Assigned Project Managers</h5>
+                <h5 class="mb-0">Project Managers</h5>
             </div>
             <div class="card-body p-4">
                 @if($managers->count() > 0)
@@ -72,7 +72,7 @@
                         @endforeach
                     </div>
                 @else
-                    <p class="text-muted mb-0">No active project managers are available.</p>
+                    <p class="text-muted mb-0">No active project managers.</p>
                 @endif
                 @error('manager_ids')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
             </div>
@@ -82,5 +82,5 @@
 
 <div class="d-flex justify-content-end gap-2 mt-4">
     <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary">Cancel</a>
-    <button type="submit" class="btn btn-cmu">Save Project</button>
+    <button type="submit" class="btn btn-cmu">Save</button>
 </div>

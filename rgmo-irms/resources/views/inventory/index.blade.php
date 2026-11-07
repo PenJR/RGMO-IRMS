@@ -1,8 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="fw-bold mb-1">Inventory Management</h2>
-            <p class="text-muted mb-0">Track stock levels, imports, and inventory item records.</p>
+            <h2 class="fw-bold mb-1">Inventory</h2>
         </div>
     </x-slot>
 
@@ -10,7 +9,7 @@
         <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
             <x-breadcrumb :items="['Inventory' => route('inventory.index')]" compact />
             <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('inventory.batches.index') }}" class="btn btn-outline-secondary">Batch &amp; Expiry Monitoring</a>
+            <a href="{{ route('inventory.batches.index') }}" class="btn btn-outline-secondary">Batches &amp; Expiry</a>
             @can('create', App\Models\InventoryItem::class)
                 <a href="{{ route('inventory.create') }}" class="btn btn-cmu d-inline-flex align-items-center gap-2">
                     <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
@@ -27,7 +26,7 @@
                             <label for="search" class="form-label">Search</label>
                             <input type="text" name="search" id="search" value="{{ request('search') }}"
                                    class="form-control"
-                                   placeholder="Search by name or description" maxlength="255">
+                                   placeholder="Search items" maxlength="255">
                         </div>
                         <div class="col-md-4 col-lg-3">
                             <label for="category_id" class="form-label">Category</label>
@@ -63,7 +62,7 @@
             @can('import', App\Models\InventoryItem::class)
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-4">
-                        <h3 class="fw-bold mb-3">Import Inventory</h3>
+                        <h3 class="fw-bold mb-3">Import</h3>
                         <form method="POST" action="{{ route('inventory.import') }}" enctype="multipart/form-data" class="row g-3">
                             @csrf
                             <div class="col-md-8">
@@ -72,15 +71,19 @@
                                 @error('file')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-4 d-flex align-items-end">
-                                <button type="submit" class="btn btn-cmu w-100">Import Items</button>
+                                <button type="submit" class="btn btn-cmu w-100">Import</button>
                             </div>
                             <div class="col-12">
-                                <small class="text-muted" id="inventory-import-help">Supported formats: CSV, XLSX, XLS, TXT. Maximum file size 10MB. Required columns: category or category_id, and name. Rows without a legacy code create new items.</small>
+                                <small class="text-muted" id="inventory-import-help">CSV, Excel or TXT · Max 10 MB</small>
+                                <details class="small text-muted mt-2">
+                                    <summary>Import help</summary>
+                                    <p class="mt-2 mb-0">Required columns: category or category_id, and name. Rows without a legacy code create new items.</p>
+                                </details>
                             </div>
                         </form>
                         @if(session('import_failures'))
                             <details class="alert alert-warning mt-3 mb-0" open>
-                                <summary class="fw-semibold">Rows that need attention</summary>
+                                <summary class="fw-semibold">Check these rows</summary>
                                 <ul class="mb-0 mt-2 ps-3">
                                     @foreach(session('import_failures') as $failure)
                                         <li>{{ $failure }}</li>
@@ -92,10 +95,10 @@
                 </div>
             @endcan
 
-            <div class="alert alert-info mb-3">
-                <strong>Use the next eligible batch.</strong> Expiry-tracked stock uses the earliest valid expiry first (FEFO); other stock uses arrival order (FIFO).
-                Expired batches and expiry-tracked batches without a date are excluded from usable stock. Critical / low stock thresholds use the usable balance.
-            </div>
+            <details class="small text-muted mb-3">
+                <summary>Stock help</summary>
+                <p class="mt-2 mb-0">Use earliest expiry first; otherwise, oldest delivery first. Expired stock and batches missing required dates are blocked. Critical levels use usable stock.</p>
+            </details>
             <!-- Inventory Items Table -->
             <div class="card border-0 shadow-sm bg-transparent shadow-none">
                 <div class="card-body p-0">
@@ -107,12 +110,12 @@
                                         <x-sortable-th column="name">Item</x-sortable-th>
 
                                         <th>Category</th>
-                                        <th>Use first · FEFO / FIFO</th>
+                                        <th>Use first</th>
                                         <x-sortable-th column="stock">Stock</x-sortable-th>
-	                                        <th>Critical / Reorder Point</th>
+	                                        <th>Stock levels</th>
                                         <x-sortable-th column="price">Price</x-sortable-th>
                                         <th>Status</th>
-                                        <th>Batch Expiry</th>
+                                        <th>Expiry</th>
                                         <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
@@ -134,7 +137,7 @@
                                             </td>
 
                                             <td data-label="Category">{{ $item->category->name ?? 'N/A' }}</td>
-                                            <td data-label="Use first · FEFO / FIFO">
+                                            <td data-label="Use first">
                                                 <div style="min-width: 180px; max-width: 240px;">
                                                 @php
                                                     $usesFefo = $item->has_expiry || $item->batches->contains(fn ($batch) => $batch->stock > 0 && $batch->expiry_date);
@@ -144,7 +147,7 @@
                                                     $firstDelivery = $firstBatch?->deliveries->where('remaining_quantity', '>', 0)->sortBy(fn ($delivery) => [$delivery->received_on->toDateString(), $delivery->id])->first();
                                                 @endphp
                                                 @if($item->usable_stock <= 0)
-                                                    <span class="text-muted">No usable stock to issue</span>
+                                                    <span class="text-muted">No usable stock</span>
                                                 @elseif($firstBatch)
                                                     <div class="fw-semibold"><a href="{{ route('inventory.batches.show', $firstBatch) }}">{{ $firstBatch->display_name }}</a> · {{ $usesFefo ? 'FEFO' : 'FIFO' }}</div>
                                                     <div class="small">{{ $firstBatch->stock }} {{ $item->unit }} on hand</div>
@@ -172,12 +175,12 @@
                                                 {{ $item->stock }} {{ $item->unit }} on hand<div class="small">{{ $item->usable_stock }} usable · {{ $item->available_stock }} available</div><div class="small text-muted">{{ $item->reserved_quantity }} reserved · {{ $item->expired_stock }} expired · {{ $item->quarantined_stock }} quarantined</div>
                                                 @if($item->isLowStock())
                                                     <span class="badge rounded-pill status-badge status-badge--danger ms-2">
-                                                        Critical / Low
+                                                        Low stock
                                                     </span>
                                                 @endif
                                             </td>
-	                                            <td data-label="Critical / Reorder">
-	                                                <div class="small">Critical / low: {{ $item->min_stock }} {{ $item->unit }}</div>
+	                                            <td data-label="Stock levels">
+	                                                <div class="small">Critical: {{ $item->min_stock }} {{ $item->unit }}</div>
 	                                                <div class="small text-muted">Reorder: {{ $item->getReorderPoint() }} {{ $item->unit }}</div>
 	                                            </td>
                                             <td data-label="Price">{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
@@ -235,12 +238,12 @@
                     @else
                         <div class="text-center py-5">
                             <i data-lucide="package-search" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
-                            <h5 class="mb-2">No inventory items found</h5>
+                            <h5 class="mb-2">No items found</h5>
                             <p class="text-muted mb-3">
                                 @if(request()->hasAny(['search', 'category', 'status']))
-                                    Try adjusting your search or filter criteria.
+                                    Try different filters.
                                 @else
-                                    Get started by adding your first inventory item.
+                                    Add your first item.
                                 @endif
                             </p>
                             @if(!request()->hasAny(['search', 'category', 'status']))

@@ -1,8 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="fw-bold mb-1">Critical / Low Stock Items</h2>
-            <p class="text-muted mb-0">Items are flagged when usable stock reaches their own critical / low stock threshold. Expired and quarantined quantities are excluded.</p>
+            <h2 class="fw-bold mb-1">Low Stock</h2>
         </div>
     </x-slot>
 
@@ -17,7 +16,7 @@
                                     <th>Item</th>
                                     <th>Category</th>
 	                                    <th>Usable / On Hand</th>
-	                                    <th>Critical / Low Stock Threshold</th>
+	                                    <th>Critical level</th>
 	                                    <th>Reorder Point</th>
 	                                    <th class="text-end">Actions</th>
                                 </tr>
@@ -40,8 +39,7 @@
                     </div>
                 @else
                     <div class="text-center py-5">
-                        <h5 class="mb-2">No critical / low stock items</h5>
-                        <p class="text-muted mb-3">Inventory levels are healthy across all categories.</p>
+                        <h5 class="mb-2">Stock levels are healthy</h5>
                         <a href="{{ route('inventory.index') }}" class="btn btn-cmu">View Inventory</a>
                     </div>
                 @endif
@@ -52,8 +50,8 @@
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
                     <div>
-                        <h5 class="fw-bold mb-1">Resource Thresholds</h5>
-                        <p class="text-muted small mb-0">Customize the critical / low stock threshold for each resource's usable balance.</p>
+                        <h5 class="fw-bold mb-1">Critical levels</h5>
+                        <p class="text-muted small mb-0">Alerts use usable stock.</p>
                     </div>
                 </div>
 
@@ -61,10 +59,10 @@
                     <table class="table align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Resource</th>
+                                <th>Item</th>
                                 <th>Category</th>
 	                                <th>Usable / On Hand</th>
-	                                <th style="width: 260px;">Critical / Low Stock Threshold</th>
+	                                <th style="width: 260px;">Critical level</th>
 	                                <th>Reorder Point</th>
 	                                <th>Status</th>
                             </tr>

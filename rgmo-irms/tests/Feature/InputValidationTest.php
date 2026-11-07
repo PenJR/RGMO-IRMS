@@ -193,6 +193,6 @@ class InputValidationTest extends TestCase
     {
         $this->actingAs($this->admin())->from(route('inventory.create'))->post(route('inventory.store'), [])
             ->assertRedirect(route('inventory.create'))->assertSessionHasErrors('name');
-        $this->get(route('inventory.create'))->assertOk()->assertSee('Please correct the following entries:');
+        $this->get(route('inventory.create'))->assertOk()->assertSee('Check these fields:');
     }
 }

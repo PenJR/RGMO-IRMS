@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div>
             <h2 class="fw-bold mb-1">Edit User</h2>
-            <p class="text-muted mb-0">Update account details for {{ $user->name }}.</p>
+            <p class="text-muted mb-0">{{ $user->name }}</p>
         </div>
     </x-slot>
 

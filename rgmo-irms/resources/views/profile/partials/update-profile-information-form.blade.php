@@ -1,12 +1,8 @@
 <section>
     <header class="mb-4">
         <h3 class="h5 fw-bold mb-1">
-            {{ __('Profile Information') }}
+            {{ __('Account Details') }}
         </h3>
-
-        <p class="text-muted small mb-0">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
     </header>
 
     <form method="post" action="{{ route('profile.update') }}" class="row g-3">
@@ -22,7 +18,7 @@
         </div>
 
         <div class="col-md-6">
-            <label for="email" class="form-label fw-semibold small">{{ __('Email Address') }}</label>
+            <label for="email" class="form-label fw-semibold small">{{ __('Email') }}</label>
             <input id="email" name="email" type="email" class="form-control" value="{{ old('email', $user->email) }}" required autocomplete="username" maxlength="255" />
             @if($errors->get('email'))
                 <div class="text-danger small mt-1">{{ $errors->first('email') }}</div>

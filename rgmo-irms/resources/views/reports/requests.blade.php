@@ -2,7 +2,6 @@
     <x-slot name="header">
         <div>
             <h2 class="fw-bold mb-1">Request Report</h2>
-            <p class="text-muted mb-0">Analyze historical request activity and statuses.</p>
         </div>
     </x-slot>
 
@@ -43,8 +42,8 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="fw-bold mb-0">Request Volume Over Time</h5>
-                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill small fw-bold">Active Filter Applied</span>
+                            <h5 class="fw-bold mb-0">Request Trends</h5>
+                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill small fw-bold">Filtered</span>
                         </div>
                         <canvas id="requestsTrendChart" style="max-height: 250px;"></canvas>
                     </div>
@@ -81,8 +80,8 @@
                     </div>
                 @else
                     <div class="text-center py-5">
-                        <h5 class="mb-2">No request report entries found</h5>
-                        <p class="text-muted">Try selecting a different date range or status.</p>
+                        <h5 class="mb-2">No requests found</h5>
+                        <p class="text-muted">Try different dates or status.</p>
                     </div>
                 @endif
             </div>

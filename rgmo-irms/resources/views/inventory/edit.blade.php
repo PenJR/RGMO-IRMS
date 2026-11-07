@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div>
             <div>
-                <h2 class="fw-bold mb-1">Edit Inventory Item</h2>
+                <h2 class="fw-bold mb-1">Edit Item</h2>
                 <p class="text-muted mb-0">{{ $item->name }}</p>
             </div>
         </div>
@@ -18,9 +18,9 @@
 
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <label class="form-label">Resource Type</label>
+                            <label class="form-label">Category</label>
                             <input class="form-control" value="{{ $item->category?->name }}" readonly aria-describedby="type-locked-help">
-                            <div class="form-text" id="type-locked-help">Resource type is locked after it is set.</div>
+                            <div class="form-text" id="type-locked-help">Locked after saving.</div>
                             @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
@@ -41,8 +41,8 @@
                         <div class="col-md-3">
                             <label class="form-label">Current Stock</label>
                             <input value="{{ $item->stock }} {{ $item->unit }}" class="form-control" readonly aria-describedby="stock-adjustment-help">
-                            <div class="form-text" id="stock-adjustment-help">Stock balances change through recorded movements.
-                                @can('adjustStock', $item)<a href="{{ route('inventory.show', $item) }}#stock-adjustment">Record an administrator stock adjustment</a>.@endcan
+                            <div class="form-text" id="stock-adjustment-help">
+                                @can('adjustStock', $item)<a href="{{ route('inventory.show', $item) }}#stock-adjustment">Adjust stock</a>@else Read only @endcan
                             </div>
                             @error('stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
@@ -50,14 +50,14 @@
                         <div class="col-md-3">
                             <label class="form-label">Unit</label>
                             <input class="form-control" value="{{ $item->unit }}" readonly aria-describedby="unit-locked-help">
-                            <div class="form-text" id="unit-locked-help">Unit is locked after it is set.</div>
+                            <div class="form-text" id="unit-locked-help">Locked after saving.</div>
                             @error('unit')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Critical / Low Stock Threshold</label>
+                            <label class="form-label">Critical level</label>
                             <input type="number" name="min_stock" value="{{ old('min_stock', $item->min_stock) }}" min="0" class="form-control @error('min_stock') is-invalid @enderror" required max="2147483647" step="1">
-                            <div class="form-text">Flag this resource when usable stock is at or below this value. Expired and quarantined stock is excluded.</div>
+                            <div class="form-text">Alert when usable stock reaches this level.</div>
                             @error('min_stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
@@ -71,7 +71,7 @@
                             <div class="form-check form-switch">
                                 <input type="hidden" name="track_batches" value="0">
                                 <input class="form-check-input" type="checkbox" role="switch" id="track_batches" name="track_batches" value="1" {{ old('track_batches', $item->track_batches) ? 'checked' : '' }}>
-                                <label class="form-check-label fw-semibold" for="track_batches">Track batch / lot numbers</label>
+                                <label class="form-check-label fw-semibold" for="track_batches">Track batches</label>
                             </div>
                             @error('track_batches')<div class="text-danger small">{{ $message }}</div>@enderror
                         </div>
@@ -86,16 +86,14 @@
                             <div class="form-check form-switch">
                                 <input type="hidden" name="has_expiry" value="0">
                                 <input class="form-check-input" type="checkbox" role="switch" id="has_expiry" name="has_expiry" value="1" {{ old('has_expiry', $item->has_expiry) ? 'checked' : '' }}>
-                                <label class="form-check-label fw-semibold" for="has_expiry">This item expires</label>
+                                <label class="form-check-label fw-semibold" for="has_expiry">Has expiry</label>
                             </div>
-                            <div class="form-text">Expiry tracking also enables batch tracking.</div>
                             @error('has_expiry')<div class="text-danger small">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="col-12">
                             <div class="alert alert-info mb-0">
-                                Expiry dates and quantities belong to individual batches. <a href="{{ route('inventory.show', $item) }}#inventory-batches">View this item's batches</a> or <a href="{{ route('inventory.batches.index', ['item_id' => $item->id]) }}">open batch monitoring</a> to review them.
-                                Existing batch dates are kept when this item profile is saved.
+                                <a href="{{ route('inventory.show', $item) }}#inventory-batches">View batches</a>
                             </div>
                         </div>
                     </div>

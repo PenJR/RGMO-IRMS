@@ -2,7 +2,6 @@
     <x-slot name="header">
         <div>
             <h2 class="fw-bold mb-1">Edit Project</h2>
-            <p class="text-muted mb-0">Update project details and manager assignments.</p>
         </div>
     </x-slot>
 

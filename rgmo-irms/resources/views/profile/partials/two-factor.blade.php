@@ -5,7 +5,7 @@
         </h3>
 
         <p class="text-muted small mb-0">
-            {{ __('Add an extra layer of security to your account using an authenticator app (Google Authenticator, Authy, etc.).') }}
+            {{ __('Protect your account with an authenticator app.') }}
         </p>
     </header>
 
@@ -13,7 +13,7 @@
         @if(auth()->user()->two_factor_enabled)
             <div class="alert alert-success d-flex align-items-center mb-4">
                 <i data-lucide="shield-check" class="me-3" style="width: 24px"></i>
-                <div>Two-factor authentication is currently <strong>enabled</strong>.</div>
+                <div>Two-factor authentication: <strong>enabled</strong>.</div>
             </div>
 
             <form id="disable-2fa-form" method="POST" action="{{ route('2fa.disable') }}" class="mt-4">
@@ -31,7 +31,7 @@
         @else
             <div class="alert alert-warning d-flex align-items-center mb-4">
                 <i data-lucide="shield-alert" class="me-3" style="width: 24px"></i>
-                <div>Two-factor authentication is currently <strong>disabled</strong>.</div>
+                <div>Two-factor authentication: <strong>disabled</strong>.</div>
             </div>
             
             <div class="row g-2 align-items-end">
@@ -62,7 +62,7 @@
                     </div>
                     <button id="reveal-2fa-secret" type="button" class="btn btn-sm btn-outline-secondary">Reveal key</button>
                 </div>
-                <p class="small text-muted mb-3">Scan the QR code with your authenticator app, then enter the code below to confirm setup.</p>
+                <p class="small text-muted mb-3">Scan the QR code with your authenticator app, then enter its code.</p>
                 <form id="confirm-2fa-form" class="row g-2">
                     @csrf
                     <div class="col-md-8">

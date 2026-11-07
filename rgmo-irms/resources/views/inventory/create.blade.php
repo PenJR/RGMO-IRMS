@@ -2,8 +2,7 @@
     <x-slot name="header">
         <div>
             <div>
-                <h2 class="fw-bold mb-1">Add Inventory Item</h2>
-                <p class="text-muted mb-0 small">Create a new stock record for the university.</p>
+                <h2 class="fw-bold mb-1">Add Item</h2>
             </div>
         </div>
     </x-slot>
@@ -19,51 +18,27 @@
                 <div class="card border-0 shadow-sm form-glass overflow-hidden">
                     <div class="card-body p-0">
                         <div class="row g-0">
-                            <!-- Left: Form Info -->
-                            <div class="col-md-4 d-none d-md-block bg-success bg-opacity-10 p-5">
-                                <div class="mb-4">
-                                    <div class="rounded-pill bg-success text-white d-inline-flex p-3 mb-3">
-                                        <i data-lucide="package-plus" style="width: 24px; height: 24px;"></i>
-                                    </div>
-                                    <h4 class="fw-bold text-dark">Item Details</h4>
-                                    <p class="text-muted small">Enter the name and category to properly categorize the new resource.</p>
-                                </div>
-                                <div class="mt-5 pt-3">
-                                    <h6 class="fw-bold text-uppercase small text-muted mb-3" style="letter-spacing: 0.05em">Inventory Tips</h6>
-                                    <ul class="list-unstyled small text-muted">
-                                        <li class="mb-3 d-flex gap-2">
-                                            <i data-lucide="info" class="text-success" style="width:14px"></i> 
-                                            <span>Use clear item names and descriptions for easy tracking.</span>
-                                        </li>
-                                        <li class="mb-3 d-flex gap-2">
-                                            <i data-lucide="alert-circle" class="text-success" style="width:14px"></i> 
-                                            <span>Set a custom low stock threshold for each resource.</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-
                             <!-- Right: Form -->
-                            <div class="col-md-8 p-4 p-md-5">
+                            <div class="col-12 p-4 p-md-5">
                                 <form action="{{ route('inventory.store') }}" method="POST">
                                     @csrf
 
                                     <div class="row g-4">
                                         <div class="col-md-6">
-                                            <label class="form-label" for="category_id">Resource Type</label>
+                                            <label class="form-label" for="category_id">Category</label>
                                             <select id="category_id" name="category_id" class="form-select @error('category_id') is-invalid @enderror">
-                                                <option value="">Add a new resource type…</option>
+                                                <option value="">New category…</option>
                                                 @foreach($categories as $category)
                                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                                                 @endforeach
                                             </select>
                                             @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                             <div id="new-type-group" class="mt-3">
-                                                <label class="form-label" for="category_name">New Resource Type</label>
+                                                <label class="form-label" for="category_name">New category</label>
                                                 <input id="category_name" name="category_name" value="{{ old('category_name') }}" maxlength="255" placeholder="e.g., Animal Feed" class="form-control @error('category_name') is-invalid @enderror">
                                                 @error('category_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                             </div>
-                                            <div class="form-text">Choose an existing type or add your own. Type and unit cannot be changed after saving.</div>
+                                            <div class="form-text">Category and unit lock after saving.</div>
                                         </div>
 
                                         <div class="col-md-6">
@@ -75,7 +50,7 @@
 
 
                                         <div class="col-md-6">
-                                            <label class="form-label">Unit of Measure</label>
+                                            <label class="form-label">Unit</label>
                                             <select name="unit" class="form-select @error('unit') is-invalid @enderror" required>
                                                 <option value="">Choose unit</option>
                                                 @foreach($units as $u)
@@ -86,20 +61,20 @@
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Initial Stock</label>
+                                            <label class="form-label">Opening stock</label>
                                             <input type="number" name="stock" value="{{ old('stock', 0) }}" class="form-control @error('stock') is-invalid @enderror" required min="0" max="2147483647" step="1">
                                             @error('stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Critical / Low Stock Threshold</label>
+                                            <label class="form-label">Critical level</label>
                                             <input type="number" name="min_stock" value="{{ old('min_stock', 5) }}" class="form-control @error('min_stock') is-invalid @enderror" required min="0" max="2147483647" step="1">
-                                            <div class="form-text">Flag this resource when usable stock is at or below this value. Expired and quarantined stock is excluded.</div>
+                                            <div class="form-text">Alert when usable stock reaches this level.</div>
                                             @error('min_stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Price (P)</label>
+                                            <label class="form-label">Unit price ({{ $currencyCode }})</label>
                                             <input type="number" name="price" value="{{ old('price', 0) }}" step="0.01" class="form-control @error('price') is-invalid @enderror" required min="0" max="9999999999.99">
                                             @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
@@ -114,9 +89,8 @@
                                             <div class="form-check form-switch">
                                                 <input type="hidden" name="track_batches" value="0">
                                                 <input class="form-check-input" type="checkbox" role="switch" id="track_batches" name="track_batches" value="1" {{ old('track_batches') ? 'checked' : '' }}>
-                                                <label class="form-check-label fw-semibold" for="track_batches">Track batch / lot numbers</label>
+                                                <label class="form-check-label fw-semibold" for="track_batches">Track batches</label>
                                             </div>
-                                            <div class="form-text">Keep separate balances for each received batch.</div>
                                             @error('track_batches')<div class="text-danger small">{{ $message }}</div>@enderror
                                         </div>
 
@@ -124,21 +98,20 @@
                                             <div class="form-check form-switch">
                                                 <input type="hidden" name="has_expiry" value="0">
                                                 <input class="form-check-input" type="checkbox" role="switch" id="has_expiry" name="has_expiry" value="1" {{ old('has_expiry') ? 'checked' : '' }}>
-                                                <label class="form-check-label fw-semibold" for="has_expiry">This item expires</label>
+                                                <label class="form-check-label fw-semibold" for="has_expiry">Has expiry</label>
                                             </div>
-                                            <div class="form-text">Expiry tracking also enables batch tracking. Issues use the earliest valid expiry first.</div>
+                                            <div class="form-text">Requires a batch and expiry date.</div>
                                             @error('has_expiry')<div class="text-danger small">{{ $message }}</div>@enderror
                                         </div>
 
                                         <div class="col-md-6" id="opening_batch_group">
-                                            <label class="form-label" for="batch_number">Opening Batch / Lot Number</label>
+                                            <label class="form-label" for="batch_number">Batch number</label>
                                             <input type="text" name="batch_number" id="batch_number" maxlength="100" value="{{ old('batch_number') }}" class="form-control @error('batch_number') is-invalid @enderror">
-                                            <div class="form-text">Required when a tracked item has initial stock. Enter later batches when receiving deliveries.</div>
                                             @error('batch_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
 
                                         <div class="col-md-6" id="expiry_date_group">
-                                            <label class="form-label" for="expiry_date">Opening Batch Expiry Date</label>
+                                            <label class="form-label" for="expiry_date">Expiry date</label>
                                             <input type="date" name="expiry_date" id="expiry_date" value="{{ old('expiry_date') }}" class="form-control @error('expiry_date') is-invalid @enderror">
                                             @error('expiry_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>

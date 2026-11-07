@@ -2,7 +2,6 @@
     <x-slot name="header">
         <div>
             <h2 class="fw-bold mb-1">Inventory Report</h2>
-            <p class="text-muted mb-0">View current inventory levels and export the report.</p>
         </div>
     </x-slot>
 
@@ -77,8 +76,8 @@
                     </div>
                 @else
                     <div class="text-center py-5">
-                        <h5 class="mb-2">No inventory data available</h5>
-                        <p class="text-muted">Try a different filter or return later.</p>
+                        <h5 class="mb-2">No inventory data found</h5>
+                        <p class="text-muted">Try different filters.</p>
                     </div>
                 @endif
             </div>

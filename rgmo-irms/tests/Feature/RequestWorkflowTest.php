@@ -248,11 +248,11 @@ class RequestWorkflowTest extends TestCase
         $this->actingAs($staff)
             ->get(route('requests.show', $request))
             ->assertOk()
-            ->assertDontSee('Print Withdrawal Slip')
+            ->assertDontSee('Print Slip')
             ->assertDontSee('Edit &amp; Download Receipt', false)
-            ->assertSee('Request status: Pending')
-            ->assertSee('Receipt printing is available only while the request status is Approved.')
-            ->assertSee('You will receive a notification when its status changes.');
+            ->assertSee('Status: Pending')
+            ->assertSee('Print receipts when approved.')
+            ->assertSee('You’ll be notified of status changes.');
 
         $this->get(route('requests.withdrawal-slip', $request))
             ->assertForbidden();
@@ -267,7 +267,7 @@ class RequestWorkflowTest extends TestCase
         $this->actingAs($staff)
             ->get(route('requests.show', $request))
             ->assertOk()
-            ->assertDontSee('Print Withdrawal Slip')
+            ->assertDontSee('Print Slip')
             ->assertDontSee('Edit &amp; Download Receipt', false);
 
         $this->get(route('requests.withdrawal-slip', $request))->assertForbidden();
@@ -345,7 +345,7 @@ class RequestWorkflowTest extends TestCase
             ->get(route('dashboard.staff'))
             ->assertOk()
             ->assertSee('My Dashboard')
-            ->assertSee('Request overview')
+            ->assertSee('My activity')
             ->assertSee('My irrigation supplies')
             ->assertSee('dashboard-kpi--interactive', false)
             ->assertDontSee('Another requester supplies');

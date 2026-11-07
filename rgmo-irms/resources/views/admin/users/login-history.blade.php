@@ -3,7 +3,7 @@
         <div>
             <div>
                 <h2 class="fw-bold mb-1">Login History</h2>
-                <p class="text-muted mb-0">View recent login events for {{ $user->name }}.</p>
+                <p class="text-muted mb-0">{{ $user->name }}</p>
             </div>
         </div>
     </x-slot>
@@ -49,8 +49,7 @@
                     </div>
                 @else
                     <div class="text-center py-5">
-                        <h5 class="mb-2">No login history available</h5>
-                        <p class="text-muted">This user has no recent recorded login events.</p>
+                        <h5 class="mb-2">No login history yet</h5>
                     </div>
                 @endif
             </div>

@@ -2,7 +2,6 @@
     <x-slot name="header">
         <div>
             <h2 class="fw-bold mb-1">Audit Trail</h2>
-            <p class="text-muted mb-0">Review system activity and audit logs.</p>
         </div>
     </x-slot>
 
@@ -67,7 +66,7 @@
                 @else
                     <div class="text-center py-5">
                         <h5 class="mb-2">No audit entries found</h5>
-                        <p class="text-muted">Use the filters to narrow the audit trail results.</p>
+                        <p class="text-muted">Try different filters.</p>
                     </div>
                 @endif
                 {{ $report->withQueryString()->links() }}

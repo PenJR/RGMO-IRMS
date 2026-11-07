@@ -1,7 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="fw-bold mb-1">Account Profile</h2>
-        <p class="text-muted mb-0 small">Manage your account settings, security, and preferences.</p>
+        <h2 class="fw-bold mb-1">Profile</h2>
     </x-slot>
 
     <div class="container-fluid py-4">
@@ -21,9 +20,9 @@
                             @include('profile.partials.update-password-form')
                         @else
                             <section>
-                                <h3 class="h5 fw-bold mb-1">Password Managed by Administrator</h3>
+                                <h3 class="h5 fw-bold mb-1">Password</h3>
                                 <p class="text-muted small mb-0">
-                                    Only an administrator can change account passwords. Contact an administrator if you need a new password.
+                                    Contact an administrator to change your password.
                                 </p>
                             </section>
                         @endif
@@ -44,8 +43,7 @@
                                     <i data-lucide="panel-left"></i>
                                 </div>
                                 <div>
-                                    <h3 class="h5 fw-bold mb-1">Navigation Preferences</h3>
-                                    <p class="text-muted small mb-0">Restore the original module order in your sidebar.</p>
+                                    <h3 class="h5 fw-bold mb-1">Sidebar Order</h3>
                                     @if(session('status') === 'sidebar-order-reset')
                                         <p class="small text-success fw-semibold mt-2 mb-0" role="status">Default sidebar order restored.</p>
                                     @endif
@@ -56,7 +54,7 @@
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" @disabled(empty($user->sidebar_order))>
                                     <i data-lucide="rotate-ccw" style="width: 16px; height: 16px;" aria-hidden="true"></i>
-                                    Reset Order
+                                    Reset to Default
                                 </button>
                             </form>
                         </div>

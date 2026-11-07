@@ -2,7 +2,6 @@
     <x-slot name="header">
         <div>
             <h2 class="fw-bold mb-1">Edit Request</h2>
-            <p class="text-muted mb-0">Update the request details before final approval.</p>
         </div>
     </x-slot>
 
@@ -15,9 +14,9 @@
 
                     <div class="row g-4">
                         <div class="col-lg-12">
-                            <label for="project-id" class="form-label">Current Project</label>
+                            <label for="project-id" class="form-label">Project</label>
                             <select id="project-id" name="project_id" class="form-select @error('project_id') is-invalid @enderror" required>
-                                <option value="">Select a project...</option>
+                                <option value="">Select a project</option>
                                 @foreach($projects as $project)
                                     <option value="{{ $project->id }}" @selected((string) old('project_id', $request->project_id) === (string) $project->id)>
                                         {{ $project->name }} ({{ $project->code }})
@@ -41,13 +40,13 @@
                     </div>
 
                     <div class="mt-5">
-                        <h5 class="mb-3">Requested Items</h5>
+                        <h5 class="mb-3">Items</h5>
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Item</th>
-                                        <th>Requested Quantity</th>
+                                        <th>Quantity</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -66,7 +65,7 @@
 
                     <div class="mt-5 d-flex gap-2">
                         <a href="{{ route('requests.show', ['request' => $request->id]) }}" class="btn btn-outline-secondary">Back</a>
-                        <button type="submit" class="btn btn-cmu">Save Changes</button>
+                        <button type="submit" class="btn btn-cmu">Save</button>
                     </div>
                 </form>
             </div>

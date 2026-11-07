@@ -2,7 +2,6 @@
     <x-slot name="header">
         <div>
             <h2 class="fw-bold mb-1">Pending Requests</h2>
-            <p class="text-muted mb-0">Review requests awaiting your stage in the approval workflow.</p>
         </div>
     </x-slot>
 
@@ -16,7 +15,7 @@
                         <table class="table table-modern mobile-card-table align-middle" data-enhanced-table data-page-size="10" data-table-label="pending requests" data-search-placeholder="Search pending requests…">
                             <thead>
                                 <tr>
-                                    <th>Request ID</th>
+                                    <th>Request</th>
                                     <th>Requester</th>
 	                                    <th>Purpose</th>
 	                                    <th>Needed Date</th>
@@ -52,8 +51,7 @@
                 @else
                     <div class="text-center py-5">
                         <h5 class="mb-2">No pending requests</h5>
-                        <p class="text-muted mb-3">All active requests have been reviewed.</p>
-                        <a href="{{ route('requests.index') }}" class="btn btn-cmu">Back to Requests</a>
+                        <a href="{{ route('requests.index') }}" class="btn btn-cmu">Requests</a>
                     </div>
                 @endif
             </div>

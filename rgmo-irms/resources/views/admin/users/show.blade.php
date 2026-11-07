@@ -2,7 +2,6 @@
     <x-slot name="header">
         <div>
             <h2 class="fw-bold mb-1">{{ $user->name }}</h2>
-            <p class="text-muted mb-0">Account details and activity history.</p>
         </div>
     </x-slot>
 
@@ -15,7 +14,7 @@
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
-                        <h5 class="fw-semibold mb-3">User Profile</h5>
+                        <h5 class="fw-semibold mb-3">Account</h5>
                         <p class="mb-2"><strong>Email:</strong> {{ $user->email }}</p>
                         <p class="mb-2"><strong>Role:</strong> {{ ucfirst(str_replace('_', ' ', $user->role)) }}</p>
                         <p class="mb-2"><strong>Status:</strong> {{ ucfirst($user->status) }}</p>
@@ -27,7 +26,7 @@
                     <div class="card-body p-4">
                         <h5 class="fw-semibold mb-1">Change Password</h5>
                         <p class="text-muted small mb-4">
-                            Set a new password for this account. Other signed-in sessions for this user will be revoked.
+                            Changing the password signs this user out of other sessions.
                         </p>
 
                         <form method="POST" action="{{ route('admin.users.reset-password', $user) }}">
@@ -90,7 +89,7 @@
                             </div>
                         @else
                             <div class="text-center py-5">
-                                <p class="text-muted mb-0">No recent activity found for this user.</p>
+                                <p class="text-muted mb-0">No recent activity.</p>
                             </div>
                         @endif
                     </div>
@@ -124,7 +123,7 @@
                             </div>
                         @else
                             <div class="text-center py-5">
-                                <p class="text-muted mb-0">No audit log entries are available.</p>
+                                <p class="text-muted mb-0">No audit logs yet.</p>
                             </div>
                         @endif
                     </div>

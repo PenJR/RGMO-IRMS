@@ -1,8 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="fw-bold mb-1">{{ ($releaseQueue ?? false) ? 'Withdrawals' : ($canReviewAllRequests ? 'Resource Requests' : 'My Requests') }}</h2>
-            <p class="text-muted mb-0">{{ ($releaseQueue ?? false) ? 'Release approved requests and view completed withdrawals.' : ($canReviewAllRequests ? 'Review all submitted resource requests across the system.' : 'Track the status and needed dates of your submitted requests.') }}</p>
+            <h2 class="fw-bold mb-1">{{ ($releaseQueue ?? false) ? 'Withdrawals' : ($canReviewAllRequests ? 'Requests' : 'My Requests') }}</h2>
         </div>
     </x-slot>
 
@@ -11,7 +10,7 @@
             <x-breadcrumb :items="['Requests' => route('requests.index')]" compact />
             <div class="d-flex flex-wrap gap-2">
             @can('review', App\Models\ResourceRequest::class)
-                <a href="{{ route('requests.pending') }}" class="btn btn-outline-secondary">Pending List</a>
+                <a href="{{ route('requests.pending') }}" class="btn btn-outline-secondary">Pending</a>
             @endcan
             @can('create', App\Models\ResourceRequest::class)
                 <a href="{{ route('requests.create') }}" class="btn btn-cmu">New Request</a>
@@ -65,7 +64,7 @@
                         <table class="table table-modern mobile-card-table align-middle" data-sticky-table>
                             <thead>
                                 <tr>
-                                    <x-sortable-th column="id">Request ID</x-sortable-th>
+                                    <x-sortable-th column="id">Request</x-sortable-th>
                                     <th>Requester</th>
                                     <th>Project</th>
                                     <x-sortable-th column="status">Status</x-sortable-th>
@@ -83,7 +82,7 @@
                                                 <div class="fw-semibold">{{ $request->project->name }}</div>
                                                 <div class="small text-muted">{{ $request->project->code }}</div>
                                             @else
-                                                <span class="text-muted">Legacy / unassigned</span>
+                                                <span class="text-muted">Unassigned</span>
                                             @endif
                                         </td>
                                         <td data-label="Status">
@@ -113,9 +112,8 @@
                 @else
                     <div class="text-center py-5">
                         <h5 class="mb-2">No requests found</h5>
-                        <p class="text-muted mb-3">Adjust your filters to locate the request you are looking for.</p>
                         @can('create', App\Models\ResourceRequest::class)
-                        <a href="{{ route('requests.create') }}" class="btn btn-cmu">Create a Request</a>
+                        <a href="{{ route('requests.create') }}" class="btn btn-cmu">New Request</a>
                         @endcan
                     </div>
                 @endif

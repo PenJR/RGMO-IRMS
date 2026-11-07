@@ -2,7 +2,6 @@
     <x-slot name="header">
         <div>
             <h2 class="h5 fw-bold mb-0">My Dashboard</h2>
-            <p class="text-muted mb-0 small">Track your resource requests and take the next action.</p>
         </div>
     </x-slot>
 
@@ -12,8 +11,8 @@
                 <p class="dashboard-welcome__eyebrow mb-2">{{ now()->format('l, F j') }}</p>
                 <h1 id="staffDashboardWelcomeTitle">Welcome back, {{ Str::before(Auth::user()->name, ' ') }}.</h1>
                 <p class="mb-0">
-                    You have <strong>{{ $stats['pending_requests'] }} pending {{ Str::plural('request', $stats['pending_requests']) }}</strong>
-                    and <strong>{{ $stats['approved_requests'] }} approved {{ Str::plural('request', $stats['approved_requests']) }}</strong>.
+                    <strong>{{ $stats['pending_requests'] }} pending {{ Str::plural('request', $stats['pending_requests']) }}</strong>
+                    · <strong>{{ $stats['approved_requests'] }} approved {{ Str::plural('request', $stats['approved_requests']) }}</strong>
                 </p>
             </div>
             <div class="dashboard-welcome__actions" aria-label="Quick actions">
@@ -23,15 +22,14 @@
                 </a>
                 <a href="{{ route('requests.index') }}" class="btn btn-light dashboard-action-btn">
                     <i data-lucide="clipboard-list" aria-hidden="true"></i>
-                    View my requests
+                    My requests
                 </a>
             </div>
         </section>
 
         <div class="dashboard-section-heading">
             <div>
-                <p class="module-eyebrow mb-1">Request overview</p>
-                <h2>Your activity at a glance</h2>
+                <h2>My activity</h2>
             </div>
             <span>Updated {{ now()->format('g:i A') }}</span>
         </div>
@@ -94,10 +92,9 @@
 
         <div class="dashboard-section-heading dashboard-section-heading--spaced">
             <div>
-                <p class="module-eyebrow mb-1">Recent activity</p>
                 <h2>My latest requests</h2>
             </div>
-            <a href="{{ route('requests.index') }}" class="btn btn-sm btn-outline-success">View all requests</a>
+            <a href="{{ route('requests.index') }}" class="btn btn-sm btn-outline-success">View all</a>
         </div>
 
         <div class="card border-0 dashboard-panel">
@@ -135,7 +132,6 @@
                 <div class="staff-dashboard__empty text-center">
                     <span class="staff-dashboard__empty-icon" aria-hidden="true"><i data-lucide="clipboard-plus"></i></span>
                     <h3>No requests yet</h3>
-                    <p>Create your first resource request and its progress will appear here.</p>
                     <a href="{{ route('requests.create') }}" class="btn btn-cmu">
                         <i data-lucide="plus" aria-hidden="true"></i>
                         Create request

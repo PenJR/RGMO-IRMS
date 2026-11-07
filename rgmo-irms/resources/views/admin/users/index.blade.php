@@ -1,8 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="fw-bold mb-1">User Management</h2>
-            <p class="text-muted mb-0">Manage staff accounts and system access.</p>
+            <h2 class="fw-bold mb-1">Users</h2>
         </div>
     </x-slot>
 
@@ -93,7 +92,6 @@
                 @else
                     <div class="text-center py-5">
                         <h5 class="mb-2">No users found</h5>
-                        <p class="text-muted">Create a new user to begin managing access.</p>
                         <a href="{{ route('admin.users.create') }}" class="btn btn-cmu">Add User</a>
                     </div>
                 @endif

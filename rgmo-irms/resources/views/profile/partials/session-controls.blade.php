@@ -2,7 +2,6 @@
     <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3 mb-4">
         <div>
             <h3 class="h5 fw-bold mb-1" id="session-controls-heading">Cookies &amp; Sessions</h3>
-            <p class="text-muted small mb-0">Review essential cookie protections and browsers signed in to your account.</p>
         </div>
         @if($sessionControls['enabled'] && $sessionControls['sessions']->where('current', false)->isNotEmpty())
             <form method="POST" action="{{ route('profile.sessions.destroy-others') }}">
@@ -22,11 +21,13 @@
         </div>
     @endif
 
-    <div class="row g-3 mb-4">
+    <details class="mb-4">
+        <summary class="small fw-semibold">Help</summary>
+    <div class="row g-3 mt-1">
         <div class="col-12 col-md-4">
             <div class="rounded-3 border bg-light p-3 h-100">
                 <p class="small fw-bold mb-1">Essential cookies only</p>
-                <p class="text-muted small mb-0">Required for sign-in, security, and saved interface preferences.</p>
+                <p class="text-muted small mb-0">For sign-in, security, and saved preferences.</p>
             </div>
         </div>
         <div class="col-12 col-md-4">
@@ -42,9 +43,10 @@
             </div>
         </div>
     </div>
+    </details>
 
     <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
-        <h4 class="h6 fw-bold mb-0">Active browser sessions</h4>
+        <h4 class="h6 fw-bold mb-0">Signed-in browsers</h4>
         <span class="badge bg-light text-dark border">{{ $sessionControls['sessions']->count() }}</span>
     </div>
 
@@ -70,7 +72,7 @@
                         <form method="POST" action="{{ route('profile.sessions.destroy', $browserSession['id']) }}" class="align-self-end align-self-sm-center">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Revoke</button>
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Sign out</button>
                         </form>
                     @endif
                 </div>
@@ -79,6 +81,6 @@
     </div>
 
     @if(! $sessionControls['enabled'])
-        <p class="text-muted small mt-3 mb-0">Individual session revocation is available when SESSION_DRIVER is set to database.</p>
+        <p class="text-muted small mt-3 mb-0">Individual sign-out is unavailable with the current session settings.</p>
     @endif
 </section>

@@ -3,7 +3,6 @@
         <div>
             <div>
                 <h2 class="fw-bold mb-1">Login Logs</h2>
-                <p class="text-muted mb-0">Account sign-in history for admin review and accounting.</p>
             </div>
         </div>
     </x-slot>
@@ -93,7 +92,6 @@
                 @else
                     <div class="text-center py-5">
                         <h5 class="mb-2">No login logs found</h5>
-                        <p class="text-muted mb-0">Login records will appear here after users sign in.</p>
                     </div>
                 @endif
             </div>

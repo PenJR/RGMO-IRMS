@@ -5,7 +5,7 @@
         </h3>
 
         <p class="text-muted small mb-0">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
+            {{ __('Use a long, random password.') }}
         </p>
     </header>
 

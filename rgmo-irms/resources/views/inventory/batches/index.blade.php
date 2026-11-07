@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
-            <div><h2 class="fw-bold mb-1">Batch &amp; expiry monitoring</h2><p class="text-muted mb-0">Review stock by batch, expiry date, and remaining quantity.</p></div>
+            <div><h2 class="fw-bold mb-1">Batches &amp; Expiry</h2></div>
             <a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary">Back to Inventory</a>
         </div>
     </x-slot>
@@ -23,7 +23,7 @@
             </form>
         </div></div>
         <div class="card"><div class="card-body">
-            <p class="small text-muted">Expired batches and batches missing a required expiry date remain on hand and are excluded from available stock. Expiring stock is issued by earliest expiry first.</p>
+            <details class="small text-muted mb-3"><summary>Stock help</summary><p class="mt-2 mb-0">Expired or undated perishables are blocked. Use the earliest expiry first.</p></details>
             <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Item</th><th>Batch</th><th>Expiry date</th><th>On hand</th><th>Status</th><th></th></tr></thead><tbody>
                 @forelse($batches as $batch)
                     @php($status = $batch->getExpiryStatus())
@@ -35,7 +35,7 @@
                         <td><span class="badge {{ $status === 'expired' ? 'bg-danger' : (in_array($status, ['expiring', 'undated']) ? 'bg-warning text-dark' : ($status === 'depleted' ? 'bg-secondary' : 'bg-success')) }}">{{ $status === 'undated' ? 'Expiry date missing' : ucfirst($status) }}</span></td>
                         <td><a href="{{ route('inventory.batches.show', $batch) }}" class="btn btn-sm btn-outline-secondary">View batch</a></td>
                     </tr>
-                @empty<tr><td colspan="6" class="text-center text-muted py-4">No batches match these filters.</td></tr>@endforelse
+                @empty<tr><td colspan="6" class="text-center text-muted py-4">No batches found.</td></tr>@endforelse
             </tbody></table></div>
             {{ $batches->links() }}
         </div></div>

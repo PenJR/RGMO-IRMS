@@ -12,24 +12,23 @@
     @endphp
 
     <x-slot name="header">
-        <h2 class="fw-bold mb-1">Resource Request #RQ-{{ $request->id }}</h2>
-        <p class="text-muted mb-0">Review request details, reservations, and withdrawals.</p>
+        <h2 class="fw-bold mb-1">Request RQ-{{ $request->id }}</h2>
     </x-slot>
 
     <div class="container-fluid py-4">
             <div class="d-flex flex-wrap gap-2 mb-4 d-print-none">
                 @if($request->status === 'approved')
                     <a href="{{ route('requests.withdrawal-slip', $request) }}" class="btn btn-outline-success" target="_blank" rel="noopener">
-                        Print Withdrawal Slip
+                        Print Slip
                     </a>
                     <a href="{{ route('requests.withdrawal-slip', $request) }}" class="btn btn-success" target="_blank" rel="noopener">
                         Edit &amp; Download Receipt
                     </a>
                 @endif
                 @if(auth()->user()->hasPermission('record-utilization') && $request->tracks_utilization && $request->withdrawals->isNotEmpty())
-                    <a href="{{ route('utilization.index') }}" class="btn btn-cmu">Record Utilization</a>
+                    <a href="{{ route('utilization.index') }}" class="btn btn-cmu">Record Use</a>
                 @endif
-                <a href="{{ route('requests.index') }}" class="btn btn-outline-secondary">Back to Requests</a>
+                <a href="{{ route('requests.index') }}" class="btn btn-outline-secondary">Requests</a>
                 @can('update', $request)
                     <a href="{{ route('requests.edit', ['request' => $request->id]) }}" class="btn btn-outline-primary">Edit</a>
                 @endcan
@@ -38,8 +37,8 @@
         @if($request->status !== 'approved' && auth()->id() === $request->user_id)
             <div class="alert alert-info d-flex align-items-start gap-2" role="status">
                 <div>
-                    <strong>Request status: {{ str($request->status)->headline() }}</strong>
-                    <div>@if($request->withdrawals->isNotEmpty())Open a saved withdrawal record below to view or print the quantities issued. Any remaining balance stays reserved.@else Receipt printing is available only while the request status is Approved. You will receive a notification when its status changes.@endif</div>
+                    <strong>Status: {{ str($request->status)->headline() }}</strong>
+                    <div>@if($request->withdrawals->isNotEmpty())View or print saved withdrawals below. Remaining quantities stay reserved.@else Print receipts when approved. You’ll be notified of status changes.@endif</div>
                 </div>
             </div>
         @endif
@@ -52,7 +51,7 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="text-muted">Requested by</span>
+                            <span class="text-muted">Requester</span>
                             <h5 class="mb-0">{{ $request->user->name ?? 'Unknown' }}</h5>
                         </div>
 	                        <span class="badge rounded-pill {{ $statusBadge }}">
@@ -68,11 +67,11 @@
                                         {{ $request->project->name }} ({{ $request->project->code }})
                                     </a>
                                 @else
-                                    <p class="mb-0 text-muted">Legacy request — no project assigned</p>
+                                    <p class="mb-0 text-muted">No project assigned</p>
                                 @endif
                             </div>
                             <div class="col-sm-6">
-                                <p class="text-uppercase text-muted small mb-1">Submission Date</p>
+                                <p class="text-uppercase text-muted small mb-1">Submitted</p>
                                 <p class="mb-0">{{ $request->created_at?->format('M d, Y H:i') }}</p>
                             </div>
                             <div class="col-sm-6 text-sm-end">
@@ -88,20 +87,20 @@
 
                         <div class="mb-4">
                             <h6 class="text-uppercase text-muted small mb-2">Remarks</h6>
-                            <p class="mb-0">{{ $request->remarks ?? 'No remarks provided.' }}</p>
+                            <p class="mb-0">{{ $request->remarks ?? 'None' }}</p>
                         </div>
 
                         <div class="mb-4">
-                            <h6 class="text-uppercase text-muted small mb-2">Approval Workflow</h6>
+                            <h6 class="text-uppercase text-muted small mb-2">Approvals</h6>
                             <div class="table-responsive"><table class="table table-sm mb-0"><tbody>
                                 <tr><th>Storekeeper</th><td>{{ $request->storekeeperChecker?->name ?? 'Awaiting verification' }}</td><td>{{ $request->storekeeper_checked_at?->format('M d, Y H:i') ?? '—' }}</td></tr>
                                 <tr><th>Unit Head</th><td>{{ $request->unitHeadApprover?->name ?? 'Awaiting endorsement' }}</td><td>{{ $request->unit_head_approved_at?->format('M d, Y H:i') ?? '—' }}</td></tr>
-                                <tr><th>RGMO Head</th><td>{{ $request->approver?->name ?? 'Awaiting final approval' }}</td><td>{{ $request->approved_at?->format('M d, Y H:i') ?? '—' }}</td></tr>
+                                <tr><th>RGMO Head</th><td>{{ $request->approver?->name ?? 'Awaiting approval' }}</td><td>{{ $request->approved_at?->format('M d, Y H:i') ?? '—' }}</td></tr>
                             </tbody></table></div>
                         </div>
 
                         <div>
-                            <h6 class="text-uppercase text-muted small mb-3">Requested Items</h6>
+                            <h6 class="text-uppercase text-muted small mb-3">Items</h6>
                             <div class="table-responsive">
                                 <table class="table align-middle mb-0">
                                     <thead class="table-light">
@@ -109,7 +108,7 @@
                                             <th>Item</th>
                                             <th>Requested</th><th>Withdrawn</th><th>Remaining</th>
                                             <th>Unit</th>
-	                                            <th>Available Stock</th>
+	                                            <th>Available</th>
 	                                            <th>Availability</th>
                                         </tr>
                                     </thead>
@@ -124,7 +123,7 @@
 	                                                    @if(! $item->item)
 	                                                        <span class="badge bg-secondary text-white">Missing item</span>
 	                                                    @elseif($request->isReleasable())
-                                                            <span class="badge bg-success">Reserved for this project</span>
+                                                            <span class="badge bg-success">Reserved</span>
                                                         @elseif($item->item->available_stock < $item->remaining_quantity)
 	                                                        <span class="badge bg-danger text-white">Insufficient</span>
 	                                                    @elseif($item->item->isLowStock())
@@ -146,13 +145,13 @@
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Approval Actions</h5>
+                        <h5 class="mb-0">Actions</h5>
                     </div>
                     <div class="card-body p-4">
 	                        @if(in_array($request->status, ['pending', 'pending_unit_head', 'pending_rgmo_head']))
 	                            @unless($canFulfill)
 	                                <div class="alert alert-warning small">
-	                                    This request has insufficient stock for one or more items. Approval is blocked until stock is replenished or the request is edited.
+	                                    Insufficient stock. Restock or edit this request before approval.
 	                                </div>
 	                            @endunless
 
@@ -160,7 +159,7 @@
 	                                <form action="{{ route('requests.verify', $request) }}" method="POST" class="mb-3">
 	                                    @csrf
                                     <div class="mb-3"><label class="form-label">Storekeeper Remarks</label><textarea name="remarks" class="form-control" rows="3" maxlength="1000"></textarea></div>
-	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }}>Verify Stock &amp; Send to Unit Head</button>
+	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }}>Verify Stock</button>
 	                                </form>
 	                            @endcan
 
@@ -168,7 +167,7 @@
 	                                <form action="{{ route('requests.endorse', $request) }}" method="POST" class="mb-3">
 	                                    @csrf
                                     <div class="mb-3"><label class="form-label">Unit Head Remarks</label><textarea name="remarks" class="form-control" rows="3" maxlength="1000"></textarea></div>
-	                                    <button type="submit" class="btn btn-cmu w-100">Endorse &amp; Send to RGMO Head</button>
+	                                    <button type="submit" class="btn btn-cmu w-100">Endorse</button>
 	                                </form>
 	                            @endcan
 
@@ -179,7 +178,7 @@
                                         <label class="form-label">Approval Remarks</label>
                                         <textarea name="remarks" class="form-control" rows="3" maxlength="1000"></textarea>
                                     </div>
-	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }}>Final Approve Request</button>
+	                                    <button type="submit" class="btn btn-cmu w-100" {{ $canFulfill ? '' : 'disabled' }}>Approve</button>
 	                                </form>
 	                            @endcan
 
@@ -187,10 +186,10 @@
                                 <form action="{{ route('requests.reject', $request) }}" method="POST">
                                     @csrf
                                     <div class="mb-3">
-                                        <label class="form-label">Rejection Notes</label>
+                                        <label class="form-label">Rejection Reason</label>
                                         <textarea name="remarks" class="form-control" rows="3" required maxlength="1000"></textarea>
                                     </div>
-	                                    <button type="submit" class="btn btn-outline-danger w-100">Reject Request</button>
+	                                    <button type="submit" class="btn btn-outline-danger w-100">Reject</button>
 	                                </form>
 	                            @endcan
 	
@@ -210,33 +209,33 @@
 	                            @can('fulfill', $request)
 	                                @unless($canFulfill)
 	                                    <div class="alert alert-warning small">
-	                                        This request was approved, but current stock is no longer enough to fulfill all items.
+	                                        Current stock cannot cover all approved items.
 	                                    </div>
 	                                @endunless
 	                                <form action="{{ route('requests.fulfill', $request) }}" method="POST" data-withdrawal-summary data-project="{{ $request->project?->name }}" data-request="RQ-{{ $request->id }}" data-confirm="Review the resources below before recording this withdrawal. Any remaining quantities stay reserved.">
                                     @csrf
                                     <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">
-                                    <p class="small text-muted">Enter the quantity issued now. Enter 0 for items not collected. The remainder stays reserved.</p>
+                                    <p class="small text-muted">Quantity to release now. 0 = not collected. Remaining quantities stay reserved.</p>
                                     @foreach($request->items as $line)
-                                        <div class="mb-3"><label class="form-label" for="release-{{ $line->id }}">{{ $line->item?->name }} ({{ $line->remaining_quantity }} remaining)</label><input id="release-{{ $line->id }}" name="quantities[{{ $line->id }}]" data-resource-name="{{ $line->item?->name }}" data-resource-unit="{{ $line->item?->unit }}" type="number" class="form-control" min="0" max="{{ $line->remaining_quantity }}" data-allocation-limit="{{ $line->item?->name }}: Withdrawal quantity must be less than or equal to the remaining allocation for this project ({{ $line->remaining_quantity }} {{ $line->item?->unit }} remaining on this request)." value="{{ old('quantities.'.$line->id, '') }}" required></div>
+                                        <div class="mb-3"><label class="form-label" for="release-{{ $line->id }}">{{ $line->item?->name }} ({{ $line->remaining_quantity }} remaining)</label><input id="release-{{ $line->id }}" name="quantities[{{ $line->id }}]" data-resource-name="{{ $line->item?->name }}" data-resource-unit="{{ $line->item?->unit }}" type="number" class="form-control" min="0" max="{{ $line->remaining_quantity }}" data-allocation-limit="{{ $line->item?->name }}: Withdrawal limit is {{ $line->remaining_quantity }} {{ $line->item?->unit }} for this project." value="{{ old('quantities.'.$line->id, '') }}" required></div>
                                     @endforeach
                                     <div class="mb-3"><label for="withdrawn-on" class="form-label">Withdrawal date</label><input id="withdrawn-on" name="withdrawn_on" type="date" class="form-control" min="{{ $request->approved_at?->toDateString() }}" max="{{ today()->toDateString() }}" value="{{ old('withdrawn_on', today()->toDateString()) }}" required></div>
                                     <div class="mb-3"><label for="received-by" class="form-label">Received by</label><input id="received-by" name="received_by" class="form-control" maxlength="255" value="{{ old('received_by') }}" required></div>
-                                    <div class="mb-3"><label for="withdrawal-notes" class="form-label">Withdrawal notes (optional)</label><textarea id="withdrawal-notes" name="notes" class="form-control" maxlength="5000">{{ old('notes') }}</textarea></div>
-                                    <button type="submit" class="btn btn-cmu w-100" data-confirm="Record this withdrawal? Any remaining quantities will stay reserved.">Record Withdrawal</button>
+                                    <div class="mb-3"><label for="withdrawal-notes" class="form-label">Notes (optional)</label><textarea id="withdrawal-notes" name="notes" class="form-control" maxlength="5000">{{ old('notes') }}</textarea></div>
+                                    <button type="submit" class="btn btn-cmu w-100" data-confirm="Record this withdrawal? Any remaining quantities will stay reserved.">Release</button>
                                 </form>
 	                            @else
-	                                <p class="text-muted mb-0">This request is approved and waiting for release.</p>
+	                                <p class="text-muted mb-0">Approved. Awaiting release.</p>
 	                            @endcan
 	                        @else
-	                            <p class="text-muted mb-3">This request has already been {{ $request->status }}.</p>
+	                            <p class="text-muted mb-3">Status: {{ $request->status }}</p>
                         @endif
                     </div>
                 </div>
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Request Timeline</h5>
+                        <h5 class="mb-0">Timeline</h5>
                     </div>
                     <div class="card-body p-4">
                         <div class="mb-3">

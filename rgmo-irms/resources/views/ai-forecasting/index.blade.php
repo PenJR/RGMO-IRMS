@@ -1,8 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="h5 fw-bold mb-0">Inventory Forecasting & Analytics</h2>
-            <p class="text-muted mb-0 small">Generate demand forecasts from a selected date range.</p>
+            <h2 class="h5 fw-bold mb-0">Forecasts</h2>
         </div>
     </x-slot>
 
@@ -11,8 +10,7 @@
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
                     <div>
-                        <h3 class="h6 fw-bold mb-1">Forecast setup</h3>
-                        <p class="text-muted small mb-0">Choose the dates to forecast, then generate the results.</p>
+                        <h3 class="h6 fw-bold mb-1">Date range</h3>
                     </div>
                     @if($generated)<span class="small text-muted">Generated {{ $as_of->format('M d, Y') }}</span>@endif
                 </div>
@@ -36,8 +34,7 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body py-5 text-center">
                     <i data-lucide="calendar-range" class="text-muted mb-3" style="width: 40px; height: 40px;"></i>
-                    <h3 class="h5 fw-bold">Choose a forecast date range</h3>
-                    <p class="text-muted mb-0">Set the dates in Forecast setup, then select <strong>Generate Forecast</strong>.</p>
+                    <h3 class="h5 fw-bold">Choose dates to generate a forecast</h3>
                 </div>
             </div>
         @else
@@ -45,7 +42,7 @@
             <div class="col-12 col-md-6 col-xl-3">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
-                        <p class="stat-label mb-1">Projected {{ $forecast_days }}-Day Demand</p>
+                        <p class="stat-label mb-1">{{ $forecast_days }}-Day Demand</p>
                         <h3 class="fw-bold mb-0">{{ number_format($summary['total_projected_demand']) }}</h3>
                         <span class="small text-muted">
                             likely range {{ number_format($summary['total_forecast_lower']) }}–{{ number_format($summary['total_forecast_upper']) }} units
@@ -58,16 +55,15 @@
                     <div class="card-body">
                         <p class="stat-label mb-1">Critical Items</p>
                         <h3 class="fw-bold mb-0 text-danger">{{ $summary['critical_items'] }}</h3>
-                        <span class="small text-muted">low stock or likely to run out soon</span>
+                        <span class="small text-muted">low stock or running out soon</span>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-xl-3">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
-                        <p class="stat-label mb-1">Reorder Suggestions</p>
+                        <p class="stat-label mb-1">To Reorder</p>
                         <h3 class="fw-bold mb-0 text-warning">{{ $summary['recommended_orders'] }}</h3>
-                        <span class="small text-muted">items need procurement action</span>
                     </div>
                 </div>
             </div>
@@ -88,7 +84,7 @@
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
                             <i data-lucide="trending-up" class="text-primary" style="width: 20px;"></i>
-                            Demand Prediction by Item
+                            Demand by Item
                         </h5>
                     </div>
                     <div class="card-body p-0">
@@ -144,7 +140,7 @@
                                     @empty
                                         <tr>
                                             <td colspan="7" class="text-center text-muted py-5">
-                                                No inventory items are available for forecasting.
+                                                No items to forecast.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -161,13 +157,12 @@
                         <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between gap-2">
                             <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
                                 <i data-lucide="sparkles" class="text-primary" style="width: 20px;"></i>
-                                AI Forecast Brief
+                                AI Summary
                             </h5>
                             <span class="badge text-bg-primary">Gemini</span>
                         </div>
                         <div class="card-body" id="ai-forecast-brief" aria-live="polite">
-                            <p class="small text-muted">Create an optional plain-language summary for this generated forecast.</p>
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="generate-ai-brief" data-endpoint="{{ route('ai-forecasting.explanation') }}" data-forecast-start="{{ $forecast_start->toDateString() }}" data-forecast-end="{{ $forecast_end->toDateString() }}">Generate AI Brief</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="generate-ai-brief" data-endpoint="{{ route('ai-forecasting.explanation') }}" data-forecast-start="{{ $forecast_start->toDateString() }}" data-forecast-end="{{ $forecast_end->toDateString() }}">Generate Summary</button>
                         </div>
                     </div>
                 </div>
@@ -178,7 +173,7 @@
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
                             <i data-lucide="zap" style="width: 20px; color: var(--cmu-green);"></i>
-                            Smart Insights
+                            Insights
                         </h5>
                     </div>
                     <div class="card-body">
@@ -195,7 +190,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-muted small mb-0">No urgent replenishment risks were detected from recent usage.</p>
+                            <p class="text-muted small mb-0">No urgent restock risks.</p>
                         @endforelse
                     </div>
                 </div>
@@ -225,7 +220,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-muted small mb-0">Category demand will appear after stock-out transactions are recorded.</p>
+                            <p class="text-muted small mb-0">Record stock-out transactions to see demand.</p>
                         @endforelse
                     </div>
                 </div>

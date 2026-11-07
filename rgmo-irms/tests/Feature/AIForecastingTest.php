@@ -70,7 +70,7 @@ class AIForecastingTest extends TestCase
                 'forecast_end' => today()->addDays(29)->toDateString(),
             ]))
             ->assertOk()
-            ->assertSee('Demand Prediction by Item')
+            ->assertSee('Demand by Item')
             ->assertSee('NPK 14-14-14')
             ->assertSee('Critical')
             ->assertSee('Reorder 32 bag')
@@ -137,7 +137,7 @@ class AIForecastingTest extends TestCase
                 'forecast_end' => today()->addDays(6)->toDateString(),
             ]))
             ->assertOk()
-            ->assertSee('Projected 7-Day Demand')
+            ->assertSee('7-Day Demand')
             ->assertViewHas('forecast_days', 7)
             ->assertViewHas('forecasts', fn (Collection $forecasts): bool => $forecasts->first()['projected_demand'] > 0
                     && $forecasts->first()['projected_demand'] <= 7
@@ -375,8 +375,8 @@ class AIForecastingTest extends TestCase
         $this->actingAs($head)
             ->get(route('ai-forecasting.index'))
             ->assertOk()
-            ->assertSee('Choose a forecast date range')
-            ->assertDontSee('Demand Prediction by Item');
+            ->assertSee('Choose dates to generate a forecast')
+            ->assertDontSee('Demand by Item');
         Http::assertSentCount(0);
 
         $this->getJson(route('ai-forecasting.explanation', [

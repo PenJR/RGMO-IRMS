@@ -1,6 +1,6 @@
 <div class="table-responsive">
     <table class="table align-middle mb-0">
-        <thead><tr><th>Delivery / Date</th><th>Item</th><th>Batch / Expiry</th><th>Supplier / PO</th><th>Delivery receipt / Invoice</th><th>Received</th><th>Unit price</th><th>Total</th><th>Remaining in stock</th><th>Received by</th></tr></thead>
+        <thead><tr><th>Delivery / Date</th><th>Item</th><th>Batch / Expiry</th><th>Supplier / PO</th><th>Receipt / Invoice</th><th>Received</th><th>Unit price</th><th>Total</th><th>In stock</th><th>Received by</th></tr></thead>
         <tbody>
             @forelse($deliveries as $delivery)
                 <tr>
@@ -15,7 +15,7 @@
                             <div class="small text-muted">{{ $delivery->inventoryBatch->expiry_date?->format('M d, Y') ?? ($delivery->inventoryItem?->has_expiry ? 'Date needed' : 'No expiry') }}</div>
                             <span class="badge text-bg-{{ match($deliveryBatchStatus) { 'expired' => 'danger', 'expiring', 'undated' => 'warning', 'depleted' => 'secondary', default => 'success' } }}">{{ ucfirst($deliveryBatchStatus) }}</span>
                         @else
-                            <span class="text-muted small">Historical / unlinked batch</span>
+                            <span class="text-muted small">No linked batch</span>
                         @endif
                     </td>
                     <td>
@@ -31,7 +31,7 @@
                             <div>{{ $delivery->procurement->po_number ?: $delivery->procurement->or_number }}</div>
                         @endif
                     </td>
-                    <td><div>DR: {{ $delivery->delivery_receipt_number ?: 'Not recorded' }}</div><div>Invoice: {{ $delivery->invoice_number ?: 'Not recorded' }}</div>@if($delivery->reference)<div class="small text-muted">Reference: {{ $delivery->reference }}</div>@endif</td>
+                    <td><div>Receipt: {{ $delivery->delivery_receipt_number ?: 'Not recorded' }}</div><div>Invoice: {{ $delivery->invoice_number ?: 'Not recorded' }}</div>@if($delivery->reference)<div class="small text-muted">Reference: {{ $delivery->reference }}</div>@endif</td>
                     <td>{{ $delivery->quantity }} {{ $delivery->unit_of_measurement ?: $delivery->inventoryItem?->unit }}</td>
                     <td>{{ $delivery->unit_cost !== null ? $currencySymbol.number_format((float) $delivery->unit_cost, 2) : 'Not recorded' }}</td>
                     <td>{{ $delivery->unit_cost !== null ? $currencySymbol.number_format($delivery->quantity * (float) $delivery->unit_cost, 2) : 'Not recorded' }}</td>
@@ -39,7 +39,7 @@
                     <td>{{ $delivery->receiver?->name ?? 'Not recorded' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="10" class="text-muted text-center py-3">No deliveries received yet.</td></tr>
+                <tr><td colspan="10" class="text-muted text-center py-3">No deliveries yet.</td></tr>
             @endforelse
         </tbody>
     </table>

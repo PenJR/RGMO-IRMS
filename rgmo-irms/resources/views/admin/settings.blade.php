@@ -6,9 +6,7 @@
                     <i data-lucide="settings-2"></i>
                 </div>
                 <div>
-                    <div class="module-eyebrow mb-1">System Administration</div>
-                    <h2 class="h5 fw-bold mb-1">System Settings</h2>
-                    <p class="text-muted small mb-0">Configure appearance, inventory thresholds, and application preferences.</p>
+                    <h2 class="h5 fw-bold mb-1">Settings</h2>
                 </div>
             </div>
         </div>
@@ -18,11 +16,11 @@
         <div class="d-flex justify-content-end align-items-center gap-2 mb-4">
             <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle d-inline-flex align-items-center gap-1 px-3 py-2">
                 <i data-lucide="shield-check" style="width: 14px; height: 14px;" aria-hidden="true"></i>
-                Administrator controls
+                Admin
             </span>
             <a href="{{ route('admin.backup.index') }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-2 px-3">
                 <i data-lucide="database-backup" style="width: 15px; height: 15px;" aria-hidden="true"></i>
-                Backup Center
+                Backup
             </a>
         </div>
         @php
@@ -34,7 +32,7 @@
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                     <div>
                         <h5 class="mb-1">Appearance</h5>
-                        <p class="text-muted small mb-0">Choose how RGMO-IRMS appears in this browser.</p>
+                        <p class="text-muted small mb-0">This browser only.</p>
                     </div>
                     <div class="theme-setting">
                         <i data-lucide="sun" class="theme-setting__icon theme-setting__icon--light" aria-hidden="true"></i>
@@ -52,8 +50,7 @@
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
-                <h5 class="mb-1">Inventory Thresholds</h5>
-                <p class="text-muted small mb-4">Set the low-stock threshold for an individual resource.</p>
+                <h5 class="mb-4">Low Stock Thresholds</h5>
                 <form method="POST" action="{{ route('admin.settings.update') }}">
                     @csrf
                     <div class="row g-3">
@@ -97,13 +94,13 @@
                                 <span class="input-group-text" id="threshold_unit">{{ $selectedInventoryItem?->unit ?? 'unit' }}</span>
                                 @error('min_stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="form-text">Only the selected resource is updated.</div>
+                            <div class="form-text">Applies to this resource only.</div>
                         </div>
 
                         <div class="col-12">
                             <button type="submit" class="btn btn-cmu" {{ $inventoryItems->isEmpty() ? 'disabled' : '' }}>Save Threshold</button>
                             @if($inventoryItems->isEmpty())
-                                <span class="text-muted small ms-2">Add inventory resources before setting thresholds.</span>
+                                <span class="text-muted small ms-2">Add a resource first.</span>
                             @endif
                         </div>
                     </div>

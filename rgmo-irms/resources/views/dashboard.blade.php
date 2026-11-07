@@ -2,7 +2,6 @@
     <x-slot name="header">
         <div>
             <h2 class="h5 fw-bold mb-0">Dashboard</h2>
-            <p class="text-muted mb-0 small">A focused view of inventory and resource operations.</p>
         </div>
     </x-slot>
 
@@ -11,19 +10,19 @@
             <div class="dashboard-welcome__content">
                 <p class="dashboard-welcome__eyebrow mb-2">{{ now()->format('l, F j') }}</p>
                 <h1 id="dashboardWelcomeTitle">Welcome back, {{ Str::before(Auth::user()->name, ' ') }}.</h1>
-                <p class="mb-0">You have <strong>{{ $stats['low_stock_count'] }} low-stock {{ Str::plural('item', $stats['low_stock_count']) }}</strong> and <strong>{{ $stats['pending_requests'] }} pending {{ Str::plural('request', $stats['pending_requests']) }}</strong> requiring attention.</p>
+                <p class="mb-0"><strong>{{ $stats['low_stock_count'] }} low-stock {{ Str::plural('item', $stats['low_stock_count']) }}</strong> · <strong>{{ $stats['pending_requests'] }} pending {{ Str::plural('request', $stats['pending_requests']) }}</strong></p>
             </div>
             <div class="dashboard-welcome__actions" aria-label="Quick actions">
                 @can('viewAny', App\Models\InventoryItem::class)
                     <a href="{{ route('inventory.low-stock') }}" class="btn btn-light dashboard-action-btn">
                         <i data-lucide="package-search" aria-hidden="true"></i>
-                        Review inventory
+                        Low stock
                     </a>
                 @endcan
                 @if(auth()->user()->hasPermission('view-forecasts'))
                     <a href="{{ route('ai-forecasting.index') }}" class="btn dashboard-action-btn dashboard-action-btn--accent">
                         <i data-lucide="sparkles" aria-hidden="true"></i>
-                        AI forecasting
+                        Forecasts
                     </a>
                 @endif
             </div>
@@ -74,7 +73,7 @@
                                 <i data-lucide="alert-triangle"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <p class="dashboard-kpi__label">Low Stock Alerts</p>
+                                <p class="dashboard-kpi__label">Low Stock</p>
                                 <h3 class="mb-0 fw-bold text-danger">{{ $stats['low_stock_count'] }}</h3>
                                 <span class="dashboard-kpi__context">{{ $stats['total_items'] > 0 ? round(($stats['low_stock_count'] / $stats['total_items']) * 100) : 0 }}% of inventory needs attention</span>
                             </div>
@@ -112,9 +111,7 @@
             <section class="mt-4" aria-labelledby="rgmoResourceOverviewTitle">
                 <div class="dashboard-section-heading dashboard-section-heading--spaced">
                     <div>
-                        <p class="module-eyebrow mb-1">RGMO Head overview</p>
-                        <h2 id="rgmoResourceOverviewTitle">Resource position and utilization</h2>
-                        <p class="text-muted mb-0">Available stock, approved-request reservations, and recorded utilization from the last 30 days.</p>
+                        <h2 id="rgmoResourceOverviewTitle">Resources &amp; usage</h2>
                     </div>
                 </div>
                 <div class="row g-3 mb-4">
@@ -126,8 +123,8 @@
                 </div>
                 <div class="card border-0 dashboard-panel mb-4">
                     <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold mb-0">Resource availability, reservations, and utilization</h5>
-                        <p class="text-muted small mb-0">Top ten resources by activity. Each label keeps the resource’s own unit.</p>
+                        <h5 class="fw-bold mb-0">Top 10 resources</h5>
+                        <p class="text-muted small mb-0">Available · Reserved for approved requests · Used in 30 days</p>
                     </div>
                     <div class="card-body px-4 pb-4" style="height: 380px;"><canvas id="rgmoResourcePositionChart"></canvas></div>
                 </div>
@@ -136,7 +133,6 @@
 
         <div class="dashboard-section-heading dashboard-section-heading--spaced">
             <div>
-                <p class="module-eyebrow mb-1">Live overview</p>
                 <h2>Inventory and requests</h2>
             </div>
         </div>
@@ -146,13 +142,13 @@
                 <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center gap-3 flex-wrap">
                         <div>
-                            <h5 class="fw-bold mb-0">Inventory Dynamics</h5>
-                            <p class="text-muted small mb-0" id="inventoryChartSubtitle">Active stock volume across recent months</p>
+                            <h5 class="fw-bold mb-0">Stock Levels</h5>
+                            <p class="visually-hidden" id="inventoryChartSubtitle">Active stock volume across recent months</p>
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <label for="inventoryChartItem" class="visually-hidden">Inventory item</label>
-                            <select class="form-select form-select-sm" id="inventoryChartItem" style="width: auto; max-width: 220px;" aria-label="Filter inventory dynamics by item">
-                                <option value="all">All inventory items</option>
+                            <select class="form-select form-select-sm" id="inventoryChartItem" style="width: auto; max-width: 220px;" aria-label="Filter stock levels by item">
+                                <option value="all">All items</option>
                                 @foreach($stats['charts']['inventory_levels']['items'] as $chartItem)
                                     <option value="{{ $chartItem['id'] }}">{{ $chartItem['name'] }}@if($chartItem['sku']) ({{ $chartItem['sku'] }})@endif</option>
                                 @endforeach
@@ -172,8 +168,7 @@
             <div class="col-lg-4">
                 <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold mb-0">Request Status Distribution</h5>
-                        <p class="text-muted small mb-0">Current status of all submitted requests</p>
+                        <h5 class="fw-bold mb-0">Request Status</h5>
                     </div>
                     <div class="card-body px-4 pb-4 d-flex align-items-center justify-content-center">
                         <div style="position: relative; height: 230px; width: 230px;">
@@ -188,8 +183,7 @@
             <summary>
                 <span class="dashboard-disclosure__icon"><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i></span>
                 <span>
-                    <strong>Explore detailed analytics</strong>
-                    <small>Request trends, stock health, category value, and inventory movement</small>
+                    <strong>More analytics</strong>
                 </span>
                 <i data-lucide="chevron-down" class="dashboard-disclosure__chevron" aria-hidden="true"></i>
             </summary>
@@ -199,8 +193,7 @@
                 <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="fw-bold mb-0">Request Activity Trend</h5>
-                            <p class="text-muted small mb-0">Submitted, approved, and rejected requests by month</p>
+                            <h5 class="fw-bold mb-0">Monthly Requests</h5>
                         </div>
                         <i data-lucide="line-chart" class="text-muted" style="width: 20px; height: 20px;"></i>
                     </div>
@@ -213,7 +206,6 @@
                 <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4">
                         <h5 class="fw-bold mb-0">Stock Health</h5>
-                        <p class="text-muted small mb-0">Healthy, warning, and low stock inventory counts</p>
                     </div>
                     <div class="card-body px-4 pb-4 d-flex align-items-center justify-content-center">
                         <div style="position: relative; height: 245px; width: 245px;">
@@ -228,8 +220,7 @@
             <div class="col-12 col-xl-4">
                 <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold mb-0">Inventory Value by Category</h5>
-                        <p class="text-muted small mb-0">Top categories by current stock value</p>
+                        <h5 class="fw-bold mb-0">Value by Category</h5>
                     </div>
                     <div class="card-body px-4 pb-4" style="height: 320px;">
                         <canvas id="categoryValueChart"></canvas>
@@ -239,8 +230,7 @@
             <div class="col-12 col-xl-4">
                 <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold mb-0">Inventory Movement</h5>
-                        <p class="text-muted small mb-0">Monthly stock-in and stock-out quantities</p>
+                        <h5 class="fw-bold mb-0">Monthly Stock Movement</h5>
                     </div>
                     <div class="card-body px-4 pb-4" style="height: 320px;">
                         <canvas id="inventoryMovementChart"></canvas>
@@ -251,7 +241,6 @@
                 <div class="card border-0 h-100 dashboard-panel">
                     <div class="card-header bg-white border-0 pt-4 px-4">
                         <h5 class="fw-bold mb-0">Top Requested Items</h5>
-                        <p class="text-muted small mb-0">Highest total requested quantities</p>
                     </div>
                     <div class="card-body px-4 pb-4" style="height: 320px;">
                         <canvas id="topRequestedItemsChart"></canvas>
@@ -264,8 +253,7 @@
 
         <div class="dashboard-section-heading dashboard-section-heading--spaced">
             <div>
-                <p class="module-eyebrow mb-1">Needs attention</p>
-                <h2>Priority work and recent requests</h2>
+                <h2>Needs attention</h2>
             </div>
         </div>
 
@@ -278,7 +266,7 @@
                                 <i data-lucide="gauge" class="text-success" style="width: 20px;"></i>
                                 Resource Readiness
                             </h5>
-                            <p class="text-muted small mb-0">Items currently above minimum stock</p>
+                            <p class="text-muted small mb-0">Items above minimum stock</p>
                         </div>
                         <a href="{{ route('inventory.low-stock') }}" class="btn btn-link text-decoration-none dashboard-view-all p-0">View all</a>
                     </div>
@@ -302,8 +290,7 @@
                         </div>
 
                         <div class="resource-suggestions-heading">
-                            <span>Suggested replenishment</span>
-                            <small>Top up to healthy stock</small>
+                            <span>Suggested restock</span>
                         </div>
                         @if($lowStockItems->count() > 0)
                             <div class="list-group list-group-flush resource-suggestions">
@@ -328,7 +315,7 @@
                         @else
                             <div class="text-center py-5">
                                 <i data-lucide="check-circle-2" class="text-success opacity-25 mb-2" style="width: 48px; height: 48px;"></i>
-                                <p class="text-muted mb-0 small">All items are sufficiently stocked.</p>
+                                <p class="text-muted mb-0 small">Stock levels are healthy.</p>
                             </div>
                         @endif
                     </div>
@@ -390,8 +377,7 @@
             <summary>
                 <span class="dashboard-disclosure__icon"><i data-lucide="history" aria-hidden="true"></i></span>
                 <span>
-                    <strong>Recent system activity</strong>
-                    <small>Review the latest changes recorded in the audit trail</small>
+                    <strong>Recent activity</strong>
                 </span>
                 <i data-lucide="chevron-down" class="dashboard-disclosure__chevron" aria-hidden="true"></i>
             </summary>
@@ -402,7 +388,7 @@
                     <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
                         <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
                             <i data-lucide="activity" class="text-info" style="width: 20px;"></i>
-                            System Audit Trail
+                            Audit Trail
                         </h5>
                     </div>
                     <div class="card-body p-0">
@@ -429,7 +415,7 @@
                             </div>
                         @else
                             <div class="text-center py-4">
-                                <p class="text-muted mb-0 small">No audit logs available.</p>
+                                <p class="text-muted mb-0 small">No audit logs yet.</p>
                             </div>
                         @endif
                     </div>

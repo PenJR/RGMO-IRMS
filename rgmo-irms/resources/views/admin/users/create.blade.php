@@ -1,8 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="fw-bold mb-1">Create New User</h2>
-            <p class="text-muted mb-0">Add a staff account to the system.</p>
+            <h2 class="fw-bold mb-1">Add User</h2>
         </div>
     </x-slot>
 
@@ -51,7 +50,7 @@
 
                     <div class="mt-5 d-flex gap-2">
                         <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-cmu">Create User</button>
+                        <button type="submit" class="btn btn-cmu">Add User</button>
                     </div>
                 </form>
             </div>

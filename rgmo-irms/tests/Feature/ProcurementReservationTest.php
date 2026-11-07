@@ -128,7 +128,7 @@ class ProcurementReservationTest extends TestCase
             ], $admin);
         }
         $this->get(route('inventory.index'))->assertOk()
-            ->assertSeeInOrder(['Use first · FIFO', 'Older supplier', 'Newer supplier'])
+            ->assertSeeInOrder(['Use first', 'Older supplier', 'Newer supplier'])
             ->assertSee(today()->subDays(3)->format('M d, Y'));
         $transaction = app(InventoryService::class)->recordStockOut($item, 12, 'Field', $admin->id);
         $this->assertEquals(0, $lots['Older supplier']->fresh()->remaining_quantity);
