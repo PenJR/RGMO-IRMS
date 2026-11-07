@@ -2,6 +2,7 @@ import './bootstrap';
 import * as bootstrap from 'bootstrap';
 import './feedback';
 import './user-name-filter';
+import './procurement-filters';
 import Chart from 'chart.js/auto';
 import {
     Activity, AlertCircle, AlertTriangle, ArrowLeft, ArrowUpRight, BadgeCheck,
