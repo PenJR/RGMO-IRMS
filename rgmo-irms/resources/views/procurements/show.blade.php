@@ -31,7 +31,7 @@
         @if(auth()->user()->hasPermission('manage-inventory') && $procurement->isReceivable() && $procurement->monitoring['remaining'] > 0)
         <div class="card mb-4"><div class="card-body"><h3 class="h5">Receive a delivery</h3><form method="POST" action="{{ route('procurements.receive', $procurement) }}">@csrf
             <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">
-            <p class="small text-muted">Enter what arrived for each item. Enter 0 for items not delivered. Prices default to the PO price; enter the actual unit price from the delivery documents.</p>
+            <p class="small text-muted">Enter what arrived for each item. Enter 0 for items not delivered. Split tracked items into their batch / lot numbers; the received total is calculated from those quantities. Prices default to the PO price; enter the actual unit price from the delivery documents.</p>
             <div class="row g-3 mb-3">
                 <div class="col-md-4"><label for="received-on" class="form-label">Date received</label><input id="received-on" type="date" name="received_on" class="form-control" min="{{ $procurement->purchased_on->toDateString() }}" max="{{ today()->toDateString() }}" value="{{ old('received_on', today()->toDateString()) }}" required></div>
                 <div class="col-md-4"><label for="delivery-receipt-number" class="form-label">Delivery receipt number</label><input id="delivery-receipt-number" name="delivery_receipt_number" class="form-control" maxlength="100" value="{{ old('delivery_receipt_number') }}" required></div>
@@ -42,19 +42,56 @@
             <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Item / Unit</th><th>Ordered</th><th>Received so far</th><th>Remaining</th><th>Quantity received now</th><th>Actual unit price ({{ $currencyCode }})</th></tr></thead><tbody>
                 @foreach($procurement->items as $poItem)
                     @if($poItem->remaining_quantity > 0)
+                        @php
+                            $tracksBatches = $poItem->inventoryItem?->requiresBatchTracking() ?? false;
+                        @endphp
                         <tr><td>{{ $poItem->inventoryItem?->name }}<div class="small text-muted">{{ $poItem->unit_of_measurement }}</div></td><td>{{ $poItem->ordered_quantity }}</td><td>{{ $poItem->received_quantity }}</td><td>{{ $poItem->remaining_quantity }}</td>
                             @if($poItem->inventoryItem && ! $poItem->inventoryItem->trashed())
-                                <td><label class="visually-hidden" for="received-{{ $poItem->id }}">Quantity received: {{ $poItem->inventoryItem->name }}</label><input id="received-{{ $poItem->id }}" name="items[{{ $poItem->id }}][quantity]" type="number" class="form-control" min="0" max="{{ $poItem->remaining_quantity }}" value="{{ old('items.'.$poItem->id.'.quantity', 0) }}" required></td>
-                                <td><label class="visually-hidden" for="cost-{{ $poItem->id }}">Unit price: {{ $poItem->inventoryItem->name }}</label><input id="cost-{{ $poItem->id }}" name="items[{{ $poItem->id }}][unit_cost]" type="number" class="form-control" min="0" max="9999999999.99" step="0.01" value="{{ old('items.'.$poItem->id.'.unit_cost', $poItem->unit_cost) }}" required></td>
+                                <td><label class="visually-hidden" for="received-{{ $poItem->id }}">Quantity received: {{ $poItem->inventoryItem->name }}</label><input id="received-{{ $poItem->id }}" name="items[{{ $poItem->id }}][quantity]" type="number" class="form-control @error('items.'.$poItem->id.'.quantity') is-invalid @enderror" min="0" max="{{ $poItem->remaining_quantity }}" step="1" value="{{ old('items.'.$poItem->id.'.quantity', 0) }}" @readonly($tracksBatches) required>@if($tracksBatches)<div class="small text-muted">Total of batches below</div>@endif @error('items.'.$poItem->id.'.quantity')<div class="invalid-feedback">{{ $message }}</div>@enderror</td>
+                                <td><label class="visually-hidden" for="cost-{{ $poItem->id }}">Unit price: {{ $poItem->inventoryItem->name }}</label><input id="cost-{{ $poItem->id }}" name="items[{{ $poItem->id }}][unit_cost]" type="number" class="form-control @error('items.'.$poItem->id.'.unit_cost') is-invalid @enderror" min="0" max="9999999999.99" step="0.01" value="{{ old('items.'.$poItem->id.'.unit_cost', $poItem->unit_cost) }}" required>@error('items.'.$poItem->id.'.unit_cost')<div class="invalid-feedback">{{ $message }}</div>@enderror</td>
                             @else
                                 <td colspan="2" class="text-danger">Item archived. Restore it before receiving.</td>
                             @endif
                         </tr>
+                        @if($tracksBatches && $poItem->inventoryItem && ! $poItem->inventoryItem->trashed())
+                            @php
+                                $oldBatches = old('items.'.$poItem->id.'.batches', [['batch_number' => '', 'quantity' => 0, 'expiry_date' => '']]);
+                                $receivingBatches = is_array($oldBatches) && count($oldBatches) ? $oldBatches : [['batch_number' => '', 'quantity' => 0, 'expiry_date' => '']];
+                            @endphp
+                            <tr data-receiving-batches data-item-id="{{ $poItem->id }}" data-total-id="received-{{ $poItem->id }}" data-has-expiry="{{ $poItem->inventoryItem->has_expiry ? '1' : '0' }}">
+                                <td colspan="6" class="bg-light">
+                                    <div class="border rounded p-3">
+                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2"><strong class="small">Batches received · {{ $poItem->inventoryItem->name }}</strong><button type="button" class="btn btn-sm btn-outline-primary" data-add-receiving-batch>Add batch</button></div>
+                                        <p class="small text-muted mb-2">Record each batch separately. Use 0 for an unused row.{{ $poItem->inventoryItem->has_expiry ? ' Each received batch needs an expiry date.' : '' }}</p>
+                                        @error('items.'.$poItem->id.'.batches')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
+                                        <div data-receiving-batch-rows>
+                                            @foreach($receivingBatches as $batchIndex => $receivingBatch)
+                                                <div class="row g-2 align-items-start mb-2" data-receiving-batch-row>
+                                                    <div class="col-md-4"><label class="form-label small" for="batch-{{ $poItem->id }}-{{ $batchIndex }}">Batch / Lot Number</label><input id="batch-{{ $poItem->id }}-{{ $batchIndex }}" name="items[{{ $poItem->id }}][batches][{{ $batchIndex }}][batch_number]" class="form-control form-control-sm @error('items.'.$poItem->id.'.batches.'.$batchIndex.'.batch_number') is-invalid @enderror" maxlength="100" value="{{ is_array($receivingBatch) ? ($receivingBatch['batch_number'] ?? '') : '' }}" data-batch-number>@error('items.'.$poItem->id.'.batches.'.$batchIndex.'.batch_number')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                                                    <div class="col-md-2"><label class="form-label small" for="batch-qty-{{ $poItem->id }}-{{ $batchIndex }}">Quantity ({{ $poItem->unit_of_measurement }})</label><input id="batch-qty-{{ $poItem->id }}-{{ $batchIndex }}" name="items[{{ $poItem->id }}][batches][{{ $batchIndex }}][quantity]" type="number" min="0" max="{{ $poItem->remaining_quantity }}" step="1" class="form-control form-control-sm @error('items.'.$poItem->id.'.batches.'.$batchIndex.'.quantity') is-invalid @enderror" value="{{ is_array($receivingBatch) ? ($receivingBatch['quantity'] ?? 0) : 0 }}" data-batch-quantity>@error('items.'.$poItem->id.'.batches.'.$batchIndex.'.quantity')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                                                    @if($poItem->inventoryItem->has_expiry)<div class="col-md-4"><label class="form-label small" for="batch-expiry-{{ $poItem->id }}-{{ $batchIndex }}">Expiry Date</label><input id="batch-expiry-{{ $poItem->id }}-{{ $batchIndex }}" name="items[{{ $poItem->id }}][batches][{{ $batchIndex }}][expiry_date]" type="date" class="form-control form-control-sm @error('items.'.$poItem->id.'.batches.'.$batchIndex.'.expiry_date') is-invalid @enderror" value="{{ is_array($receivingBatch) ? ($receivingBatch['expiry_date'] ?? '') : '' }}" data-batch-expiry>@error('items.'.$poItem->id.'.batches.'.$batchIndex.'.expiry_date')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>@endif
+                                                    <div class="col-md-2"><span class="form-label small d-none d-md-block" aria-hidden="true">&nbsp;</span><button type="button" class="btn btn-sm btn-outline-danger" data-remove-receiving-batch>Remove batch</button></div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <p class="small mb-0" data-batch-total-message aria-live="polite"></p>
+                                        <template data-receiving-batch-template>
+                                            <div class="row g-2 align-items-start mb-2" data-receiving-batch-row>
+                                                <div class="col-md-4"><label class="form-label small" for="batch-{{ $poItem->id }}-__INDEX__">Batch / Lot Number</label><input id="batch-{{ $poItem->id }}-__INDEX__" name="items[{{ $poItem->id }}][batches][__INDEX__][batch_number]" class="form-control form-control-sm" maxlength="100" data-batch-number></div>
+                                                <div class="col-md-2"><label class="form-label small" for="batch-qty-{{ $poItem->id }}-__INDEX__">Quantity ({{ $poItem->unit_of_measurement }})</label><input id="batch-qty-{{ $poItem->id }}-__INDEX__" name="items[{{ $poItem->id }}][batches][__INDEX__][quantity]" type="number" min="0" max="{{ $poItem->remaining_quantity }}" step="1" class="form-control form-control-sm" value="0" data-batch-quantity></div>
+                                                @if($poItem->inventoryItem->has_expiry)<div class="col-md-4"><label class="form-label small" for="batch-expiry-{{ $poItem->id }}-__INDEX__">Expiry Date</label><input id="batch-expiry-{{ $poItem->id }}-__INDEX__" name="items[{{ $poItem->id }}][batches][__INDEX__][expiry_date]" type="date" class="form-control form-control-sm" data-batch-expiry></div>@endif
+                                                <div class="col-md-2"><span class="form-label small d-none d-md-block" aria-hidden="true">&nbsp;</span><button type="button" class="btn btn-sm btn-outline-danger" data-remove-receiving-batch>Remove batch</button></div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
                     @endif
                 @endforeach
             </tbody></table></div>
             <button class="btn btn-cmu mt-3" data-confirm="Confirm the received quantities and prices, and add them to inventory?">Receive into Inventory</button>
         </form></div></div>@endif
-        <div class="card"><div class="card-body"><h3 class="h5">Delivery history</h3><p class="small text-muted">Stock issues use historical/unlinked stock first, then received deliveries in date order. Each withdrawal keeps its delivery references.</p>@include('deliveries._history', ['deliveries' => $procurement->deliveries])</div></div>
+        <div class="card"><div class="card-body"><h3 class="h5">Delivery history</h3><p class="small text-muted">Expiry-tracked stock issues by earliest valid expiry (FEFO); other stock uses arrival order (FIFO). Each withdrawal keeps its batch and delivery references.</p>@include('deliveries._history', ['deliveries' => $procurement->deliveries])</div></div>
     </div>
 </x-app-layout>

@@ -9,12 +9,15 @@
     <div class="container-fluid py-4">
         <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
             <x-breadcrumb :items="['Inventory' => route('inventory.index')]" compact />
+            <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('inventory.batches.index') }}" class="btn btn-outline-secondary">Batch &amp; Expiry Monitoring</a>
             @can('create', App\Models\InventoryItem::class)
                 <a href="{{ route('inventory.create') }}" class="btn btn-cmu d-inline-flex align-items-center gap-2">
                     <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
                     Add Item
                 </a>
             @endcan
+            </div>
         </div>
 
             <div class="card border-0 shadow-sm mb-4">
@@ -90,8 +93,8 @@
             @endcan
 
             <div class="alert alert-info mb-3">
-                <strong>First in, first out (FIFO).</strong> Withdrawals use the earliest arrival first.
-                The next delivery and remaining batches appear below. Existing stock without delivery records is used first; its supplier and arrival date are unknown.
+                <strong>Use the next eligible batch.</strong> Expiry-tracked stock uses the earliest valid expiry first (FEFO); other stock uses arrival order (FIFO).
+                Expired batches and expiry-tracked batches without a date are excluded from usable stock. Critical / low stock thresholds use the usable balance.
             </div>
             <!-- Inventory Items Table -->
             <div class="card border-0 shadow-sm bg-transparent shadow-none">
@@ -104,12 +107,12 @@
                                         <x-sortable-th column="name">Item</x-sortable-th>
 
                                         <th>Category</th>
-                                        <th>Use first · FIFO</th>
+                                        <th>Use first · FEFO / FIFO</th>
                                         <x-sortable-th column="stock">Stock</x-sortable-th>
-	                                        <th>Low / Reorder Point</th>
+	                                        <th>Critical / Reorder Point</th>
                                         <x-sortable-th column="price">Price</x-sortable-th>
                                         <th>Status</th>
-                                        <x-sortable-th column="expiry_date">Expiry</x-sortable-th>
+                                        <th>Batch Expiry</th>
                                         <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
@@ -131,33 +134,33 @@
                                             </td>
 
                                             <td data-label="Category">{{ $item->category->name ?? 'N/A' }}</td>
-                                            <td data-label="Use first · FIFO">
+                                            <td data-label="Use first · FEFO / FIFO">
                                                 <div style="min-width: 180px; max-width: 240px;">
                                                 @php
-                                                    $lots = $item->fifoDeliveries;
-                                                    $historical = max(0, $item->stock - $lots->sum('remaining_quantity'));
-                                                    $firstLot = $lots->first();
+                                                    $usesFefo = $item->has_expiry || $item->batches->contains(fn ($batch) => $batch->stock > 0 && $batch->expiry_date);
+                                                    $eligibleBatches = $item->batches->filter(fn ($batch) => $batch->stock > 0 && ! $batch->isExpired() && (! $item->has_expiry || $batch->expiry_date))
+                                                        ->sortBy(fn ($batch) => [$usesFefo ? ($batch->expiry_date?->toDateString() ?? '9999-12-31') : '', $batch->deliveries->where('remaining_quantity', '>', 0)->min(fn ($delivery) => $delivery->received_on->toDateString()) ?? $batch->created_at->toDateString(), $batch->id]);
+                                                    $firstBatch = $eligibleBatches->first();
+                                                    $firstDelivery = $firstBatch?->deliveries->where('remaining_quantity', '>', 0)->sortBy(fn ($delivery) => [$delivery->received_on->toDateString(), $delivery->id])->first();
                                                 @endphp
-                                                @if($item->stock <= 0)
-                                                    <span class="text-muted">No stock to issue</span>
-                                                @elseif($historical > 0)
-                                                    <div class="fw-semibold">Existing stock · use first</div>
-                                                    <div class="small">{{ $historical }} {{ $item->unit }} remaining</div>
-                                                    <div class="small text-muted">Arrival / supplier not recorded</div>
-                                                @elseif($firstLot)
-                                                    <div class="fw-semibold">{{ $firstLot->procurement->supplier_name }}</div>
-                                                    <div class="small">Arrived {{ $firstLot->received_on->format('M d, Y') }}</div>
-                                                    <div class="small">{{ $firstLot->remaining_quantity }} {{ $item->unit }} remaining · DEL-{{ $firstLot->id }}</div>
+                                                @if($item->usable_stock <= 0)
+                                                    <span class="text-muted">No usable stock to issue</span>
+                                                @elseif($firstBatch)
+                                                    <div class="fw-semibold"><a href="{{ route('inventory.batches.show', $firstBatch) }}">{{ $firstBatch->display_name }}</a> · {{ $usesFefo ? 'FEFO' : 'FIFO' }}</div>
+                                                    <div class="small">{{ $firstBatch->stock }} {{ $item->unit }} on hand</div>
+                                                    <div class="small text-muted">{{ $firstBatch->expiry_date ? 'Expires '.$firstBatch->expiry_date->format('M d, Y') : 'No expiry' }}</div>
+                                                    @if($firstDelivery)<div class="small text-muted">{{ $firstDelivery->procurement?->supplier_name }} · arrived {{ $firstDelivery->received_on->format('M d, Y') }}</div>@else<div class="small text-muted">Opening / adjusted balance</div>@endif
+                                                @else
+                                                    <a href="{{ route('inventory.show', $item) }}#inventory-batches">Review historical stock balances</a>
                                                 @endif
-                                                @if($lots->isNotEmpty())
+                                                @if($eligibleBatches->isNotEmpty())
                                                     <details class="mt-2 small">
-                                                        <summary>Delivery queue ({{ $lots->count() }})</summary>
+                                                        <summary>Eligible batch queue ({{ $eligibleBatches->count() }})</summary>
                                                         <ol class="ps-3 mt-2 mb-0">
-                                                            @foreach($lots as $lot)
+                                                            @foreach($eligibleBatches as $queuedBatch)
                                                                 <li class="mb-2">
-                                                                    <a href="{{ route('procurements.show', $lot->procurement) }}">{{ $lot->procurement->supplier_name }}</a>
-                                                                    <div>Arrived {{ $lot->received_on->format('M d, Y') }} · DEL-{{ $lot->id }}</div>
-                                                                    <div>{{ $lot->remaining_quantity }} {{ $item->unit }} remaining · OR {{ $lot->procurement->or_number }}</div>
+                                                                    <a href="{{ route('inventory.batches.show', $queuedBatch) }}">{{ $queuedBatch->display_name }}</a>
+                                                                    <div>{{ $queuedBatch->stock }} {{ $item->unit }} · {{ $queuedBatch->expiry_date ? 'expires '.$queuedBatch->expiry_date->format('M d, Y') : 'no expiry' }}</div>
                                                                 </li>
                                                             @endforeach
                                                         </ol>
@@ -166,15 +169,15 @@
                                                 </div>
                                             </td>
                                             <td data-label="Stock">
-                                                {{ $item->stock }} {{ $item->unit }} on hand<div class="small text-muted">{{ $item->reserved_quantity }} reserved · {{ $item->available_stock }} available</div>
-                                                @if($item->stock <= $item->min_stock)
+                                                {{ $item->stock }} {{ $item->unit }} on hand<div class="small">{{ $item->usable_stock }} usable · {{ $item->available_stock }} available</div><div class="small text-muted">{{ $item->reserved_quantity }} reserved · {{ $item->expired_stock }} expired · {{ $item->quarantined_stock }} quarantined</div>
+                                                @if($item->isLowStock())
                                                     <span class="badge rounded-pill status-badge status-badge--danger ms-2">
-                                                        Low
+                                                        Critical / Low
                                                     </span>
                                                 @endif
                                             </td>
-	                                            <td data-label="Low / Reorder">
-	                                                <div class="small">Low: {{ $item->min_stock }} {{ $item->unit }}</div>
+	                                            <td data-label="Critical / Reorder">
+	                                                <div class="small">Critical / low: {{ $item->min_stock }} {{ $item->unit }}</div>
 	                                                <div class="small text-muted">Reorder: {{ $item->getReorderPoint() }} {{ $item->unit }}</div>
 	                                            </td>
                                             <td data-label="Price">{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
@@ -190,15 +193,16 @@
 	                                                @endif
 	                                            </td>
 	                                            <td data-label="Expiry">
-	                                                @if($item->has_expiry)
-	                                                    <div class="small">{{ $item->expiry_date?->format('M d, Y') ?? 'No date' }}</div>
-	                                                    @if($item->isExpired())
-	                                                        <span class="badge rounded-pill status-badge status-badge--danger">Expired</span>
-	                                                    @elseif($item->isExpiringSoon())
-	                                                        <span class="badge rounded-pill status-badge status-badge--warning">Expiring soon</span>
-	                                                    @else
-	                                                        <span class="badge rounded-pill status-badge status-badge--success">Active</span>
-	                                                    @endif
+	                                                @if($item->has_expiry || $usesFefo)
+                                                        @php
+                                                            $nextExpiryBatch = $eligibleBatches->first(fn ($batch) => $batch->expiry_date !== null);
+                                                        @endphp
+                                                        @if($nextExpiryBatch)<div class="small">Next: {{ $nextExpiryBatch->expiry_date->format('M d, Y') }}</div>@endif
+                                                        @if($item->expired_stock > 0)<span class="badge rounded-pill status-badge status-badge--danger">{{ $item->expired_stock }} expired</span>@endif
+                                                        @if($item->quarantined_stock > 0)<span class="badge rounded-pill status-badge status-badge--warning">{{ $item->quarantined_stock }} quarantined</span>@endif
+                                                        @if($item->isExpiringSoon())<span class="badge rounded-pill status-badge status-badge--warning">Expiring soon</span>@endif
+                                                        @if(! $nextExpiryBatch && $item->stock <= 0)<span class="text-muted small">No stock</span>@endif
+                                                        <div class="small"><a href="{{ route('inventory.batches.index', ['item_id' => $item->id]) }}">View batches</a></div>
 	                                                @else
 	                                                    <span class="text-muted small">No expiry</span>
                                                 @endif

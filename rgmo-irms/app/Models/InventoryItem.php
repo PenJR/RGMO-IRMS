@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\InventoryBatchService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,14 @@ class InventoryItem extends Model
 
         static::updating(function (InventoryItem $item) {
             $errors = [];
+            if (($item->isDirty('has_expiry') && ! $item->has_expiry)
+                && $item->batches()->exists()) {
+                $errors['has_expiry'] = 'Expiry tracking cannot be disabled after batch expiration dates have been recorded.';
+            }
+            if ($item->isDirty('track_batches') && ! $item->track_batches
+                && $item->batches()->whereNotNull('batch_number')->exists()) {
+                $errors['track_batches'] = 'Batch tracking cannot be disabled after numbered batches have been recorded.';
+            }
             if ($item->isDirty('stock') && $item->stock < $item->getOriginal('stock')
                 && $item->stock < $item->reserved_quantity) {
                 $errors['stock'] = 'Stock cannot be reduced below quantities reserved for approved requests.';
@@ -41,8 +50,8 @@ class InventoryItem extends Model
         });
 
         static::forceDeleting(function (InventoryItem $item) {
-            if ($item->transactions()->where('is_adjustment', true)->exists()) {
-                throw ValidationException::withMessages(['item' => 'Items with stock adjustment history can be archived, but cannot be permanently deleted.']);
+            if ($item->transactions()->where('is_adjustment', true)->exists() || $item->batches()->exists()) {
+                throw ValidationException::withMessages(['item' => 'Items with batch or stock adjustment history can be archived, but cannot be permanently deleted.']);
             }
         });
     }
@@ -50,7 +59,10 @@ class InventoryItem extends Model
     public function scopeWithReservationBalance(Builder $query): Builder
     {
         return $query->withSum(['requestItems as reserved_total' => fn ($q) => $q
-            ->whereHas('request', fn ($r) => $r->whereIn('status', ['approved', 'partially_withdrawn']))], DB::raw('quantity - withdrawn_quantity'));
+            ->whereHas('request', fn ($r) => $r->whereIn('status', ['approved', 'partially_withdrawn']))], DB::raw('quantity - withdrawn_quantity'))
+            ->withSum('batches as batch_stock_total', 'stock')
+            ->withSum(['batches as expired_batch_stock' => fn ($q) => $q->whereDate('expiry_date', '<', today())], 'stock')
+            ->withSum(['batches as undated_batch_stock' => fn ($q) => $q->whereNull('expiry_date')], 'stock');
     }
 
     public function getReservedQuantityAttribute(): int
@@ -66,7 +78,64 @@ class InventoryItem extends Model
 
     public function getAvailableStockAttribute(): int
     {
-        return max(0, (int) $this->stock - $this->reserved_quantity);
+        return $this->availableStockOn(today()->toDateString());
+    }
+
+    public function requiresBatchTracking(): bool
+    {
+        return $this->track_batches || $this->has_expiry;
+    }
+
+    public function batches(): HasMany
+    {
+        return $this->hasMany(InventoryBatch::class);
+    }
+
+    public function stockBalancesOn(?string $asOf = null): array
+    {
+        $asOf ??= today()->toDateString();
+        if ($asOf === today()->toDateString() && array_key_exists('batch_stock_total', $this->attributes)) {
+            $total = (int) $this->batch_stock_total;
+            $expired = (int) $this->expired_batch_stock;
+            $undated = (int) $this->undated_batch_stock;
+        } elseif ($this->relationLoaded('batches')) {
+            $total = (int) $this->batches->sum('stock');
+            $expired = (int) $this->batches->filter(fn ($batch) => $batch->expiry_date && $batch->expiry_date->toDateString() < $asOf)->sum('stock');
+            $undated = (int) $this->batches->whereNull('expiry_date')->sum('stock');
+        } else {
+            $totals = $this->batches()->selectRaw('COALESCE(SUM(stock), 0) as total, COALESCE(SUM(CASE WHEN expiry_date < ? THEN stock ELSE 0 END), 0) as expired, COALESCE(SUM(CASE WHEN expiry_date IS NULL THEN stock ELSE 0 END), 0) as undated', [$asOf])->first();
+            $total = (int) $totals->total;
+            $expired = (int) $totals->expired;
+            $undated = (int) $totals->undated;
+        }
+        $legacy = max(0, (int) $this->stock - $total);
+        $expired += $this->has_expiry && $this->expiry_date && $this->expiry_date->toDateString() < $asOf ? $legacy : 0;
+        $quarantined = $this->has_expiry ? $undated + ($this->expiry_date ? 0 : $legacy) : 0;
+        $expired = min((int) $this->stock, $expired);
+        $quarantined = min(max(0, (int) $this->stock - $expired), $quarantined);
+
+        return ['total' => $total, 'legacy' => $legacy, 'expired' => $expired,
+            'quarantined' => $quarantined, 'usable' => max(0, (int) $this->stock - $expired - $quarantined)];
+    }
+
+    public function availableStockOn(string $asOf): int
+    {
+        return max(0, $this->stockBalancesOn($asOf)['usable'] - $this->reserved_quantity);
+    }
+
+    public function getUsableStockAttribute(): int
+    {
+        return $this->stockBalancesOn()['usable'];
+    }
+
+    public function getExpiredStockAttribute(): int
+    {
+        return $this->stockBalancesOn()['expired'];
+    }
+
+    public function getQuarantinedStockAttribute(): int
+    {
+        return $this->stockBalancesOn()['quarantined'];
     }
 
     public function fifoDeliveries(): HasMany
@@ -76,29 +145,86 @@ class InventoryItem extends Model
     }
 
     /** Caller holds this item's row lock. Track delivered lots consumed by any stock reduction. */
-    public function allocateDeliveries(int $quantity): array
+    public function allocateDeliveries(int $quantity, ?string $asOf = null, ?int $batchId = null, bool $allowExpired = false): array
     {
+        $asOf ??= today()->toDateString();
         $allocations = [];
-        $lots = $this->fifoDeliveries()->lockForUpdate()->get();
-        // Historical/unlinked stock is consumed first rather than inventing a supplier for it.
-        $untracked = min($quantity, max(0, (int) $this->stock - $lots->sum('remaining_quantity')));
-        $remaining = $quantity - $untracked;
-        foreach ($lots as $lot) {
+        $batchAllocations = [];
+        $historical = 0;
+        $batches = $this->batches()->where('stock', '>', 0)->with(['deliveries' => fn ($q) => $q
+            ->where('remaining_quantity', '>', 0)->orderBy('received_on')->orderBy('id')])->lockForUpdate()->get();
+        $legacyLots = $this->fifoDeliveries()->whereNull('inventory_batch_id')->lockForUpdate()->get();
+        $candidates = collect();
+        foreach ($batches as $batch) {
+            $unlinked = max(0, $batch->stock - $batch->deliveries->sum('remaining_quantity'));
+            if ($unlinked > 0) {
+                $candidates->push(['batch' => $batch, 'lot' => null, 'quantity' => $unlinked,
+                    'expiry' => $batch->expiry_date?->toDateString(), 'arrival' => $batch->created_at->toDateString(), 'id' => 0]);
+            }
+            foreach ($batch->deliveries as $lot) {
+                $candidates->push(['batch' => $batch, 'lot' => $lot, 'quantity' => $lot->remaining_quantity,
+                    'expiry' => $batch->expiry_date?->toDateString(), 'arrival' => $lot->received_on->toDateString(), 'id' => $lot->id]);
+            }
+        }
+        foreach ($legacyLots as $lot) {
+            $candidates->push(['batch' => null, 'lot' => $lot, 'quantity' => $lot->remaining_quantity,
+                'expiry' => $this->has_expiry ? $this->expiry_date?->toDateString() : null,
+                'arrival' => $lot->received_on->toDateString(), 'id' => $lot->id]);
+        }
+        // Use every physical batch/lot here, including expired stock; it must never become "historical" usable stock.
+        $untracked = max(0, (int) $this->stock - $batches->sum('stock') - $legacyLots->sum('remaining_quantity'));
+        if ($untracked > 0) {
+            $candidates->push(['batch' => null, 'lot' => null, 'quantity' => $untracked,
+                'expiry' => $this->has_expiry ? $this->expiry_date?->toDateString() : null,
+                'arrival' => '0001-01-01', 'id' => 0]);
+        }
+        $fefo = $this->has_expiry || $candidates->contains(fn ($row) => $row['expiry'] !== null);
+        $candidates = $candidates->filter(function ($row) use ($batchId, $allowExpired, $asOf) {
+            if ($batchId && $row['batch']?->id !== $batchId) {
+                return false;
+            }
+            if ($allowExpired) {
+                return true;
+            }
+            if ($row['arrival'] > $asOf) {
+                return false;
+            }
+
+            return $row['expiry'] ? $row['expiry'] >= $asOf : ! $this->has_expiry;
+        })->sortBy(fn ($row) => [$fefo ? ($row['expiry'] ?? '9999-12-31') : '', $row['arrival'], $row['id']]);
+        $remaining = $quantity;
+        foreach ($candidates as $row) {
             if ($remaining <= 0) {
                 break;
             }
-            $take = min($remaining, $lot->remaining_quantity);
-            $lot->decrement('remaining_quantity', $take);
-            $allocations[] = ['delivery_id' => $lot->id, 'quantity' => $take];
+            $batch = $row['batch'];
+            $take = min($remaining, $row['quantity'], $batch?->stock ?? $row['quantity']);
+            if ($take <= 0) {
+                continue;
+            }
+            if ($batch) {
+                $batch->decrement('stock', $take);
+                $batchAllocations[$batch->id] = app(InventoryBatchService::class)->snapshot(
+                    $batch, ($batchAllocations[$batch->id]['quantity'] ?? 0) + $take);
+            }
+            if ($row['lot']) {
+                $row['lot']->decrement('remaining_quantity', $take);
+                $allocations[] = ['delivery_id' => $row['lot']->id, 'quantity' => $take];
+            } else {
+                $historical += $take;
+            }
             $remaining -= $take;
         }
+        if ($remaining > 0) {
+            throw ValidationException::withMessages(['quantity' => 'Insufficient usable batch stock for this date. Expired or undated perishable stock cannot be released.']);
+        }
 
-        return ['deliveries' => $allocations, 'historical_quantity' => $untracked];
+        return ['deliveries' => $allocations, 'historical_quantity' => $historical, 'batches' => array_values($batchAllocations)];
     }
 
-    protected $appends = ['reserved_quantity', 'available_stock'];
+    protected $appends = ['reserved_quantity', 'available_stock', 'usable_stock', 'expired_stock', 'quarantined_stock'];
 
-    protected $hidden = ['reserved_total'];
+    protected $hidden = ['reserved_total', 'batch_stock_total', 'expired_batch_stock', 'undated_batch_stock'];
 
     protected $fillable = [
         'category_id',
@@ -112,6 +238,7 @@ class InventoryItem extends Model
         'description',
         'planting_date',
         'has_expiry',
+        'track_batches',
         'expiry_date',
         'funding_source',
     ];
@@ -121,6 +248,7 @@ class InventoryItem extends Model
         'reorder_level' => 'integer',
         'planting_date' => 'datetime',
         'has_expiry' => 'boolean',
+        'track_batches' => 'boolean',
         'expiry_date' => 'date',
     ];
 
@@ -162,7 +290,9 @@ class InventoryItem extends Model
      */
     public function scopeLowStock(Builder $query): Builder
     {
-        return $query->whereRaw('stock <= min_stock');
+        [$stock, $bindings] = self::usableStockExpression();
+
+        return $query->whereRaw($stock.' <= inventory_items.min_stock', $bindings);
     }
 
     /**
@@ -178,7 +308,10 @@ class InventoryItem extends Model
      */
     public function scopeWarningStock(Builder $query): Builder
     {
-        return $query->whereRaw('stock > min_stock')->whereRaw('stock <= min_stock * 1.5');
+        [$stock, $bindings] = self::usableStockExpression();
+
+        return $query->whereRaw($stock.' > inventory_items.min_stock', $bindings)
+            ->whereRaw($stock.' <= inventory_items.min_stock * 1.5', $bindings);
     }
 
     /**
@@ -186,7 +319,9 @@ class InventoryItem extends Model
      */
     public function scopeGoodStock(Builder $query): Builder
     {
-        return $query->whereRaw('stock > min_stock * 1.5');
+        [$stock, $bindings] = self::usableStockExpression();
+
+        return $query->whereRaw($stock.' > inventory_items.min_stock * 1.5', $bindings);
     }
 
     /**
@@ -194,7 +329,18 @@ class InventoryItem extends Model
      */
     public function scopeNeedsReorder(Builder $query): Builder
     {
-        return $query->whereRaw('stock <= COALESCE(reorder_level, min_stock)');
+        [$stock, $bindings] = self::usableStockExpression();
+
+        return $query->whereRaw($stock.' <= COALESCE(inventory_items.reorder_level, inventory_items.min_stock)', $bindings);
+    }
+
+    private static function usableStockExpression(): array
+    {
+        $total = '(SELECT COALESCE(SUM(batch_total.stock), 0) FROM inventory_batches batch_total WHERE batch_total.inventory_item_id = inventory_items.id)';
+        $blocked = '(SELECT COALESCE(SUM(blocked.stock), 0) FROM inventory_batches blocked WHERE blocked.inventory_item_id = inventory_items.id AND (blocked.expiry_date < ? OR (inventory_items.has_expiry = ? AND blocked.expiry_date IS NULL)))';
+        $legacy = 'CASE WHEN inventory_items.has_expiry = ? AND (inventory_items.expiry_date IS NULL OR inventory_items.expiry_date < ?) AND inventory_items.stock > '.$total.' THEN inventory_items.stock - '.$total.' ELSE 0 END';
+
+        return ['(inventory_items.stock - '.$blocked.' - '.$legacy.')', [today()->toDateString(), true, true, today()->toDateString()]];
     }
 
     /**
@@ -202,19 +348,26 @@ class InventoryItem extends Model
      */
     public function scopeExpired(Builder $query): Builder
     {
-        return $query->where('has_expiry', true)
-            ->whereNotNull('expiry_date')
-            ->whereDate('expiry_date', '<', today());
+        return $query->where(function (Builder $query) {
+            $query->whereHas('batches', fn ($batches) => $batches->expired())
+                ->orWhere(fn (Builder $legacy) => $legacy->where('has_expiry', true)
+                    ->whereDate('expiry_date', '<', today())->whereRaw('inventory_items.stock > (SELECT COALESCE(SUM(legacy_batch.stock), 0) FROM inventory_batches legacy_batch WHERE legacy_batch.inventory_item_id = inventory_items.id)'));
+        });
     }
 
     /**
      * Scope a query to include items expiring in the next N days.
      */
-    public function scopeExpiringSoon(Builder $query, int $days = 30): Builder
+    public function scopeExpiringSoon(Builder $query, ?int $days = null): Builder
     {
-        return $query->where('has_expiry', true)
-            ->whereNotNull('expiry_date')
-            ->whereBetween('expiry_date', [today(), today()->addDays($days)]);
+        $days ??= (int) config('inventory.expiry_alert_days', 30);
+
+        return $query->where(function (Builder $query) use ($days) {
+            $query->whereHas('batches', fn ($batches) => $batches->expiringSoon($days))
+                ->orWhere(fn (Builder $legacy) => $legacy->where('has_expiry', true)
+                    ->whereDate('expiry_date', '>=', today())->whereDate('expiry_date', '<=', today()->addDays($days))
+                    ->whereRaw('inventory_items.stock > (SELECT COALESCE(SUM(legacy_batch.stock), 0) FROM inventory_batches legacy_batch WHERE legacy_batch.inventory_item_id = inventory_items.id)'));
+        });
     }
 
     /**
@@ -243,7 +396,7 @@ class InventoryItem extends Model
      */
     public function isLowStock(): bool
     {
-        return $this->stock <= $this->min_stock;
+        return $this->usable_stock <= $this->min_stock;
     }
 
     /**
@@ -251,10 +404,10 @@ class InventoryItem extends Model
      */
     public function getStockStatus(): string
     {
-        if ($this->stock <= $this->min_stock) {
+        if ($this->usable_stock <= $this->min_stock) {
             return 'low';
         }
-        if ($this->stock <= ($this->min_stock * 1.5)) {
+        if ($this->usable_stock <= ($this->min_stock * 1.5)) {
             return 'warning';
         }
 
@@ -266,28 +419,28 @@ class InventoryItem extends Model
      */
     public function isExpired(): bool
     {
-        return $this->has_expiry && $this->expiry_date?->lt(today());
+        return $this->expired_stock > 0;
     }
 
     /**
      * Determine whether the item expires within the next N days.
      */
-    public function isExpiringSoon(int $days = 30): bool
+    public function isExpiringSoon(?int $days = null): bool
     {
-        return $this->has_expiry
-            && $this->expiry_date
-            && $this->expiry_date->betweenIncluded(today(), today()->addDays($days));
+        $days ??= (int) config('inventory.expiry_alert_days', 30);
+        $batchExpiring = $this->relationLoaded('batches')
+            ? $this->batches->contains(fn ($batch) => $batch->isExpiringSoon($days))
+            : $this->batches()->expiringSoon($days)->exists();
+
+        return $batchExpiring || ($this->has_expiry && $this->stockBalancesOn()['legacy'] > 0
+            && $this->expiry_date && $this->expiry_date->betweenIncluded(today(), today()->addDays($days)));
     }
 
     /**
      * Resolve the item expiry status label.
      */
-    public function getExpiryStatus(int $days = 30): string
+    public function getExpiryStatus(?int $days = null): string
     {
-        if (! $this->has_expiry) {
-            return 'none';
-        }
-
         if ($this->isExpired()) {
             return 'expired';
         }
@@ -295,8 +448,11 @@ class InventoryItem extends Model
         if ($this->isExpiringSoon($days)) {
             return 'expiring';
         }
+        if ($this->quarantined_stock > 0) {
+            return 'undated';
+        }
 
-        return 'active';
+        return $this->has_expiry ? 'active' : 'none';
     }
 
     /**
@@ -312,7 +468,7 @@ class InventoryItem extends Model
      */
     public function needsReorder(): bool
     {
-        return $this->stock <= $this->getReorderPoint();
+        return $this->usable_stock <= $this->getReorderPoint();
     }
 
     /**
@@ -349,7 +505,7 @@ class InventoryItem extends Model
 
             $allocations = $lockedItem->allocateDeliveries($quantity);
             $lockedItem->decrement('stock', $quantity);
-            $lockedItem->transactions()->create([
+            $transaction = $lockedItem->transactions()->create([
                 'user_id' => $userId,
                 'transaction_type' => 'stock_out',
                 'quantity' => $quantity,
@@ -357,6 +513,7 @@ class InventoryItem extends Model
                 'meta' => $allocations,
                 'funding_source' => $fundingSource,
             ]);
+            app(InventoryBatchService::class)->recordMovements($transaction, $allocations['batches'], false);
             $this->setRawAttributes($lockedItem->fresh()->getAttributes(), true);
         });
     }

@@ -24,6 +24,11 @@ class Delivery extends Model
         return $this->belongsTo(InventoryItem::class)->withTrashed();
     }
 
+    public function inventoryBatch(): BelongsTo
+    {
+        return $this->belongsTo(InventoryBatch::class);
+    }
+
     public function procurement()
     {
         return $this->belongsTo(Procurement::class);

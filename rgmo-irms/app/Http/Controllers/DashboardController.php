@@ -8,6 +8,7 @@ use App\Models\ResourceRequest;
 use App\Models\User;
 use App\Services\ReportService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -29,7 +30,7 @@ class DashboardController extends Controller
         }
 
         $stats = $this->reportService->getDashboardStats();
-        $lowStockItems = InventoryItem::lowStock()->orderBy('stock')->limit(5)->get();
+        $lowStockItems = InventoryItem::lowStock()->withReservationBalance()->orderBy('stock')->limit(5)->get();
         $recentRequests = ResourceRequest::latest()->limit(5)->with('user')->get();
         $recentActivities = auth()->user()->hasPermission('view-audit-trail')
             ? AuditLog::latest()->limit(10)->with('user')->get()
@@ -118,16 +119,9 @@ class DashboardController extends Controller
      */
     private function moduleHealthData(): array
     {
-        $expiringSoonQuery = InventoryItem::active()
-            ->where('has_expiry', true)
-            ->whereNotNull('expiry_date')
-            ->whereBetween('expiry_date', [today(), today()->addDays(30)]);
-
-        $expiredCount = InventoryItem::active()
-            ->where('has_expiry', true)
-            ->whereNotNull('expiry_date')
-            ->whereDate('expiry_date', '<', today())
-            ->count();
+        $alertDays = (int) config('inventory.expiry_alert_days', 30);
+        $expiringSoonQuery = InventoryItem::active()->expiringSoon($alertDays);
+        $expiredCount = InventoryItem::active()->expired()->count();
 
         $moduleStats = [
             'inventory' => [
@@ -139,7 +133,7 @@ class DashboardController extends Controller
                 'metrics' => [
                     'Low stock' => InventoryItem::active()->lowStock()->count(),
                     'Warning stock' => InventoryItem::active()->warningStock()->count(),
-                    'Expiring in 30 days' => $expiringSoonQuery->count(),
+                    'Expiring in '.$alertDays.' days' => (clone $expiringSoonQuery)->count(),
                     'Expired items' => $expiredCount,
                 ],
                 'route' => route('inventory.low-stock'),
@@ -194,7 +188,7 @@ class DashboardController extends Controller
 
         $moduleStats['inventory']['status'] = $this->resolveStatus(
             $moduleStats['inventory']['metrics']['Expired items'] > 0,
-            $moduleStats['inventory']['metrics']['Low stock'] > 0 || $moduleStats['inventory']['metrics']['Expiring in 30 days'] > 0
+            $moduleStats['inventory']['metrics']['Low stock'] > 0 || $moduleStats['inventory']['metrics']['Expiring in '.$alertDays.' days'] > 0
         );
         $moduleStats['requests']['status'] = $this->resolveStatus(
             $moduleStats['requests']['metrics']['Overdue pending'] > 0,
@@ -219,8 +213,16 @@ class DashboardController extends Controller
             ],
             'modules' => $moduleStats,
             'urgent' => [
-                'low_stock_items' => InventoryItem::active()->lowStock()->orderBy('stock')->limit(5)->get(['id', 'name', 'sku', 'stock', 'unit', 'min_stock']),
-                'expiring_items' => $expiringSoonQuery->orderBy('expiry_date')->limit(5)->get(['id', 'name', 'sku', 'expiry_date']),
+                'low_stock_items' => InventoryItem::active()->lowStock()->withReservationBalance()->orderBy('stock')->limit(5)->get(),
+                'expiring_items' => (clone $expiringSoonQuery)
+                    ->withMin(['batches as next_batch_expiry' => fn ($batches) => $batches
+                        ->where('stock', '>', 0)->whereDate('expiry_date', '>=', today())
+                        ->whereDate('expiry_date', '<=', today()->addDays($alertDays))], 'expiry_date')
+                    ->orderByRaw('COALESCE((SELECT MIN(expiry_date) FROM inventory_batches WHERE inventory_batches.inventory_item_id = inventory_items.id AND stock > 0 AND expiry_date >= ?), inventory_items.expiry_date)', [today()->toDateString()])
+                    ->limit(5)->get()->map(fn ($item) => (object) [
+                        'id' => $item->id, 'name' => $item->name, 'sku' => $item->sku,
+                        'expiry_date' => $item->next_batch_expiry ? Carbon::parse($item->next_batch_expiry)->toDateString() : $item->expiry_date?->toDateString(),
+                    ]),
                 'pending_requests' => ResourceRequest::pending()->with('user:id,name')->oldest()->limit(5)->get(['id', 'user_id', 'purpose', 'needed_date', 'created_at']),
                 'recent_audit_logs' => AuditLog::with('user:id,name')->latest()->limit(6)->get(['id', 'user_id', 'action', 'module', 'created_at']),
             ],

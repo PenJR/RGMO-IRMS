@@ -33,7 +33,7 @@
 	                                        <td data-label="Needed Date">{{ $request->needed_date?->format('M d, Y') ?? 'N/A' }}</td>
 	                                        <td data-label="Readiness">
 	                                            @php
-	                                                $shortItems = $request->items->filter(fn ($item) => ! $item->item || $item->item->stock < $item->quantity);
+	                                                $shortItems = $request->items->filter(fn ($item) => ! $item->item || $item->item->available_stock < $item->quantity);
 	                                            @endphp
 	                                            @if($shortItems->isEmpty())
 	                                                <span class="badge rounded-pill status-badge status-badge--success">Ready</span>

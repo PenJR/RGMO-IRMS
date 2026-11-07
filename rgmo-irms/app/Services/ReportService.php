@@ -24,7 +24,7 @@ class ReportService
      */
     public function getInventoryReport(array $filters = [])
     {
-        $query = InventoryItem::active()->with('category', 'transactions');
+        $query = InventoryItem::active()->withReservationBalance()->with('category', 'transactions');
 
         if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
@@ -356,23 +356,18 @@ class ReportService
             ->groupBy('inventory_item_id')
             ->pluck('total', 'inventory_item_id');
 
-        $items = InventoryItem::active()
-            ->withSum(['requestItems as reserved_total' => fn ($query) => $query
-                ->whereHas('request', fn ($request) => $request->whereIn('status', [
-                    ResourceRequest::STATUS_APPROVED,
-                    ResourceRequest::STATUS_PARTIALLY_WITHDRAWN,
-                ]))], DB::raw('quantity - withdrawn_quantity'))
+        $items = InventoryItem::active()->withReservationBalance()
             ->orderBy('name')
-            ->get(['id', 'name', 'stock', 'unit', 'min_stock']);
+            ->get();
 
         $resources = $items->map(function (InventoryItem $item) use ($utilized): array {
-            $reserved = max(0, (int) ($item->reserved_total ?? 0));
+            $reserved = $item->reserved_quantity;
 
             return [
                 'id' => $item->id,
                 'name' => $item->name,
                 'unit' => $item->unit,
-                'available' => max(0, (int) $item->stock - $reserved),
+                'available' => $item->available_stock,
                 'reserved' => $reserved,
                 'utilized_30_days' => (int) ($utilized[$item->id] ?? 0),
                 'stock' => (int) $item->stock,

@@ -193,7 +193,7 @@ class ProcurementController extends Controller
 
     public function show(Procurement $procurement, ProcurementService $procurementService)
     {
-        $procurement->load(['items.inventoryItem', 'item', 'supplier', 'deliveries.receiver', 'deliveries.inventoryItem', 'preparedBy', 'approvedBy', 'rejectedBy', 'cancelledBy']);
+        $procurement->load(['items.inventoryItem', 'item', 'supplier', 'deliveries.receiver', 'deliveries.inventoryItem', 'deliveries.inventoryBatch.inventoryItem', 'preparedBy', 'approvedBy', 'rejectedBy', 'cancelledBy']);
         $procurementService->attachMonitoring(collect([$procurement]));
 
         return view('procurements.show', compact('procurement'));
@@ -206,6 +206,10 @@ class ProcurementController extends Controller
             'items' => 'prohibits:quantity|required_without:quantity|array|min:1|max:100',
             'items.*.quantity' => 'required|integer|min:0|max:2147483647',
             'items.*.unit_cost' => 'nullable|numeric|min:0|max:9999999999.99|decimal:0,2',
+            'items.*.batches' => 'sometimes|array|max:100',
+            'items.*.batches.*.quantity' => 'required|integer|min:0|max:2147483647',
+            'items.*.batches.*.batch_number' => 'nullable|string|max:100',
+            'items.*.batches.*.expiry_date' => 'nullable|date_format:Y-m-d',
             'received_on' => 'required|date_format:Y-m-d|before_or_equal:today',
             'delivery_receipt_number' => 'nullable|required_with:items|string|max:100',
             'invoice_number' => 'nullable|string|max:100',

@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Events\NotificationCreated;
+use App\Models\InventoryBatch;
 use App\Models\Notification;
 use App\Models\ResourceRequest;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class NotificationService
 {
@@ -143,7 +145,7 @@ class NotificationService
             default => 'Staff',
         };
 
-        $notificationType = $user->normalizedRole() . '_login';
+        $notificationType = $user->normalizedRole().'_login';
 
         $this->notifyRoles([User::ROLE_ADMIN], $notificationType, "{$roleLabel} {$user->name} logged in to the system.", [
             'title' => "{$roleLabel} Login",
@@ -195,17 +197,81 @@ class NotificationService
     /**
      * Send a notification for low stock.
      */
-    public function notifyLowStock(string $itemName, int $quantity): void
+    public function notifyLowStock(string $itemName, int $quantity, ?int $itemId = null): void
     {
-        $message = "Item '{$itemName}' is low in stock (Current: {$quantity}).";
+        $message = "Item '{$itemName}' is low in stock (Usable: {$quantity}).";
 
-        $this->notifyRoles([User::ROLE_ADMIN, User::ROLE_STOREKEEPER], 'low_stock', $message, [
+        $this->notifyInventoryRolesOnce('low_stock', $message, [
             'title' => 'Low Stock Alert',
             'data' => [
+                'alert_key' => hash('sha256', 'low_stock|'.($itemId ?? hash('sha256', $itemName)).'|'.$quantity),
+                'inventory_item_id' => $itemId,
                 'item_name' => $itemName,
                 'quantity' => $quantity,
             ],
         ]);
+    }
+
+    /** Record an expiry warning once for each batch state and eligible recipient. */
+    public function notifyBatchExpiry(InventoryBatch $batch): void
+    {
+        if ($batch->stock <= 0) {
+            return;
+        }
+        $batch->loadMissing('inventoryItem');
+        if (! $batch->inventoryItem || $batch->inventoryItem->trashed()) {
+            return;
+        }
+        $status = $batch->getExpiryStatus();
+        if (! in_array($status, ['expired', 'expiring', 'undated'], true)
+            || ($status === 'undated' && ! $batch->inventoryItem->has_expiry)) {
+            return;
+        }
+        $date = $batch->expiry_date?->toDateString();
+        $type = 'inventory_'.$status;
+        $detail = match ($status) {
+            'expired' => 'expired on '.$date,
+            'expiring' => 'expires on '.$date,
+            default => 'is missing its required expiry date',
+        };
+
+        $this->notifyInventoryRolesOnce($type,
+            "Batch '{$batch->display_name}' for '{$batch->inventoryItem->name}' {$detail} ({$batch->stock} {$batch->inventoryItem->unit} on hand).", [
+                'title' => match ($status) {
+                    'expired' => 'Expired Batch Alert',
+                    'expiring' => 'Batch Expiry Warning',
+                    default => 'Batch Expiry Date Required',
+                },
+                'data' => [
+                    'alert_key' => hash('sha256', implode('|', [$batch->id, $type, $date ?? 'undated', $batch->stock])),
+                    'inventory_item_id' => $batch->inventory_item_id,
+                    'batch_id' => $batch->id,
+                    'batch_number' => $batch->batch_number,
+                    'expiry_date' => $date,
+                    'quantity' => (int) $batch->stock,
+                    'status' => $status,
+                ],
+            ]);
+    }
+
+    private function notifyInventoryRolesOnce(string $type, string $message, array $attributes): void
+    {
+        foreach ([User::ROLE_ADMIN, User::ROLE_STOREKEEPER] as $role) {
+            foreach ($this->usersForRole($role) as $recipient) {
+                DB::transaction(function () use ($recipient, $role, $type, $message, $attributes) {
+                    // Serialize monitoring for each recipient, including concurrent scheduler runs.
+                    $user = User::whereKey($recipient->id)->lockForUpdate()->first();
+                    if (! $user?->isActive()) {
+                        return;
+                    }
+                    if ($user->notifications()->where('type', $type)
+                        ->where('data->alert_key', $attributes['data']['alert_key'])->exists()) {
+                        return;
+                    }
+                    $this->createNotification($user->id, $type, $message, $attributes + ['recipient_role' => $role]);
+                });
+            }
+        }
     }
 
     /**
@@ -284,7 +350,7 @@ class NotificationService
             return $names->first();
         }
 
-        return $names->first() . ' and ' . ($names->count() - 1) . ' other item(s)';
+        return $names->first().' and '.($names->count() - 1).' other item(s)';
     }
 
     /**

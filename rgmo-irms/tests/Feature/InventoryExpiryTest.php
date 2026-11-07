@@ -34,6 +34,7 @@ class InventoryExpiryTest extends TestCase
             'price' => 125,
             'has_expiry' => '1',
             'expiry_date' => '2026-12-31',
+            'batch_number' => 'CHEM-SEED-TREAT-OPENING',
         ]);
 
         $item = InventoryItem::where('sku', 'CHEM-SEED-TREAT')->firstOrFail();

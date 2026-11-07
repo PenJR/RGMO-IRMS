@@ -7,8 +7,10 @@ use App\Models\Delivery;
 use App\Models\InventoryItem;
 use App\Models\Procurement;
 use App\Models\User;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -154,10 +156,12 @@ class ProcurementService
 
         return DB::transaction(function () use ($procurement, $data, $actor) {
             $purchase = Procurement::lockForUpdate()->findOrFail($procurement->id);
+            $fingerprint = hash('sha256', json_encode(Arr::only($data, ['items', 'quantity', 'received_on', 'delivery_receipt_number', 'invoice_number', 'reference']), JSON_THROW_ON_ERROR));
             // Check retries before status: the first submission may have completed the order.
             $existing = Delivery::where('submission_key', $data['submission_key'])->first();
             if ($existing) {
                 abort_unless($existing->procurement_id === $purchase->id, 409);
+                abort_if($existing->submission_fingerprint && $existing->submission_fingerprint !== $fingerprint, 409, 'This receipt key already belongs to a different delivery.');
 
                 return $existing;
             }
@@ -212,28 +216,92 @@ class ProcurementService
                     throw ValidationException::withMessages([$errorKey => 'This inventory item is archived and cannot receive deliveries.']);
                 }
                 $unitCost = $input['unit_cost'] ?? $line->unit_cost;
-                $delivery = $purchase->deliveries()->create([
-                    'procurement_item_id' => $line->id,
-                    'inventory_item_id' => $item->id, 'received_by' => $actor->id,
-                    'received_on' => $data['received_on'], 'quantity' => $quantity,
-                    'remaining_quantity' => $quantity, 'reference' => $data['reference'] ?? null,
-                    'receipt_key' => $data['submission_key'],
-                    'submission_key' => $firstDelivery ? (string) Str::uuid() : $data['submission_key'],
-                    'delivery_receipt_number' => $data['delivery_receipt_number'] ?? null,
-                    'invoice_number' => $data['invoice_number'] ?? null,
-                    'unit_cost' => $unitCost, 'unit_of_measurement' => $line->unit_of_measurement,
-                ]);
-                $transaction = app(InventoryService::class)->recordStockIn($item, $quantity, 'Delivery #'.$delivery->id.' / '.$purchase->supplier_name, $actor->id, $purchase->funding_source, 'DEL-'.$delivery->id);
-                $transaction->update(['meta' => [
-                    'delivery_id' => $delivery->id, 'procurement_id' => $purchase->id,
-                    'procurement_item_id' => $line->id, 'unit_cost' => $unitCost,
-                    'received_on' => $data['received_on'],
-                    'delivery_receipt_number' => $delivery->delivery_receipt_number,
-                    'invoice_number' => $delivery->invoice_number,
-                ]]);
+                $batches = $input['batches'] ?? [];
+                if (! $batches && $item->requiresBatchTracking()) {
+                    throw ValidationException::withMessages(['items.'.$line->id.'.batches' => 'Enter the batch numbers, quantities and expiration dates for this tracked item.']);
+                }
+                $legacyReceipt = ! $batches;
+                if (! $batches) {
+                    $batches = [['quantity' => $quantity, 'batch_number' => null, 'expiry_date' => null]];
+                }
+                $positive = [];
+                $seen = [];
+                foreach ($batches as $index => $batchInput) {
+                    $prefix = 'items.'.$line->id.'.batches.'.$index.'.';
+                    try {
+                        Validator::make($batchInput, ['quantity' => 'required|integer|min:0|max:2147483647'])->validate();
+                        if ((int) $batchInput['quantity'] === 0) {
+                            continue;
+                        }
+                        $legacy = $legacyReceipt;
+                        $batchInput = Validator::make($batchInput, [
+                            'quantity' => 'required|integer|min:1|max:2147483647',
+                            'batch_number' => [$legacy ? 'nullable' : 'required', 'string', 'max:100'],
+                            'expiry_date' => [$item->has_expiry ? 'required' : 'nullable', 'date_format:Y-m-d', 'after_or_equal:'.$data['received_on']],
+                        ])->validate();
+                        $number = isset($batchInput['batch_number']) ? trim($batchInput['batch_number']) : null;
+                        if ($number && isset($seen[$number])) {
+                            throw ValidationException::withMessages(['batch_number' => 'Enter each batch number only once for this PO item.']);
+                        }
+                        if ($number) {
+                            $seen[$number] = true;
+                        }
+                        $batchInput['batch_number'] = $number;
+                        $batchInput['legacy'] = $legacy;
+                        $positive[] = ['input' => $batchInput, 'prefix' => $prefix];
+                    } catch (ValidationException $exception) {
+                        $errors = [];
+                        foreach ($exception->errors() as $field => $messages) {
+                            $errors[$prefix.$field] = $messages;
+                        }
+                        throw ValidationException::withMessages($errors);
+                    }
+                }
+                if (array_sum(array_map(fn ($row) => (int) $row['input']['quantity'], $positive)) !== $quantity) {
+                    throw ValidationException::withMessages(['items.'.$line->id.'.batches' => 'Batch quantities must equal the total received quantity for this item.']);
+                }
+                foreach ($positive as $row) {
+                    $batchInput = $row['input'];
+                    $batchService = app(InventoryBatchService::class);
+                    try {
+                        $batch = $batchService->resolve($item, $batchInput['batch_number'], $batchInput['expiry_date'] ?? null, $actor, $batchInput['legacy']);
+                    } catch (ValidationException $exception) {
+                        $errors = [];
+                        foreach ($exception->errors() as $field => $messages) {
+                            $errors[$row['prefix'].$field] = $messages;
+                        }
+                        throw ValidationException::withMessages($errors);
+                    }
+                    $batchQuantity = (int) $batchInput['quantity'];
+                    $batch->increment('stock', $batchQuantity);
+                    $delivery = $purchase->deliveries()->create([
+                        'procurement_item_id' => $line->id,
+                        'inventory_batch_id' => $batch->id,
+                        'submission_fingerprint' => $fingerprint,
+                        'inventory_item_id' => $item->id, 'received_by' => $actor->id,
+                        'received_on' => $data['received_on'], 'quantity' => $batchQuantity,
+                        'remaining_quantity' => $batchQuantity, 'reference' => $data['reference'] ?? null,
+                        'receipt_key' => $data['submission_key'],
+                        'submission_key' => $firstDelivery ? (string) Str::uuid() : $data['submission_key'],
+                        'delivery_receipt_number' => $data['delivery_receipt_number'] ?? null,
+                        'invoice_number' => $data['invoice_number'] ?? null,
+                        'unit_cost' => $unitCost, 'unit_of_measurement' => $line->unit_of_measurement,
+                    ]);
+                    $batchSnapshots = [$batchService->snapshot($batch, $batchQuantity)];
+                    $transaction = app(InventoryService::class)->recordStockIn($item, $batchQuantity, 'Delivery #'.$delivery->id.' / '.$purchase->supplier_name, $actor->id, $purchase->funding_source, 'DEL-'.$delivery->id);
+                    $transaction->update(['meta' => [
+                        'delivery_id' => $delivery->id, 'procurement_id' => $purchase->id,
+                        'procurement_item_id' => $line->id, 'unit_cost' => $unitCost,
+                        'received_on' => $data['received_on'],
+                        'delivery_receipt_number' => $delivery->delivery_receipt_number,
+                        'invoice_number' => $delivery->invoice_number,
+                        'batches' => $batchSnapshots,
+                    ]]);
+                    $batchService->recordMovements($transaction, $batchSnapshots, true);
+                    AuditLog::log($actor->id, 'receive', 'delivery', Delivery::class, $delivery->id, null, $delivery->toArray());
+                    $firstDelivery ??= $delivery;
+                }
                 $line->increment('received_quantity', $quantity);
-                AuditLog::log($actor->id, 'receive', 'delivery', Delivery::class, $delivery->id, null, $delivery->toArray());
-                $firstDelivery ??= $delivery;
             }
             if (! $firstDelivery) {
                 throw ValidationException::withMessages([isset($data['items']) ? 'items' : 'quantity' => 'Enter a positive received quantity for at least one item.']);

@@ -50,7 +50,7 @@ class SupplierController extends Controller
         $procurements = $supplier->procurements()->with('items.inventoryItem')
             ->latest()->paginate(10, ['*'], 'purchases_page');
         $deliveries = Delivery::whereHas('procurement', fn ($query) => $query->where('supplier_id', $supplier->id))
-            ->with(['procurement.supplier', 'inventoryItem', 'receiver'])
+            ->with(['procurement.supplier', 'inventoryItem', 'receiver', 'inventoryBatch.inventoryItem'])
             ->orderByDesc('received_on')->orderByDesc('id')->paginate(15, ['*'], 'deliveries_page');
 
         return view('suppliers.show', compact('supplier', 'procurements', 'deliveries'));

@@ -233,7 +233,7 @@ class RmsService
     /**
      * Get low stock items.
      */
-    public function getLowStockItems() { return InventoryItem::whereColumn('stock', '<=', 'min_stock')->get(); }
+    public function getLowStockItems() { return InventoryItem::lowStock()->withReservationBalance()->get(); }
 
     /**
      * Create category.

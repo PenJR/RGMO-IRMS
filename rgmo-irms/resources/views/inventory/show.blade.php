@@ -37,19 +37,16 @@
                                     <dd class="text-sm text-gray-900">{{ $item->description ?? 'No description' }}</dd>
                                 </div>
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500">Expiry</dt>
+                                    <dt class="text-sm font-medium text-gray-500">Batch &amp; Expiry Tracking</dt>
                                     <dd class="text-sm text-gray-900">
                                         @if($item->has_expiry)
-                                            {{ $item->expiry_date?->format('M d, Y') ?? 'Date not set' }}
-	                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-2
-	                                                @if($item->isExpired()) bg-red-100 text-red-800
-	                                                @elseif($item->isExpiringSoon()) bg-yellow-100 text-yellow-800
-	                                                @else bg-green-100 text-green-800 @endif">
-	                                                {{ str($item->getExpiryStatus())->replace('_', ' ')->title() }}
-	                                            </span>
-	                                        @else
-	                                            Does not expire
+                                            Batch numbers and expiry dates · FEFO
+                                        @elseif($item->requiresBatchTracking())
+                                            Batch / lot numbers · FIFO
+                                        @else
+                                            Arrival order · FIFO
                                         @endif
+                                        <div class="small text-muted">Review each batch below. Expired stock and expiry-tracked stock without a date cannot be issued.</div>
                                     </dd>
                                 </div>
                             </dl>
@@ -60,18 +57,26 @@
                             <h3 class="text-lg font-medium text-gray-900 mb-4">Stock Information</h3>
                             <dl class="space-y-3">
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500">Current Stock</dt>
+                                    <dt class="text-sm font-medium text-gray-500">On Hand</dt>
                                     <dd class="text-sm text-gray-900">
-                                        {{ $item->stock }} {{ $item->unit }}<div class="small text-muted">{{ $item->reserved_quantity }} reserved · {{ $item->available_stock }} available</div>
+                                        {{ $item->stock }} {{ $item->unit }}
                                         @if($item->isLowStock())
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 ml-2">
-                                                Low Stock
+                                                Critical / Low Stock
                                             </span>
                                         @endif
                                     </dd>
                                 </div>
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500">Minimum Stock</dt>
+                                    <dt class="text-sm font-medium text-gray-500">Usable / Expired / Quarantined</dt>
+                                    <dd class="text-sm text-gray-900">{{ $item->usable_stock }} usable · {{ $item->expired_stock }} expired · {{ $item->quarantined_stock }} quarantined {{ $item->unit }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Reserved / Available</dt>
+                                    <dd class="text-sm text-gray-900">{{ $item->reserved_quantity }} reserved · {{ $item->available_stock }} available {{ $item->unit }}<div class="small text-muted">Available = usable stock less active reservations.</div></dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Critical / Low Stock Threshold</dt>
                                     <dd class="text-sm text-gray-900">{{ $item->min_stock }} {{ $item->unit }}</dd>
                                 </div>
 	                                <div>
@@ -106,6 +111,34 @@
                 </div>
             </div>
 
+            <div class="card mb-4" id="inventory-batches"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <h3 class="h5 mb-0">Batch balances &amp; expiry</h3>
+                    <a href="{{ route('inventory.batches.index', ['item_id' => $item->id]) }}" class="btn btn-sm btn-outline-secondary">Batch monitoring</a>
+                </div>
+                <p class="small text-muted">Expiry-tracked items issue by earliest valid expiry (FEFO). Other items issue by arrival order (FIFO). Historical balances keep their legacy lot labels.</p>
+                <div class="table-responsive"><table class="table align-middle">
+                    <thead><tr><th>Batch / Lot</th><th>On hand</th><th>Expiry date</th><th>Status</th><th class="text-end">Details</th></tr></thead>
+                    <tbody>
+                        @forelse($batches as $batch)
+                            @php
+                                $batchStatus = $batch->getExpiryStatus();
+                            @endphp
+                            <tr>
+                                <td><a href="{{ route('inventory.batches.show', $batch) }}">{{ $batch->display_name }}</a>@if($batch->is_legacy)<div class="small text-muted">Historical stock</div>@endif</td>
+                                <td>{{ $batch->stock }} {{ $item->unit }}</td>
+                                <td>{{ $batch->expiry_date?->format('M d, Y') ?? ($item->has_expiry ? 'Date needed — quarantined' : 'No expiry') }}</td>
+                                <td><span class="badge text-bg-{{ match($batchStatus) { 'expired' => 'danger', 'expiring', 'undated' => 'warning', 'depleted' => 'secondary', default => 'success' } }}">{{ str($batchStatus)->replace('_', ' ')->title() }}</span></td>
+                                <td class="text-end"><a href="{{ route('inventory.batches.show', $batch) }}" class="btn btn-sm btn-outline-primary">View batch</a></td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="5" class="text-center text-muted py-3">No batch balances recorded.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table></div>
+                {{ $batches->fragment('inventory-batches')->links() }}
+            </div></div>
+
             <div class="card mb-4"><div class="card-body">
                 <div class="d-flex justify-content-between gap-2 mb-3"><h3 class="h5">Purchase &amp; delivery trace</h3>
                     @if(auth()->user()->hasPermission(['manage-inventory', 'manage-purchase-orders', 'approve-purchase-orders']))
@@ -126,7 +159,7 @@
                         <h3 class="text-lg font-medium text-gray-900 mb-2">Administrator Stock Adjustment</h3>
                         <p class="text-muted small mb-3">Correct a discrepancy using its incident report. Saved adjustments remain in history; record a new adjustment to correct a mistake.</p>
                         <p class="small">Item: <strong>{{ $item->name }}</strong> · On hand: <strong>{{ $item->stock }} {{ $item->unit }}</strong> · Reserved: {{ $item->reserved_quantity }} · Available: {{ $item->available_stock }}</p>
-                        <form method="POST" action="{{ route('inventory.adjust-stock', $item) }}" class="grid grid-cols-1 md:grid-cols-3 gap-4" data-confirm="Record this stock adjustment and its incident report in the item history?">
+                        <form method="POST" action="{{ route('inventory.adjust-stock', $item) }}" class="grid grid-cols-1 md:grid-cols-3 gap-4" data-batch-adjustment data-track-batches="{{ $item->requiresBatchTracking() ? '1' : '0' }}" data-has-expiry="{{ $item->has_expiry ? '1' : '0' }}" data-confirm="Record this stock adjustment and its incident report in the item history?">
                             @csrf
                             <input type="hidden" name="idempotency_key" value="{{ old('idempotency_key', (string) Str::uuid()) }}">
                             <div>
@@ -149,6 +182,28 @@
                                 <label for="incident_report_reference" class="block text-sm font-medium text-gray-700">Incident report reference</label>
                                 <input type="text" name="incident_report_reference" id="incident_report_reference" class="form-control mt-1" maxlength="100" value="{{ old('incident_report_reference') }}" placeholder="e.g., IR-2026-001" required>
                                 @error('incident_report_reference')<div class="text-danger small">{{ $message }}</div>@enderror
+                            </div>
+                            <div>
+                                <label for="inventory_batch_id" class="block text-sm font-medium text-gray-700">Existing batch / lot</label>
+                                <select name="inventory_batch_id" id="inventory_batch_id" class="form-select mt-1">
+                                    <option value="">{{ $item->requiresBatchTracking() ? 'Choose a batch, or create one for an increase' : 'Automatic allocation / opening balance' }}</option>
+                                    @foreach($adjustmentBatches as $adjustmentBatch)
+                                        <option value="{{ $adjustmentBatch->id }}" @selected((string) old('inventory_batch_id') === (string) $adjustmentBatch->id)>{{ $adjustmentBatch->display_name }} · {{ $adjustmentBatch->stock }} {{ $item->unit }} · {{ $adjustmentBatch->expiry_date?->format('M d, Y') ?? ($item->has_expiry ? 'No expiry date' : 'No expiry') }} · {{ ucfirst($adjustmentBatch->getExpiryStatus()) }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="small text-muted">Select a batch for a tracked decrease. Expired and quarantined batches may be removed as corrections.</div>
+                                @error('inventory_batch_id')<div class="text-danger small">{{ $message }}</div>@enderror
+                            </div>
+                            <div data-new-adjustment-batch>
+                                <label for="adjustment_batch_number" class="block text-sm font-medium text-gray-700">New Batch / Lot Number</label>
+                                <input type="text" name="batch_number" id="adjustment_batch_number" class="form-control mt-1" maxlength="100" value="{{ old('batch_number') }}">
+                                @error('batch_number')<div class="text-danger small">{{ $message }}</div>@enderror
+                            </div>
+                            <div data-new-adjustment-batch>
+                                <label for="adjustment_expiry_date" class="block text-sm font-medium text-gray-700">New Batch Expiry Date</label>
+                                <input type="date" name="expiry_date" id="adjustment_expiry_date" class="form-control mt-1" value="{{ old('expiry_date') }}">
+                                <div class="small text-muted">An existing batch keeps its own expiry date.</div>
+                                @error('expiry_date')<div class="text-danger small">{{ $message }}</div>@enderror
                             </div>
                             <div class="md:col-span-3">
                                 <label for="reason" class="block text-sm font-medium text-gray-700">Reason</label>

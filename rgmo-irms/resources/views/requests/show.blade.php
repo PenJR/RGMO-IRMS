@@ -127,7 +127,7 @@
                                                             <span class="badge bg-success">Reserved for this project</span>
                                                         @elseif($item->item->available_stock < $item->remaining_quantity)
 	                                                        <span class="badge bg-danger text-white">Insufficient</span>
-	                                                    @elseif($item->item->stock <= $item->item->min_stock)
+	                                                    @elseif($item->item->isLowStock())
 	                                                        <span class="badge bg-warning text-dark">Low after release</span>
 	                                                    @else
 	                                                        <span class="badge status-badge status-badge--success">Ready</span>

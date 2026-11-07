@@ -158,7 +158,7 @@
                                     <p class="fw-semibold mb-0">{{ $item->name }}</p>
 
                                 </div>
-                                <span class="badge bg-warning-subtle text-warning">{{ $item->expiry_date->format('M d, Y') }}</span>
+                                <span class="badge bg-warning-subtle text-warning">{{ \Illuminate\Support\Carbon::parse($item->expiry_date)->format('M d, Y') }}</span>
                             </div>
                         @empty
                             <div class="text-center py-5">

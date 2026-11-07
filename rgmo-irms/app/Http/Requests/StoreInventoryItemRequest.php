@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\InventoryItem;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreInventoryItemRequest extends FormRequest
 {
@@ -33,7 +34,9 @@ class StoreInventoryItemRequest extends FormRequest
             'description' => 'nullable|string|max:5000',
             'planting_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
             'has_expiry' => 'sometimes|boolean',
-            'expiry_date' => 'nullable|required_if:has_expiry,1|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
+            'track_batches' => 'sometimes|boolean',
+            'batch_number' => [Rule::requiredIf(fn () => ($this->boolean('track_batches') || $this->boolean('has_expiry')) && (int) $this->input('stock', 0) > 0), 'nullable', 'string', 'max:100'],
+            'expiry_date' => [Rule::requiredIf(fn () => $this->boolean('has_expiry') && (int) $this->input('stock', 0) > 0), 'nullable', 'date_format:Y-m-d', 'after_or_equal:0001-01-01', 'before_or_equal:9999-12-31'],
         ];
     }
 }

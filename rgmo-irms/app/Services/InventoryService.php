@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -77,7 +78,7 @@ class InventoryService
      */
     public function getLowStockItems()
     {
-        return InventoryItem::lowStock()->active()->get();
+        return InventoryItem::lowStock()->active()->with('category')->withReservationBalance()->get();
     }
 
     /**
@@ -101,19 +102,30 @@ class InventoryService
             unset($data['category_name']);
 
             $openingStock = (int) ($data['stock'] ?? 0);
+            $batchNumber = $data['batch_number'] ?? null;
+            unset($data['batch_number']);
+            $data['track_batches'] = ($data['track_batches'] ?? false) || ($data['has_expiry'] ?? false);
             $data['stock'] = 0;
             $item = InventoryItem::create($data);
 
             if ($openingStock > 0) {
                 $item->update(['stock' => $openingStock]);
-                $item->transactions()->create([
+                $allocations = [];
+                if ($item->requiresBatchTracking()) {
+                    $batchService = app(InventoryBatchService::class);
+                    $batch = $batchService->resolve($item, $batchNumber, $item->expiry_date?->toDateString(), $userId ? User::findOrFail($userId) : null, ! $batchNumber);
+                    $batch->increment('stock', $openingStock);
+                    $allocations[] = $batchService->snapshot($batch, $openingStock);
+                }
+                $transaction = $item->transactions()->create([
                     'user_id' => $userId,
                     'transaction_type' => 'stock_in',
                     'quantity' => $openingStock,
                     'source' => 'Opening balance',
                     'reference' => 'OPENING-'.$item->id,
-                    'meta' => ['opening_balance' => true],
+                    'meta' => ['opening_balance' => true, 'batches' => $allocations],
                 ]);
+                app(InventoryBatchService::class)->recordMovements($transaction, $allocations, true);
             }
 
             if ($userId) {
@@ -146,11 +158,18 @@ class InventoryService
             $oldValues = $lockedItem->toArray();
             $newStock = array_key_exists('stock', $data) ? (int) $data['stock'] : (int) $lockedItem->stock;
             unset($data['stock']);
+            if (array_key_exists('expiry_date', $data) && $lockedItem->batches()->exists()
+                && ($data['expiry_date'] ?: null) !== $lockedItem->expiry_date?->toDateString()) {
+                throw ValidationException::withMessages(['expiry_date' => 'Update expiration dates on the individual batch profiles.']);
+            }
 
             if ($newStock !== (int) $lockedItem->stock) {
                 throw ValidationException::withMessages(['stock' => 'Use the administrator stock adjustment form with a reason and incident report reference to change an existing balance.']);
             }
             $lockedItem->update($data);
+            if ($lockedItem->requiresBatchTracking()) {
+                app(InventoryBatchService::class)->ensureLegacyStock($lockedItem, $userId ? User::findOrFail($userId) : null);
+            }
 
             if ($userId) {
                 AuditLog::log(
@@ -255,9 +274,10 @@ class InventoryService
      *
      * @throws ValidationException
      */
-    public function recordStockOut(InventoryItem $item, int $quantity, string $destination, int $userId, ?string $fundingSource = null, ?string $reference = null, ?string $idempotencyKey = null): InventoryTransaction
+    public function recordStockOut(InventoryItem $item, int $quantity, string $destination, int $userId, ?string $fundingSource = null, ?string $reference = null, ?string $idempotencyKey = null, ?string $effectiveDate = null): InventoryTransaction
     {
-        $transaction = DB::transaction(function () use ($item, $quantity, $destination, $userId, $fundingSource, $reference, $idempotencyKey) {
+        $effectiveDate ??= today()->toDateString();
+        $transaction = DB::transaction(function () use ($item, $quantity, $destination, $userId, $fundingSource, $reference, $idempotencyKey, $effectiveDate) {
             if ($idempotencyKey) {
                 $existing = InventoryTransaction::where('idempotency_key', $idempotencyKey)->first();
                 if ($existing) {
@@ -266,11 +286,11 @@ class InventoryService
             }
 
             $lockedItem = InventoryItem::lockForUpdate()->findOrFail($item->id);
-            if ($quantity < 1 || $lockedItem->available_stock < $quantity) {
+            if ($quantity < 1 || $lockedItem->availableStockOn($effectiveDate) < $quantity) {
                 throw ValidationException::withMessages(['quantity' => 'Insufficient stock to complete this transaction.']);
             }
 
-            $allocations = $lockedItem->allocateDeliveries($quantity);
+            $allocations = $lockedItem->allocateDeliveries($quantity, $effectiveDate);
             $lockedItem->decrement('stock', $quantity);
             $transaction = $lockedItem->transactions()->create([
                 'user_id' => $userId,
@@ -282,6 +302,8 @@ class InventoryService
                 'reference' => $reference,
                 'idempotency_key' => $idempotencyKey,
             ]);
+
+            app(InventoryBatchService::class)->recordMovements($transaction, $allocations['batches'], false);
 
             AuditLog::log(
                 $userId,
@@ -298,7 +320,7 @@ class InventoryService
 
         $freshItem = $item->fresh();
         if ($freshItem->isLowStock()) {
-            $this->notificationService->notifyLowStock($freshItem->name, $freshItem->stock);
+            $this->notificationService->notifyLowStock($freshItem->name, $freshItem->usable_stock, $freshItem->id);
         }
 
         return $transaction;

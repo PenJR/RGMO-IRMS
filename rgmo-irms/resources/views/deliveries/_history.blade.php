@@ -1,11 +1,23 @@
 <div class="table-responsive">
     <table class="table align-middle mb-0">
-        <thead><tr><th>Delivery / Date</th><th>Item</th><th>Supplier / PO</th><th>Delivery receipt / Invoice</th><th>Received</th><th>Unit price</th><th>Total</th><th>Remaining in stock</th><th>Received by</th></tr></thead>
+        <thead><tr><th>Delivery / Date</th><th>Item</th><th>Batch / Expiry</th><th>Supplier / PO</th><th>Delivery receipt / Invoice</th><th>Received</th><th>Unit price</th><th>Total</th><th>Remaining in stock</th><th>Received by</th></tr></thead>
         <tbody>
             @forelse($deliveries as $delivery)
                 <tr>
                     <td>DEL-{{ $delivery->id }}<div class="small text-muted">{{ $delivery->received_on->format('M d, Y') }}</div></td>
                     <td>@if($delivery->inventoryItem && ! $delivery->inventoryItem->trashed())<a href="{{ route('inventory.show', $delivery->inventory_item_id) }}">{{ $delivery->inventoryItem->name }}</a>@else{{ $delivery->inventoryItem?->name ?? 'Archived item' }}@endif</td>
+                    <td>
+                        @if($delivery->inventoryBatch)
+                            @php
+                                $deliveryBatchStatus = $delivery->inventoryBatch->getExpiryStatus();
+                            @endphp
+                            <a href="{{ route('inventory.batches.show', $delivery->inventoryBatch) }}">{{ $delivery->inventoryBatch->display_name }}</a>
+                            <div class="small text-muted">{{ $delivery->inventoryBatch->expiry_date?->format('M d, Y') ?? ($delivery->inventoryItem?->has_expiry ? 'Date needed' : 'No expiry') }}</div>
+                            <span class="badge text-bg-{{ match($deliveryBatchStatus) { 'expired' => 'danger', 'expiring', 'undated' => 'warning', 'depleted' => 'secondary', default => 'success' } }}">{{ ucfirst($deliveryBatchStatus) }}</span>
+                        @else
+                            <span class="text-muted small">Historical / unlinked batch</span>
+                        @endif
+                    </td>
                     <td>
                         @if($delivery->procurement->supplier_id && auth()->user()->can('view', $delivery->procurement->supplier))
                             <a href="{{ route('suppliers.show', $delivery->procurement->supplier_id) }}">{{ $delivery->procurement->supplier->company_name }}</a>
@@ -27,7 +39,7 @@
                     <td>{{ $delivery->receiver?->name ?? 'Not recorded' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="text-muted text-center py-3">No deliveries received yet.</td></tr>
+                <tr><td colspan="10" class="text-muted text-center py-3">No deliveries received yet.</td></tr>
             @endforelse
         </tbody>
     </table>

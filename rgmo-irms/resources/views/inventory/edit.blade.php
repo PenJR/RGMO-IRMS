@@ -55,9 +55,9 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Low Stock Threshold</label>
+                            <label class="form-label">Critical / Low Stock Threshold</label>
                             <input type="number" name="min_stock" value="{{ old('min_stock', $item->min_stock) }}" min="0" class="form-control @error('min_stock') is-invalid @enderror" required max="2147483647" step="1">
-                            <div class="form-text">This resource is flagged low when stock is at or below this value.</div>
+                            <div class="form-text">Flag this resource when usable stock is at or below this value. Expired and quarantined stock is excluded.</div>
                             @error('min_stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
@@ -65,6 +65,15 @@
                             <label class="form-label">Reorder Level</label>
                             <input type="number" name="reorder_level" value="{{ old('reorder_level', $item->reorder_level) }}" min="0" class="form-control @error('reorder_level') is-invalid @enderror" max="2147483647" step="1">
                             @error('reorder_level')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input type="hidden" name="track_batches" value="0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="track_batches" name="track_batches" value="1" {{ old('track_batches', $item->track_batches) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-semibold" for="track_batches">Track batch / lot numbers</label>
+                            </div>
+                            @error('track_batches')<div class="text-danger small">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="col-md-6">
@@ -79,12 +88,15 @@
                                 <input class="form-check-input" type="checkbox" role="switch" id="has_expiry" name="has_expiry" value="1" {{ old('has_expiry', $item->has_expiry) ? 'checked' : '' }}>
                                 <label class="form-check-label fw-semibold" for="has_expiry">This item expires</label>
                             </div>
+                            <div class="form-text">Expiry tracking also enables batch tracking.</div>
+                            @error('has_expiry')<div class="text-danger small">{{ $message }}</div>@enderror
                         </div>
 
-                        <div class="col-md-6" id="expiry_date_group">
-                            <label class="form-label">Expiry Date</label>
-                            <input type="date" name="expiry_date" id="expiry_date" value="{{ old('expiry_date', $item->expiry_date?->format('Y-m-d')) }}" class="form-control @error('expiry_date') is-invalid @enderror">
-                            @error('expiry_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0">
+                                Expiry dates and quantities belong to individual batches. <a href="{{ route('inventory.show', $item) }}#inventory-batches">View this item's batches</a> or <a href="{{ route('inventory.batches.index', ['item_id' => $item->id]) }}">open batch monitoring</a> to review them.
+                                Existing batch dates are kept when this item profile is saved.
+                            </div>
                         </div>
                     </div>
 
@@ -97,22 +109,4 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const toggle = document.getElementById('has_expiry');
-            const group = document.getElementById('expiry_date_group');
-            const input = document.getElementById('expiry_date');
-
-            const syncExpiry = () => {
-                group.classList.toggle('d-none', !toggle.checked);
-                input.required = toggle.checked;
-                if (!toggle.checked) {
-                    input.value = '';
-                }
-            };
-
-            toggle.addEventListener('change', syncExpiry);
-            syncExpiry();
-        });
-    </script>
 </x-app-layout>

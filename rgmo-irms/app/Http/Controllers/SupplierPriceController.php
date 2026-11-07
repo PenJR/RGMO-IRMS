@@ -36,7 +36,7 @@ class SupplierPriceController extends Controller
                 ->groupBy('procurements.supplier_id', 'suppliers.company_name', 'deliveries.unit_of_measurement')
                 ->groupByRaw('COALESCE(suppliers.company_name, procurements.supplier_name)')
                 ->orderBy('deliveries.unit_of_measurement')->orderBy('average_price')->get();
-            $deliveries = $history->with(['procurement.supplier', 'inventoryItem', 'receiver'])
+            $deliveries = $history->with(['procurement.supplier', 'inventoryItem', 'receiver', 'inventoryBatch.inventoryItem'])
                 ->orderByDesc('received_on')->orderByDesc('id')->paginate(20)->withQueryString();
         }
 

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AIForecastingController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\BatchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\NotificationController;
@@ -82,6 +83,9 @@ Route::middleware('auth')->group(function () {
 
     // Inventory Module
     Route::middleware(['permission:view-inventory,manage-inventory'])->group(function () {
+        Route::get('/inventory/batches', [BatchController::class, 'index'])->name('inventory.batches.index');
+        Route::get('/inventory/batches/{batch}', [BatchController::class, 'show'])->name('inventory.batches.show');
+        Route::patch('/inventory/batches/{batch}', [BatchController::class, 'update'])->name('inventory.batches.update');
         Route::get('/inventory/low-stock', [InventoryController::class, 'lowStock'])->name('inventory.low-stock');
         Route::get('/inventory/export-pdf', [InventoryController::class, 'exportPdf'])->name('inventory.export-pdf');
         Route::get('/inventory/export-csv', [InventoryController::class, 'exportCsv'])->name('inventory.export-csv');

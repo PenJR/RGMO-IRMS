@@ -55,7 +55,7 @@ class InventoryController extends Controller
         $items = $this->inventoryService
             ->getAllItems(8, $filters)
             ->withQueryString();
-        $items->getCollection()->load('fifoDeliveries.procurement');
+        $items->getCollection()->load(['fifoDeliveries.procurement', 'fifoDeliveries.inventoryBatch', 'batches.deliveries.procurement']);
 
         return view('inventory.index', [
             'items' => $items,
@@ -111,7 +111,7 @@ class InventoryController extends Controller
      */
     public function show(InventoryItem $inventory)
     {
-        $item = $inventory;
+        $item = InventoryItem::withReservationBalance()->findOrFail($inventory->id);
 
         $this->authorize('view', $item);
 
@@ -121,6 +121,8 @@ class InventoryController extends Controller
         return view('inventory.show', [
             'item' => $item,
             'transactions' => $transactions,
+            'batches' => $item->batches()->with('inventoryItem')->orderByRaw('CASE WHEN expiry_date IS NULL THEN 1 ELSE 0 END')->orderBy('expiry_date')->orderBy('id')->paginate(10, ['*'], 'batches_page')->withQueryString(),
+            'adjustmentBatches' => $item->batches()->where('stock', '>', 0)->with('inventoryItem')->orderBy('batch_number')->get(),
             'procurements' => Procurement::where(function ($query) use ($item) {
                 $query->whereHas('items', fn ($lines) => $lines->where('inventory_item_id', $item->id))
                     ->orWhere('inventory_item_id', $item->id);
@@ -128,7 +130,7 @@ class InventoryController extends Controller
                 ->withSum(['deliveries' => fn ($deliveries) => $deliveries->where('inventory_item_id', $item->id)], 'quantity')
                 ->latest()->paginate(10, ['*'], 'purchases_page'),
             'deliveries' => Delivery::where('inventory_item_id', $item->id)
-                ->with(['procurement.supplier', 'inventoryItem', 'receiver'])
+                ->with(['procurement.supplier', 'inventoryItem', 'receiver', 'inventoryBatch.inventoryItem'])
                 ->orderByDesc('received_on')->orderByDesc('id')->paginate(10, ['*'], 'deliveries_page'),
         ]);
     }
@@ -142,7 +144,7 @@ class InventoryController extends Controller
      */
     public function edit(InventoryItem $inventory)
     {
-        $item = $inventory;
+        $item = $inventory->loadCount('batches');
 
         $this->authorize('update', $item);
 
@@ -178,11 +180,14 @@ class InventoryController extends Controller
             'description' => 'nullable|string|max:5000',
             'planting_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
             'has_expiry' => 'sometimes|boolean',
-            'expiry_date' => 'nullable|required_if:has_expiry,1|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
+            'track_batches' => 'sometimes|boolean',
+            'expiry_date' => 'nullable|date_format:Y-m-d|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
         ]);
 
         $validated['has_expiry'] = $request->boolean('has_expiry');
-        $validated['expiry_date'] = $validated['has_expiry'] ? ($validated['expiry_date'] ?? null) : null;
+        if (! $validated['has_expiry']) {
+            $validated['expiry_date'] = null;
+        }
 
         $this->inventoryService->updateItem($item, $validated, auth()->id());
 
@@ -402,6 +407,7 @@ class InventoryController extends Controller
     {
         $items = $this->inventoryService->getLowStockItems();
         $thresholdItems = InventoryItem::active()
+            ->withReservationBalance()
             ->with('category')
             ->orderBy('name')
             ->get();
@@ -489,12 +495,15 @@ class InventoryController extends Controller
             'description' => 'nullable|string|max:5000',
             'planting_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
             'has_expiry' => 'sometimes|boolean',
-            'expiry_date' => 'nullable|required_if:has_expiry,1|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
+            'track_batches' => 'sometimes|boolean',
+            'expiry_date' => 'nullable|date_format:Y-m-d|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
         ]);
 
         if ($request->has('has_expiry')) {
             $validated['has_expiry'] = $request->boolean('has_expiry');
-            $validated['expiry_date'] = $validated['has_expiry'] ? ($validated['expiry_date'] ?? null) : null;
+            if (! $validated['has_expiry']) {
+                $validated['expiry_date'] = null;
+            }
         }
 
         $updated = $this->inventoryService->updateItem($item, $validated, auth()->id())->load('category');

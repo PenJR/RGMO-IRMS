@@ -47,6 +47,7 @@ class InventoryForecastingService
 
         $items = InventoryItem::query()
             ->active()
+            ->withReservationBalance()
             ->with('category')
             ->orderBy('name')
             ->get();
@@ -69,9 +70,9 @@ class InventoryForecastingService
             $forecastUpper = (int) ceil($prediction['upper']);
             $averageDailyUsage = $prediction['point'] / $forecastDays;
             $daysUntilStockout = $averageDailyUsage > 0
-                ? (int) floor($item->stock / $averageDailyUsage)
+                ? (int) floor($item->usable_stock / $averageDailyUsage)
                 : null;
-            $recommendedOrder = max(0, ($projectedDemand + (int) $item->min_stock) - (int) $item->stock);
+            $recommendedOrder = max(0, ($projectedDemand + (int) $item->min_stock) - $item->usable_stock);
             $demandChangePercent = $previousUsage > 0
                 ? (($currentUsage - $previousUsage) / $previousUsage) * 100
                 : ($currentUsage > 0 ? 100.0 : 0.0);
@@ -350,11 +351,11 @@ class InventoryForecastingService
         ?int $daysUntilStockout,
         int $forecastDays
     ): string {
-        if ($item->stock <= $item->min_stock || ($daysUntilStockout !== null && $daysUntilStockout <= 14)) {
+        if ($item->isLowStock() || ($daysUntilStockout !== null && $daysUntilStockout <= 14)) {
             return 'critical';
         }
 
-        if ($forecastUpper >= $item->stock || $projectedDemand >= $item->stock
+        if ($forecastUpper >= $item->usable_stock || $projectedDemand >= $item->usable_stock
             || ($daysUntilStockout !== null && $daysUntilStockout <= $forecastDays)) {
             return 'watch';
         }

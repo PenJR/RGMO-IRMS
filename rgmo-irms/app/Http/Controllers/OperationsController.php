@@ -281,6 +281,9 @@ class OperationsController extends Controller
             'reason' => $request->input('reason') ?? $request->input('source') ?? $request->input('destination'),
             'incident_report_reference' => $request->input('incident_report_reference'),
             'idempotency_key' => $request->header('Idempotency-Key') ?? $request->input('idempotency_key'),
+            'inventory_batch_id' => $request->input('inventory_batch_id'),
+            'batch_number' => $request->input('batch_number'),
+            'expiry_date' => $request->input('expiry_date'),
         ], $request->user());
     }
 

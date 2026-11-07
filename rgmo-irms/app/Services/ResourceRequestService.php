@@ -292,7 +292,7 @@ class ResourceRequestService
         foreach ($request->items->groupBy('inventory_item_id') as $lines) {
             $item = $lines->first()->item;
             $remaining = $lines->sum(fn ($line) => $line->remaining_quantity);
-            if (! $item || ($request->isReleasable() ? $item->stock < $remaining : $item->available_stock < $remaining)) {
+            if (! $item || ($request->isReleasable() ? $item->usable_stock < $remaining : $item->available_stock < $remaining)) {
                 return false;
             }
         }
@@ -342,7 +342,7 @@ class ResourceRequestService
                 $item = InventoryItem::lockForUpdate()->findOrFail($line->inventory_item_id);
                 // Release only this line's reservation, inside the same stock transaction.
                 $line->increment('withdrawn_quantity', $quantity);
-                $transaction = app(InventoryService::class)->recordStockOut($item, $quantity, 'resource_request_'.$locked->id, auth()->id(), null, 'WD-'.$withdrawal->id);
+                $transaction = app(InventoryService::class)->recordStockOut($item, $quantity, 'resource_request_'.$locked->id, auth()->id(), null, 'WD-'.$withdrawal->id, null, $date);
                 $deliveryIds = collect($transaction->meta['deliveries'] ?? [])->pluck('delivery_id');
                 if (Delivery::whereIn('id', $deliveryIds)->whereDate('received_on', '>', $date)->exists()) {
                     throw ValidationException::withMessages(['withdrawn_on' => 'A withdrawal cannot predate the delivery of its stock.']);

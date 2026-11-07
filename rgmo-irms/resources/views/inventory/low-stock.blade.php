@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="fw-bold mb-1">Low Stock Items</h2>
-            <p class="text-muted mb-0">Items are flagged using their own per-resource low stock threshold.</p>
+            <h2 class="fw-bold mb-1">Critical / Low Stock Items</h2>
+            <p class="text-muted mb-0">Items are flagged when usable stock reaches their own critical / low stock threshold. Expired and quarantined quantities are excluded.</p>
         </div>
     </x-slot>
 
@@ -16,8 +16,8 @@
                                 <tr>
                                     <th>Item</th>
                                     <th>Category</th>
-	                                    <th>Stock</th>
-	                                    <th>Low Stock Threshold</th>
+	                                    <th>Usable / On Hand</th>
+	                                    <th>Critical / Low Stock Threshold</th>
 	                                    <th>Reorder Point</th>
 	                                    <th class="text-end">Actions</th>
                                 </tr>
@@ -27,7 +27,7 @@
                                     <tr>
                                         <td>{{ $item->name }}</td>
 	                                        <td>{{ $item->category->name ?? 'N/A' }}</td>
-	                                        <td>{{ $item->stock }} {{ $item->unit }}</td>
+	                                        <td>{{ $item->usable_stock }} usable / {{ $item->stock }} on hand {{ $item->unit }}<div class="small text-muted">{{ $item->available_stock }} available · {{ $item->reserved_quantity }} reserved · {{ $item->expired_stock }} expired · {{ $item->quarantined_stock }} quarantined</div></td>
 	                                        <td>{{ $item->min_stock }} {{ $item->unit }}</td>
 	                                        <td>{{ $item->getReorderPoint() }} {{ $item->unit }}</td>
 	                                        <td class="text-end">
@@ -40,7 +40,7 @@
                     </div>
                 @else
                     <div class="text-center py-5">
-                        <h5 class="mb-2">No low stock items</h5>
+                        <h5 class="mb-2">No critical / low stock items</h5>
                         <p class="text-muted mb-3">Inventory levels are healthy across all categories.</p>
                         <a href="{{ route('inventory.index') }}" class="btn btn-cmu">View Inventory</a>
                     </div>
@@ -53,7 +53,7 @@
                 <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
                     <div>
                         <h5 class="fw-bold mb-1">Resource Thresholds</h5>
-                        <p class="text-muted small mb-0">Customize when each resource appears as low stock.</p>
+                        <p class="text-muted small mb-0">Customize the critical / low stock threshold for each resource's usable balance.</p>
                     </div>
                 </div>
 
@@ -63,8 +63,8 @@
                             <tr>
                                 <th>Resource</th>
                                 <th>Category</th>
-	                                <th>Current Stock</th>
-	                                <th style="width: 260px;">Low Stock Threshold</th>
+	                                <th>Usable / On Hand</th>
+	                                <th style="width: 260px;">Critical / Low Stock Threshold</th>
 	                                <th>Reorder Point</th>
 	                                <th>Status</th>
                             </tr>
@@ -77,13 +77,13 @@
 
                                     </td>
                                     <td>{{ $item->category->name ?? 'N/A' }}</td>
-	                                    <td>{{ $item->stock }} {{ $item->unit }}</td>
+	                                    <td>{{ $item->usable_stock }} usable / {{ $item->stock }} on hand {{ $item->unit }}<div class="small text-muted">{{ $item->available_stock }} available</div></td>
                                     <td>
                                         @can('update', $item)
                                             <form method="POST" action="{{ route('inventory.update-low-stock-threshold', $item) }}" class="d-flex gap-2 align-items-start">
                                                 @csrf
                                                 @method('PATCH')
-                                                <input type="number" name="min_stock" value="{{ old('min_stock', $item->min_stock) }}" min="0" class="form-control form-control-sm" aria-label="Low stock threshold for {{ $item->name }}" required max="2147483647" step="1">
+                                                <input type="number" name="min_stock" value="{{ old('min_stock', $item->min_stock) }}" min="0" class="form-control form-control-sm" aria-label="Critical / low stock threshold for {{ $item->name }}" required max="2147483647" step="1">
                                                 <button type="submit" class="btn btn-sm btn-cmu">Save</button>
                                             </form>
                                         @else
