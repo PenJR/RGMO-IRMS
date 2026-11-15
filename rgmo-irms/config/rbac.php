@@ -29,6 +29,7 @@ return [
                 'view-audit-trail',
                 'manage-forecasting-settings',
                 'manage-request-corrections',
+                'resolve-incidents',
                 'receive-notifications',
             ],
         ],
@@ -37,7 +38,7 @@ return [
             'permissions' => [
                 'view-inventory', 'view-projects', 'submit-request',
                 'update-pending-request', 'record-utilization',
-                'monitor-status', 'view-history', 'receive-notifications',
+                'monitor-status', 'view-history', 'report-incidents', 'receive-notifications',
             ],
         ],
         'project_manager' => [
@@ -45,6 +46,7 @@ return [
             'permissions' => [
                 'view-inventory', 'view-projects', 'submit-request',
                 'monitor-status', 'view-history', 'receive-notifications',
+                'report-incidents',
             ],
         ],
         'rgmo_head' => [
@@ -59,7 +61,8 @@ return [
             'label' => 'Storekeeper',
             'permissions' => [
                 'view-inventory', 'view-suppliers', 'view-projects', 'monitor-status', 'view-history',
-                'verify-request', 'record-withdrawal', 'record-utilization', 'receive-notifications',
+                'verify-request', 'record-withdrawal', 'record-utilization', 'investigate-incidents',
+                'view-incidents', 'receive-notifications',
             ],
         ],
         'unit_head' => [
@@ -73,7 +76,7 @@ return [
             'label' => 'Auditor',
             'permissions' => [
                 'view-audit-trail', 'generate-reports', 'monitor-status', 'view-history',
-                'request-correction',
+                'request-correction', 'view-incidents',
             ],
         ],
     ],
@@ -106,6 +109,9 @@ return [
         'manage-forecasting-settings' => 'Manage forecasting settings',
         'request-correction' => 'Request a correction to a verified resource request',
         'manage-request-corrections' => 'Apply or reject resource request corrections',
+        'report-incidents' => 'Report operational incidents',
+        'investigate-incidents' => 'Investigate reported incidents',
+        'resolve-incidents' => 'Resolve incident reports and approve stock adjustments',
         'receive-notifications' => 'Receive notifications',
     ],
 ];

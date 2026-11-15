@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\IncidentReport;
 use App\Models\Notification;
 use App\Services\NotificationService;
 use App\Support\InputRules;
@@ -161,6 +162,10 @@ class NotificationController extends Controller
     {
         $relatedRequest = $notification->relatedRequest;
         $canViewRequest = $relatedRequest && Gate::allows('view', $relatedRequest);
+        $incident = isset($notification->data['incident_id'])
+            ? IncidentReport::find($notification->data['incident_id'])
+            : null;
+        $canViewIncident = $incident && Gate::allows('view', $incident);
 
         return [
             'id' => $notification->id,
@@ -175,6 +180,8 @@ class NotificationController extends Controller
             'recipient_role' => $notification->recipient_role,
             'related_request_id' => $notification->related_request_id,
             'related_request_url' => $canViewRequest ? route('requests.show', $relatedRequest) : null,
+            'incident_report_id' => $canViewIncident ? $incident->id : null,
+            'incident_report_url' => $canViewIncident ? route('incidents.show', $incident) : null,
             'read_at' => $notification->read_at?->toDateTimeString(),
             'created_at' => $notification->created_at?->toDateTimeString(),
             'created_at_human' => $notification->created_at?->format('M d, Y h:i A'),

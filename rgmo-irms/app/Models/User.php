@@ -38,6 +38,7 @@ class User extends Authenticatable
         'dashboard',
         'health',
         'inventory',
+        'incidents',
         'projects',
         'requests',
         'reports',

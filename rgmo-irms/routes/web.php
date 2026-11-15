@@ -5,13 +5,17 @@ use App\Http\Controllers\AIForecastingController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\IncidentReportController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ResourceRequestController;
 use App\Http\Controllers\ResourceUsageController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SupplierPriceController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\TwoFactorController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +26,19 @@ Route::get('/', function () {
 
 // Authenticated routes
 Route::middleware('auth')->group(function () {
+    Route::prefix('incidents')->name('incidents.')->group(function () {
+        Route::get('/', [IncidentReportController::class, 'index'])->name('index');
+        Route::get('/create', [IncidentReportController::class, 'create'])->middleware('permission:report-incidents')->name('create');
+        Route::post('/', [IncidentReportController::class, 'store'])->middleware(['permission:report-incidents', 'throttle:10,1'])->name('store');
+        Route::get('/{incident}', [IncidentReportController::class, 'show'])->name('show');
+        Route::get('/{incident}/evidence/{file}', [IncidentReportController::class, 'evidence'])
+            ->whereNumber('file')->name('evidence');
+        Route::post('/{incident}/investigation', [IncidentReportController::class, 'investigate'])
+            ->middleware('permission:investigate-incidents')->name('investigate');
+        Route::post('/{incident}/resolution', [IncidentReportController::class, 'resolve'])
+            ->middleware('permission:resolve-incidents')->name('resolve');
+    });
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/data', [DashboardController::class, 'data'])
@@ -59,26 +76,26 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('permission:manage-inventory,manage-purchase-orders,approve-purchase-orders')->group(function () {
-        Route::get('/procurements', [\App\Http\Controllers\ProcurementController::class, 'index'])->name('procurements.index');
-        Route::get('/procurements/prices', [\App\Http\Controllers\SupplierPriceController::class, 'index'])->name('procurements.prices');
-        Route::get('/procurements/{procurement}', [\App\Http\Controllers\ProcurementController::class, 'show'])->name('procurements.show');
-        Route::get('/procurements/{procurement}/receipt', [\App\Http\Controllers\ProcurementController::class, 'receipt'])->name('procurements.receipt');
+        Route::get('/procurements', [ProcurementController::class, 'index'])->name('procurements.index');
+        Route::get('/procurements/prices', [SupplierPriceController::class, 'index'])->name('procurements.prices');
+        Route::get('/procurements/{procurement}', [ProcurementController::class, 'show'])->name('procurements.show');
+        Route::get('/procurements/{procurement}/receipt', [ProcurementController::class, 'receipt'])->name('procurements.receipt');
     });
     Route::middleware('permission:approve-purchase-orders')->group(function () {
-        Route::post('/procurements/{procurement}/approve', [\App\Http\Controllers\ProcurementController::class, 'approve'])->name('procurements.approve');
-        Route::post('/procurements/{procurement}/reject', [\App\Http\Controllers\ProcurementController::class, 'reject'])->name('procurements.reject');
+        Route::post('/procurements/{procurement}/approve', [ProcurementController::class, 'approve'])->name('procurements.approve');
+        Route::post('/procurements/{procurement}/reject', [ProcurementController::class, 'reject'])->name('procurements.reject');
     });
     Route::middleware('permission:manage-inventory')->group(function () {
-        Route::post('/procurements', [\App\Http\Controllers\ProcurementController::class, 'store'])->name('procurements.store');
-        Route::put('/procurements/{procurement}', [\App\Http\Controllers\ProcurementController::class, 'update'])->name('procurements.update');
-        Route::post('/procurements/{procurement}/submit', [\App\Http\Controllers\ProcurementController::class, 'submit'])->name('procurements.submit');
-        Route::post('/procurements/{procurement}/cancel', [\App\Http\Controllers\ProcurementController::class, 'cancel'])->name('procurements.cancel');
-        Route::post('/procurements/{procurement}/receive', [\App\Http\Controllers\ProcurementController::class, 'receive'])->name('procurements.receive');
+        Route::post('/procurements', [ProcurementController::class, 'store'])->name('procurements.store');
+        Route::put('/procurements/{procurement}', [ProcurementController::class, 'update'])->name('procurements.update');
+        Route::post('/procurements/{procurement}/submit', [ProcurementController::class, 'submit'])->name('procurements.submit');
+        Route::post('/procurements/{procurement}/cancel', [ProcurementController::class, 'cancel'])->name('procurements.cancel');
+        Route::post('/procurements/{procurement}/receive', [ProcurementController::class, 'receive'])->name('procurements.receive');
     });
 
     Route::middleware('permission:view-suppliers,manage-suppliers')->group(function () {
-        Route::resource('suppliers', \App\Http\Controllers\SupplierController::class)->except(['destroy']);
-        Route::patch('/suppliers/{supplier}/deactivate', [\App\Http\Controllers\SupplierController::class, 'deactivate'])->name('suppliers.deactivate');
+        Route::resource('suppliers', SupplierController::class)->except(['destroy']);
+        Route::patch('/suppliers/{supplier}/deactivate', [SupplierController::class, 'deactivate'])->name('suppliers.deactivate');
     });
 
     // Inventory Module

@@ -63,6 +63,14 @@
             </a>
         @endcan
 
+        @can('viewAny', App\Models\IncidentReport::class)
+            <a href="{{ route('incidents.index') }}" class="nav-link {{ request()->routeIs('incidents.*') ? 'active' : '' }}" data-sidebar-item="incidents" draggable="true" data-sidebar-tooltip="Incidents" aria-label="Incident reports">
+                <span class="nav-icon"><i data-lucide="triangle-alert"></i></span>
+                <span class="nav-label">Incident Reports</span>
+                <span class="sidebar-drag-handle" aria-hidden="true">⠿</span>
+            </a>
+        @endcan
+
         @if(auth()->user()->can('viewAny', App\Models\ResourceRequest::class) || auth()->user()->can('create', App\Models\ResourceRequest::class))
             <details class="nav-group {{ request()->routeIs('requests.*', 'utilization.*') ? 'active' : '' }}" data-sidebar-item="requests" draggable="true" {{ request()->routeIs('requests.*', 'utilization.*') ? 'open' : '' }}>
                 <summary>

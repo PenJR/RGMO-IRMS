@@ -71,6 +71,9 @@
                                             @if($notification->related_request_id)
                                                 <a href="{{ route('requests.show', ['request' => $notification->related_request_id]) }}" class="link-success fw-semibold">Request #{{ $notification->related_request_id }}</a>
                                             @endif
+                                            @if(isset($notification->data['incident_id']) && ($incident = \App\Models\IncidentReport::find($notification->data['incident_id'])) && auth()->user()->can('view', $incident))
+                                                <a href="{{ route('incidents.show', $incident) }}" class="link-success fw-semibold">{{ $incident->reference() }}</a>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-end gap-2 flex-shrink-0">
@@ -162,6 +165,9 @@
                     const requestLink = notification.related_request_url
                         ? `<a href="${escapeHtml(notification.related_request_url)}" class="link-success fw-semibold">Request #${escapeHtml(notification.related_request_id)}</a>`
                         : '';
+                    const incidentLink = notification.incident_report_url
+                        ? `<a href="${escapeHtml(notification.incident_report_url)}" class="link-success fw-semibold">Incident ${escapeHtml(notification.incident_report_id)}</a>`
+                        : '';
                     const sender = notification.sender?.name
                         ? `<span>From ${escapeHtml(notification.sender.name)}</span>`
                         : '';
@@ -185,6 +191,7 @@
                                         <span>${escapeHtml(notification.created_at_human ?? notification.created_at ?? 'Unknown date')}</span>
                                         ${sender}
                                         ${requestLink}
+                                        ${incidentLink}
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-end gap-2 flex-shrink-0">

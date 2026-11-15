@@ -2,15 +2,17 @@
 
 namespace App\Providers;
 
+use App\Models\IncidentReport;
 use App\Models\InventoryItem;
+use App\Models\Procurement;
 use App\Models\Project;
 use App\Models\ResourceRequest;
-use App\Models\Procurement;
 use App\Models\User;
+use App\Policies\IncidentReportPolicy;
 use App\Policies\InventoryItemPolicy;
+use App\Policies\ProcurementPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\ResourceRequestPolicy;
-use App\Policies\ProcurementPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -24,6 +26,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         User::class => UserPolicy::class,
         InventoryItem::class => InventoryItemPolicy::class,
+        IncidentReport::class => IncidentReportPolicy::class,
         ResourceRequest::class => ResourceRequestPolicy::class,
         Procurement::class => ProcurementPolicy::class,
         Project::class => ProjectPolicy::class,

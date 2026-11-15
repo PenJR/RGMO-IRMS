@@ -1,6 +1,6 @@
 # Roles and permissions
 
-The system has four predefined roles. Permission definitions live in [`config/rbac.php`](../config/rbac.php); routes, controllers, and services also enforce record ownership and workflow state. Assigning a role selects its predefined permissions, not a custom permission set.
+The request-permission matrix below covers the four primary request roles. The system also has Storekeeper, Unit Head, and Auditor roles. Permission definitions live in [`config/rbac.php`](../config/rbac.php); routes, controllers, and services also enforce record ownership and workflow state. Assigning a role selects its predefined permissions, not a custom permission set.
 
 | Capability | Administrator | RGMO Head | Project Manager | Staff |
 |---|---|---|---|---|
@@ -20,6 +20,10 @@ The system has four predefined roles. Permission definitions live in [`config/rb
 | Personal notifications | Yes | Yes | Yes | Yes |
 
 Administrator is the system superuser, subject to account safeguards and workflow validation. Staff can process other users' approved requests, but cannot browse their pending or rejected requests. Project visibility does not grant access to another requester's requests.
+
+## Incident reports
+
+Incident reports are a separate operational workflow and do not revise resource requests or other approved documents. Staff and Project Managers can report incidents and view their own reports. Storekeepers can view reports and record investigations; they cannot approve stock changes. Administrators review investigations and resolve reports by approving a stock adjustment, resolving without an adjustment, or closing/rejecting with a reason. The reporter and investigator cannot resolve their own report. Auditors have read-only access to all incident reports. Uploaded evidence is stored privately and downloaded only through an authorized report view.
 
 ## Resource workflow
 

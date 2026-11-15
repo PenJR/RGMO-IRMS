@@ -6,6 +6,7 @@ RGMO-IRMS is a Laravel-based Inventory and Resource Management System for the Re
 
 - Inventory records, stock movements, low-stock thresholds, expiry tracking, and spreadsheet import/export.
 - Project records and a request → review → approval → release → utilization workflow.
+- Operational incident reports with private evidence, Storekeeper investigation, and administrator-controlled resolution and stock adjustments.
 - Reports and CSV/PDF exports for authorized roles.
 - Forecasting, personal notifications, and dashboard summaries.
 - Authentication, optional two-factor verification, user administration, and audit history.
@@ -20,9 +21,9 @@ Stock is deducted when resources are released. Actual utilization is recorded se
 | [Local setup](docs/SETUP.md) | Requirements, installation, first administrator, and development commands. |
 | [Deployment](docs/DEPLOYMENT.md) | Environment configuration, container processes, release checks, and migration. |
 | [Backup and restore](docs/BACKUP-RESTORE.md) | Archive location, troubleshooting, restore rehearsal, and current limitations. |
-| [Roles and permissions](docs/ROLES-PERMISSIONS.md) | Role capabilities, record scope, and request workflow. |
 | [Suppliers and deliveries](docs/SUPPLIERS-DELIVERIES.md) | Supplier profiles, multi-item receiving, receipt history, and price comparisons. |
 | [Controlled stock adjustments](docs/CONTROLLED-STOCK-ADJUSTMENTS.md) | Administrator discrepancy corrections, incident references, and adjustment history. |
+| [Roles and permissions](docs/ROLES-PERMISSIONS.md) | Role capabilities, record scope, and request and incident workflows. |
 | [Batches, expiry, and critical stock](docs/BATCH-EXPIRY-MONITORING.md) | Batch receiving, FEFO/FIFO releases, expiry monitoring, and industry references. |
 | [Testing](docs/TESTING.md) | Automated commands, manual role checks, and evidence recording. |
 
