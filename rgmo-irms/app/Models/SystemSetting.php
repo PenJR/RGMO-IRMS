@@ -89,6 +89,18 @@ class SystemSetting extends Model
     }
 
     /**
+     * Get the administrator-selected fiscal year, or the current calendar year when automatic.
+     */
+    public static function fiscalYear(): int
+    {
+        $year = static::get('fiscal_year_override');
+
+        return is_numeric($year) && (int) $year >= 1 && (int) $year <= now()->year
+            ? (int) $year
+            : now()->year;
+    }
+
+    /**
      * Handle set.
      */
     public static function set(string $key, $value): void

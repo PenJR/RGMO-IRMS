@@ -50,6 +50,41 @@
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
+                <h5 class="mb-1">Fiscal Year</h5>
+                <p class="text-muted small mb-3">
+                    The fiscal year follows the calendar year. Inventory reports show the balance at the end of the selected year;
+                    remaining stock carries forward and is never reset.
+                </p>
+                <form method="POST" action="{{ route('admin.settings.fiscal-year.update') }}" class="row g-3 align-items-end">
+                    @csrf
+                    <div class="col-md-8">
+                        <label for="fiscal_year" class="form-label">Report fiscal year</label>
+                        <select id="fiscal_year" name="fiscal_year" class="form-select @error('fiscal_year') is-invalid @enderror">
+                            <option value="" {{ (string) old('fiscal_year', $fiscalYearOverride ?? '') === '' ? 'selected' : '' }}>
+                                Automatic ({{ now()->year }})
+                            </option>
+                            @foreach($fiscalYearOptions as $year)
+                                @if($year < now()->year)
+                                    <option value="{{ $year }}" {{ (string) old('fiscal_year', $fiscalYearOverride ?? '') === (string) $year ? 'selected' : '' }}>
+                                        {{ $year }}
+                                    </option>
+                                @endif
+                            @endforeach
+                        </select>
+                        @error('fiscal_year')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-cmu w-100">Save Fiscal Year</button>
+                    </div>
+                    <div class="col-12 form-text">
+                        Currently using {{ $fiscalYear }}. Choosing Automatic advances to the current year automatically.
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
                 <h5 class="mb-4">Low Stock Thresholds</h5>
                 <form method="POST" action="{{ route('admin.settings.update') }}">
                     @csrf

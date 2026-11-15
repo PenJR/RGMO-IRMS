@@ -16,7 +16,14 @@
 </head>
 <body>
     <h1>Inventory Report</h1>
-    <p class="meta">Generated on {{ now()->format('F j, Y H:i') }}</p>
+    <p class="meta">
+        @if(isset($report['fiscal_year']))
+            Fiscal year {{ $report['fiscal_year'] }} stock as of {{ $report['as_of']->format('F j, Y') }}.
+        @else
+            Current inventory stock.
+        @endif
+        Generated on {{ now()->format('F j, Y H:i') }}
+    </p>
 
     <table>
         <thead>
@@ -24,7 +31,7 @@
                 <th>Item</th>
 
                 <th>Category</th>
-                <th>Stock</th>
+                <th>Stock at year end</th>
                 <th>Min Stock</th>
                 <th>Price ({{ $currencyCode ?? 'PHP' }})</th>
                 <th>Status</th>
@@ -36,10 +43,10 @@
                     <td>{{ $item->name }}</td>
 
                     <td>{{ $item->category?->name ?? 'N/A' }}</td>
-                    <td>{{ number_format($item->stock) }} {{ $item->unit }}</td>
+                    <td>{{ number_format($item->stock_at_fiscal_year_end ?? $item->stock) }} {{ $item->unit }}</td>
                     <td>{{ number_format($item->min_stock) }} {{ $item->unit }}</td>
                     <td class="price">{{ $currencySymbol ?? '₱' }}{{ number_format($item->price, 2) }}</td>
-                    <td>{{ $item->stock <= $item->min_stock ? 'Low' : 'OK' }}</td>
+                    <td>{{ ucfirst($item->stock_status_at_fiscal_year_end ?? $item->getStockStatus()) }}</td>
                 </tr>
             @endforeach
         </tbody>

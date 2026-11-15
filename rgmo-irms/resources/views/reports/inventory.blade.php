@@ -13,6 +13,10 @@
             <a href="{{ route('reports.inventory.export-pdf', request()->query()) }}" class="btn btn-cmu">Export PDF</a>
             </div>
         </div>
+        <p class="text-muted mb-3">
+            Stock remaining at the end of fiscal year {{ $report['fiscal_year'] }}
+            (as of {{ $report['as_of']->format('F j, Y') }}). Remaining stock carries forward between years.
+        </p>
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
@@ -46,7 +50,7 @@
                                     <th>Item</th>
 
                                     <th>Category</th>
-                                    <th>Stock</th>
+                                    <th>Stock at year end</th>
                                     <th>Min Stock</th>
                                     <th>Price ({{ $currencyCode }})</th>
                                     <th>Status</th>
@@ -58,15 +62,15 @@
                                         <td>{{ $item->name }}</td>
 
                                         <td>{{ $item->category?->name ?? 'N/A' }}</td>
-                                        <td>{{ $item->stock }} {{ $item->unit }}</td>
+                                        <td>{{ $item->stock_at_fiscal_year_end }} {{ $item->unit }}</td>
                                         <td>{{ $item->min_stock }} {{ $item->unit }}</td>
                                         <td>{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
                                         <td>
                                             <span class="badge rounded-pill
-                                                @if($item->getStockStatus() === 'low') bg-danger text-white
-                                                @elseif($item->getStockStatus() === 'warning') bg-warning text-dark
+                                                @if($item->stock_status_at_fiscal_year_end === 'low') bg-danger text-white
+                                                @elseif($item->stock_status_at_fiscal_year_end === 'warning') bg-warning text-dark
                                                 @else bg-success text-white @endif">
-                                                {{ ucfirst($item->getStockStatus()) }}
+                                                {{ ucfirst($item->stock_status_at_fiscal_year_end) }}
                                             </span>
                                         </td>
                                     </tr>

@@ -183,6 +183,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/backup', [BackupController::class, 'run'])->name('backup.run');
         Route::get('/settings', [SystemSettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [SystemSettingsController::class, 'update'])->name('settings.update');
+        Route::post('/settings/fiscal-year', [SystemSettingsController::class, 'updateFiscalYear'])->name('settings.fiscal-year.update');
     });
 });
 

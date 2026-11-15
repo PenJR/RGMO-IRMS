@@ -150,18 +150,18 @@ class ReportController extends Controller
         $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.csv';
 
         $handle = fopen('php://memory', 'w');
-        fputcsv($handle, ['Item Name', 'Category', 'Stock', 'Min Stock', 'Unit', 'Price ('.SystemSetting::currencyCode().')', 'Status']);
+        fputcsv($handle, ['Item Name', 'Category', 'Stock as of FY '.$report['fiscal_year'], 'Min Stock', 'Unit', 'Price ('.SystemSetting::currencyCode().')', 'Status']);
 
         foreach ($report['items'] as $item) {
             fputcsv($handle, [
                 $item->name,
 
                 $item->category->name,
-                $item->stock,
+                $item->stock_at_fiscal_year_end,
                 $item->min_stock,
                 $item->unit,
                 $item->price,
-                $item->getStockStatus(),
+                $item->stock_status_at_fiscal_year_end,
             ]);
         }
 
@@ -294,7 +294,7 @@ class ReportController extends Controller
             'year.between' => 'Enter a year from 1 to 9999.',
         ]);
 
-        return [(int) ($validated['month'] ?? now()->month), (int) ($validated['year'] ?? now()->year)];
+        return [(int) ($validated['month'] ?? now()->month), (int) ($validated['year'] ?? SystemSetting::fiscalYear())];
     }
 
     /**

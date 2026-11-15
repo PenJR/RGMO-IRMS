@@ -8,6 +8,7 @@ use App\Models\InventoryTransaction;
 use App\Models\RequestItem;
 use App\Models\ResourceRequest;
 use App\Models\ResourceUsage;
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -24,24 +25,60 @@ class ReportService
      */
     public function getInventoryReport(array $filters = [])
     {
-        $query = InventoryItem::active()->withReservationBalance()->with('category', 'transactions');
+        $fiscalYear = SystemSetting::fiscalYear();
+        $asOf = Carbon::create($fiscalYear, 12, 31)->endOfDay();
+        if ($fiscalYear === now()->year) {
+            $asOf = today()->endOfDay();
+        }
+
+        $query = InventoryItem::active()->with('category');
 
         if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
 
-        if (! empty($filters['low_stock'])) {
-            $query->lowStock();
-        }
-
         $items = $query->get();
+        $laterMovements = InventoryTransaction::query()
+            ->where('created_at', '>', $asOf)
+            ->select('inventory_item_id')
+            ->selectRaw(
+                'SUM(CASE WHEN transaction_type = ? THEN quantity WHEN transaction_type = ? THEN -quantity ELSE 0 END) as net_movement',
+                ['stock_in', 'stock_out']
+            )
+            ->groupBy('inventory_item_id')
+            ->pluck('net_movement', 'inventory_item_id');
+
+        $items = $items->map(function (InventoryItem $item) use ($asOf, $laterMovements): InventoryItem {
+            $stock = $item->created_at?->greaterThan($asOf)
+                ? 0
+                : max(0, (int) $item->stock - (int) $laterMovements->get($item->id, 0));
+            $item->setAttribute('stock_at_fiscal_year_end', $stock);
+            $item->setAttribute('stock_status_at_fiscal_year_end', $this->stockStatus($stock, (int) $item->min_stock));
+
+            return $item;
+        });
+
+        if (! empty($filters['low_stock'])) {
+            $items = $items->filter(fn (InventoryItem $item) => $item->stock_at_fiscal_year_end <= $item->min_stock);
+        }
 
         return [
             'total_items' => $items->count(),
-            'low_stock_items' => $items->filter(fn ($item) => $item->isLowStock())->count(),
-            'total_value' => $items->sum(fn ($item) => $item->stock * $item->price),
+            'low_stock_items' => $items->filter(fn ($item) => $item->stock_status_at_fiscal_year_end === 'low')->count(),
+            'total_value' => $items->sum(fn ($item) => $item->stock_at_fiscal_year_end * $item->price),
             'items' => $items,
+            'fiscal_year' => $fiscalYear,
+            'as_of' => $asOf,
         ];
+    }
+
+    private function stockStatus(int $stock, int $minStock): string
+    {
+        if ($stock <= $minStock) {
+            return 'low';
+        }
+
+        return $stock <= ($minStock * 1.5) ? 'warning' : 'good';
     }
 
     /**
