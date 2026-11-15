@@ -42,9 +42,9 @@
                     </div>
                 </div>
 
-                <div class="modal-footer border-0">
+                <div class="modal-footer justify-content-center border-0 gap-2">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
-                    <button type="submit" class="btn btn-danger ms-3">{{ __('Delete Account') }}</button>
+                    <button type="submit" class="btn btn-danger">{{ __('Delete Account') }}</button>
                 </div>
             </form>
         </div>

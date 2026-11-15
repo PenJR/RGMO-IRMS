@@ -124,7 +124,7 @@ class ProcurementController extends Controller
             'order_date' => 'required_without:purchased_on|nullable|date_format:Y-m-d|before_or_equal:today',
             'purchased_on' => 'nullable|required_without:order_date|date_format:Y-m-d|before_or_equal:today',
             'expected_delivery_date' => 'nullable|date_format:Y-m-d',
-            'funding_source' => 'required|string|max:255', 'notes' => 'nullable|string|max:5000',
+            'funding_source' => ['required', Rule::in(['JF', 'STF'])], 'notes' => 'nullable|string|max:5000',
             'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ], $legacy ? [
             'inventory_item_id' => 'required|integer|exists:inventory_items,id,deleted_at,NULL',

@@ -263,6 +263,29 @@ body {
     border-bottom: 1px solid rgba(0, 73, 30, 0.08);
 }
 
+/* Shared form-dialog accents: keep dialogs calm, but give primary actions a clear RGMO identity. */
+.modal-content {
+    overflow: hidden;
+    border: 1px solid rgba(0, 73, 30, 0.14);
+    background: linear-gradient(145deg, #ffffff 0%, #fbfff9 100%);
+}
+
+.modal-content .modal-header {
+    padding-top: 1.25rem;
+    background: linear-gradient(90deg, rgba(2, 104, 30, 0.10), rgba(255, 198, 0, 0.14), rgba(255, 255, 255, 0.96));
+    border-bottom: 1px solid rgba(0, 73, 30, 0.10) !important;
+    box-shadow: inset 5px 0 0 var(--cmu-yellow);
+}
+
+.modal-content .modal-title {
+    color: var(--cmu-green);
+}
+
+.modal-content .modal-footer {
+    background: linear-gradient(90deg, rgba(2, 104, 30, 0.05), rgba(255, 198, 0, 0.10));
+    border-top: 1px solid rgba(0, 73, 30, 0.10) !important;
+}
+
 /* Custom UI Refinements */
 .card {
     border-radius: 12px !important;
@@ -895,6 +918,26 @@ table[data-enhanced-table] thead th[aria-sort="descending"]::after {
 .table-modern tbody tr:hover {
     transform: translateY(-1px);
     box-shadow: var(--ui-shadow) !important;
+}
+
+/* Shared table accents keep dense records scannable without overwhelming status colours. */
+.table thead th,
+.table-modern thead th {
+    background: linear-gradient(90deg, rgba(2, 104, 30, 0.11), rgba(255, 198, 0, 0.16)) !important;
+    border-top: 2px solid var(--cmu-green-2) !important;
+}
+
+.table thead th:first-child,
+.table-modern thead th:first-child {
+    box-shadow: inset 4px 0 0 var(--cmu-yellow);
+}
+
+.table tbody tr:nth-child(even) > * {
+    background-color: rgba(2, 104, 30, 0.018);
+}
+
+.table tbody tr:hover > * {
+    background-color: rgba(255, 198, 0, 0.09) !important;
 }
 
 .badge {
@@ -1993,7 +2036,7 @@ html[data-bs-theme="dark"] .table-light {
     border: 1px solid var(--cmu-border);
 }
 .rgmo-confirm p { margin: 0.75rem 0 1.5rem; overflow-wrap: anywhere; }
-.rgmo-confirm__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0.75rem; }
+.rgmo-confirm__actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.75rem; }
 @media print {
     .rgmo-toasts, .rgmo-confirm { display: none !important; }
 }

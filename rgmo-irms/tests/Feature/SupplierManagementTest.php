@@ -114,7 +114,7 @@ class SupplierManagementTest extends TestCase
         $this->post(route('procurements.store'), [
             'inventory_item_id' => $item->id, 'supplier_id' => $supplier->id,
             'or_number' => 'OR-LINKED', 'purchased_on' => today()->toDateString(),
-            'quantity' => 10, 'unit_cost' => 25, 'funding_source' => 'RGMO',
+            'quantity' => 10, 'unit_cost' => 25, 'funding_source' => 'JF',
         ])->assertSessionHasNoErrors()->assertRedirect();
 
         $linked = Procurement::where('or_number', 'OR-LINKED')->firstOrFail();
@@ -125,7 +125,7 @@ class SupplierManagementTest extends TestCase
         $this->post(route('procurements.store'), [
             'inventory_item_id' => $item->id, 'supplier_name' => 'Legacy Compatible Supplier', 'supplier_number' => '09180000000',
             'or_number' => 'OR-LEGACY', 'purchased_on' => today()->toDateString(),
-            'quantity' => 5, 'unit_cost' => 20, 'funding_source' => 'RGMO',
+            'quantity' => 5, 'unit_cost' => 20, 'funding_source' => 'JF',
         ])->assertSessionHasNoErrors()->assertRedirect();
 
         $legacy = Procurement::where('or_number', 'OR-LEGACY')->firstOrFail();
@@ -143,14 +143,14 @@ class SupplierManagementTest extends TestCase
             'inventory_item_id' => $item->id, 'created_by' => $admin->id, 'supplier_id' => $supplier->id,
             'supplier_name' => $supplier->company_name, 'supplier_number' => $supplier->contact_number,
             'or_number' => 'OR-RETIRED', 'purchased_on' => today(), 'quantity' => 4,
-            'unit_cost' => 10, 'funding_source' => 'RGMO',
+            'unit_cost' => 10, 'funding_source' => 'JF',
         ]);
         $supplier->update(['status' => Supplier::STATUS_INACTIVE]);
 
         $this->actingAs($admin)->post(route('procurements.store'), [
             'inventory_item_id' => $item->id, 'supplier_id' => $supplier->id,
             'or_number' => 'OR-NOT-ALLOWED', 'purchased_on' => today()->toDateString(),
-            'quantity' => 1, 'unit_cost' => 10, 'funding_source' => 'RGMO',
+            'quantity' => 1, 'unit_cost' => 10, 'funding_source' => 'JF',
         ])->assertSessionHasErrors('supplier_id');
 
         $this->assertSame($supplier->id, $procurement->fresh()->supplier_id);
