@@ -73,6 +73,13 @@
             @endif
         </div>
 
+        @if(filled(config('services.turnstile.site_key')))
+            <div class="auth-field">
+                <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}"></div>
+                @error('turnstile')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+            </div>
+        @endif
+
         <div class="d-grid mt-3">
             <button type="submit" class="btn btn-cmu d-flex align-items-center justify-content-center gap-2">
                 <i data-lucide="log-in" aria-hidden="true"></i>
@@ -85,6 +92,10 @@
         <span>Need access?</span>
         <strong>Contact the system administrator.</strong>
     </div>
+
+    @if(filled(config('services.turnstile.site_key')))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

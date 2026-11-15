@@ -30,7 +30,7 @@
 	                                        <td>{{ $item->min_stock }} {{ $item->unit }}</td>
 	                                        <td>{{ $item->getReorderPoint() }} {{ $item->unit }}</td>
 	                                        <td class="text-end">
-                                            <a href="{{ route('inventory.show', ['inventory' => $item->id]) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                            <a href="{{ route('inventory.show', $item) }}" class="btn btn-sm btn-outline-primary">View</a>
                                         </td>
                                     </tr>
                                 @endforeach

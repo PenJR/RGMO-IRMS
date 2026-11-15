@@ -22,10 +22,21 @@
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
+        @if(filled(config('services.turnstile.site_key')))
+            <div class="auth-field">
+                <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}"></div>
+                @error('turnstile')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+            </div>
+        @endif
+
         <div class="flex items-center justify-end">
             <x-primary-button>
                 {{ __('Email Password Reset Link') }}
             </x-primary-button>
         </div>
     </form>
+
+    @if(filled(config('services.turnstile.site_key')))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
 </x-guest-layout>

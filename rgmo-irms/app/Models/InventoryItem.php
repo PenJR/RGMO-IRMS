@@ -19,6 +19,9 @@ class InventoryItem extends Model
     protected static function booted(): void
     {
         static::creating(function (InventoryItem $item) {
+            if (blank($item->public_id)) {
+                $item->public_id = (string) Str::ulid();
+            }
             if (blank($item->sku)) {
                 $item->sku = 'ITEM-'.(string) Str::uuid();
             }
@@ -54,6 +57,11 @@ class InventoryItem extends Model
                 throw ValidationException::withMessages(['item' => 'Items with batch or stock adjustment history can be archived, but cannot be permanently deleted.']);
             }
         });
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
     }
 
     public function scopeWithReservationBalance(Builder $query): Builder

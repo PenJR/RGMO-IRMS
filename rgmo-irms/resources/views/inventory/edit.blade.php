@@ -12,7 +12,7 @@
         <div class="d-flex justify-content-end mb-4"><a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2"><i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>Back to Inventory</a></div>
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-                <form method="POST" action="{{ route('inventory.update', ['inventory' => $item->id]) }}">
+                <form method="POST" action="{{ route('inventory.update', $item) }}">
                     @csrf
                     @method('PUT')
 
@@ -99,7 +99,7 @@
                     </div>
 
                     <div class="mt-5 d-flex gap-2">
-                        <a href="{{ route('inventory.show', ['inventory' => $item->id]) }}" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="{{ route('inventory.show', $item) }}" class="btn btn-outline-secondary">Cancel</a>
                         <button type="submit" class="btn btn-cmu">Update Item</button>
                     </div>
                 </form>

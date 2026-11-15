@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\TurnstileService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -29,6 +30,12 @@ class PasswordResetLinkController extends Controller
         $request->validate([
             'email' => ['required', 'string', 'email', 'max:255'],
         ]);
+
+        if (! app(TurnstileService::class)->verify($request)) {
+            throw ValidationException::withMessages([
+                'turnstile' => 'Security verification failed. Please try again.',
+            ]);
+        }
 
         $status = Password::sendResetLink(
             $request->only('email')

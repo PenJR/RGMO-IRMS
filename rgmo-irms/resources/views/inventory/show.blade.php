@@ -8,8 +8,8 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="d-flex justify-content-end flex-wrap gap-2 mb-4">
-                @can('update', $item)<a href="{{ route('inventory.edit', ['inventory' => $item->id]) }}" class="btn btn-cmu d-inline-flex align-items-center gap-2"><i data-lucide="pencil" style="width: 16px; height: 16px;"></i>Edit</a>@endcan
-                @can('delete', $item)<form action="{{ route('inventory.destroy', ['inventory' => $item->id]) }}" method="POST" data-confirm="Delete this item?">@csrf @method('DELETE')<button type="submit" class="btn btn-outline-danger">Delete</button></form>@endcan
+                @can('update', $item)<a href="{{ route('inventory.edit', $item) }}" class="btn btn-cmu d-inline-flex align-items-center gap-2"><i data-lucide="pencil" style="width: 16px; height: 16px;"></i>Edit</a>@endcan
+                @can('delete', $item)<form action="{{ route('inventory.destroy', $item) }}" method="POST" data-confirm="Delete this item?">@csrf @method('DELETE')<button type="submit" class="btn btn-outline-danger">Delete</button></form>@endcan
                 <a href="{{ route('inventory.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2"><i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>Back to Inventory</a>
             </div>
 

@@ -21,6 +21,9 @@ class InventoryWithoutSkuTest extends TestCase
         $this->get(route('inventory.create'))->assertOk()->assertDontSee('name="sku"', false);
         $this->post(route('inventory.store'), $data)->assertSessionHasNoErrors();
         $item = InventoryItem::where('name', $data['name'])->firstOrFail();
+        $this->assertNotEmpty($item->public_id);
+        $this->assertStringContainsString($item->public_id, route('inventory.show', $item));
+        $this->actingAs(auth()->user())->get('/inventory/'.$item->id)->assertNotFound();
         $legacyCode = $item->sku;
         $this->assertNotEmpty($legacyCode);
         $this->put(route('inventory.update', $item), array_replace($data, ['name' => 'Updated rice']))->assertSessionHasNoErrors();

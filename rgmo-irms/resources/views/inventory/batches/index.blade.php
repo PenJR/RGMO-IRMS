@@ -28,7 +28,7 @@
                 @forelse($batches as $batch)
                     @php($status = $batch->getExpiryStatus())
                     <tr>
-                        <td><a href="{{ route('inventory.show', $batch->inventory_item_id) }}">{{ $batch->inventoryItem->name }}</a><div class="small text-muted">{{ $batch->inventoryItem->category?->name }}</div></td>
+                        <td><a href="{{ route('inventory.show', $batch->inventoryItem) }}">{{ $batch->inventoryItem->name }}</a><div class="small text-muted">{{ $batch->inventoryItem->category?->name }}</div></td>
                         <td><a href="{{ route('inventory.batches.show', $batch) }}">{{ $batch->display_name }}</a>@if($batch->is_legacy)<div class="small text-muted">Legacy stock</div>@endif</td>
                         <td>{{ $batch->expiry_date?->format('M d, Y') ?? ($batch->inventoryItem->has_expiry ? 'Date required' : 'Does not expire') }}</td>
                         <td>{{ number_format($batch->stock) }} {{ $batch->inventoryItem->unit }}</td>

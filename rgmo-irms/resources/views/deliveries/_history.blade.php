@@ -5,7 +5,7 @@
             @forelse($deliveries as $delivery)
                 <tr>
                     <td>DEL-{{ $delivery->id }}<div class="small text-muted">{{ $delivery->received_on->format('M d, Y') }}</div></td>
-                    <td>@if($delivery->inventoryItem && ! $delivery->inventoryItem->trashed())<a href="{{ route('inventory.show', $delivery->inventory_item_id) }}">{{ $delivery->inventoryItem->name }}</a>@else{{ $delivery->inventoryItem?->name ?? 'Archived item' }}@endif</td>
+                    <td>@if($delivery->inventoryItem && ! $delivery->inventoryItem->trashed())<a href="{{ route('inventory.show', $delivery->inventoryItem) }}">{{ $delivery->inventoryItem->name }}</a>@else{{ $delivery->inventoryItem?->name ?? 'Archived item' }}@endif</td>
                     <td>
                         @if($delivery->inventoryBatch)
                             @php

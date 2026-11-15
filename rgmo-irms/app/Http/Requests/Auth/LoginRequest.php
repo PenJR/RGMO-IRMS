@@ -5,6 +5,7 @@ namespace App\Http\Requests\Auth;
 use App\Models\AuditLog;
 use App\Models\User;
 use App\Services\SecurityEventLogger;
+use App\Services\TurnstileService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -44,6 +45,12 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
+        if (! app(TurnstileService::class)->verify($this)) {
+            throw ValidationException::withMessages([
+                'turnstile' => 'Security verification failed. Please try again.',
+            ]);
+        }
+
         $this->ensureIsNotRateLimited();
 
         $user = User::where('email', $this->input('email'))->first();

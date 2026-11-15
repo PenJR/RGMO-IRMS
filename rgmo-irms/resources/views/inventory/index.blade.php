@@ -213,13 +213,13 @@
                                             <td class="text-end" data-label="Actions">
                                                 <div class="d-inline-flex gap-2">
                                                     @can('view', $item)
-                                                        <a href="{{ route('inventory.show', ['inventory' => $item->id]) }}" class="btn btn-sm inventory-action inventory-action--view">View</a>
+                                                        <a href="{{ route('inventory.show', $item) }}" class="btn btn-sm inventory-action inventory-action--view">View</a>
                                                     @endcan
                                                     @can('update', $item)
-                                                        <a href="{{ route('inventory.edit', ['inventory' => $item->id]) }}" class="btn btn-sm inventory-action inventory-action--edit">Edit</a>
+                                                        <a href="{{ route('inventory.edit', $item) }}" class="btn btn-sm inventory-action inventory-action--edit">Edit</a>
                                                     @endcan
                                                     @can('delete', $item)
-                                                        <form method="POST" action="{{ route('inventory.destroy', ['inventory' => $item->id]) }}">
+                                                        <form method="POST" action="{{ route('inventory.destroy', $item) }}">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="btn btn-sm inventory-action inventory-action--delete"
