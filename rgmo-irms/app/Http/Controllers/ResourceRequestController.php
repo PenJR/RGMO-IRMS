@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreResourceRequestRequest;
 use App\Models\AuditLog;
+use App\Models\Delivery;
 use App\Models\InventoryItem;
 use App\Models\Project;
+use App\Models\RequestCorrection;
 use App\Models\ResourceRequest;
+use App\Models\Withdrawal;
 use App\Rules\CurrentProject;
 use App\Services\ResourceRequestService;
 use App\Support\InputRules;
@@ -15,6 +18,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ResourceRequestController extends Controller
@@ -36,7 +40,9 @@ class ResourceRequestController extends Controller
         $this->authorize('viewAny', ResourceRequest::class);
 
         $filters = $request->validate(InputRules::requestFilters());
-        $canReviewAllRequests = $request->user()->hasPermission(['review-request', 'verify-request', 'endorse-request', 'approve-request']);
+        $canReviewAllRequests = $request->user()->hasPermission([
+            'review-request', 'verify-request', 'endorse-request', 'approve-request', 'request-correction',
+        ]);
 
         if (! $canReviewAllRequests) {
             $filters['user_id'] = $request->user()->id;
@@ -115,12 +121,97 @@ class ResourceRequestController extends Controller
             ->where('model_id', $request->id)
             ->oldest()
             ->get();
+        $corrections = $request->corrections()->with('requester', 'reviewer')->latest()->get();
+        $correctionItemIds = $corrections
+            ->flatMap(fn (RequestCorrection $correction) => collect($correction->proposed_values['items'] ?? [])
+                ->pluck('inventory_item_id')
+                ->merge(collect($correction->original_values['items'] ?? [])->pluck('inventory_item_id')))
+            ->unique()
+            ->all();
 
         return view('requests.show', [
             'request' => $request,
             'workflowLogs' => $workflowLogs,
+            'corrections' => $corrections,
+            'correctionItemNames' => InventoryItem::withTrashed()->whereIn('id', $correctionItemIds)->pluck('name', 'id'),
+            'correctionItems' => InventoryItem::active()->orderBy('name')->get(['id', 'name', 'unit']),
+            'projects' => Project::query()->current()->orderBy('name')->get(),
             'canFulfill' => $this->requestService->canFulfillRequest($request),
         ]);
+    }
+
+    /**
+     * Show pending correction proposals for independent administrator review.
+     */
+    public function correctionIndex(): View
+    {
+        abort_unless(auth()->user()->hasPermission('manage-request-corrections'), 403);
+
+        return view('requests.corrections-index', [
+            'corrections' => RequestCorrection::query()
+                ->where('status', RequestCorrection::STATUS_PENDING)
+                ->with('request.user', 'request.project', 'requester')
+                ->latest()
+                ->paginate(25),
+        ]);
+    }
+
+    /**
+     * Submit a correction proposal without changing the locked document.
+     */
+    public function requestCorrection(Request $httpRequest, ResourceRequest $request): RedirectResponse
+    {
+        $this->authorize('requestCorrection', $request);
+
+        $validated = $httpRequest->validate([
+            'project_id' => ['required', 'integer', new CurrentProject],
+            'ris_no' => 'nullable|string|max:50',
+            'responsible_center' => 'nullable|string|max:255',
+            'purpose' => 'required|string|max:1000',
+            'remarks' => 'nullable|string|max:1000',
+            'needed_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
+            'reason' => 'required|string|max:1000',
+            'items' => 'required|array|list|min:1|max:100',
+            'items.*' => 'required|array:inventory_item_id,quantity',
+            'items.*.inventory_item_id' => [
+                'required', 'integer', 'min:1', 'distinct',
+                Rule::exists('inventory_items', 'id')->whereNull('deleted_at'),
+            ],
+            'items.*.quantity' => 'required|integer|min:1|max:2147483647',
+        ]);
+        $reason = $validated['reason'];
+        unset($validated['reason']);
+
+        $correction = $this->requestService->requestCorrection($request, $validated, $reason, (int) auth()->id());
+
+        return redirect()->route('requests.show', $request)
+            ->with('success', 'Correction proposal #'.$correction->id.' was submitted for independent review.');
+    }
+
+    /**
+     * Apply a correction proposal and send the new revision through all approvals again.
+     */
+    public function applyCorrection(ResourceRequest $request, RequestCorrection $correction): RedirectResponse
+    {
+        $this->authorize('manageCorrection', [$request, $correction]);
+        $this->requestService->applyCorrection($request, $correction, (int) auth()->id());
+
+        return redirect()->route('requests.show', $request)
+            ->with('success', 'Correction applied as a new revision. Storekeeper, Unit Head, and RGMO Head approval are required again.');
+    }
+
+    /**
+     * Reject a correction proposal and retain the reviewer’s explanation.
+     */
+    public function rejectCorrection(Request $httpRequest, ResourceRequest $request, RequestCorrection $correction): RedirectResponse
+    {
+        $this->authorize('manageCorrection', [$request, $correction]);
+        $validated = $httpRequest->validate([
+            'decision_reason' => 'required|string|max:1000',
+        ]);
+        $this->requestService->rejectCorrection($request, $correction, (int) auth()->id(), $validated['decision_reason']);
+
+        return redirect()->route('requests.show', $request)->with('success', 'Correction proposal rejected and recorded in the request history.');
     }
 
     /**
@@ -394,13 +485,14 @@ class ResourceRequestController extends Controller
         ]);
     }
 
-    public function withdrawalRecord(ResourceRequest $request, \App\Models\Withdrawal $withdrawal)
+    public function withdrawalRecord(ResourceRequest $request, Withdrawal $withdrawal)
     {
         $this->authorize('view', $request);
         abort_unless($withdrawal->resource_request_id === $request->id, 404);
         $withdrawal->load('issuer', 'items.requestItem.item', 'items.transaction');
         $deliveryIds = $withdrawal->items->flatMap(fn ($line) => collect($line->transaction->meta['deliveries'] ?? [])->pluck('delivery_id'));
-        $deliveries = \App\Models\Delivery::with('procurement')->whereIn('id', $deliveryIds)->get()->keyBy('id');
+        $deliveries = Delivery::with('procurement')->whereIn('id', $deliveryIds)->get()->keyBy('id');
+
         return view('requests.withdrawal-record', compact('request', 'withdrawal', 'deliveries'));
     }
 

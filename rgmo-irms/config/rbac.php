@@ -28,6 +28,7 @@ return [
                 'view-forecasts',
                 'view-audit-trail',
                 'manage-forecasting-settings',
+                'manage-request-corrections',
                 'receive-notifications',
             ],
         ],
@@ -68,6 +69,13 @@ return [
                 'endorse-request', 'receive-notifications',
             ],
         ],
+        'auditor' => [
+            'label' => 'Auditor',
+            'permissions' => [
+                'view-audit-trail', 'generate-reports', 'monitor-status', 'view-history',
+                'request-correction',
+            ],
+        ],
     ],
 
     'permissions' => [
@@ -96,6 +104,8 @@ return [
         'view-forecasts' => 'View forecasting results',
         'view-audit-trail' => 'View audit trail',
         'manage-forecasting-settings' => 'Manage forecasting settings',
+        'request-correction' => 'Request a correction to a verified resource request',
+        'manage-request-corrections' => 'Apply or reject resource request corrections',
         'receive-notifications' => 'Receive notifications',
     ],
 ];

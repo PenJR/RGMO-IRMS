@@ -26,6 +26,8 @@ class User extends Authenticatable
 
     const ROLE_UNIT_HEAD = 'unit_head';
 
+    const ROLE_AUDITOR = 'auditor';
+
     const STATUS_ACTIVE = 'active';
 
     const STATUS_INACTIVE = 'inactive';
@@ -83,6 +85,7 @@ class User extends Authenticatable
             self::ROLE_RGMO_HEAD,
             self::ROLE_STOREKEEPER,
             self::ROLE_UNIT_HEAD,
+            self::ROLE_AUDITOR,
         ];
     }
 

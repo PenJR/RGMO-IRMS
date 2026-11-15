@@ -75,13 +75,16 @@
                 </summary>
                 <div class="nav-submenu">
                     @can('viewAny', App\Models\ResourceRequest::class)
-                        <a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('requests.index') ? 'active' : '' }}">{{ auth()->user()->hasPermission(['review-request', 'approve-request']) ? 'All Requests' : 'My Requests' }}</a>
+                        <a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('requests.index') ? 'active' : '' }}">{{ auth()->user()->hasPermission(['review-request', 'approve-request', 'request-correction']) ? 'All Requests' : 'My Requests' }}</a>
                     @endcan
                     @if(auth()->user()->hasPermission('record-withdrawal'))
                         <a href="{{ route('requests.releases') }}" class="nav-link {{ request()->routeIs('requests.releases') ? 'active' : '' }}">Withdrawals</a>
                     @endif
                     @if(auth()->user()->hasPermission('record-utilization'))
                         <a href="{{ route('utilization.index') }}" class="nav-link {{ request()->routeIs('utilization.*') ? 'active' : '' }}">Usage</a>
+                    @endif
+                    @if(auth()->user()->hasPermission('manage-request-corrections'))
+                        <a href="{{ route('requests.corrections.index') }}" class="nav-link {{ request()->routeIs('requests.corrections.*') ? 'active' : '' }}">Correction Proposals</a>
                     @endif
                     @can('review', App\Models\ResourceRequest::class)
                         <a href="{{ route('requests.pending') }}" class="nav-link {{ request()->routeIs('requests.pending') ? 'active' : '' }}">Pending</a>

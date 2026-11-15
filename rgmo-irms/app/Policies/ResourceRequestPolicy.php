@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\RequestCorrection;
 use App\Models\ResourceRequest;
 use App\Models\User;
 
@@ -14,7 +15,8 @@ class ResourceRequestPolicy
     {
         return $user->hasPermission('monitor-status')
             || $user->hasPermission(['review-request', 'verify-request', 'endorse-request'])
-            || $user->hasPermission('approve-request');
+            || $user->hasPermission('approve-request')
+            || $user->hasPermission('request-correction');
     }
 
     /**
@@ -24,6 +26,7 @@ class ResourceRequestPolicy
     {
         return $user->id === $request->user_id
             || $user->hasPermission(['review-request', 'verify-request', 'endorse-request', 'approve-request'])
+            || $user->hasPermission('request-correction')
             || ($user->hasPermission('record-withdrawal')
                 && in_array($request->status, [ResourceRequest::STATUS_APPROVED, ResourceRequest::STATUS_PARTIALLY_WITHDRAWN, ResourceRequest::STATUS_COMPLETED], true));
     }
@@ -41,7 +44,9 @@ class ResourceRequestPolicy
      */
     public function update(User $user, ResourceRequest $request): bool
     {
-        if (! $request->isPending()) return false;
+        if (! $request->isPending()) {
+            return false;
+        }
 
         if ($user->hasPermission('manage-users')) {
             return true;
@@ -109,5 +114,21 @@ class ResourceRequestPolicy
     public function fulfill(User $user, ResourceRequest $request): bool
     {
         return $user->hasPermission('record-withdrawal') && $request->isReleasable();
+    }
+
+    public function requestCorrection(User $user, ResourceRequest $request): bool
+    {
+        return $user->hasPermission('request-correction')
+            && $request->canRequestCorrection()
+            && ! $request->corrections()->where('status', RequestCorrection::STATUS_PENDING)->exists();
+    }
+
+    public function manageCorrection(User $user, ResourceRequest $request, RequestCorrection $correction): bool
+    {
+        return $user->hasPermission('manage-request-corrections')
+            && $correction->resource_request_id === $request->id
+            && $correction->status === RequestCorrection::STATUS_PENDING
+            && $correction->requested_by !== $user->id
+            && $request->canRequestCorrection();
     }
 }

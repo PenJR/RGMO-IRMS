@@ -12,6 +12,9 @@
             @can('review', App\Models\ResourceRequest::class)
                 <a href="{{ route('requests.pending') }}" class="btn btn-outline-secondary">Pending</a>
             @endcan
+            @if(auth()->user()->hasPermission('manage-request-corrections'))
+                <a href="{{ route('requests.corrections.index') }}" class="btn btn-outline-warning">Correction Proposals</a>
+            @endif
             @can('create', App\Models\ResourceRequest::class)
                 <a href="{{ route('requests.create') }}" class="btn btn-cmu">New Request</a>
             @endcan

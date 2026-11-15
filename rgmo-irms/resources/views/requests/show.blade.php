@@ -42,6 +42,7 @@
                 </div>
             </div>
         @endif
+        @include('requests.partials.corrections')
 
         @if($request->withdrawals->isNotEmpty())
         <div class="card mb-4"><div class="card-body"><h3 class="h5">Withdrawal history</h3><div class="table-responsive"><table class="table"><thead><tr><th>Record</th><th>Date</th><th>Issued by</th><th>Received by</th><th>Items released</th></tr></thead><tbody>@foreach($request->withdrawals as $withdrawal)<tr><td><a href="{{ route('requests.withdrawal-record', [$request, $withdrawal]) }}">WD-{{ $withdrawal->id }}</a></td><td>{{ $withdrawal->withdrawn_on->format('M d, Y') }}</td><td>{{ $withdrawal->issuer->name }}</td><td>{{ $withdrawal->received_by }}</td><td>@foreach($withdrawal->items as $line)<div>{{ $line->requestItem->item?->name }}: {{ $line->quantity }}</div>@endforeach</td></tr>@endforeach</tbody></table></div></div></div>

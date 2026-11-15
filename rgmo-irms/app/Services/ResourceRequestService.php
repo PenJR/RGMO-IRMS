@@ -5,8 +5,11 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\Delivery;
 use App\Models\InventoryItem;
+use App\Models\Project;
+use App\Models\RequestCorrection;
 use App\Models\RequestItem;
 use App\Models\ResourceRequest;
+use App\Models\User;
 use App\Models\Withdrawal;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -146,7 +149,7 @@ class ResourceRequestService
             AuditLog::log($storekeeperId, 'storekeeper_verify', 'resource_request', ResourceRequest::class, $locked->id, $old, $locked->fresh()->toArray());
             $request->setRawAttributes($locked->getAttributes(), true);
         }, 5);
-        $this->notificationService->notifyRequestAwaitingRole($request, \App\Models\User::ROLE_UNIT_HEAD, 'Storekeeper verification is complete.');
+        $this->notificationService->notifyRequestAwaitingRole($request, User::ROLE_UNIT_HEAD, 'Storekeeper verification is complete.');
     }
 
     public function endorseRequest(ResourceRequest $request, int $unitHeadId, ?string $remarks = null): void
@@ -161,7 +164,7 @@ class ResourceRequestService
             AuditLog::log($unitHeadId, 'unit_head_endorse', 'resource_request', ResourceRequest::class, $locked->id, $old, $locked->fresh()->toArray());
             $request->setRawAttributes($locked->getAttributes(), true);
         }, 5);
-        $this->notificationService->notifyRequestAwaitingRole($request, \App\Models\User::ROLE_RGMO_HEAD, 'Unit Head endorsement is complete.');
+        $this->notificationService->notifyRequestAwaitingRole($request, User::ROLE_RGMO_HEAD, 'Unit Head endorsement is complete.');
     }
 
     /** Mark an endorsed request as approved and reserve its stock. */
@@ -180,6 +183,205 @@ class ResourceRequestService
         }, 5);
 
         $this->notificationService->notifyResourceRequestApproved($request, $approverId);
+    }
+
+    /**
+     * Record a correction proposal without changing the verified request.
+     */
+    public function requestCorrection(ResourceRequest $request, array $proposedValues, string $reason, int $actorId): RequestCorrection
+    {
+        return DB::transaction(function () use ($request, $proposedValues, $reason, $actorId) {
+            $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            if (! $locked->canRequestCorrection()) {
+                throw ValidationException::withMessages(['correction' => 'Corrections are only available before an approved request has any withdrawals.']);
+            }
+            if ($locked->corrections()->where('status', RequestCorrection::STATUS_PENDING)->exists()) {
+                throw ValidationException::withMessages(['correction' => 'A correction is already awaiting review for this request.']);
+            }
+
+            $proposedValues = $this->normalizeCorrectionValues($proposedValues);
+            $currentValues = $this->correctionSnapshot($locked);
+            if ($this->comparableCorrectionValues($currentValues) === $this->comparableCorrectionValues($proposedValues)) {
+                throw ValidationException::withMessages(['correction' => 'The proposed correction does not change the request.']);
+            }
+
+            $correction = $locked->corrections()->create([
+                'requested_by' => $actorId,
+                'reason' => $reason,
+                'proposed_values' => $proposedValues,
+                'status' => RequestCorrection::STATUS_PENDING,
+            ]);
+
+            AuditLog::log($actorId, 'correction_requested', 'resource_request', ResourceRequest::class, $locked->id,
+                null, $proposedValues, ['correction_id' => $correction->id, 'reason' => $reason]);
+
+            return $correction;
+        }, 5);
+    }
+
+    /**
+     * Apply a correction as a new document revision and restart all three approvals.
+     */
+    public function applyCorrection(ResourceRequest $request, RequestCorrection $correction, int $actorId): void
+    {
+        DB::transaction(function () use ($request, $correction, $actorId) {
+            $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            $lockedCorrection = RequestCorrection::lockForUpdate()->findOrFail($correction->id);
+            if ($lockedCorrection->resource_request_id !== $locked->id
+                || $lockedCorrection->status !== RequestCorrection::STATUS_PENDING
+                || $lockedCorrection->requested_by === $actorId
+                || ! $locked->canRequestCorrection()) {
+                throw ValidationException::withMessages(['correction' => 'This correction is no longer available for review.']);
+            }
+
+            $before = $this->correctionSnapshot($locked);
+            $proposed = $this->normalizeCorrectionValues($lockedCorrection->proposed_values);
+            if (! Project::query()->current()->whereKey($proposed['project_id'])->exists()) {
+                throw ValidationException::withMessages(['project_id' => 'The proposed project is no longer available. Submit a new correction proposal.']);
+            }
+            $activeItemCount = InventoryItem::active()
+                ->whereIn('id', collect($proposed['items'])->pluck('inventory_item_id'))
+                ->count();
+            if ($activeItemCount !== count($proposed['items'])) {
+                throw ValidationException::withMessages(['items' => 'One or more proposed resources are no longer active. Submit a new correction proposal.']);
+            }
+            $locked->update([
+                'project_id' => $proposed['project_id'],
+                'ris_no' => $proposed['ris_no'],
+                'responsible_center' => $proposed['responsible_center'],
+                'purpose' => $proposed['purpose'],
+                'remarks' => $proposed['remarks'],
+                'needed_date' => $proposed['needed_date'],
+                'status' => ResourceRequest::STATUS_PENDING,
+                'storekeeper_checked_by' => null,
+                'storekeeper_checked_at' => null,
+                'unit_head_approved_by' => null,
+                'unit_head_approved_at' => null,
+                'approved_by' => null,
+                'approved_at' => null,
+            ]);
+            $locked->items()->delete();
+            foreach ($proposed['items'] as $item) {
+                $locked->items()->create($item);
+            }
+
+            $this->ensureItemsAreAvailable($locked);
+            $locked->refresh();
+            $after = $this->correctionSnapshot($locked);
+            $lockedCorrection->update([
+                'reviewed_by' => $actorId,
+                'status' => RequestCorrection::STATUS_APPLIED,
+                'original_values' => $before,
+                'reviewed_at' => now(),
+                'applied_at' => now(),
+            ]);
+
+            AuditLog::log($actorId, 'correction_applied', 'resource_request', ResourceRequest::class, $locked->id,
+                $before, $after, [
+                    'correction_id' => $lockedCorrection->id,
+                    'reason' => $lockedCorrection->reason,
+                    'requested_by' => $lockedCorrection->requested_by,
+                    'approval_workflow_restarted' => true,
+                ]);
+        }, 5);
+    }
+
+    /**
+     * Reject a proposal while retaining its reason and reviewer in the correction history.
+     */
+    public function rejectCorrection(ResourceRequest $request, RequestCorrection $correction, int $actorId, string $decisionReason): void
+    {
+        DB::transaction(function () use ($request, $correction, $actorId, $decisionReason) {
+            $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            $lockedCorrection = RequestCorrection::lockForUpdate()->findOrFail($correction->id);
+            if ($lockedCorrection->resource_request_id !== $locked->id
+                || $lockedCorrection->status !== RequestCorrection::STATUS_PENDING
+                || $lockedCorrection->requested_by === $actorId
+                || ! $locked->canRequestCorrection()) {
+                throw ValidationException::withMessages(['correction' => 'This correction is no longer available for review.']);
+            }
+
+            $lockedCorrection->update([
+                'reviewed_by' => $actorId,
+                'status' => RequestCorrection::STATUS_REJECTED,
+                'decision_reason' => $decisionReason,
+                'reviewed_at' => now(),
+            ]);
+
+            AuditLog::log($actorId, 'correction_rejected', 'resource_request', ResourceRequest::class, $locked->id,
+                null, null, [
+                    'correction_id' => $lockedCorrection->id,
+                    'reason' => $lockedCorrection->reason,
+                    'decision_reason' => $decisionReason,
+                    'requested_by' => $lockedCorrection->requested_by,
+                ]);
+        }, 5);
+    }
+
+    /**
+     * Normalize validated editable document fields for reliable comparison and storage.
+     *
+     * @return array<string, mixed>
+     */
+    private function normalizeCorrectionValues(array $values): array
+    {
+        return [
+            'project_id' => (int) $values['project_id'],
+            'ris_no' => ($values['ris_no'] ?? null) ?: null,
+            'responsible_center' => ($values['responsible_center'] ?? null) ?: null,
+            'purpose' => trim($values['purpose']),
+            'remarks' => filled($values['remarks'] ?? null) ? trim($values['remarks']) : null,
+            'needed_date' => ($values['needed_date'] ?? null) ?: null,
+            'items' => collect($values['items'])
+                ->map(fn (array $item): array => [
+                    'inventory_item_id' => (int) $item['inventory_item_id'],
+                    'quantity' => (int) $item['quantity'],
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * Snapshot the current document, line items and approval signatures.
+     *
+     * @return array<string, mixed>
+     */
+    private function correctionSnapshot(ResourceRequest $request): array
+    {
+        $request->loadMissing('items');
+
+        return [
+            'project_id' => (int) $request->project_id,
+            'ris_no' => $request->ris_no,
+            'responsible_center' => $request->responsible_center,
+            'purpose' => $request->purpose,
+            'remarks' => $request->remarks,
+            'needed_date' => $request->needed_date?->toDateString(),
+            'items' => $request->items->map(fn (RequestItem $item): array => [
+                'inventory_item_id' => (int) $item->inventory_item_id,
+                'quantity' => (int) $item->quantity,
+            ])->values()->all(),
+            'approval' => [
+                'status' => $request->status,
+                'storekeeper_checked_by' => $request->storekeeper_checked_by,
+                'storekeeper_checked_at' => $request->storekeeper_checked_at?->toISOString(),
+                'unit_head_approved_by' => $request->unit_head_approved_by,
+                'unit_head_approved_at' => $request->unit_head_approved_at?->toISOString(),
+                'approved_by' => $request->approved_by,
+                'approved_at' => $request->approved_at?->toISOString(),
+            ],
+        ];
+    }
+
+    /**
+     * Exclude workflow metadata when checking whether a proposed document changes any content.
+     */
+    private function comparableCorrectionValues(array $values): array
+    {
+        unset($values['approval']);
+
+        return $values;
     }
 
     private function ensureItemsAreAvailable(ResourceRequest $request): void
@@ -257,12 +459,18 @@ class ResourceRequestService
      *
      * @return Collection
      */
-    public function getPendingRequestsFor(\App\Models\User $user)
+    public function getPendingRequestsFor(User $user)
     {
         $statuses = [];
-        if ($user->hasPermission('verify-request')) $statuses[] = ResourceRequest::STATUS_PENDING;
-        if ($user->hasPermission('endorse-request')) $statuses[] = ResourceRequest::STATUS_PENDING_UNIT_HEAD;
-        if ($user->hasPermission('approve-request')) $statuses[] = ResourceRequest::STATUS_PENDING_RGMO_HEAD;
+        if ($user->hasPermission('verify-request')) {
+            $statuses[] = ResourceRequest::STATUS_PENDING;
+        }
+        if ($user->hasPermission('endorse-request')) {
+            $statuses[] = ResourceRequest::STATUS_PENDING_UNIT_HEAD;
+        }
+        if ($user->hasPermission('approve-request')) {
+            $statuses[] = ResourceRequest::STATUS_PENDING_RGMO_HEAD;
+        }
 
         return ResourceRequest::whereIn('status', $statuses)->with('user', 'project', 'items.item')->orderBy('created_at', 'asc')->get();
     }

@@ -100,9 +100,16 @@ Route::middleware('auth')->group(function () {
     });
 
     // Resource Request Module
-    Route::middleware(['permission:submit-request,update-pending-request,review-request,verify-request,endorse-request,approve-request'])->group(function () {
+    Route::middleware(['permission:submit-request,update-pending-request,review-request,verify-request,endorse-request,approve-request,request-correction'])->group(function () {
         Route::get('/requests/releases', [ResourceRequestController::class, 'releases'])->middleware('permission:record-withdrawal')->name('requests.releases');
         Route::get('/requests/pending/list', [ResourceRequestController::class, 'pending'])->name('requests.pending');
+        Route::get('/requests/corrections', [ResourceRequestController::class, 'correctionIndex'])
+            ->middleware('permission:manage-request-corrections')->name('requests.corrections.index');
+        Route::post('/requests/{request}/corrections', [ResourceRequestController::class, 'requestCorrection'])->name('requests.corrections.store');
+        Route::post('/requests/{request}/corrections/{correction}/apply', [ResourceRequestController::class, 'applyCorrection'])
+            ->middleware('permission:manage-request-corrections')->name('requests.corrections.apply');
+        Route::post('/requests/{request}/corrections/{correction}/reject', [ResourceRequestController::class, 'rejectCorrection'])
+            ->middleware('permission:manage-request-corrections')->name('requests.corrections.reject');
         Route::get('/requests/{request}/withdrawals/{withdrawal}', [ResourceRequestController::class, 'withdrawalRecord'])->name('requests.withdrawal-record');
         Route::get('/requests/{request}/withdrawal-slip/download', [ResourceRequestController::class, 'downloadWithdrawalSlip'])->name('requests.withdrawal-slip.download');
         Route::get('/requests/{request}/withdrawal-slip', [ResourceRequestController::class, 'withdrawalSlip'])->name('requests.withdrawal-slip');

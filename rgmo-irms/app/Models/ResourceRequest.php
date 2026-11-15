@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Validation\ValidationException;
 
 class ResourceRequest extends Model
 {
@@ -109,6 +110,11 @@ class ResourceRequest extends Model
         return $this->hasMany(Withdrawal::class);
     }
 
+    public function corrections(): HasMany
+    {
+        return $this->hasMany(RequestCorrection::class);
+    }
+
     public function isReleasable(): bool
     {
         return in_array($this->status, [self::STATUS_APPROVED, self::STATUS_PARTIALLY_WITHDRAWN], true);
@@ -209,6 +215,15 @@ class ResourceRequest extends Model
             && $this->unit_head_approved_at !== null;
     }
 
+    public function canRequestCorrection(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_PENDING_UNIT_HEAD,
+            self::STATUS_PENDING_RGMO_HEAD,
+            self::STATUS_APPROVED,
+        ], true) && ! $this->withdrawals()->exists();
+    }
+
     /**
      * Approve the resource request, setting the approver and timestamp.
      *
@@ -218,7 +233,7 @@ class ResourceRequest extends Model
     public function approve(int $approvedBy, ?string $remarks = null): void
     {
         if (! $this->canReceiveFinalApproval()) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'status' => 'Storekeeper verification and Unit Head endorsement must both be recorded before RGMO Head approval.',
             ]);
         }
