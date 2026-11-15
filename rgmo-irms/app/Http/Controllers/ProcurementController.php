@@ -15,6 +15,38 @@ use Illuminate\Validation\ValidationException;
 
 class ProcurementController extends Controller
 {
+    public function searchSuggestions(Request $request)
+    {
+        $data = $request->validate(['q' => 'nullable|string|max:100']);
+        $query = trim((string) ($data['q'] ?? ''));
+
+        if (mb_strlen($query) < 1) {
+            return response()->json(['suggestions' => []]);
+        }
+
+        $matches = Procurement::query()
+            ->select(['po_number', 'or_number', 'supplier_name'])
+            ->where(function ($builder) use ($query) {
+                $builder->where('po_number', 'like', "{$query}%")
+                    ->orWhere('or_number', 'like', "{$query}%")
+                    ->orWhere('supplier_name', 'like', "{$query}%");
+            })
+            ->orderBy('po_number')
+            ->limit(12)
+            ->get();
+
+        $suggestions = $matches->flatMap(function (Procurement $purchase) use ($query) {
+            return collect([
+                ['value' => $purchase->po_number, 'label' => 'PO number'],
+                ['value' => $purchase->or_number, 'label' => 'OR number'],
+                ['value' => $purchase->supplier_name, 'label' => 'Supplier'],
+            ])->filter(fn (array $suggestion) => filled($suggestion['value'])
+                && str_starts_with(mb_strtolower($suggestion['value']), mb_strtolower($query)));
+        })->unique('value')->take(8)->values();
+
+        return response()->json(['suggestions' => $suggestions]);
+    }
+
     public function index(Request $request, ProcurementService $procurementService)
     {
         $filters = $request->validate([

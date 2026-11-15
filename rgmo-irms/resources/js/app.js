@@ -3,6 +3,7 @@ import * as bootstrap from 'bootstrap';
 import './feedback';
 import './user-name-filter';
 import './procurement-filters';
+import { attachSearchSuggestions } from './search-suggestions';
 import './server-sort';
 import './batch-receiving';
 import Chart from 'chart.js/auto';
@@ -12,7 +13,7 @@ import {
     Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
     CircleAlert, Clipboard, ClipboardCheck, ClipboardList, ClipboardPlus, Clock3,
     DatabaseBackup, Download, Edit3, Eye, EyeOff, FileCheck, FilePlus2, FileText, Files,
-    FolderKanban, Gauge, History, Home, Info, KeyRound, LayoutDashboard, Leaf,
+    FolderKanban, Funnel, Gauge, History, Home, Info, KeyRound, LayoutDashboard, Leaf,
     LineChart, LockKeyhole, LogIn, LogOut, Mail, Menu, Monitor, Moon, Package,
     PackagePlus, PackageSearch, PanelLeft, PanelLeftClose, PanelLeftOpen, Pencil,
     PieChart, Plus, PlusCircle, RotateCcw, Search, Send, Settings, Settings2,
@@ -29,7 +30,7 @@ const lucideIcons = {
     Check, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
     CircleAlert, Clipboard, ClipboardCheck, ClipboardList, ClipboardPlus, Clock3,
     DatabaseBackup, Download, Edit3, Eye, EyeOff, FileCheck, FilePlus2, FileText, Files,
-    FolderKanban, Gauge, History, Home, Info, KeyRound, LayoutDashboard, Leaf,
+    FolderKanban, Funnel, Gauge, History, Home, Info, KeyRound, LayoutDashboard, Leaf,
     LineChart, LockKeyhole, LogIn, LogOut, Mail, Menu, Monitor, Moon, Package,
     PackagePlus, PackageSearch, PanelLeft, PanelLeftClose, PanelLeftOpen, Pencil,
     PieChart, Plus, PlusCircle, RotateCcw, Search, Send, Settings, Settings2,
@@ -174,6 +175,13 @@ const enhanceDataTable = (table) => {
     searchInput.placeholder = table.dataset.searchPlaceholder || `Search ${label}…`;
     searchInput.autocomplete = 'off';
     searchGroup.append(searchLabel, searchInput);
+    attachSearchSuggestions(searchInput, () => rows.flatMap((row) => Array.from(row.cells)
+        .filter((cell) => {
+            const header = table.tHead?.rows[0]?.cells[cell.cellIndex];
+            return !/actions?/i.test(header?.textContent || '') && !cell.querySelector('button, form');
+        })
+        .flatMap((cell) => (cell.innerText || cell.textContent || '').split('\n')
+            .map((value) => value.replace(/\s+/g, ' ').trim()))));
 
     const toolbarMeta = document.createElement('div');
     toolbarMeta.className = 'd-flex align-items-center gap-3';

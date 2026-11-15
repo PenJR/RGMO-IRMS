@@ -1,5 +1,71 @@
 const purchaseList = document.querySelector('[data-procurement-list]');
 
+const procurementSearch = document.querySelector('[data-procurement-search]');
+
+if (procurementSearch && window.fetch) {
+    const input = procurementSearch.querySelector('#po-search');
+    const list = procurementSearch.querySelector('#po-search-suggestions');
+    const suggestionsUrl = procurementSearch.dataset.suggestionsUrl;
+    let timeout;
+    let request;
+
+    const closeSuggestions = () => {
+        list.replaceChildren();
+        list.classList.add('d-none');
+        input.setAttribute('aria-expanded', 'false');
+    };
+
+    const showSuggestions = (suggestions) => {
+        closeSuggestions();
+        suggestions.forEach((suggestion) => {
+            const option = document.createElement('button');
+            option.type = 'button';
+            option.className = 'list-group-item list-group-item-action text-start';
+            option.setAttribute('role', 'option');
+            option.innerHTML = `<span class="d-block fw-semibold"></span><small class="text-muted"></small>`;
+            option.querySelector('span').textContent = suggestion.value;
+            option.querySelector('small').textContent = suggestion.label;
+            option.addEventListener('click', () => {
+                input.value = suggestion.value;
+                closeSuggestions();
+                input.focus();
+            });
+            list.append(option);
+        });
+        if (suggestions.length) {
+            list.classList.remove('d-none');
+            input.setAttribute('aria-expanded', 'true');
+        }
+    };
+
+    input?.addEventListener('input', () => {
+        window.clearTimeout(timeout);
+        request?.abort();
+        const query = input.value.trim();
+        if (query.length < 1) return closeSuggestions();
+        timeout = window.setTimeout(async () => {
+            request = new AbortController();
+            try {
+                const url = new URL(suggestionsUrl, window.location.origin);
+                url.searchParams.set('q', query);
+                const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: request.signal });
+                if (!response.ok) throw new Error('Suggestions are unavailable.');
+                const data = await response.json();
+                if (input.value.trim() === query) showSuggestions(data.suggestions || []);
+            } catch (error) {
+                if (error.name !== 'AbortError') closeSuggestions();
+            }
+        }, 300);
+    });
+
+    input?.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeSuggestions();
+    });
+    document.addEventListener('click', (event) => {
+        if (!procurementSearch.contains(event.target)) closeSuggestions();
+    });
+}
+
 if (purchaseList && window.fetch && window.AbortController) {
     const indexUrl = new URL(purchaseList.dataset.procurementUrl, window.location.href);
     const regions = ['summary', 'orders', 'supplier-history'];

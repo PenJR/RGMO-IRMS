@@ -74,6 +74,25 @@ class PurchaseOrderInterfaceTest extends TestCase
             ->assertSee('Interface Supplies');
     }
 
+    public function test_purchase_order_search_suggestions_match_prefixes(): void
+    {
+        $admin = $this->admin();
+        $supplier = Supplier::create(['company_name' => 'Suggestive Supplies', 'supplier_code' => 'SUP-SUGGEST', 'status' => Supplier::STATUS_ACTIVE]);
+        $purchase = $this->purchaseOrder($admin, $supplier);
+        $purchase->update(['po_number' => 'PO-SUGGEST-001', 'or_number' => 'OR-SUGGEST-001']);
+
+        $this->actingAs($admin)
+            ->getJson(route('procurements.search-suggestions', ['q' => 'PO-SU']))
+            ->assertOk()
+            ->assertJsonPath('suggestions.0.value', 'PO-SUGGEST-001')
+            ->assertJsonPath('suggestions.0.label', 'PO number');
+
+        $this->actingAs($admin)
+            ->getJson(route('procurements.search-suggestions', ['q' => 'Sugg']))
+            ->assertOk()
+            ->assertJsonFragment(['value' => 'Suggestive Supplies', 'label' => 'Supplier']);
+    }
+
     public function test_procurement_index_separates_status_counts_and_preserves_delivery_counts(): void
     {
         $admin = $this->admin();

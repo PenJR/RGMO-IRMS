@@ -54,27 +54,29 @@
         </div>
         @endif
         <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-4"><h3 class="fw-bold mb-3">Purchase orders</h3>
-            <form method="GET" action="{{ route('procurements.index') }}" class="row g-3 mb-0">
-                <div class="col-lg-3"><label for="po-search" class="visually-hidden">Search</label><input id="po-search" name="search" class="form-control" value="{{ $filters['search'] ?? '' }}" placeholder="Search PO, OR number, or supplier"></div>
-                <div class="col-md-3 col-lg-2"><label for="po-status-filter" class="form-label">Status</label><select id="po-status-filter" name="status" class="form-select"><option value="">All statuses</option>@foreach($statuses as $status)<option value="{{ $status }}" @selected(($filters['status'] ?? '') === $status)>{{ ucwords(str_replace('_', ' ', $status)) }}</option>@endforeach</select></div>
-                <div class="col-md-3 col-lg-2"><label for="po-supplier-filter" class="form-label">Supplier</label><select id="po-supplier-filter" name="supplier_id" class="form-select"><option value="">All suppliers</option>@foreach($suppliers as $supplier)<option value="{{ $supplier->id }}" @selected(($filters['supplier_id'] ?? null) == $supplier->id)>{{ $supplier->company_name }}</option>@endforeach</select></div>
-                <div class="col-md-3 col-lg-2"><label for="po-item-filter" class="form-label">Item</label><select id="po-item-filter" name="inventory_item_id" class="form-select"><option value="">All items</option>@foreach($items as $item)<option value="{{ $item->id }}" @selected(($filters['inventory_item_id'] ?? null) == $item->id)>{{ $item->name }}</option>@endforeach</select></div>
-                <div class="col-md-3"><label for="po-date-from" class="form-label">Order from</label><input id="po-date-from" type="date" name="date_from" class="form-control" value="{{ $filters['date_from'] ?? '' }}"></div>
-                <div class="col-md-3"><label for="po-date-to" class="form-label">Order to</label><input id="po-date-to" type="date" name="date_to" class="form-control" value="{{ $filters['date_to'] ?? '' }}"></div>
-                <div class="col-md-6 col-lg-2 d-flex align-items-end gap-2"><button class="btn btn-cmu flex-fill">Filter</button><a href="{{ route('procurements.index') }}" class="btn btn-outline-secondary">Clear</a></div>
-            </form>
+            <div class="card-body p-4">
+                <form method="GET" action="{{ route('procurements.index') }}" class="d-flex flex-wrap align-items-end gap-3 mb-0">
+                    <div><h3 class="fw-bold mb-1">Purchase orders</h3><p class="text-muted small mb-0">Find and narrow down purchase orders.</p></div>
+                    <div class="position-relative ms-lg-3" style="flex:0 1 640px;min-width:min(100%, 320px)" data-procurement-search data-suggestions-url="{{ route('procurements.search-suggestions') }}"><label for="po-search" class="visually-hidden">Search purchase orders</label><input id="po-search" name="search" class="form-control" value="{{ $filters['search'] ?? '' }}" placeholder="Search PO number, OR number, or supplier" autocomplete="off" aria-autocomplete="list" aria-controls="po-search-suggestions" aria-expanded="false"><div id="po-search-suggestions" class="list-group position-absolute start-0 end-0 mt-1 shadow-sm d-none" role="listbox" style="z-index: 1060"></div></div>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" type="button" id="po-filter-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                            <i data-lucide="funnel" style="width:16px;height:16px"></i> Filters
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="po-filter-toggle" style="width:min(420px, calc(100vw - 3rem))">
+                            <div class="row g-3">
+                                <div class="col-sm-6"><label for="po-status-filter" class="form-label">Status</label><select id="po-status-filter" name="status" class="form-select"><option value="">All statuses</option>@foreach($statuses as $status)<option value="{{ $status }}" @selected(($filters['status'] ?? '') === $status)>{{ ucwords(str_replace('_', ' ', $status)) }}</option>@endforeach</select></div>
+                                <div class="col-sm-6"><label for="po-supplier-filter" class="form-label">Supplier</label><select id="po-supplier-filter" name="supplier_id" class="form-select"><option value="">All suppliers</option>@foreach($suppliers as $supplier)<option value="{{ $supplier->id }}" @selected(($filters['supplier_id'] ?? null) == $supplier->id)>{{ $supplier->company_name }}</option>@endforeach</select></div>
+                                <div class="col-12"><label for="po-item-filter" class="form-label">Item</label><select id="po-item-filter" name="inventory_item_id" class="form-select"><option value="">All items</option>@foreach($items as $item)<option value="{{ $item->id }}" @selected(($filters['inventory_item_id'] ?? null) == $item->id)>{{ $item->name }}</option>@endforeach</select></div>
+                                <div class="col-sm-6"><label for="po-date-from" class="form-label">Order from</label><input id="po-date-from" type="date" name="date_from" class="form-control" value="{{ $filters['date_from'] ?? '' }}"></div>
+                                <div class="col-sm-6"><label for="po-date-to" class="form-label">Order to</label><input id="po-date-to" type="date" name="date_to" class="form-control" value="{{ $filters['date_to'] ?? '' }}"></div>
+                                <div class="col-12 d-flex justify-content-end gap-2 pt-1"><a href="{{ route('procurements.index') }}" class="btn btn-outline-secondary">Clear</a><button class="btn btn-cmu">Apply filters</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
         <div class="card border-0 shadow-sm mb-4" data-procurement-orders>
-            <div class="card-body p-4 pb-0">
-            <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="Purchase order status">
-                <a href="{{ route('procurements.index', array_filter(request()->except(['status', 'page']))) }}" data-procurement-status="" class="badge rounded-pill text-decoration-none {{ empty($filters['status']) ? 'text-bg-dark' : 'text-bg-light border' }}" @if(empty($filters['status'])) aria-current="page" @endif>All {{ array_sum($statusCounts) }}</a>
-                @foreach($statuses as $status)
-                    <a href="{{ route('procurements.index', array_merge(request()->except(['status', 'page']), ['status' => $status])) }}" data-procurement-status="{{ $status }}" class="badge rounded-pill text-decoration-none {{ ($filters['status'] ?? '') === $status ? 'text-bg-primary' : 'text-bg-light border' }}" @if(($filters['status'] ?? '') === $status) aria-current="page" @endif>{{ ucwords(str_replace('_', ' ', $status)) }} {{ $statusCounts[$status] ?? 0 }}</a>
-                @endforeach
-            </nav>
-            </div>
             <div class="table-responsive"><table class="table table-modern mobile-card-table align-middle mb-0"><thead><tr><th>PO</th><th>Items</th><th>Supplier</th><th>Order date</th><th>Ordered / Received / Remaining</th><th>Total / Outstanding</th><th>Deliveries</th><th>Status</th></tr></thead><tbody>
             @forelse($procurements as $purchase)<tr><td><a href="{{ route('procurements.show', $purchase) }}" class="fw-semibold">{{ $purchase->po_number ?: 'PRC-'.$purchase->id }}</a></td><td>{{ $purchase->items->pluck('inventoryItem.name')->filter()->join(', ') ?: optional($purchase->item)->name }}</td><td>{{ $purchase->supplier?->company_name ?: $purchase->supplier_name }}<div class="small text-muted">{{ $purchase->supplier?->supplier_code ?: $purchase->supplier_number }}</div></td><td>{{ optional($purchase->order_date ?: $purchase->purchased_on)->format('M d, Y') }}</td><td>{{ $purchase->monitoring['ordered'] }} / {{ $purchase->monitoring['received'] }} / {{ $purchase->monitoring['remaining'] }}</td><td>₱{{ number_format((float) $purchase->monitoring['total'], 2) }}<div class="small text-muted">Outstanding ₱{{ number_format((float) $purchase->monitoring['outstanding'], 2) }}</div></td><td><div class="progress" style="height: 8px"><div class="progress-bar" style="width: {{ $purchase->monitoring['progress'] }}%"></div></div><small>{{ $purchase->monitoring['progress'] }}% · {{ $purchase->monitoring['delivery_count'] }} delivery record{{ $purchase->monitoring['delivery_count'] === 1 ? '' : 's' }}</small>@if($purchase->monitoring['overdue'])<div class="small text-danger fw-semibold">Overdue {{ $purchase->expected_delivery_date?->format('M d, Y') }}</div>@elseif($purchase->expected_delivery_date)<div class="small text-muted">Due {{ $purchase->expected_delivery_date->format('M d, Y') }}</div>@endif</td><td><span class="badge text-bg-{{ match($purchase->status) { 'approved' => 'success', 'partially_received', 'completed' => 'info', 'rejected', 'cancelled' => 'danger', 'pending_approval' => 'warning', default => 'secondary' } }}">{{ $purchase->status_label }}</span></td></tr>
             @empty<tr><td colspan="8" class="text-muted">No matching orders.</td></tr>@endforelse

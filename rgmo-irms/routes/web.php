@@ -77,6 +77,9 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('permission:manage-inventory,manage-purchase-orders,approve-purchase-orders')->group(function () {
         Route::get('/procurements', [ProcurementController::class, 'index'])->name('procurements.index');
+        Route::get('/procurements/search-suggestions', [ProcurementController::class, 'searchSuggestions'])
+            ->middleware('throttle:30,1')
+            ->name('procurements.search-suggestions');
         Route::get('/procurements/prices', [SupplierPriceController::class, 'index'])->name('procurements.prices');
         Route::get('/procurements/{procurement}', [ProcurementController::class, 'show'])->name('procurements.show');
         Route::get('/procurements/{procurement}/receipt', [ProcurementController::class, 'receipt'])->name('procurements.receipt');
