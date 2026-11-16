@@ -24,7 +24,7 @@
 
         @if(filled(config('services.turnstile.site_key')))
             <div class="auth-field">
-                <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}"></div>
+                <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="light"></div>
                 @error('turnstile')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
         @endif
