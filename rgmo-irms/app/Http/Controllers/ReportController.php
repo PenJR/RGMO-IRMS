@@ -21,6 +21,53 @@ class ReportController extends Controller
      */
     public function __construct(private ReportService $reportService) {}
 
+    /** Display the reporting center and its official report formats. */
+    public function index(): View
+    {
+        return view('reports.index');
+    }
+
+    /** Display a print-ready official template for data not yet captured by the system. */
+    public function formTemplate(string $template): View
+    {
+        $templates = [
+            'animal-physical-count' => [
+                'title' => 'Total Physical Count of Animals',
+                'period' => 'As of '.now()->format('F d, Y'),
+                'headers' => ['No.', 'Cow', 'Heifer', 'Bull', 'Female Calf', 'Male Calf', 'Total Count'],
+                'rows' => 12,
+            ],
+            'harvest-report' => [
+                'title' => 'Harvest Report',
+                'period' => 'Reporting period: ____________________',
+                'headers' => ['Particulars', 'Date of Harvest', 'Average Yield / Hectare', 'Previous Balance', 'Production', 'Deductions', 'Ending Balance', 'Remarks'],
+                'rows' => 10,
+            ],
+            'post-harvest-report' => [
+                'title' => 'Post-Harvest Report',
+                'period' => 'Reporting period: ____________________',
+                'headers' => ['Location', 'Variety', 'Area', 'Date Planted', 'Date Harvested', 'Field Weight', 'Previous Balance', 'Additional Production', 'Drying / Milling', 'Sold', 'Ending Balance', 'Remarks'],
+                'rows' => 10,
+            ],
+            'processing-report' => [
+                'title' => 'Weekly Report of Grains Processing',
+                'period' => 'Reporting period: ____________________',
+                'headers' => ['Area', 'Variety', 'UOM', 'Production Cost', 'Yield', 'Previous Balance', 'Production', 'Drying', 'Milled', 'Sold', 'Adjustment', 'Ending Balance', 'Remarks'],
+                'rows' => 10,
+            ],
+            'production-expense' => [
+                'title' => 'Production Expenses per Area',
+                'period' => 'Reporting period: ____________________',
+                'headers' => ['Particulars', 'Unit', 'Unit Amount', 'Beginning Qty', 'Beginning Total', 'Additional Qty', 'Additional Total', 'Project Expense Qty', 'Project Expense Total', 'Ending Qty', 'Ending Total'],
+                'rows' => 12,
+            ],
+        ];
+
+        abort_unless(isset($templates[$template]), 404);
+
+        return view('reports.form-template', ['template' => $templates[$template]]);
+    }
+
     /**
      * Display a comprehensive inventory report with optional category and stock level filtering.
      *

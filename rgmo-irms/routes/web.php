@@ -177,6 +177,8 @@ Route::middleware('auth')->group(function () {
 
     // Reports
     Route::middleware(['permission:generate-reports,view-audit-trail'])->group(function () {
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/forms/{template}', [ReportController::class, 'formTemplate'])->name('reports.forms.show');
         Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
         Route::get('/reports/resource-usage', [ReportController::class, 'resourceUsage'])->name('reports.resource-usage');
         Route::get('/reports/audit-trail', [ReportController::class, 'auditTrail'])->middleware('permission:view-audit-trail')->name('reports.audit-trail');

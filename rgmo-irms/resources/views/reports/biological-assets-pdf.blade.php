@@ -3,29 +3,12 @@
 <head>
     <meta charset="utf-8">
     <title>Weekly Report of Biological Assets</title>
-    <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #333; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 14px; margin: 0; text-transform: uppercase; }
-        .header p { margin: 2px 0; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #000; padding: 5px; text-align: center; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        .text-left { text-align: left; }
-        .footer { margin-top: 30px; width: 100%; }
-        .footer-table { width: 100%; border: none; }
-        .footer-table td { border: none; text-align: center; padding: 10px; }
-        .sig-line { border-top: 1px solid #000; width: 80%; margin: 15px auto 5px auto; }
-    </style>
+    @include('reports.partials.official-pdf-style')
 </head>
 <body>
-    <div class="header">
-        <h1>Weekly Report of Biological Assets and Agricultural Produce</h1>
-        <p>Central Mindanao University - RGMO</p>
-        <p>Period: {{ $startDate->format('M d, Y') }} - {{ $endDate->format('M d, Y') }}</p>
-    </div>
+    @include('reports.partials.official-pdf-header', ['title' => 'Weekly Report of Biological Assets and Agricultural Produce', 'period' => 'Reporting period: '.$startDate->format('M d, Y').' – '.$endDate->format('M d, Y')])
 
-    <table>
+    <table class="report-table">
         <thead>
             <tr>
                 <th rowspan="2">PROJECT</th>
@@ -68,26 +51,6 @@
         </tfoot>
     </table>
 
-    <div class="footer">
-        <table class="footer-table">
-            <tr>
-                <td>
-                    <p>I hereby certify to the correctness of the above information.</p>
-                    <div class="sig-line"></div>
-                    <p>Project Manager</p>
-                </td>
-                <td>
-                    <p>Reviewed by:</p>
-                    <div class="sig-line"></div>
-                    <p>Director - CEO</p>
-                </td>
-                <td>
-                    <p>Noted by:</p>
-                    <div class="sig-line"></div>
-                    <p>VP for RGM</p>
-                </td>
-            </tr>
-        </table>
-    </div>
+    @include('reports.partials.certification')
 </body>
 </html>

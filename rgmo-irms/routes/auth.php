@@ -25,7 +25,19 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [NewPasswordController::class, 'store'])
             ->name('password.store');
     });
+/*
+Dear Aly,
 
+ Halo Aly iam writing this code for our capstone project throughout my development you are always
+ by my side and i just wanna thank you for everything from late night chikas to study calls with you 
+ my year has been so much better because of you and i just wanna say thank you my beshy, my mamshie, mah love
+ hoping for your dreams to come true and for you to be happy and healthy always, 
+ i love you so muchie muchie may favourite shade of blue, loves a lot <3
+
+ -Clip
+
+
+*/
 Route::middleware('auth')->group(function () {
     // Keep old verification URLs harmless for existing browser sessions and links.
     Route::get('verify-email', fn () => redirect()->route('dashboard'));
@@ -42,3 +54,5 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 });
+
+

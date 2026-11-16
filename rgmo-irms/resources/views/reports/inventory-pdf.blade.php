@@ -3,29 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>Inventory Report</title>
-    <style>
-        body { font-family: "DejaVu Sans", sans-serif; color: #1f2937; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
-        th { background: #f3f4f6; text-align: left; font-weight: 700; }
-        td { font-size: 0.875rem; }
-        .price { text-align: right; white-space: nowrap; }
-        h1 { font-size: 1.25rem; margin: 0; }
-        .meta { margin-top: 0.5rem; color: #6b7280; font-size: 0.9rem; }
-    </style>
+    @include('reports.partials.official-pdf-style')
 </head>
 <body>
-    <h1>Inventory Report</h1>
-    <p class="meta">
-        @if(isset($report['fiscal_year']))
-            Fiscal year {{ $report['fiscal_year'] }} stock as of {{ $report['as_of']->format('F j, Y') }}.
-        @else
-            Current inventory stock.
-        @endif
-        Generated on {{ now()->format('F j, Y H:i') }}
-    </p>
+    @include('reports.partials.official-pdf-header', ['title' => 'Inventory Summary', 'period' => 'Fiscal year '.($report['fiscal_year'] ?? now()->year).' · Stock position as of '.($report['as_of'] ?? now())->format('F j, Y')])
+    <p class="report-note">This report shows stock remaining at the end of the selected fiscal year.</p>
 
-    <table>
+    <table class="report-table">
         <thead>
             <tr>
                 <th>Item</th>
@@ -51,5 +35,6 @@
             @endforeach
         </tbody>
     </table>
+    @include('reports.partials.certification')
 </body>
 </html>

@@ -6,7 +6,7 @@
         </div>
     </x-slot>
 
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 report-print-page">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 d-print-none">
             <x-breadcrumb :items="['Reports' => '#', 'Monthly Inventory' => route('reports.monthly-inventory')]" compact />
             <div class="d-flex gap-2">
@@ -14,6 +14,7 @@
             <button onclick="window.print()" class="btn btn-outline-secondary">Print Report</button>
             </div>
         </div>
+        <x-report-document-header title="Monthly Inventory of Agricultural Materials and Other Supplies" period="As of {{ DateTime::createFromFormat('!m', $month)->format('F') }} {{ $year }}" type="Monthly official report" />
 
         <div class="card border-0 shadow-sm mb-4 d-print-none">
             <div class="card-body p-4">
@@ -109,6 +110,24 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div class="mt-5 row text-center report-certification">
+            <div class="col-md-4">
+                <p class="mb-5">I hereby certify to the correctness of the above information.</p>
+                <div class="border-bottom border-dark mx-auto mb-1" style="width: 200px"></div>
+                <p class="text-muted small">Prepared by</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-5">Reviewed and validated for submission.</p>
+                <div class="border-bottom border-dark mx-auto mb-1" style="width: 200px"></div>
+                <p class="text-muted small">Reviewed by</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-5">&nbsp;</p>
+                <div class="border-bottom border-dark mx-auto mb-1" style="width: 200px"></div>
+                <p class="text-muted small">Noted by</p>
             </div>
         </div>
     </div>

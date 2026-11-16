@@ -3,29 +3,12 @@
 <head>
     <meta charset="utf-8">
     <title>Report of Supplies Issuance</title>
-    <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #333; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 14px; margin: 0; text-transform: uppercase; }
-        .header p { margin: 2px 0; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #000; padding: 5px; text-align: center; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        .text-left { text-align: left; }
-        .footer { margin-top: 30px; }
-        .footer-table { width: 100%; border: none; }
-        .footer-table td { border: none; text-align: center; padding: 10px; }
-        .sig-line { border-top: 1px solid #000; width: 60%; margin: 15px auto 5px auto; }
-    </style>
+    @include('reports.partials.official-pdf-style')
 </head>
 <body>
-    <div class="header">
-        <h1>Report of Agricultural and Marine Supplies Issuance</h1>
-        <p>Central Mindanao University - RGMO</p>
-        <p>Month: {{ DateTime::createFromFormat('!m', $month)->format('F') }} {{ $year }}</p>
-    </div>
+    @include('reports.partials.official-pdf-header', ['title' => 'Report of Agricultural and Marine Supplies Issuance', 'period' => 'Month of '.DateTime::createFromFormat('!m', $month)->format('F').' '.$year])
 
-    <table>
+    <table class="report-table">
         <thead>
             <tr>
                 <th>RIS No.</th>
@@ -68,20 +51,6 @@
         </tfoot>
     </table>
 
-    <div class="footer">
-        <p>We hereby certify to the correctness of the above information.</p>
-        <table class="footer-table">
-            <tr>
-                <td>
-                    <div class="sig-line"></div>
-                    <p>RGMO - Admin Assistant III</p>
-                </td>
-                <td>
-                    <div class="sig-line"></div>
-                    <p>Farm Worker II</p>
-                </td>
-            </tr>
-        </table>
-    </div>
+    @include('reports.partials.certification')
 </body>
 </html>

@@ -6,7 +6,7 @@
         </div>
     </x-slot>
 
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 report-print-page">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 d-print-none">
             <x-breadcrumb :items="['Reports' => '#', 'Biological Assets' => route('reports.biological-assets')]" compact />
             <div class="d-flex gap-2">
@@ -14,6 +14,7 @@
             <button onclick="window.print()" class="btn btn-outline-secondary">Print Report</button>
             </div>
         </div>
+        <x-report-document-header title="Weekly Report of Biological Assets and Agricultural Produce" period="Reporting period: {{ $startDate->format('M d, Y') }} – {{ $endDate->format('M d, Y') }}" type="Weekly official report" />
 
         <div class="card border-0 shadow-sm mb-4 d-print-none">
             <div class="card-body p-4">

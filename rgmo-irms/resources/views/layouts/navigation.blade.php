@@ -115,6 +115,7 @@
                     </span>
                 </summary>
                 <div class="nav-submenu">
+                    <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}">Reporting Center</a>
                     <a href="{{ route('reports.inventory') }}" class="nav-link {{ request()->routeIs('reports.inventory') ? 'active' : '' }}">Inventory Summary</a>
                     <a href="{{ route('reports.biological-assets') }}" class="nav-link {{ request()->routeIs('reports.biological-assets') ? 'active' : '' }}">Biological Assets (Weekly)</a>
                     <a href="{{ route('reports.supplies-issuance') }}" class="nav-link {{ request()->routeIs('reports.supplies-issuance') ? 'active' : '' }}">Supplies Issuance (Monthly)</a>

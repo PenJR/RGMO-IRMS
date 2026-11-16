@@ -7,6 +7,7 @@
 
     <div class="container-fluid py-4">
         <x-breadcrumb :items="['Reports' => '#', 'Request Analytics' => route('reports.requests')]" />
+        <x-report-document-header title="Request Analytics" period="Filtered request activity and trend analysis" />
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">

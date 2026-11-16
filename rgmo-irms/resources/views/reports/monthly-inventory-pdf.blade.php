@@ -3,27 +3,12 @@
 <head>
     <meta charset="utf-8">
     <title>Monthly Inventory Report</title>
-    <style>
-        @page { margin: 20px; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 8px; color: #333; line-height: 1.2; }
-        .header { text-align: center; margin-bottom: 10px; }
-        .header h1 { font-size: 11px; margin: 0; text-transform: uppercase; }
-        .header p { margin: 1px 0; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; table-layout: fixed; }
-        th, td { border: 1px solid #000; padding: 2px; text-align: center; word-wrap: break-word; }
-        th { background-color: #f2f2f2; font-weight: bold; overflow: hidden; }
-        .text-left { text-align: left; }
-        .bg-light { background-color: #fafafa; }
-    </style>
+    @include('reports.partials.official-pdf-style')
 </head>
 <body>
-    <div class="header">
-        <h1>Monthly Inventory of Agricultural Materials and Other Supplies</h1>
-        <p>Central Mindanao University - RGMO</p>
-        <p>As of {{ DateTime::createFromFormat('!m', $month)->format('F') }} {{ $year }}</p>
-    </div>
+    @include('reports.partials.official-pdf-header', ['title' => 'Monthly Inventory of Agricultural Materials and Other Supplies', 'period' => 'As of '.DateTime::createFromFormat('!m', $month)->format('F').' '.$year])
 
-    <table>
+    <table class="report-table">
         <thead>
             <tr>
                 <th rowspan="2" style="width: 10%;">PARTICULARS</th>
@@ -84,5 +69,6 @@
             @endforeach
         </tbody>
     </table>
+    @include('reports.partials.certification')
 </body>
 </html>

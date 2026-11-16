@@ -5,7 +5,7 @@
         </div>
     </x-slot>
 
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 report-print-page">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <x-breadcrumb :items="['Reports' => '#', 'Inventory Summary' => route('reports.inventory')]" compact />
             <div class="d-flex gap-2">
@@ -17,6 +17,7 @@
             Stock remaining at the end of fiscal year {{ $report['fiscal_year'] }}
             (as of {{ $report['as_of']->format('F j, Y') }}). Remaining stock carries forward between years.
         </p>
+        <x-report-document-header title="Inventory Summary" period="Fiscal year {{ $report['fiscal_year'] }} · Stock position as of {{ $report['as_of']->format('F j, Y') }}" />
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">

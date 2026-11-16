@@ -104,15 +104,13 @@
                 <div class="card-body p-0">
                     @if($items->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-modern mobile-card-table align-middle" data-sticky-table>
+                            <table class="table table-modern mobile-card-table align-middle inventory-index-table" data-sticky-table>
                                 <thead>
                                     <tr>
                                         <x-sortable-th column="name">Item</x-sortable-th>
 
-                                        <th>Category</th>
                                         <th>Use first</th>
                                         <x-sortable-th column="stock">Stock</x-sortable-th>
-	                                        <th>Stock levels</th>
                                         <x-sortable-th column="price">Price</x-sortable-th>
                                         <th>Status</th>
                                         <th>Expiry</th>
@@ -124,11 +122,12 @@
                                         <tr>
                                             <td data-label="Item">
                                                 <div class="d-flex align-items-center gap-3">
-                                                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center fw-semibold text-muted" style="width: 40px; height: 40px;">
+                                                    <div class="inventory-item-initial rounded-circle bg-light border d-flex align-items-center justify-content-center fw-semibold text-muted">
                                                         {{ strtoupper(substr($item->name, 0, 1)) }}
                                                     </div>
                                                     <div>
                                                         <div class="fw-semibold">{{ $item->name }}</div>
+                                                        <div class="text-muted small">{{ $item->category->name ?? 'Uncategorized' }}</div>
                                                         @if($item->description)
                                                             <div class="text-muted small">{{ Str::limit($item->description, 50) }}</div>
                                                         @endif
@@ -136,9 +135,8 @@
                                                 </div>
                                             </td>
 
-                                            <td data-label="Category">{{ $item->category->name ?? 'N/A' }}</td>
                                             <td data-label="Use first">
-                                                <div style="min-width: 180px; max-width: 240px;">
+                                                <div class="inventory-use-first">
                                                 @php
                                                     $usesFefo = $item->has_expiry || $item->batches->contains(fn ($batch) => $batch->stock > 0 && $batch->expiry_date);
                                                     $eligibleBatches = $item->batches->filter(fn ($batch) => $batch->stock > 0 && ! $batch->isExpired() && (! $item->has_expiry || $batch->expiry_date))
@@ -149,10 +147,9 @@
                                                 @if($item->usable_stock <= 0)
                                                     <span class="text-muted">No usable stock</span>
                                                 @elseif($firstBatch)
-                                                    <div class="fw-semibold"><a href="{{ route('inventory.batches.show', $firstBatch) }}">{{ $firstBatch->display_name }}</a> · {{ $usesFefo ? 'FEFO' : 'FIFO' }}</div>
+                                                    <div class="fw-semibold text-truncate"><a href="{{ route('inventory.batches.show', $firstBatch) }}">{{ $firstBatch->display_name }}</a> · {{ $usesFefo ? 'FEFO' : 'FIFO' }}</div>
                                                     <div class="small">{{ $firstBatch->stock }} {{ $item->unit }} on hand</div>
                                                     <div class="small text-muted">{{ $firstBatch->expiry_date ? 'Expires '.$firstBatch->expiry_date->format('M d, Y') : 'No expiry' }}</div>
-                                                    @if($firstDelivery)<div class="small text-muted">{{ $firstDelivery->procurement?->supplier_name }} · arrived {{ $firstDelivery->received_on->format('M d, Y') }}</div>@else<div class="small text-muted">Opening / adjusted balance</div>@endif
                                                 @else
                                                     <a href="{{ route('inventory.show', $item) }}#inventory-batches">Review historical stock balances</a>
                                                 @endif
@@ -173,16 +170,13 @@
                                             </td>
                                             <td data-label="Stock">
                                                 {{ $item->stock }} {{ $item->unit }} on hand<div class="small">{{ $item->usable_stock }} usable · {{ $item->available_stock }} available</div><div class="small text-muted">{{ $item->reserved_quantity }} reserved · {{ $item->expired_stock }} expired · {{ $item->quarantined_stock }} quarantined</div>
+	                                            <div class="small text-muted">Critical: {{ $item->min_stock }} · Reorder: {{ $item->getReorderPoint() }} {{ $item->unit }}</div>
                                                 @if($item->isLowStock())
                                                     <span class="badge rounded-pill status-badge status-badge--danger ms-2">
                                                         Low stock
                                                     </span>
                                                 @endif
                                             </td>
-	                                            <td data-label="Stock levels">
-	                                                <div class="small">Critical: {{ $item->min_stock }} {{ $item->unit }}</div>
-	                                                <div class="small text-muted">Reorder: {{ $item->getReorderPoint() }} {{ $item->unit }}</div>
-	                                            </td>
                                             <td data-label="Price">{{ $currencySymbol }}{{ number_format($item->price, 2) }}</td>
 	                                            <td data-label="Status">
 	                                                <span class="badge rounded-pill status-badge
@@ -211,7 +205,9 @@
                                                 @endif
                                             </td>
                                             <td class="text-end" data-label="Actions">
-                                                <div class="d-inline-flex gap-2">
+                                                <details class="inventory-actions-menu text-start">
+                                                    <summary class="btn btn-sm inventory-action inventory-action--view">Actions <span aria-hidden="true">⌄</span></summary>
+                                                    <div class="inventory-actions-menu__panel">
                                                     @can('view', $item)
                                                         <a href="{{ route('inventory.show', $item) }}" class="btn btn-sm inventory-action inventory-action--view">View</a>
                                                     @endcan
@@ -226,7 +222,8 @@
                                                                     data-confirm="Are you sure you want to delete this item?">Delete</button>
                                                         </form>
                                                     @endcan
-                                                </div>
+                                                    </div>
+                                                </details>
                                             </td>
                                         </tr>
                                     @endforeach

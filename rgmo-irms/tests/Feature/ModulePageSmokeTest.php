@@ -38,6 +38,8 @@ class ModulePageSmokeTest extends TestCase
             route('projects.show', $project),
             route('projects.edit', $project),
             route('notifications.index'),
+            route('reports.index'),
+            route('reports.forms.show', 'harvest-report'),
             route('reports.inventory'),
             route('reports.resource-usage'),
             route('reports.audit-trail'),
