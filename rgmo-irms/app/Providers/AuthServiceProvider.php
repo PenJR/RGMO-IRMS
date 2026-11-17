@@ -6,12 +6,14 @@ use App\Models\FundingSource;
 use App\Models\IncidentReport;
 use App\Models\InventoryItem;
 use App\Models\Procurement;
+use App\Models\ProcurementDraft;
 use App\Models\Project;
 use App\Models\ResourceRequest;
 use App\Models\User;
 use App\Policies\FundingSourcePolicy;
 use App\Policies\IncidentReportPolicy;
 use App\Policies\InventoryItemPolicy;
+use App\Policies\ProcurementDraftPolicy;
 use App\Policies\ProcurementPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\ResourceRequestPolicy;
@@ -32,6 +34,7 @@ class AuthServiceProvider extends ServiceProvider
         FundingSource::class => FundingSourcePolicy::class,
         ResourceRequest::class => ResourceRequestPolicy::class,
         Procurement::class => ProcurementPolicy::class,
+        ProcurementDraft::class => ProcurementDraftPolicy::class,
         Project::class => ProjectPolicy::class,
     ];
 

@@ -28,6 +28,8 @@ php artisan test tests/Feature/ManuscriptAccessControlTest.php tests/Feature/Rba
 php artisan test tests/Feature/RequestWorkflowTest.php tests/Feature/ResourceRequestProjectTest.php
 php artisan test tests/Feature/MaintenanceCommandTest.php tests/Feature/SchedulerConfigurationTest.php
 php artisan test tests/Feature/InputValidationTest.php
+php artisan test tests/Feature/ProcurementDraftTest.php tests/Feature/ProcurementDraftConversionTest.php tests/Feature/ProcurementDraftInterfaceTest.php
+node --test scripts/tests/purchase-draft-autosaver.test.mjs
 ```
 
 Inspect actual results rather than copying old pass counts. SQLite tests do not establish PostgreSQL-specific behavior. Backup tests that mock a command do not create or restore a real archive.

@@ -10,6 +10,7 @@ use App\Http\Controllers\IncidentReportController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProcurementController;
+use App\Http\Controllers\ProcurementDraftController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportController;
@@ -90,6 +91,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/procurements/{procurement}/reject', [ProcurementController::class, 'reject'])->name('procurements.reject');
     });
     Route::middleware('permission:manage-inventory')->group(function () {
+        Route::get('/procurement-drafts', [ProcurementDraftController::class, 'index'])->name('procurement-drafts.index');
+        Route::get('/procurement-drafts/{draftId}', [ProcurementDraftController::class, 'show'])->whereUuid('draftId')->name('procurement-drafts.show');
+        Route::post('/procurement-drafts/{draftId}', [ProcurementDraftController::class, 'save'])->whereUuid('draftId')->middleware('throttle:120,1')->name('procurement-drafts.save');
+        Route::delete('/procurement-drafts/{draftId}', [ProcurementDraftController::class, 'discard'])->whereUuid('draftId')->name('procurement-drafts.discard');
+        Route::get('/procurement-drafts/{draftId}/receipt', [ProcurementDraftController::class, 'receipt'])->whereUuid('draftId')->name('procurement-drafts.receipt');
         Route::post('/procurements', [ProcurementController::class, 'store'])->name('procurements.store');
         Route::put('/procurements/{procurement}', [ProcurementController::class, 'update'])->name('procurements.update');
         Route::patch('/procurements/{procurement}/funding-source', [ProcurementController::class, 'updateFundingSource'])->name('procurements.update-funding-source');

@@ -3,6 +3,7 @@ import * as bootstrap from 'bootstrap';
 import './feedback';
 import './user-name-filter';
 import './procurement-filters';
+import './purchase-draft-form';
 import { attachSearchSuggestions } from './search-suggestions';
 import './server-sort';
 import './batch-receiving';

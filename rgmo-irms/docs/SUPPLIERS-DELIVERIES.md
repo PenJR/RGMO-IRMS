@@ -10,6 +10,8 @@
 
 Receipts cannot exceed an item's undelivered balance or add stock to an archived inventory item. If any line fails, the entire receipt is rolled back. Repeating the same submission does not add stock again, including when the original submission completed the order. Existing single-item integrations are retained; multi-item orders must specify quantities by PO line ID.
 
+Unfinished **New PO** entries save automatically and can be recovered from **Unfinished entries → Continue**. They remain private preparation work until **Save draft** creates a PO; stock and approvals are unaffected by autosaving. See [Purchase autosave](PURCHASE-AUTOSAVE.md) for recovery, receipts, conflicts and discarding entries.
+
 ## View history and compare prices
 
 - PO details show every delivered item, quantity, remaining lot balance, receiver, receipt/invoice numbers, and actual unit price.

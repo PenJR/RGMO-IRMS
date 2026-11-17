@@ -23,6 +23,7 @@
         </div>
 
         @if(auth()->user()->hasPermission('manage-inventory'))
+        @include('procurements._unfinished-drafts')
         <div class="modal fade" id="newPurchaseOrderModal" tabindex="-1" aria-labelledby="newPurchaseOrderModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
@@ -30,9 +31,24 @@
                         <div><h5 class="modal-title fw-bold" id="newPurchaseOrderModalLabel">New purchase order</h5><p class="text-muted small mb-0">Stock updates on delivery.</p></div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form method="POST" action="{{ route('procurements.store') }}" enctype="multipart/form-data">
+                    @php
+                        $restorePurchaseInput = $errors->any() && (old('items') !== null || old('po_number') !== null || old('procurement_draft_id') !== null);
+                        $previousPurchaseInput = collect(session()->getOldInput())->only(['po_number', 'supplier_id', 'order_date', 'expected_delivery_date', 'funding_source_id', 'notes', 'items'])->all();
+                    @endphp
+                    <form method="POST" action="{{ route('procurements.store') }}" enctype="multipart/form-data" data-po-draft-form data-drafts-url="{{ route('procurement-drafts.index') }}" data-restore-old="{{ $restorePurchaseInput ? 'true' : 'false' }}">
                         @csrf
+                        <script type="application/json" data-po-old-input>@json($previousPurchaseInput)</script>
+                        <input type="hidden" name="procurement_draft_id" value="{{ old('procurement_draft_id') }}">
+                        <input type="hidden" name="procurement_draft_revision" value="{{ old('procurement_draft_revision') }}">
                         <div class="modal-body px-4 pb-2">
+                            <div class="mb-3">
+                                <p class="small text-muted mb-1" role="status" aria-live="polite" data-po-autosave-status>Entries save automatically as you type. Save draft creates the purchase order.</p>
+                                <div class="d-flex flex-wrap gap-2 d-none" data-po-autosave-actions>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-po-autosave-retry>Retry saving</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary d-none" data-po-autosave-reload>Load saved version</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary d-none" data-po-autosave-copy>Keep entries as a new draft</button>
+                                </div>
+                            </div>
                             <div class="row g-3">
                                 <div class="col-md-6"><label for="po-number" class="form-label">PO number</label><input id="po-number" name="po_number" class="form-control" required maxlength="100" value="{{ old('po_number', old('or_number')) }}"></div>
                                 <div class="col-md-6"><label for="supplier-id" class="form-label">Supplier</label><select id="supplier-id" name="supplier_id" class="form-select" required><option value="">Select active supplier</option>@foreach($activeSuppliers as $supplier)<option value="{{ $supplier->id }}" @selected(old('supplier_id') == $supplier->id)>{{ $supplier->company_name }}{{ $supplier->contact_number ? ' — '.$supplier->contact_number : '' }}</option>@endforeach</select><div class="form-text"><a href="{{ route('suppliers.create') }}">Add supplier</a></div></div>
@@ -50,18 +66,18 @@
                                     @error('funding_source')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     @if($fundingSources->isEmpty())<div class="form-text text-danger">An administrator must activate a funding source before a purchase can be recorded.</div>@endif
                                 </div>
-                                <div class="col-md-3"><label for="receipt" class="form-label">Receipt</label><input id="receipt" name="receipt" type="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control"></div>
+                                <div class="col-md-3"><label for="receipt" class="form-label">Receipt</label><input id="receipt" name="receipt" type="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control"><div class="form-text">PDF or image, up to 5 MB.</div><div class="small mt-2 d-none" data-po-saved-receipt><a data-po-receipt-link target="_blank" rel="noopener">Saved receipt</a><button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" data-po-remove-receipt>Remove</button></div><div class="small text-warning mt-1" data-po-receipt-warning></div></div>
                                 <div class="col-12"><div class="d-flex justify-content-between align-items-center mb-2"><div><label class="form-label mb-0 fw-semibold">Items</label></div><button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" id="add-po-item"><i data-lucide="plus" style="width:14px;height:14px"></i>Add item</button></div>
                                     <div class="table-responsive border rounded"><table class="table table-modern align-middle mb-0" id="po-items"><thead><tr><th class="ps-3">Item</th><th>Quantity</th><th>Unit</th><th>Unit cost</th><th class="text-end">Subtotal</th><th class="pe-3 text-end">Action</th></tr></thead><tbody>
                                     @php $oldItems = old('items', [[]]); @endphp
-                                    @foreach($oldItems as $row => $oldItem)<tr class="po-item-row"><td class="ps-3" style="min-width:220px"><select name="items[{{ $row }}][inventory_item_id]" class="form-select po-item-select" required><option value="">Select item</option>@foreach($items as $item)<option value="{{ $item->id }}" @selected(($oldItem['inventory_item_id'] ?? null) == $item->id) data-unit="{{ $item->unit }}">{{ $item->name }}</option>@endforeach</select></td><td style="width:110px"><input name="items[{{ $row }}][ordered_quantity]" type="number" min="1" class="form-control po-quantity" required value="{{ $oldItem['ordered_quantity'] ?? '' }}"></td><td style="width:120px"><input name="items[{{ $row }}][unit_of_measurement]" class="form-control po-unit" maxlength="30" required value="{{ $oldItem['unit_of_measurement'] ?? '' }}"></td><td style="min-width:180px"><div class="input-group" style="min-width:160px"><span class="input-group-text px-3">₱</span><input name="items[{{ $row }}][unit_cost]" type="number" min="0" max="9999999999.99" step="0.01" class="form-control po-cost" required value="{{ $oldItem['unit_cost'] ?? '' }}"></div></td><td class="po-subtotal fw-semibold text-end">₱0.00</td><td class="pe-3 text-end"><button type="button" class="btn btn-sm btn-outline-danger remove-po-item" aria-label="Remove item"><i data-lucide="trash-2" style="width:15px;height:15px"></i></button></td></tr>@endforeach
+                                    @foreach($oldItems as $row => $oldItem)<tr class="po-item-row"><td class="ps-3" style="min-width:220px"><select name="items[{{ $row }}][inventory_item_id]" class="form-select po-item-select" required><option value="">Select item</option>@foreach($items as $item)<option value="{{ $item->id }}" @selected(($oldItem['inventory_item_id'] ?? null) == $item->id) data-unit="{{ $item->unit }}">{{ $item->name }}</option>@endforeach</select></td><td style="width:110px"><input name="items[{{ $row }}][ordered_quantity]" type="text" inputmode="numeric" pattern="[0-9]+" maxlength="30" class="form-control po-quantity" required value="{{ $oldItem['ordered_quantity'] ?? '' }}"></td><td style="width:120px"><input name="items[{{ $row }}][unit_of_measurement]" class="form-control po-unit" maxlength="30" required value="{{ $oldItem['unit_of_measurement'] ?? '' }}"></td><td style="min-width:180px"><div class="input-group" style="min-width:160px"><span class="input-group-text px-3">₱</span><input name="items[{{ $row }}][unit_cost]" type="text" inputmode="decimal" pattern="[0-9]+(\.[0-9]{1,2})?" maxlength="30" class="form-control po-cost" required value="{{ $oldItem['unit_cost'] ?? '' }}"></div></td><td class="po-subtotal fw-semibold text-end">₱0.00</td><td class="pe-3 text-end"><button type="button" class="btn btn-sm btn-outline-danger remove-po-item" aria-label="Remove item"><i data-lucide="trash-2" style="width:15px;height:15px"></i></button></td></tr>@endforeach
                                     </tbody></table></div>
                                     <div class="d-flex justify-content-end mt-3"><div class="text-end"><div class="small text-muted">Total</div><strong class="fs-5" id="po-total">₱0.00</strong></div></div>
                                 </div>
                                 <div class="col-12"><label for="purchase-notes" class="form-label">Notes <span class="text-muted fw-normal">(optional)</span></label><textarea id="purchase-notes" name="notes" class="form-control" rows="3" maxlength="5000">{{ old('notes') }}</textarea></div>
                             </div>
                         </div>
-                        <div class="modal-footer justify-content-center border-0 px-4 pb-4 gap-2"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-cmu" @disabled($fundingSources->isEmpty())>Save draft</button></div>
+                        <div class="modal-footer justify-content-center border-0 px-4 pb-4 gap-2"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button><button type="submit" class="btn btn-cmu" @disabled($fundingSources->isEmpty())>Save draft</button></div>
                     </form>
                 </div>
             </div>
@@ -98,65 +114,4 @@
         </tbody></table></div><div class="card-body">{{ $procurements->links() }}</div></div>
         <div class="card border-0 shadow-sm mt-4" data-procurement-supplier-history><div class="card-body"><h3 class="fw-bold mb-3">Supplier history</h3><div class="table-responsive"><table class="table table-modern align-middle mb-0"><thead><tr><th>Supplier</th><th>POs</th><th>Total PO value</th><th>Outstanding</th><th>Last order</th></tr></thead><tbody>@forelse($supplierHistory as $history)<tr><td>{{ $history['supplier']?->company_name ?: $history['legacy_name'] ?: 'Unknown supplier' }}</td><td>{{ $history['purchase_count'] }}</td><td>₱{{ number_format((float) $history['total_value'], 2) }}</td><td>₱{{ number_format((float) $history['outstanding_value'], 2) }}</td><td>{{ $history['last_order_date']?->format('M d, Y') ?? '—' }}</td></tr>@empty<tr><td colspan="5" class="text-muted">No matching supplier history.</td></tr>@endforelse</tbody></table></div></div></div>
     </div>
-    @push('scripts')
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const button = document.querySelector('[data-bs-target="#newPurchaseOrderModal"]');
-        const modalElement = document.querySelector('#newPurchaseOrderModal');
-
-        if (button && modalElement && window.bootstrap) {
-            button.addEventListener('click', (event) => {
-                event.preventDefault();
-                window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
-            });
-        }
-
-        @if($errors->any())
-        if (modalElement && window.bootstrap) {
-            window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
-        }
-        @endif
-    });
-    (() => {
-        const tbody = document.querySelector('#po-items tbody');
-        const total = document.querySelector('#po-total');
-        if (!tbody) return;
-        const peso = new Intl.NumberFormat('en-PH', {style:'currency', currency:'PHP'});
-        const recalculate = () => {
-            let poTotal = 0;
-            tbody.querySelectorAll('.po-item-row').forEach(row => {
-                const quantity = parseFloat(row.querySelector('.po-quantity')?.value || 0);
-                const cost = parseFloat(row.querySelector('.po-cost')?.value || 0);
-                const subtotal = quantity * cost;
-                poTotal += Number.isFinite(subtotal) ? subtotal : 0;
-                row.querySelector('.po-subtotal').textContent = peso.format(subtotal);
-            });
-            total.textContent = peso.format(poTotal);
-        };
-        const renumber = () => {
-            tbody.querySelectorAll('.po-item-row').forEach((row, index) => {
-                row.querySelectorAll('[name]').forEach(input => input.name = input.name.replace(/items\[\d+\]/, `items[${index}]`));
-            });
-        };
-        tbody.addEventListener('change', event => {
-            const row = event.target.closest('.po-item-row');
-            if (event.target.matches('.po-item-select')) row.querySelector('.po-unit').value = event.target.selectedOptions[0]?.dataset.unit || '';
-            recalculate();
-        });
-        tbody.addEventListener('input', recalculate);
-        tbody.addEventListener('click', event => {
-            if (!event.target.closest('.remove-po-item')) return;
-            if (tbody.querySelectorAll('.po-item-row').length === 1) return;
-            event.target.closest('.po-item-row').remove(); renumber(); recalculate();
-        });
-        document.querySelector('#add-po-item')?.addEventListener('click', () => {
-            const row = tbody.querySelector('.po-item-row').cloneNode(true);
-            row.querySelectorAll('input, select').forEach(input => { input.value = ''; input.removeAttribute('required'); });
-            row.querySelector('.po-subtotal').textContent = peso.format(0);
-            tbody.appendChild(row); renumber(); recalculate();
-        });
-        recalculate();
-    })();
-    </script>
-    @endpush
 </x-app-layout>

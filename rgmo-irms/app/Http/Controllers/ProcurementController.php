@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ProcurementDraftConflictException;
 use App\Models\AuditLog;
 use App\Models\FundingSource;
 use App\Models\InventoryItem;
 use App\Models\Procurement;
+use App\Models\ProcurementDraft;
 use App\Models\Supplier;
+use App\Services\ProcurementDraftService;
 use App\Services\ProcurementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -101,6 +104,12 @@ class ProcurementController extends Controller
             ->toArray();
 
         $fundingSources = FundingSource::orderBy('code')->get();
+        $unfinishedDrafts = $request->user()->hasPermission('manage-inventory')
+            ? ProcurementDraft::where('user_id', $request->user()->id)
+                ->where('status', ProcurementDraft::STATUS_ACTIVE)
+                ->orderByDesc('updated_at')->orderBy('id')
+                ->paginate(5, ['*'], 'unfinished_page')->withQueryString()
+            : null;
 
         return view('procurements.index', [
             'procurements' => $procurements,
@@ -113,16 +122,46 @@ class ProcurementController extends Controller
             'activeSuppliers' => Supplier::where('status', Supplier::STATUS_ACTIVE)->orderBy('company_name')->get(),
             'fundingSources' => $fundingSources->where('status', FundingSource::STATUS_ACTIVE)->values(),
             'allFundingSources' => $fundingSources,
+            'unfinishedDrafts' => $unfinishedDrafts,
             'statuses' => Procurement::statuses(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, ProcurementDraftService $draftService)
     {
-        if ($request->has('items')) {
-            $request->merge(['items' => array_values(array_filter($request->input('items', []), fn ($item) => filled($item['inventory_item_id'] ?? null)))]);
+        $this->authorize('create', Procurement::class);
+        $draftFields = $request->validate([
+            'procurement_draft_id' => ['nullable', 'uuid'],
+            'procurement_draft_revision' => ['nullable', 'required_with:procurement_draft_id', 'integer', 'min:1'],
+        ]);
+        $draftId = isset($draftFields['procurement_draft_id']) ? strtolower($draftFields['procurement_draft_id']) : null;
+        $draftRevision = (int) ($draftFields['procurement_draft_revision'] ?? 0);
+        if ($draftId) {
+            // Hold the checkpoint through validation and creation. A competing
+            // final request must observe completion before PO uniqueness checks.
+            return DB::transaction(function () use ($request, $draftService, $draftId, $draftRevision) {
+                $checkpoint = ProcurementDraft::lockForUpdate()->findOrFail($draftId);
+                $this->authorize('view', $checkpoint);
+                if ($checkpoint->status === ProcurementDraft::STATUS_COMPLETED) {
+                    return redirect()->route('procurements.show', $checkpoint->completed_procurement_id);
+                }
+                if ($checkpoint->status !== ProcurementDraft::STATUS_ACTIVE || $checkpoint->revision !== $draftRevision) {
+                    throw new ProcurementDraftConflictException($checkpoint, 'This unfinished entry has changed. Load its saved version before creating the purchase order.');
+                }
+
+                return $this->createPurchase($request, $draftService, $draftId, $draftRevision);
+            }, 5);
         }
-        $legacy = ! $request->has('items');
+
+        return $this->createPurchase($request, $draftService, null, 0);
+    }
+
+    private function createPurchase(Request $request, ProcurementDraftService $draftService, ?string $draftId, int $draftRevision)
+    {
+        if ($request->has('items') && is_array($request->input('items'))) {
+            $request->merge(['items' => array_values(array_filter($request->input('items'), fn ($item) => is_array($item) && filled($item['inventory_item_id'] ?? null)))]);
+        }
+        $legacy = ! $request->has('items') && $draftId === null;
         $data = $request->validate(array_merge([
             'supplier_id' => ($legacy ? 'nullable|required_without_all:supplier_name,supplier_number' : 'required').'|integer|exists:suppliers,id,status,active',
             'supplier_name' => 'nullable|required_without:supplier_id|string|max:255', 'supplier_number' => 'nullable|required_without:supplier_id|string|max:80',
@@ -201,14 +240,18 @@ class ProcurementController extends Controller
 
         $path = $request->file('receipt')?->store('procurement-receipts', 'local');
         try {
-            $purchase = DB::transaction(function () use ($data, $items, $path, $request, $legacy) {
+            $purchase = DB::transaction(function () use ($data, $items, $path, $request, $legacy, $draftId, $draftRevision, $draftService) {
+                $checkpoint = $draftId ? $draftService->lockForConversion($request->user(), $draftId, $draftRevision) : null;
+                if ($checkpoint?->receipt_path && ! $path && ! Storage::disk('local')->exists($checkpoint->receipt_path)) {
+                    throw ValidationException::withMessages(['receipt' => 'The saved receipt is no longer available. Attach it again or remove it from the unfinished entry before saving.']);
+                }
                 $fundingSource = $this->resolveFundingSource($data['funding_source'] ?? null, sourceId: $data['funding_source_id'] ?? null);
                 $data['funding_source_id'] = $fundingSource->id;
                 $data['funding_source'] = $fundingSource->code;
                 $purchase = Procurement::create($data + [
                     'created_by' => $request->user()->id,
                     'prepared_by' => $request->user()->id,
-                    'receipt_path' => $path,
+                    'receipt_path' => $path ?? $checkpoint?->receipt_path,
                     'status' => $legacy ? Procurement::STATUS_APPROVED : Procurement::STATUS_DRAFT,
                     'approved_at' => $legacy ? now() : null,
                 ]);
@@ -226,12 +269,18 @@ class ProcurementController extends Controller
                     ]);
                 }
                 AuditLog::log($request->user()->id, 'create', 'procurement', Procurement::class, $purchase->id, null, $purchase->toArray());
+                if ($checkpoint) {
+                    $draftService->complete($checkpoint, $purchase);
+                }
 
                 return $purchase;
             }, 5);
         } catch (\Throwable $e) {
             if ($path) {
                 Storage::disk('local')->delete($path);
+            }
+            if ($e instanceof ProcurementDraftConflictException && $e->draft->status === ProcurementDraft::STATUS_COMPLETED) {
+                return redirect()->route('procurements.show', $e->draft->completed_procurement_id);
             }
             throw $e;
         }
