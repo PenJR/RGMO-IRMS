@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\FundingSource;
 use App\Models\IncidentReport;
 use App\Models\InventoryItem;
 use App\Models\Procurement;
 use App\Models\Project;
 use App\Models\ResourceRequest;
 use App\Models\User;
+use App\Policies\FundingSourcePolicy;
 use App\Policies\IncidentReportPolicy;
 use App\Policies\InventoryItemPolicy;
 use App\Policies\ProcurementPolicy;
@@ -27,6 +29,7 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         InventoryItem::class => InventoryItemPolicy::class,
         IncidentReport::class => IncidentReportPolicy::class,
+        FundingSource::class => FundingSourcePolicy::class,
         ResourceRequest::class => ResourceRequestPolicy::class,
         Procurement::class => ProcurementPolicy::class,
         Project::class => ProjectPolicy::class,

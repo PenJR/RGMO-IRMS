@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\AuditLog;
 use App\Models\Category;
+use App\Models\FundingSource;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use App\Models\LoginHistory;
@@ -203,6 +204,7 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        $fundingSources = FundingSource::active()->orderBy('code')->pluck('code');
         foreach ($items as $index => $item) {
             if ($item->transactions()->exists()) {
                 continue;
@@ -213,7 +215,9 @@ class DatabaseSeeder extends Seeder
                 $date = now()->subMonths($monthOffset)->setDay(6)->setHour(9);
                 $stockIn = 28 + (($index + $monthOffset) % 18);
                 $stockOut = 14 + (($index * 2 + $monthOffset) % 11);
-                $fundingSource = ['RGMO', 'DA Grant', 'DA Hybrid'][($index + $monthOffset) % 3];
+                $fundingSource = $fundingSources->isNotEmpty()
+                    ? $fundingSources[($index + $monthOffset) % $fundingSources->count()]
+                    : null;
 
                 DB::table('inventory_transactions')->insert([
                     'inventory_item_id' => $item->id,

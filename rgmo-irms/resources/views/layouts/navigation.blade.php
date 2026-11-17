@@ -158,7 +158,7 @@
         @endcan
 
         @if(auth()->user()->isAdmin())
-            <details class="nav-group {{ request()->routeIs('admin.backup.*') || request()->routeIs('admin.settings.*') ? 'active' : '' }}" data-sidebar-item="system" draggable="true" {{ request()->routeIs('admin.backup.*') || request()->routeIs('admin.settings.*') ? 'open' : '' }}>
+            <details class="nav-group {{ request()->routeIs('admin.backup.*', 'admin.settings.*', 'funding-sources.*') ? 'active' : '' }}" data-sidebar-item="system" draggable="true" {{ request()->routeIs('admin.backup.*', 'admin.settings.*', 'funding-sources.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle" data-sidebar-tooltip="System" aria-label="System">
                         <span class="nav-icon"><i data-lucide="settings"></i></span>
@@ -170,6 +170,9 @@
                 <div class="nav-submenu">
                     <a href="{{ route('admin.backup.index') }}" class="nav-link {{ request()->routeIs('admin.backup.*') ? 'active' : '' }}">Backup</a>
                     <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">Settings</a>
+                    @can('viewAny', App\Models\FundingSource::class)
+                        <a href="{{ route('funding-sources.index') }}" class="nav-link {{ request()->routeIs('funding-sources.*') ? 'active' : '' }}">Funding Sources</a>
+                    @endcan
                 </div>
             </details>
         @endif

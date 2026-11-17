@@ -5,8 +5,35 @@
         @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
         <div class="card mb-4"><div class="card-body"><div class="row g-3">
             <div class="col-md-6"><h3 class="h5">PO {{ $procurement->po_number ?? $procurement->or_number }}</h3><p><strong>{{ $procurement->supplier?->company_name ?: $procurement->supplier_name }}</strong><br>{{ $procurement->supplier?->contact_person }}<br>{{ $procurement->supplier?->contact_number ?: $procurement->supplier_number }}<br>{{ $procurement->supplier?->email }}<br>{{ $procurement->supplier?->business_address }}<br>OR: {{ $procurement->or_number ?? '—' }}<br>Ordered: {{ $procurement->order_date?->format('M d, Y') ?? $procurement->purchased_on->format('M d, Y') }}<br>Expected: {{ $procurement->expected_delivery_date?->format('M d, Y') ?? 'Not specified' }}</p></div>
-            <div class="col-md-6"><p>Total: <strong>₱{{ number_format((float) $procurement->total_amount, 2) }}</strong><br>Prepared by: {{ $procurement->preparedBy->name ?? '—' }}<br>Funding: {{ $procurement->funding_source }}</p></div>
+            <div class="col-md-6"><p>Total: <strong>₱{{ number_format((float) $procurement->total_amount, 2) }}</strong><br>Prepared by: {{ $procurement->preparedBy->name ?? '—' }}<br>Funding: {{ $procurement->fundingSource?->label ?? $procurement->funding_source }}
+                @if($procurement->fundingSource && ! $procurement->fundingSource->isActive())<span class="badge text-bg-secondary">Inactive</span>@endif
+            </p></div>
         </div>
+        @can('update', $procurement)
+            <form method="POST" action="{{ route('procurements.update-funding-source', $procurement) }}" class="row g-2 align-items-end mt-2 mb-3">
+                @csrf @method('PATCH')
+                <div class="col-md-6">
+                    <label for="purchase-funding-source" class="form-label">Funding source</label>
+                    @php
+                        $selectedFundingSourceId = old('funding_source_id', old('funding_source') === null ? $procurement->funding_source_id : null);
+                        $selectedFundingSourceCode = old('funding_source', $procurement->funding_source);
+                    @endphp
+                    <select id="purchase-funding-source" name="funding_source_id" class="form-select {{ $errors->has('funding_source_id') || $errors->has('funding_source') ? 'is-invalid' : '' }}" required>
+                        <option value="">Select active funding source</option>
+                        @if($procurement->fundingSource && ! $procurement->fundingSource->isActive())
+                            <option value="{{ $procurement->funding_source_id }}" @selected($selectedFundingSourceId == $procurement->funding_source_id || ($selectedFundingSourceId === null && $selectedFundingSourceCode === $procurement->funding_source))>{{ $procurement->fundingSource->label }} (inactive — retained)</option>
+                        @endif
+                        @foreach($fundingSources as $fundingSource)
+                            <option value="{{ $fundingSource->id }}" @selected($selectedFundingSourceId == $fundingSource->id || ($selectedFundingSourceId === null && $selectedFundingSourceCode === $fundingSource->code))>{{ $fundingSource->label }}</option>
+                        @endforeach
+                    </select>
+                    @error('funding_source_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    @error('funding_source')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <div class="form-text">Choose an active source before submitting for approval. Funding cannot change after approval.</div>
+                </div>
+                <div class="col-md-auto"><button type="submit" class="btn btn-outline-primary">Update funding source</button></div>
+            </form>
+        @endcan
         <div class="table-responsive mt-3"><h4 class="h6">Ordered items</h4><table class="table table-sm"><thead><tr><th>Item</th><th>Ordered</th><th>Received</th><th>Remaining</th><th>Unit cost</th><th>Subtotal</th></tr></thead><tbody>@foreach($procurement->items as $poItem)<tr><td>{{ $poItem->inventoryItem->name }}</td><td>{{ $poItem->ordered_quantity }} {{ $poItem->unit_of_measurement }}</td><td>{{ $poItem->received_quantity }} {{ $poItem->unit_of_measurement }}</td><td>{{ $poItem->remaining_quantity }} {{ $poItem->unit_of_measurement }}</td><td>₱{{ number_format((float) $poItem->unit_cost, 2) }}</td><td>₱{{ number_format((float) $poItem->subtotal, 2) }}</td></tr>@endforeach</tbody></table></div>
         </div><p>{{ $procurement->notes }}</p>
         <p>Status: <span class="badge text-bg-{{ match($procurement->status) { 'approved' => 'success', 'partially_received', 'completed' => 'info', 'rejected', 'cancelled' => 'danger', 'pending_approval' => 'warning', default => 'secondary' } }}">{{ $procurement->status_label }}</span></p>

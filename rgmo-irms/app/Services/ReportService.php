@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\FundingSource;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use App\Models\RequestItem;
@@ -276,37 +277,78 @@ class ReportService
     }
 
     /**
+     * Include the funding registry and retained transaction labels in report headings.
+     */
+    public function monthlyInventoryFundingSources(): array
+    {
+        $sources = FundingSource::query()->orderBy('code')->get()
+            ->mapWithKeys(fn (FundingSource $source) => [$source->code => $source->label])
+            ->all();
+
+        // Retain labels on older transactions even when no registry entry exists.
+        foreach (InventoryTransaction::query()->distinct()->orderBy('funding_source')->pluck('funding_source') as $code) {
+            if ($code !== null && trim($code) !== '' && ! array_key_exists($code, $sources)) {
+                $sources[$code] = $code;
+            }
+        }
+        $sources[''] = 'Unclassified';
+
+        return $sources;
+    }
+
+    /**
      * Generate the Monthly Inventory of Agricultural Materials and Other Supplies.
      *
      * @return Collection
      */
-    public function getMonthlyInventoryReport(int $month, int $year)
+    public function getMonthlyInventoryReport(int $month, int $year, ?array $fundingSources = null)
     {
         $startDate = Carbon::create($year, $month, 1)->startOfMonth();
         $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+        $fundingSources ??= $this->monthlyInventoryFundingSources();
+        $fundingSources[''] = 'Unclassified';
 
-        $items = InventoryItem::with(['transactions'])->get();
+        $items = InventoryItem::query()->get();
+        $movements = InventoryTransaction::query()
+            ->where('created_at', '<=', $endDate)
+            ->select('inventory_item_id', 'funding_source')
+            ->selectRaw(
+                'SUM(CASE WHEN created_at < ? AND transaction_type = ? THEN quantity WHEN created_at < ? AND transaction_type = ? THEN -quantity ELSE 0 END) as beginning_quantity',
+                [$startDate, 'stock_in', $startDate, 'stock_out']
+            )
+            ->selectRaw(
+                'SUM(CASE WHEN created_at >= ? AND transaction_type = ? THEN quantity ELSE 0 END) as delivered_quantity',
+                [$startDate, 'stock_in']
+            )
+            ->selectRaw(
+                'SUM(CASE WHEN created_at >= ? AND transaction_type = ? THEN quantity ELSE 0 END) as withdrawn_quantity',
+                [$startDate, 'stock_out']
+            )
+            ->groupBy('inventory_item_id', 'funding_source')
+            ->get()
+            ->groupBy('inventory_item_id');
 
-        return $items->map(function ($item) use ($startDate, $endDate) {
-            // Previous Balance breakdown by source
-            $sources = ['RGMO', 'DA Grant', 'DA Hybrid'];
+        return $items->map(function ($item) use ($fundingSources, $movements) {
             $beginningBalances = [];
-            foreach ($sources as $source) {
-                $stockInBefore = $item->transactions()->where('transaction_type', 'stock_in')->where('funding_source', $source)->where('created_at', '<', $startDate)->sum('quantity');
-                $stockOutBefore = $item->transactions()->where('transaction_type', 'stock_out')->where('funding_source', $source)->where('created_at', '<', $startDate)->sum('quantity');
-                $beginningBalances[$source] = (object) [
-                    'qty' => $stockInBefore - $stockOutBefore,
-                    'value' => ($stockInBefore - $stockOutBefore) * $item->price,
-                ];
+            foreach ($fundingSources as $code => $label) {
+                $beginningBalances[$code] = (object) ['qty' => 0, 'value' => 0];
             }
 
-            $delivered = $item->transactions()->where('transaction_type', 'stock_in')->whereBetween('created_at', [$startDate, $endDate])->sum('quantity');
-            $withdrawals = $item->transactions()->where('transaction_type', 'stock_out')->whereBetween('created_at', [$startDate, $endDate])->sum('quantity');
-
-            $totalBeginningQty = 0;
-            foreach ($beginningBalances as $bb) {
-                $totalBeginningQty += $bb->qty;
+            $delivered = 0;
+            $withdrawals = 0;
+            foreach ($movements->get($item->id, collect()) as $movement) {
+                $code = $movement->funding_source;
+                $code = $code === null || trim($code) === '' ? '' : $code;
+                // Keep totals complete if a source arrives after the headings were read.
+                if (! array_key_exists($code, $beginningBalances)) {
+                    $code = '';
+                }
+                $beginningBalances[$code]->qty += (int) $movement->beginning_quantity;
+                $beginningBalances[$code]->value = $beginningBalances[$code]->qty * $item->price;
+                $delivered += (int) $movement->delivered_quantity;
+                $withdrawals += (int) $movement->withdrawn_quantity;
             }
+            $totalBeginningQty = array_sum(array_map(fn ($balance) => $balance->qty, $beginningBalances));
 
             return (object) [
                 'particulars' => $item->name,

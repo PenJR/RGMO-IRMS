@@ -175,10 +175,12 @@ class ReportController extends Controller
     {
         [$month, $year] = $this->monthlyPeriod($request);
 
-        $report = $this->reportService->getMonthlyInventoryReport($month, $year);
+        $fundingSources = $this->reportService->monthlyInventoryFundingSources();
+        $report = $this->reportService->getMonthlyInventoryReport($month, $year, $fundingSources);
 
         return view('reports.monthly-inventory', [
             'report' => $report,
+            'fundingSources' => $fundingSources,
             'month' => $month,
             'year' => $year,
         ]);
@@ -286,10 +288,12 @@ class ReportController extends Controller
     {
         [$month, $year] = $this->monthlyPeriod($request);
 
-        $report = $this->reportService->getMonthlyInventoryReport($month, $year);
+        $fundingSources = $this->reportService->monthlyInventoryFundingSources();
+        $report = $this->reportService->getMonthlyInventoryReport($month, $year, $fundingSources);
 
         $pdf = Pdf::loadView('reports.monthly-inventory-pdf', [
             'report' => $report,
+            'fundingSources' => $fundingSources,
             'month' => $month,
             'year' => $year,
         ])->setPaper('a4', 'landscape');

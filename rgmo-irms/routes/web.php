@@ -5,6 +5,7 @@ use App\Http\Controllers\AIForecastingController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FundingSourceController;
 use App\Http\Controllers\IncidentReportController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\NotificationController;
@@ -91,6 +92,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:manage-inventory')->group(function () {
         Route::post('/procurements', [ProcurementController::class, 'store'])->name('procurements.store');
         Route::put('/procurements/{procurement}', [ProcurementController::class, 'update'])->name('procurements.update');
+        Route::patch('/procurements/{procurement}/funding-source', [ProcurementController::class, 'updateFundingSource'])->name('procurements.update-funding-source');
         Route::post('/procurements/{procurement}/submit', [ProcurementController::class, 'submit'])->name('procurements.submit');
         Route::post('/procurements/{procurement}/cancel', [ProcurementController::class, 'cancel'])->name('procurements.cancel');
         Route::post('/procurements/{procurement}/receive', [ProcurementController::class, 'receive'])->name('procurements.receive');
@@ -99,6 +101,12 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:view-suppliers,manage-suppliers')->group(function () {
         Route::resource('suppliers', SupplierController::class)->except(['destroy']);
         Route::patch('/suppliers/{supplier}/deactivate', [SupplierController::class, 'deactivate'])->name('suppliers.deactivate');
+    });
+
+    Route::middleware('permission:manage-funding-sources')->group(function () {
+        Route::resource('funding-sources', FundingSourceController::class)->except(['destroy']);
+        Route::patch('/funding-sources/{funding_source}/deactivate', [FundingSourceController::class, 'deactivate'])->name('funding-sources.deactivate');
+        Route::patch('/funding-sources/{funding_source}/reactivate', [FundingSourceController::class, 'reactivate'])->name('funding-sources.reactivate');
     });
 
     // Inventory Module

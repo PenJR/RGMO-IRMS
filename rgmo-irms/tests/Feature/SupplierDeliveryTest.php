@@ -235,7 +235,7 @@ class SupplierDeliveryTest extends TestCase
         $this->post(route('procurements.store'), [
             'supplier_name' => 'Unregistered supplier', 'supplier_number' => '12345',
             'po_number' => 'PO-UNREGISTERED', 'order_date' => today()->toDateString(),
-            'funding_source' => 'RGMO', 'items' => [[
+            'funding_source' => 'JF', 'items' => [[
                 'inventory_item_id' => $item->id, 'ordered_quantity' => 1,
                 'unit_of_measurement' => 'sacks', 'unit_cost' => '10.00',
             ]],
@@ -243,7 +243,7 @@ class SupplierDeliveryTest extends TestCase
         $this->post(route('procurements.store'), [
             'supplier_name' => $supplier->company_name, 'supplier_number' => '12345',
             'or_number' => 'OR-INACTIVE', 'purchased_on' => today()->toDateString(),
-            'funding_source' => 'RGMO', 'inventory_item_id' => $item->id, 'quantity' => 1, 'unit_cost' => '10.00',
+            'funding_source' => 'JF', 'inventory_item_id' => $item->id, 'quantity' => 1, 'unit_cost' => '10.00',
         ])->assertSessionHasErrors('supplier_name');
         $this->assertDatabaseCount('procurements', 1);
         $this->assertDatabaseCount('suppliers', 1);

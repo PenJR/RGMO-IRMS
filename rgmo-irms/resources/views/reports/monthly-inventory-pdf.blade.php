@@ -14,19 +14,17 @@
                 <th rowspan="2" style="width: 10%;">PARTICULARS</th>
                 <th rowspan="2" style="width: 4%;">Unit</th>
                 <th rowspan="2" style="width: 6%;">Value (Php)</th>
-                <th colspan="8">Beginning Balance</th>
+                <th colspan="{{ count($fundingSources) * 2 + 2 }}">Beginning Balance</th>
                 <th colspan="2">Delivered</th>
                 <th colspan="2">Withdrawals</th>
                 <th colspan="2">Ending Balance</th>
                 <th rowspan="2" style="width: 6%;">Remarks</th>
             </tr>
             <tr>
-                <th style="width: 4%;">RGMO Qty</th>
-                <th style="width: 6%;">Value</th>
-                <th style="width: 4%;">DA Qty</th>
-                <th style="width: 6%;">Value</th>
-                <th style="width: 4%;">DAH Qty</th>
-                <th style="width: 6%;">Value</th>
+                @foreach($fundingSources as $label)
+                    <th>{{ $label }} Qty</th>
+                    <th>Value</th>
+                @endforeach
                 <th style="width: 4%;">Tot Qty</th>
                 <th style="width: 6%;">Tot Val</th>
                 
@@ -39,18 +37,16 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($report as $row)
+            @forelse($report as $row)
                 <tr>
                     <td class="text-left">{{ $row->particulars }}</td>
                     <td>{{ $row->unit }}</td>
                     <td>{{ number_format($row->value, 2) }}</td>
                     
-                    <td>{{ $row->beginning_balances['RGMO']->qty }}</td>
-                    <td>{{ number_format($row->beginning_balances['RGMO']->value, 2) }}</td>
-                    <td>{{ $row->beginning_balances['DA Grant']->qty }}</td>
-                    <td>{{ number_format($row->beginning_balances['DA Grant']->value, 2) }}</td>
-                    <td>{{ $row->beginning_balances['DA Hybrid']->qty }}</td>
-                    <td>{{ number_format($row->beginning_balances['DA Hybrid']->value, 2) }}</td>
+                    @foreach($fundingSources as $code => $label)
+                        <td>{{ $row->beginning_balances[$code]->qty }}</td>
+                        <td>{{ number_format($row->beginning_balances[$code]->value, 2) }}</td>
+                    @endforeach
                     
                     <td class="bg-light">{{ $row->total_beginning_balance_qty }}</td>
                     <td class="bg-light">{{ number_format($row->total_beginning_balance_value, 2) }}</td>
@@ -66,9 +62,12 @@
                     
                     <td>{{ $row->remarks }}</td>
                 </tr>
-            @endforeach
+            @empty
+                <tr><td colspan="{{ count($fundingSources) * 2 + 12 }}">No inventory data available for the selected month.</td></tr>
+            @endforelse
         </tbody>
     </table>
+    <p class="report-note">Source balances follow recorded transaction labels. Unclassified includes opening balances and movements without a funding source, or with a source unavailable when these headings were prepared. Recorded labels remain unchanged; refresh the report to include newly available sources.</p>
     @include('reports.partials.certification')
 </body>
 </html>

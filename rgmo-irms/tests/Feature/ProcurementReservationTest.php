@@ -146,7 +146,7 @@ class ProcurementReservationTest extends TestCase
         $admin = $this->actor();
         $this->actingAs($admin);
         $item = $this->item(0);
-        $this->post(route('procurements.store'), ['inventory_item_id' => $item->id, 'supplier_name' => 'Seed supplier', 'supplier_number' => '09123456789', 'or_number' => 'OR-100', 'purchased_on' => today()->toDateString(), 'quantity' => 100, 'unit_cost' => 20, 'funding_source' => 'RGMO'])->assertRedirect();
+        $this->post(route('procurements.store'), ['inventory_item_id' => $item->id, 'supplier_name' => 'Seed supplier', 'supplier_number' => '09123456789', 'or_number' => 'OR-100', 'purchased_on' => today()->toDateString(), 'quantity' => 100, 'unit_cost' => 20, 'funding_source' => 'JF'])->assertRedirect();
         $purchase = Procurement::firstOrFail();
         $this->assertEquals(0, $item->fresh()->stock);
         $data = ['quantity' => 40, 'received_on' => today()->toDateString(), 'submission_key' => (string) Str::uuid()];
@@ -292,7 +292,7 @@ class ProcurementReservationTest extends TestCase
         $item = $this->item(0);
         $this->post(route('procurements.store'), [
             'inventory_item_id' => $item->id, 'supplier_name' => 'Supplier', 'supplier_number' => '12345', 'or_number' => 'OR-PRIVATE',
-            'purchased_on' => today()->toDateString(), 'quantity' => 10, 'unit_cost' => 20, 'funding_source' => 'RGMO',
+            'purchased_on' => today()->toDateString(), 'quantity' => 10, 'unit_cost' => 20, 'funding_source' => 'JF',
             'receipt' => UploadedFile::fake()->create('receipt.pdf', 10, 'application/pdf'),
         ])->assertSessionHasNoErrors();
         $purchase = Procurement::firstOrFail();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\FundingSource;
 use App\Models\InventoryItem;
 use App\Models\Procurement;
 use App\Models\Supplier;
@@ -53,6 +54,7 @@ class ProcurementController extends Controller
             'search' => 'nullable|string|max:255',
             'status' => 'nullable|in:draft,pending_approval,approved,rejected,partially_received,completed,cancelled',
             'supplier_id' => 'nullable|integer|exists:suppliers,id',
+            'funding_source_id' => 'nullable|integer|exists:funding_sources,id',
             'inventory_item_id' => 'nullable|integer|exists:inventory_items,id',
             'date_from' => 'nullable|date_format:Y-m-d',
             'date_to' => 'nullable|date_format:Y-m-d|after_or_equal:date_from',
@@ -60,7 +62,7 @@ class ProcurementController extends Controller
 
         $applyFilters = function ($query, bool $includeStatus = true, bool $includeRelationships = true) use ($filters) {
             if ($includeRelationships) {
-                $query->with(['items.inventoryItem', 'supplier', 'deliveries'])
+                $query->with(['items.inventoryItem', 'supplier', 'deliveries', 'fundingSource'])
                     ->withCount('deliveries');
             }
 
@@ -73,6 +75,7 @@ class ProcurementController extends Controller
             })
                 ->when($includeStatus && ($filters['status'] ?? null), fn ($query) => $query->where('status', $filters['status']))
                 ->when($filters['supplier_id'] ?? null, fn ($query, $supplierId) => $query->where('supplier_id', $supplierId))
+                ->when($filters['funding_source_id'] ?? null, fn ($query, $sourceId) => $query->where('funding_source_id', $sourceId))
                 ->when($filters['inventory_item_id'] ?? null, fn ($query, $itemId) => $query->whereHas('items', fn ($items) => $items->where('inventory_item_id', $itemId)))
                 ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->where(function ($query) use ($date) {
                     $query->whereDate('order_date', '>=', $date)->orWhereDate('purchased_on', '>=', $date);
@@ -97,6 +100,8 @@ class ProcurementController extends Controller
             ->map(fn ($count) => (int) $count)
             ->toArray();
 
+        $fundingSources = FundingSource::orderBy('code')->get();
+
         return view('procurements.index', [
             'procurements' => $procurements,
             'filters' => $filters,
@@ -106,6 +111,8 @@ class ProcurementController extends Controller
             'items' => InventoryItem::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('company_name')->get(),
             'activeSuppliers' => Supplier::where('status', Supplier::STATUS_ACTIVE)->orderBy('company_name')->get(),
+            'fundingSources' => $fundingSources->where('status', FundingSource::STATUS_ACTIVE)->values(),
+            'allFundingSources' => $fundingSources,
             'statuses' => Procurement::statuses(),
         ]);
     }
@@ -124,7 +131,9 @@ class ProcurementController extends Controller
             'order_date' => 'required_without:purchased_on|nullable|date_format:Y-m-d|before_or_equal:today',
             'purchased_on' => 'nullable|required_without:order_date|date_format:Y-m-d|before_or_equal:today',
             'expected_delivery_date' => 'nullable|date_format:Y-m-d',
-            'funding_source' => ['required', Rule::in(['JF', 'STF'])], 'notes' => 'nullable|string|max:5000',
+            'funding_source' => ['nullable', 'required_without:funding_source_id', 'string', 'max:255', Rule::exists('funding_sources', 'code')->where('status', FundingSource::STATUS_ACTIVE)],
+            'funding_source_id' => ['nullable', 'required_without:funding_source', 'integer', Rule::exists('funding_sources', 'id')->where('status', FundingSource::STATUS_ACTIVE)],
+            'notes' => 'nullable|string|max:5000',
             'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ], $legacy ? [
             'inventory_item_id' => 'required|integer|exists:inventory_items,id,deleted_at,NULL',
@@ -137,6 +146,10 @@ class ProcurementController extends Controller
             'items.*.unit_of_measurement' => 'required|string|max:30',
             'items.*.unit_cost' => 'required|numeric|min:0|max:9999999999.99|decimal:0,2',
         ]));
+        if (isset($data['funding_source_id'], $data['funding_source'])
+            && FundingSource::whereKey($data['funding_source_id'])->value('code') !== $data['funding_source']) {
+            throw ValidationException::withMessages(['funding_source_id' => 'The funding source selections do not match.']);
+        }
         unset($data['receipt']);
         if (! empty($data['supplier_id'])) {
             $supplier = Supplier::findOrFail($data['supplier_id']);
@@ -189,6 +202,9 @@ class ProcurementController extends Controller
         $path = $request->file('receipt')?->store('procurement-receipts', 'local');
         try {
             $purchase = DB::transaction(function () use ($data, $items, $path, $request, $legacy) {
+                $fundingSource = $this->resolveFundingSource($data['funding_source'] ?? null, sourceId: $data['funding_source_id'] ?? null);
+                $data['funding_source_id'] = $fundingSource->id;
+                $data['funding_source'] = $fundingSource->code;
                 $purchase = Procurement::create($data + [
                     'created_by' => $request->user()->id,
                     'prepared_by' => $request->user()->id,
@@ -225,10 +241,11 @@ class ProcurementController extends Controller
 
     public function show(Procurement $procurement, ProcurementService $procurementService)
     {
-        $procurement->load(['items.inventoryItem', 'item', 'supplier', 'deliveries.receiver', 'deliveries.inventoryItem', 'deliveries.inventoryBatch.inventoryItem', 'preparedBy', 'approvedBy', 'rejectedBy', 'cancelledBy']);
+        $procurement->load(['items.inventoryItem', 'item', 'supplier', 'fundingSource', 'deliveries.receiver', 'deliveries.inventoryItem', 'deliveries.inventoryBatch.inventoryItem', 'preparedBy', 'approvedBy', 'rejectedBy', 'cancelledBy']);
         $procurementService->attachMonitoring(collect([$procurement]));
+        $fundingSources = FundingSource::active()->orderBy('code')->get();
 
-        return view('procurements.show', compact('procurement'));
+        return view('procurements.show', compact('procurement', 'fundingSources'));
     }
 
     public function receive(Request $request, Procurement $procurement, ProcurementService $service)
@@ -260,6 +277,8 @@ class ProcurementController extends Controller
             'supplier_id' => ['required', 'integer', 'exists:suppliers,id,status,active'],
             'order_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'expected_delivery_date' => ['nullable', 'date_format:Y-m-d'],
+            'funding_source' => ['sometimes', 'required', 'string', 'max:255'],
+            'funding_source_id' => ['sometimes', 'required', 'integer', Rule::exists('funding_sources', 'id')],
             'notes' => ['nullable', 'string', 'max:5000'],
             'items' => ['required', 'array', 'min:1', 'max:100'],
             'items.*.inventory_item_id' => ['required', 'integer', 'distinct', 'exists:inventory_items,id,deleted_at,NULL'],
@@ -276,9 +295,17 @@ class ProcurementController extends Controller
             $total = $this->decimalAdd($total, $item['subtotal']);
         }
         unset($item);
-        DB::transaction(function () use ($procurement, $data, $total) {
+        DB::transaction(function () use ($procurement, $data, $total, $request) {
+            $procurement = Procurement::lockForUpdate()->findOrFail($procurement->id);
+            $this->authorize('update', $procurement);
+            $oldFunding = $procurement->only(['funding_source_id', 'funding_source']);
+            $funding = [];
+            if (array_key_exists('funding_source', $data) || array_key_exists('funding_source_id', $data)) {
+                $source = $this->resolveFundingSource($data['funding_source'] ?? null, $procurement, $data['funding_source_id'] ?? null);
+                $funding = ['funding_source_id' => $source->id, 'funding_source' => $source->code];
+            }
             $supplier = Supplier::findOrFail($data['supplier_id']);
-            $procurement->update([
+            $procurement->update($funding + [
                 'po_number' => $data['po_number'], 'supplier_id' => $supplier->id,
                 'supplier_name' => $supplier->company_name, 'supplier_number' => $supplier->contact_number ?? '',
                 'order_date' => $data['order_date'], 'purchased_on' => $data['order_date'],
@@ -289,6 +316,9 @@ class ProcurementController extends Controller
             foreach ($data['items'] as $item) {
                 $procurement->items()->create($item + ['received_quantity' => 0]);
             }
+            if ($oldFunding !== $procurement->only(['funding_source_id', 'funding_source'])) {
+                AuditLog::log($request->user()->id, 'update', 'procurement', Procurement::class, $procurement->id, $oldFunding, $procurement->only(['funding_source_id', 'funding_source']));
+            }
         }, 5);
 
         return redirect()->route('procurements.show', $procurement)->with('success', 'Purchase order updated.');
@@ -297,12 +327,64 @@ class ProcurementController extends Controller
     public function submit(Procurement $procurement)
     {
         $this->authorize('submit', $procurement);
-        if (! $procurement->items()->exists()) {
-            throw ValidationException::withMessages(['items' => 'A purchase order must contain at least one item.']);
-        }
-        $procurement->update(['status' => Procurement::STATUS_PENDING_APPROVAL]);
+        DB::transaction(function () use ($procurement) {
+            $purchase = Procurement::lockForUpdate()->findOrFail($procurement->id);
+            $this->authorize('submit', $purchase);
+            if (! $purchase->items()->exists()) {
+                throw ValidationException::withMessages(['items' => 'A purchase order must contain at least one item.']);
+            }
+            $source = $this->resolveFundingSource((string) $purchase->funding_source, sourceId: $purchase->funding_source_id);
+            $purchase->update([
+                'funding_source_id' => $source->id,
+                'funding_source' => $source->code,
+                'status' => Procurement::STATUS_PENDING_APPROVAL,
+            ]);
+        }, 5);
 
         return back()->with('success', 'Purchase order submitted for approval.');
+    }
+
+    public function updateFundingSource(Request $request, Procurement $procurement)
+    {
+        $this->authorize('update', $procurement);
+        $data = $request->validate([
+            'funding_source' => ['nullable', 'required_without:funding_source_id', 'string', 'max:255'],
+            'funding_source_id' => ['nullable', 'required_without:funding_source', 'integer', Rule::exists('funding_sources', 'id')],
+        ]);
+
+        DB::transaction(function () use ($request, $procurement, $data) {
+            $purchase = Procurement::lockForUpdate()->findOrFail($procurement->id);
+            $this->authorize('update', $purchase);
+            $source = $this->resolveFundingSource($data['funding_source'] ?? null, $purchase, $data['funding_source_id'] ?? null);
+            $oldValues = $purchase->only(['funding_source_id', 'funding_source']);
+            $purchase->fill(['funding_source_id' => $source->id, 'funding_source' => $source->code]);
+            if ($purchase->isDirty(['funding_source_id', 'funding_source'])) {
+                $purchase->save();
+                AuditLog::log($request->user()->id, 'update', 'procurement', Procurement::class, $purchase->id, $oldValues, $purchase->only(['funding_source_id', 'funding_source']));
+            }
+        }, 5);
+
+        return back()->with('success', 'Purchase order funding source updated.');
+    }
+
+    private function resolveFundingSource(?string $code, ?Procurement $procurement = null, ?int $sourceId = null): FundingSource
+    {
+        $source = FundingSource::query()
+            ->when($sourceId !== null, fn ($query) => $query->whereKey($sourceId), fn ($query) => $query->where('code', $code))
+            ->lockForUpdate()->first();
+        if ($source && $code !== null && $source->code !== $code) {
+            throw ValidationException::withMessages(['funding_source_id' => 'The funding source selections do not match.']);
+        }
+        $unchanged = $source !== null && $procurement !== null && $procurement->funding_source === $source->code
+            && ($procurement->funding_source_id === null || $procurement->funding_source_id === $source->id);
+
+        if (! $source || (! $source->isActive() && ! $unchanged)) {
+            throw ValidationException::withMessages([
+                $sourceId !== null ? 'funding_source_id' : 'funding_source' => 'Select an active funding source. An administrator can manage funding sources under System.',
+            ]);
+        }
+
+        return $source;
     }
 
     public function approve(Request $request, Procurement $procurement)

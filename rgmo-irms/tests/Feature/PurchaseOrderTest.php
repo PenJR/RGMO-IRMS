@@ -58,7 +58,7 @@ class PurchaseOrderTest extends TestCase
             'po_number' => 'PO-TEST-001',
             'order_date' => today()->toDateString(),
             'expected_delivery_date' => today()->addWeek()->toDateString(),
-            'funding_source' => 'RGMO',
+            'funding_source' => 'JF',
             'notes' => 'Multi-item order',
             'items' => [
                 ['inventory_item_id' => $first->id, 'ordered_quantity' => 10, 'unit_of_measurement' => 'sacks', 'unit_cost' => '125.50'],
@@ -87,12 +87,12 @@ class PurchaseOrderTest extends TestCase
             'supplier_name' => $supplier->company_name, 'supplier_number' => $supplier->contact_number,
             'purchased_on' => today(), 'order_date' => today(), 'total_amount' => '10.00',
             'inventory_item_id' => $item->id, 'quantity' => 1, 'unit_cost' => '10.00',
-            'funding_source' => 'RGMO', 'created_by' => $admin->id, 'prepared_by' => $admin->id,
+            'funding_source' => 'JF', 'created_by' => $admin->id, 'prepared_by' => $admin->id,
         ]);
 
         $response = $this->actingAs($admin)->post(route('procurements.store'), [
             'supplier_id' => $supplier->id, 'po_number' => 'PO-DUPLICATE',
-            'order_date' => today()->toDateString(), 'funding_source' => 'RGMO',
+            'order_date' => today()->toDateString(), 'funding_source' => 'JF',
             'items' => [['inventory_item_id' => $item->id, 'ordered_quantity' => 0, 'unit_of_measurement' => 'pieces', 'unit_cost' => '10.00']],
         ]);
         $response->assertSessionHasErrors(['po_number', 'items.0.ordered_quantity']);
@@ -100,7 +100,7 @@ class PurchaseOrderTest extends TestCase
         $this->actingAs($admin)->post(route('procurements.store'), [
             'supplier_id' => $supplier->id, 'po_number' => 'PO-BAD-DATE',
             'order_date' => today()->toDateString(), 'expected_delivery_date' => today()->subDay()->toDateString(),
-            'funding_source' => 'RGMO',
+            'funding_source' => 'JF',
             'items' => [['inventory_item_id' => $item->id, 'ordered_quantity' => 1, 'unit_of_measurement' => 'pieces', 'unit_cost' => '10.00']],
         ])->assertSessionHasErrors('expected_delivery_date');
     }
@@ -114,7 +114,7 @@ class PurchaseOrderTest extends TestCase
         $this->actingAs($admin)->post(route('procurements.store'), [
             'supplier_id' => $supplier->id, 'or_number' => 'OR-LEGACY-001',
             'purchased_on' => today()->toDateString(), 'inventory_item_id' => $item->id,
-            'quantity' => 6, 'unit_cost' => '12.34', 'funding_source' => 'RGMO',
+            'quantity' => 6, 'unit_cost' => '12.34', 'funding_source' => 'JF',
         ])->assertSessionHasNoErrors();
 
         $purchase = Procurement::where('or_number', 'OR-LEGACY-001')->firstOrFail();

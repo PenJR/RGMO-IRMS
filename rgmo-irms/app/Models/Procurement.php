@@ -70,6 +70,11 @@ class Procurement extends Model
         });
     }
 
+    public function fundingSource(): BelongsTo
+    {
+        return $this->belongsTo(FundingSource::class);
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(ProcurementItem::class)->orderBy('id');

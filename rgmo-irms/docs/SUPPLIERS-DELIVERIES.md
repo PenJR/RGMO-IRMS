@@ -3,7 +3,7 @@
 ## Record a delivery
 
 1. Register the supplier under **Suppliers**, including its company name, unique supplier code, contact details, address, and TIN where applicable. Inactive suppliers remain in historical records but cannot be selected for a new purchase order.
-2. Under **Procurement & Deliveries**, create a purchase order using an active registered supplier. Add each inventory item, ordered quantity, unit, and price. Submit the order for approval.
+2. Under **Procurement & Deliveries**, create a purchase order using an active registered supplier and funding source. Administrators maintain funding choices under **System → Funding sources**; see [Funding sources](FUNDING-SOURCES.md) for deactivation and historical-record rules. Add each inventory item, ordered quantity, unit, and price. Submit the order for approval.
 3. Open an approved or partially received order. Under **Receive a delivery**, enter the date, delivery receipt number, invoice number if applicable, and any additional reference. The signed-in inventory manager is recorded as the receiver.
 4. Enter the quantity received against each PO item. Enter zero for items that have not arrived. Confirm the actual unit prices; they default to the individual PO line prices.
 5. Save. Each positive quantity creates its own delivery lot, stock-in transaction, and audit entry. The receipt's lines share a receipt key. A partial delivery leaves the order open until every line is fully received.

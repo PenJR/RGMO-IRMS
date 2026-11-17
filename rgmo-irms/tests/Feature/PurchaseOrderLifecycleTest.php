@@ -37,7 +37,7 @@ class PurchaseOrderLifecycleTest extends TestCase
             'supplier_id' => $supplier->id, 'supplier_name' => $supplier->company_name,
             'supplier_number' => '', 'order_date' => today(), 'purchased_on' => today(),
             'inventory_item_id' => $item->id, 'quantity' => 5, 'unit_cost' => '10.00',
-            'total_amount' => '50.00', 'funding_source' => 'RGMO',
+            'total_amount' => '50.00', 'funding_source' => 'JF',
             'created_by' => $preparedBy->id, 'prepared_by' => $preparedBy->id,
             'status' => Procurement::STATUS_DRAFT,
         ], $overrides));

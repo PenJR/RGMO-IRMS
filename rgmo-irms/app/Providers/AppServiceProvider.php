@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        foreach (['id', 'userId', 'itemId', 'requestId', 'categoryId', 'notificationId'] as $parameter) {
+        foreach (['id', 'userId', 'itemId', 'requestId', 'categoryId', 'notificationId', 'funding_source'] as $parameter) {
             Route::pattern($parameter, '[1-9][0-9]{0,17}');
         }
 
