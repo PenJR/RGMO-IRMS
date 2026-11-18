@@ -1,7 +1,7 @@
 <section>
     <header class="mb-4">
         <h3 class="h5 fw-bold mb-1">
-            {{ __('Account Details') }}
+            {{ __('Account Info') }}
         </h3>
     </header>
 
