@@ -222,7 +222,7 @@
 	                                        Current stock cannot cover all approved items.
 	                                    </div>
 	                                @endunless
-	                                <form action="{{ route('requests.fulfill', $request) }}" method="POST" data-withdrawal-summary data-project="{{ $request->project?->name }}" data-request="RQ-{{ $request->id }}" data-confirm="Review the resources below before recording this withdrawal. Any remaining quantities stay reserved.">
+	                                <form id="release-resources" action="{{ route('requests.fulfill', $request) }}" method="POST" data-withdrawal-summary data-project="{{ $request->project?->name }}" data-request="RQ-{{ $request->id }}" data-confirm="Review the resources below before recording this withdrawal. Any remaining quantities stay reserved.">
                                     @csrf
                                     <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">
                                     <p class="small text-muted">Quantity to release now. 0 = not collected. Remaining quantities stay reserved.</p>
