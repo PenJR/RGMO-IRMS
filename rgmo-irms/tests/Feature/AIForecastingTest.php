@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
+use App\Models\GeneratedReportSnapshot;
 use App\Models\User;
 use App\Services\ForecastExplanationService;
 use App\Services\InventoryForecastingService;
@@ -160,6 +161,33 @@ class AIForecastingTest extends TestCase
             ]))
             ->assertUnprocessable()
             ->assertJsonValidationErrors('forecast_end');
+    }
+
+    public function test_forecast_landing_page_reopens_the_latest_saved_forecast(): void
+    {
+        $head = User::factory()->create([
+            'role' => User::ROLE_RGMO_HEAD,
+            'status' => User::STATUS_ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+        $snapshot = GeneratedReportSnapshot::create([
+            'user_id' => $head->id,
+            'generation_key' => (string) \Illuminate\Support\Str::uuid(),
+            'generator_name' => 'test',
+            'report_key' => 'forecast',
+            'title' => 'Saved forecast',
+            'schema_version' => 1,
+            'filters' => ['forecast_start' => today()->toDateString(), 'forecast_end' => today()->addDays(6)->toDateString()],
+            'snapshot' => app(\App\Services\ReportSnapshotBuilder::class)->forecast(
+                app(InventoryForecastingService::class)->buildForecast(7),
+                ['forecast_start' => today()->toDateString(), 'forecast_end' => today()->addDays(6)->toDateString()]
+            ),
+            'generated_at' => now(),
+        ]);
+
+        $this->actingAs($head)->get(route('ai-forecasting.index'))
+            ->assertOk()
+            ->assertViewHas('snapshot', fn ($value) => $value?->is($snapshot));
     }
 
     /**

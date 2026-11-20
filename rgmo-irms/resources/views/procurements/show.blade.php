@@ -54,7 +54,7 @@
             @if($procurement->rejected_at)<li>Rejected by {{ $procurement->rejectedBy?->name }} on {{ $procurement->rejected_at->format('M d, Y g:i A') }}: {{ $procurement->rejection_reason }}</li>@endif
             @if($procurement->cancelled_at)<li>Cancelled by {{ $procurement->cancelledBy?->name }} on {{ $procurement->cancelled_at->format('M d, Y g:i A') }}: {{ $procurement->cancellation_reason }}</li>@endif
         </ul></div>@endif
-        @if($procurement->receipt_path)<a class="btn btn-outline-success" href="{{ route('procurements.receipt', $procurement) }}">Download receipt</a>@endif @if($procurement->item && ! $procurement->item->trashed())<a class="btn btn-outline-secondary" href="{{ route('inventory.show', $procurement->item) }}">View item</a>@endif</div></div>
+        @if($procurement->receipt_path)<a class="btn btn-outline-success" href="{{ route('procurements.receipt', $procurement) }}">Download receipt</a> <a class="btn btn-outline-secondary" target="_blank" rel="noopener" href="{{ route('procurements.receipt', ['procurement' => $procurement, 'preview' => 1]) }}">Preview receipt</a>@endif @if($procurement->item && ! $procurement->item->trashed())<a class="btn btn-outline-secondary" href="{{ route('inventory.show', $procurement->item) }}">View item</a>@endif</div></div>
         @if(auth()->user()->hasPermission('manage-inventory') && $procurement->isReceivable() && $procurement->monitoring['remaining'] > 0)
         <div class="card mb-4"><div class="card-body"><h3 class="h5">Receive delivery</h3><form method="POST" action="{{ route('procurements.receive', $procurement) }}">@csrf
             <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">

@@ -547,9 +547,17 @@ class ProcurementController extends Controller
         return $code;
     }
 
-    public function receipt(Procurement $procurement)
+    public function receipt(Request $request, Procurement $procurement)
     {
         abort_unless($procurement->receipt_path && Storage::disk('local')->exists($procurement->receipt_path), 404);
+
+        if ($request->boolean('preview')) {
+            $filename = basename($procurement->receipt_path);
+
+            return Storage::disk('local')->response($procurement->receipt_path, $filename, [
+                'Content-Disposition' => 'inline; filename="'.addcslashes($filename, '"\\').'"',
+            ]);
+        }
 
         return Storage::disk('local')->download($procurement->receipt_path);
     }

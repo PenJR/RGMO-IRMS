@@ -104,6 +104,9 @@
                                             @can('update', $request)
                                                 <a href="{{ route('requests.edit', ['request' => $request->id]) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
                                             @endcan
+                                            @if($request->isReleasable() && auth()->user()->can('fulfill', $request))
+                                                <a href="{{ route('requests.show', ['request' => $request->id]) }}#release-resources" class="btn btn-sm btn-cmu">Release</a>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
