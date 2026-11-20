@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Delivery;
 use App\Models\FundingSource;
 use App\Models\GeneratedReportSnapshot;
 use App\Models\IncidentReport;
@@ -11,6 +12,7 @@ use App\Models\ProcurementDraft;
 use App\Models\Project;
 use App\Models\ResourceRequest;
 use App\Models\User;
+use App\Policies\DeliveryPolicy;
 use App\Policies\FundingSourcePolicy;
 use App\Policies\GeneratedReportSnapshotPolicy;
 use App\Policies\IncidentReportPolicy;
@@ -31,6 +33,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         User::class => UserPolicy::class,
+        Delivery::class => DeliveryPolicy::class,
         InventoryItem::class => InventoryItemPolicy::class,
         IncidentReport::class => IncidentReportPolicy::class,
         FundingSource::class => FundingSourcePolicy::class,

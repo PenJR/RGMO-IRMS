@@ -19,8 +19,25 @@
                 <div>{{ $batchAllocation['quantity'] }} from batch {{ $batchAllocation['batch_number'] ?: 'Legacy lot #'.$batchAllocation['inventory_batch_id'] }}@if($batchAllocation['expiry_date']) · expires {{ $batchAllocation['expiry_date'] }}@endif</div>
             @endforeach
             @foreach(($line->transaction->meta['deliveries'] ?? []) as $allocation)
-                @php($delivery = $deliveries->get($allocation['delivery_id']))
-                @if($delivery)<div>{{ $allocation['quantity'] }} from DEL-{{ $delivery->id }} — <a href="{{ route('procurements.show', $delivery->procurement_id) }}">{{ $delivery->procurement->supplier_name }} / OR {{ $delivery->procurement->or_number }}</a> (received {{ $delivery->received_on->format('M d, Y') }})</div>@endif
+                @php
+                    $delivery = $deliveries->get($allocation['delivery_id']);
+                    $receiptSnapshot = $delivery ? ($line->transaction->meta['delivery_snapshots'][$delivery->id] ?? []) : [];
+                    $recordedReceiptDate = $delivery ? ($receiptSnapshot['received_on'] ?? $delivery->original_data['received_on'] ?? $delivery->received_on->toDateString()) : null;
+                @endphp
+                @if($delivery)
+                    <div>
+                        {{ $allocation['quantity'] }} from DEL-{{ $delivery->id }} —
+                        @if(auth()->user()->hasPermission(['manage-inventory', 'manage-purchase-orders', 'approve-purchase-orders']))
+                            <a href="{{ route('procurements.show', $delivery->procurement_id) }}">{{ $delivery->procurement->supplier_name }} / OR {{ $delivery->procurement->or_number }}</a>
+                        @else
+                            {{ $delivery->procurement->supplier_name }} / OR {{ $delivery->procurement->or_number }}
+                        @endif
+                        (received {{ \Illuminate\Support\Carbon::parse($recordedReceiptDate)->format('M d, Y') }})
+                    </div>
+                    @if($receiptSnapshot['delivery_receipt_number'] ?? null)
+                        <div class="small text-muted">Receipt as issued: {{ $receiptSnapshot['delivery_receipt_number'] }}</div>
+                    @endif
+                @endif
             @endforeach
             @if($line->transaction->meta['historical_quantity'] ?? 0)<div>{{ $line->transaction->meta['historical_quantity'] }} from opening, adjustment, or historical stock</div>@endif
         </td></tr>@endforeach</tbody></table></div><p>{{ $withdrawal->notes }}</p><p class="small text-muted">This record contains only the quantities issued in this withdrawal. Any remaining approved quantity stays reserved.</p>

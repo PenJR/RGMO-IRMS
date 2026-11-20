@@ -116,7 +116,8 @@ class InventoryController extends Controller
         $this->authorize('view', $item);
 
         $item->load('category');
-        $transactions = $this->inventoryService->getTransactionHistory($item, 10);
+        $transactions = $this->inventoryService->getTransactionHistory($item, 10)
+            ->through(fn ($transaction) => $transaction->forViewer(auth()->user()));
 
         return view('inventory.show', [
             'item' => $item,
@@ -127,7 +128,7 @@ class InventoryController extends Controller
                 $query->whereHas('items', fn ($lines) => $lines->where('inventory_item_id', $item->id))
                     ->orWhere('inventory_item_id', $item->id);
             })->with(['items' => fn ($lines) => $lines->where('inventory_item_id', $item->id)])
-                ->withSum(['deliveries' => fn ($deliveries) => $deliveries->where('inventory_item_id', $item->id)], 'quantity')
+                ->withSum(['deliveries' => fn ($deliveries) => $deliveries->where('inventory_item_id', $item->id)->whereNull('voided_at')], 'quantity')
                 ->latest()->paginate(10, ['*'], 'purchases_page'),
             'deliveries' => Delivery::where('inventory_item_id', $item->id)
                 ->with(['procurement.supplier', 'inventoryItem', 'receiver', 'inventoryBatch.inventoryItem'])
@@ -472,7 +473,7 @@ class InventoryController extends Controller
         $item = InventoryItem::with('category', 'transactions.user')->findOrFail($id);
         $this->authorize('view', $item);
 
-        return response()->json($item);
+        return response()->json($this->withVisibleTransactionDetails($item));
     }
 
     /**
@@ -558,7 +559,7 @@ class InventoryController extends Controller
         $item = InventoryItem::findOrFail($itemId);
         $this->recordAdjustment($request, $item, 'stock_in');
 
-        return response()->json($item->fresh(['category', 'transactions']));
+        return response()->json($this->withVisibleTransactionDetails($item->fresh(['category', 'transactions'])));
     }
 
     /**
@@ -569,7 +570,16 @@ class InventoryController extends Controller
         $item = InventoryItem::findOrFail($itemId);
         $this->recordAdjustment($request, $item, 'stock_out');
 
-        return response()->json($item->fresh(['category', 'transactions']));
+        return response()->json($this->withVisibleTransactionDetails($item->fresh(['category', 'transactions'])));
+    }
+
+    private function withVisibleTransactionDetails(InventoryItem $item): InventoryItem
+    {
+        if ($item->relationLoaded('transactions')) {
+            $item->setRelation('transactions', $item->transactions->map(fn ($transaction) => $transaction->forViewer(auth()->user())));
+        }
+
+        return $item;
     }
 
     /**

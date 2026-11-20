@@ -209,16 +209,25 @@ class ReportService
         $items = InventoryItem::whereHas('category', function ($q) {
             $q->where('name', 'like', '%Biological Assets%');
         })->with(['transactions'])->get();
+        $correctionTransactionIds = DB::table('delivery_corrections')
+            ->join('inventory_transactions', 'inventory_transactions.id', '=', 'delivery_corrections.inventory_transaction_id')
+            ->whereBetween('inventory_transactions.created_at', [$startDate, $endDate])
+            ->whereIn('inventory_transactions.inventory_item_id', $items->modelKeys())
+            ->pluck('delivery_corrections.inventory_transaction_id')->flip();
 
-        return $items->map(function ($item) use ($startDate, $endDate) {
+        return $items->map(function ($item) use ($startDate, $endDate, $correctionTransactionIds) {
             // Previous balance = stock before startDate
             $stockInBefore = $item->transactions()->where('transaction_type', 'stock_in')->where('created_at', '<', $startDate)->sum('quantity');
             $stockOutBefore = $item->transactions()->where('transaction_type', 'stock_out')->where('created_at', '<', $startDate)->sum('quantity');
             $previousStock = $stockInBefore - $stockOutBefore;
 
-            // Changes this month
-            $additions = $item->transactions()->where('transaction_type', 'stock_in')->whereBetween('created_at', [$startDate, $endDate])->sum('quantity');
-            $deductions = $item->transactions()->where('transaction_type', 'stock_out')->whereBetween('created_at', [$startDate, $endDate])->sum('quantity');
+            $periodMovements = $item->transactions->filter(fn ($transaction) => $transaction->created_at->betweenIncluded($startDate, $endDate));
+            $corrections = $periodMovements->filter(fn ($transaction) => $correctionTransactionIds->has($transaction->id));
+            $correctionDecreases = $corrections->where('transaction_type', 'stock_out')->sum('quantity');
+            $correctionQuantity = $corrections->where('transaction_type', 'stock_in')->sum('quantity') - $correctionDecreases;
+            // Receipt reversals amend additions rather than claiming that stock was issued.
+            $additions = $periodMovements->where('transaction_type', 'stock_in')->sum('quantity') - $correctionDecreases;
+            $deductions = $periodMovements->where('transaction_type', 'stock_out')->sum('quantity') - $correctionDecreases;
 
             return (object) [
                 'particulars' => $item->name,
@@ -232,7 +241,7 @@ class ReportService
                 'deduction_value' => $deductions * $item->price,
                 'ending_balance_qty' => $previousStock + $additions - $deductions,
                 'ending_balance_value' => ($previousStock + $additions - $deductions) * $item->price,
-                'remarks' => $item->description,
+                'remarks' => $this->deliveryCorrectionRemarks($item->description, (int) $correctionQuantity, $item->unit),
             ];
         });
     }
@@ -316,21 +325,26 @@ class ReportService
 
         $items = InventoryItem::query()->get();
         $movements = InventoryTransaction::query()
-            ->where('created_at', '<=', $endDate)
-            ->select('inventory_item_id', 'funding_source')
+            ->leftJoin('delivery_corrections', 'delivery_corrections.inventory_transaction_id', '=', 'inventory_transactions.id')
+            ->where('inventory_transactions.created_at', '<=', $endDate)
+            ->select('inventory_transactions.inventory_item_id', 'inventory_transactions.funding_source')
             ->selectRaw(
-                'SUM(CASE WHEN created_at < ? AND transaction_type = ? THEN quantity WHEN created_at < ? AND transaction_type = ? THEN -quantity ELSE 0 END) as beginning_quantity',
+                'SUM(CASE WHEN inventory_transactions.created_at < ? AND transaction_type = ? THEN quantity WHEN inventory_transactions.created_at < ? AND transaction_type = ? THEN -quantity ELSE 0 END) as beginning_quantity',
                 [$startDate, 'stock_in', $startDate, 'stock_out']
             )
             ->selectRaw(
-                'SUM(CASE WHEN created_at >= ? AND transaction_type = ? THEN quantity ELSE 0 END) as delivered_quantity',
-                [$startDate, 'stock_in']
+                'SUM(CASE WHEN inventory_transactions.created_at >= ? AND transaction_type = ? THEN quantity WHEN inventory_transactions.created_at >= ? AND transaction_type = ? AND delivery_corrections.id IS NOT NULL THEN -quantity ELSE 0 END) as delivered_quantity',
+                [$startDate, 'stock_in', $startDate, 'stock_out']
             )
             ->selectRaw(
-                'SUM(CASE WHEN created_at >= ? AND transaction_type = ? THEN quantity ELSE 0 END) as withdrawn_quantity',
+                'SUM(CASE WHEN inventory_transactions.created_at >= ? AND transaction_type = ? AND delivery_corrections.id IS NULL THEN quantity ELSE 0 END) as withdrawn_quantity',
                 [$startDate, 'stock_out']
             )
-            ->groupBy('inventory_item_id', 'funding_source')
+            ->selectRaw(
+                'SUM(CASE WHEN inventory_transactions.created_at >= ? AND delivery_corrections.id IS NOT NULL THEN CASE WHEN transaction_type = ? THEN quantity ELSE -quantity END ELSE 0 END) as correction_quantity',
+                [$startDate, 'stock_in']
+            )
+            ->groupBy('inventory_transactions.inventory_item_id', 'inventory_transactions.funding_source')
             ->get()
             ->groupBy('inventory_item_id');
 
@@ -342,6 +356,7 @@ class ReportService
 
             $delivered = 0;
             $withdrawals = 0;
+            $correctionQuantity = 0;
             foreach ($movements->get($item->id, collect()) as $movement) {
                 $code = $movement->funding_source;
                 $code = $code === null || trim($code) === '' ? '' : $code;
@@ -353,6 +368,7 @@ class ReportService
                 $beginningBalances[$code]->value = $beginningBalances[$code]->qty * $item->price;
                 $delivered += (int) $movement->delivered_quantity;
                 $withdrawals += (int) $movement->withdrawn_quantity;
+                $correctionQuantity += (int) $movement->correction_quantity;
             }
             $totalBeginningQty = array_sum(array_map(fn ($balance) => $balance->qty, $beginningBalances));
 
@@ -369,9 +385,18 @@ class ReportService
                 'withdrawals_value' => $withdrawals * $item->price,
                 'ending_balance_qty' => $totalBeginningQty + $delivered - $withdrawals,
                 'ending_balance_value' => ($totalBeginningQty + $delivered - $withdrawals) * $item->price,
-                'remarks' => $item->description,
+                'remarks' => $this->deliveryCorrectionRemarks($item->description, $correctionQuantity, $item->unit),
             ];
         });
+    }
+
+    private function deliveryCorrectionRemarks(?string $remarks, int $quantity, string $unit): ?string
+    {
+        if ($quantity === 0) {
+            return $remarks;
+        }
+
+        return trim(($remarks ?? '').' Includes delivery correction: '.sprintf('%+d', $quantity).' '.$unit.'.');
     }
 
     /**

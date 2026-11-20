@@ -103,7 +103,7 @@ class ReportSnapshotBuilder
         $snapshot = $this->base();
         $balances = [
             'previous_balance_qty' => 'Previous quantity', 'previous_balance_value' => 'Previous value',
-            'addition_qty' => 'Addition quantity', 'addition_value' => 'Addition value',
+            'addition_qty' => 'Additions / corrections quantity', 'addition_value' => 'Additions / corrections value',
             'deduction_qty' => 'Deduction quantity', 'deduction_value' => 'Deduction value',
             'ending_balance_qty' => 'Ending quantity', 'ending_balance_value' => 'Ending value',
         ];
@@ -154,7 +154,7 @@ class ReportSnapshotBuilder
         }
         $balances = [
             'total_beginning_balance_qty' => 'Total beginning quantity', 'total_beginning_balance_value' => 'Total beginning value',
-            'delivered_qty' => 'Delivered quantity', 'delivered_value' => 'Delivered value',
+            'delivered_qty' => 'Delivered / corrected quantity', 'delivered_value' => 'Delivered / corrected value',
             'withdrawals_qty' => 'Withdrawn quantity', 'withdrawals_value' => 'Withdrawn value',
             'ending_balance_qty' => 'Ending quantity', 'ending_balance_value' => 'Ending value',
         ];

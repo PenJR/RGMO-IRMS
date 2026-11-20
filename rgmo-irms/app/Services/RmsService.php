@@ -370,11 +370,23 @@ class RmsService
     /**
      * Get inventory transactions.
      */
-    public function getInventoryTransactions() { return InventoryTransaction::with('item')->latest()->paginate(50); }
+    public function getInventoryTransactions()
+    {
+        $transactions = InventoryTransaction::with('item')->latest()->paginate(50);
+        $viewer = auth()->user();
+
+        return $viewer ? $transactions->through(fn ($transaction) => $transaction->forViewer($viewer)) : $transactions;
+    }
     /**
      * Get item transaction history.
      */
-    public function getItemTransactionHistory(int $itemId) { return InventoryTransaction::where('inventory_item_id', $itemId)->latest()->get(); }
+    public function getItemTransactionHistory(int $itemId)
+    {
+        $transactions = InventoryTransaction::where('inventory_item_id', $itemId)->latest()->get();
+        $viewer = auth()->user();
+
+        return $viewer ? $transactions->map(fn ($transaction) => $transaction->forViewer($viewer)) : $transactions;
+    }
 
     /**
      * Generate inventory report.

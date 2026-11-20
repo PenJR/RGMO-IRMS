@@ -31,6 +31,7 @@ php artisan test tests/Feature/InputValidationTest.php
 php artisan test tests/Feature/ProcurementDraftTest.php tests/Feature/ProcurementDraftConversionTest.php tests/Feature/ProcurementDraftInterfaceTest.php
 node --test scripts/tests/purchase-draft-autosaver.test.mjs
 php artisan test tests/Feature/ReportHistoryTest.php tests/Feature/ReportHistoryExportsTest.php tests/Feature/ForecastSnapshotTest.php tests/Feature/AIForecastingTest.php
+php artisan test tests/Feature/DeliveryCorrectionTest.php tests/Feature/DeliveryCorrectionIntegrationTest.php tests/Feature/SupplierDeliveryTest.php tests/Feature/BatchInventoryTest.php
 ```
 
 Inspect actual results rather than copying old pass counts. SQLite tests do not establish PostgreSQL-specific behavior. Backup tests that mock a command do not create or restore a real archive.
@@ -50,6 +51,8 @@ Use dedicated test accounts and clearly named test records. Check desktop and ph
 | Utilization | Usage links to a released item, respects remaining quantity and valid dates, and does not deduct stock again. |
 | Validation | Invalid values produce visible errors; valid Unicode and permitted uploads still work. |
 | Reports | Filters and exports match visible data and the role's scope. |
+| Delivery corrections | Administrator corrects a receipt or voids an unused lot with a reason/reference. Item/batch/PO balances change once; originals and prior release costs remain fixed. Issued quantities and reserved stock cannot be removed. |
+| Correction access | RGMO Head and Auditor can read correction history but direct mutation URLs return403. Storekeeper, Unit Head, Project Manager, and Staff cannot open the correction workflow. Revoked grants, inactive, and locked Administrator accounts are denied. |
 | Saved history | Save a filtered report and generate a forecast; reopen them after changing source quantities, names, prices, currency, and funding labels. Original results and downloads stay fixed. Refresh and repeated submission do not duplicate snapshots. |
 | History access | RGMO Head cannot open audit snapshots; Auditor cannot open forecasts; ordinary Staff cannot open history. Test direct snapshot and PDF/CSV/JSON URLs as well as list filtering. |
 | Forecast summaries | Generate an optional summary from a saved forecast, then reopen it after source changes or AI configuration removal. The first successful saved summary remains available; failed requests preserve the numerical forecast and allow retry. |

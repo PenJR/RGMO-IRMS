@@ -4,7 +4,23 @@
         <tbody>
             @forelse($deliveries as $delivery)
                 <tr>
-                    <td>DEL-{{ $delivery->id }}<div class="small text-muted">{{ $delivery->received_on->format('M d, Y') }}</div></td>
+                    <td>
+                        DEL-{{ $delivery->id }}
+                        <div class="small text-muted">{{ $delivery->received_on->format('M d, Y') }}</div>
+                        @if($delivery->isVoided())
+                            <span class="badge text-bg-danger">Voided</span>
+                        @elseif($delivery->correction_revision > 0)
+                            <span class="badge text-bg-warning">Corrected · revision {{ $delivery->correction_revision }}</span>
+                        @endif
+                        @can('viewCorrections', $delivery)
+                            <div class="mt-1"><a class="small" href="{{ route('deliveries.corrections.index', $delivery) }}">Correction history</a></div>
+                        @endcan
+                        @can('correct', $delivery)
+                            @unless($delivery->isVoided())
+                                <div class="mt-1"><a class="small" href="{{ route('deliveries.corrections.create', $delivery) }}">Correct delivery</a></div>
+                            @endunless
+                        @endcan
+                    </td>
                     <td>@if($delivery->inventoryItem && ! $delivery->inventoryItem->trashed())<a href="{{ route('inventory.show', $delivery->inventoryItem) }}">{{ $delivery->inventoryItem->name }}</a>@else{{ $delivery->inventoryItem?->name ?? 'Archived item' }}@endif</td>
                     <td>
                         @if($delivery->inventoryBatch)
@@ -32,8 +48,22 @@
                         @endif
                     </td>
                     <td><div>Receipt: {{ $delivery->delivery_receipt_number ?: 'Not recorded' }}</div><div>Invoice: {{ $delivery->invoice_number ?: 'Not recorded' }}</div>@if($delivery->reference)<div class="small text-muted">Reference: {{ $delivery->reference }}</div>@endif</td>
-                    <td>{{ $delivery->quantity }} {{ $delivery->unit_of_measurement ?: $delivery->inventoryItem?->unit }}</td>
-                    <td>{{ $delivery->unit_cost !== null ? $currencySymbol.number_format((float) $delivery->unit_cost, 2) : 'Not recorded' }}</td>
+                    <td>
+                        {{ $delivery->quantity }} {{ $delivery->unit_of_measurement ?: $delivery->inventoryItem?->unit }}
+                        @can('viewCorrections', $delivery)
+                            @if($delivery->original_data !== null)
+                                <div class="small text-muted">Originally {{ $delivery->original_data['quantity'] }} {{ $delivery->original_data['unit_of_measurement'] ?: $delivery->inventoryItem?->unit }}</div>
+                            @endif
+                        @endcan
+                    </td>
+                    <td>
+                        {{ $delivery->unit_cost !== null ? $currencySymbol.number_format((float) $delivery->unit_cost, 2) : 'Not recorded' }}
+                        @can('viewCorrections', $delivery)
+                            @if(isset($delivery->original_data['unit_cost']) && $delivery->original_data['unit_cost'] !== $delivery->unit_cost)
+                                <div class="small text-muted">Originally {{ $currencySymbol.number_format((float) $delivery->original_data['unit_cost'], 2) }}</div>
+                            @endif
+                        @endcan
+                    </td>
                     <td>{{ $delivery->unit_cost !== null ? $currencySymbol.number_format($delivery->quantity * (float) $delivery->unit_cost, 2) : 'Not recorded' }}</td>
                     <td>{{ $delivery->remaining_quantity }}</td>
                     <td>{{ $delivery->receiver?->name ?? 'Not recorded' }}</td>

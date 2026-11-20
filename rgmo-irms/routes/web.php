@@ -5,6 +5,7 @@ use App\Http\Controllers\AIForecastingController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeliveryCorrectionController;
 use App\Http\Controllers\FundingSourceController;
 use App\Http\Controllers\GeneratedReportSnapshotController;
 use App\Http\Controllers\IncidentReportController;
@@ -82,6 +83,19 @@ Route::middleware('auth')->group(function () {
         Route::post('/ai-forecasting/explanation', [AIForecastingController::class, 'explanation'])
             ->middleware('throttle:10,1')
             ->name('ai-forecasting.explanation.generate');
+    });
+
+    Route::middleware('permission:view-delivery-corrections')->group(function () {
+        Route::get('/delivery-corrections', [DeliveryCorrectionController::class, 'overview'])
+            ->name('deliveries.corrections.overview');
+        Route::get('/deliveries/{delivery}/corrections', [DeliveryCorrectionController::class, 'index'])
+            ->name('deliveries.corrections.index');
+    });
+    Route::middleware('permission:correct-deliveries')->group(function () {
+        Route::get('/deliveries/{delivery}/corrections/create', [DeliveryCorrectionController::class, 'create'])
+            ->name('deliveries.corrections.create');
+        Route::post('/deliveries/{delivery}/corrections', [DeliveryCorrectionController::class, 'store'])
+            ->middleware('throttle:20,1')->name('deliveries.corrections.store');
     });
 
     Route::middleware('permission:manage-inventory,manage-purchase-orders,approve-purchase-orders')->group(function () {

@@ -552,7 +552,16 @@ class ResourceRequestService
                 $line->increment('withdrawn_quantity', $quantity);
                 $transaction = app(InventoryService::class)->recordStockOut($item, $quantity, 'resource_request_'.$locked->id, auth()->id(), null, 'WD-'.$withdrawal->id, null, $date);
                 $deliveryIds = collect($transaction->meta['deliveries'] ?? [])->pluck('delivery_id');
-                if (Delivery::whereIn('id', $deliveryIds)->whereDate('received_on', '>', $date)->exists()) {
+                $deliverySnapshots = $transaction->meta['delivery_snapshots'] ?? [];
+                $predatesReceipt = Delivery::whereIn('id', $deliveryIds)->get(['id', 'received_on', 'original_data'])
+                    ->contains(function (Delivery $delivery) use ($deliverySnapshots, $date) {
+                        $receivedOn = $deliverySnapshots[$delivery->id]['received_on']
+                            ?? $delivery->original_data['received_on']
+                            ?? $delivery->received_on->toDateString();
+
+                        return $receivedOn > $date;
+                    });
+                if ($predatesReceipt) {
                     throw ValidationException::withMessages(['withdrawn_on' => 'A withdrawal cannot predate the delivery of its stock.']);
                 }
                 $withdrawal->items()->create([

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class InventoryTransaction extends Model
@@ -53,6 +54,18 @@ class InventoryTransaction extends Model
      */
     public function getDetailsAttribute(): string
     {
+        if ($this->meta['delivery_correction'] ?? false) {
+            if ($this->correctionDetailsRestricted()) {
+                return 'Delivery correction: DEL-'.($this->meta['delivery_id'] ?? 'Not recorded')
+                    .' | Reference: '.($this->reference ?: 'Not recorded');
+            }
+
+            return 'Delivery correction: DEL-'.($this->meta['delivery_id'] ?? 'Not recorded')
+                .' | '.($this->reason ?: 'Recorded delivery correction')
+                .' | Incident report: '.($this->incident_report_reference ?: 'Not recorded')
+                .($this->stock_before !== null ? ' | Balance: '.$this->stock_before.' → '.$this->stock_after : '')
+                .' | Reference: '.($this->reference ?: 'Not recorded');
+        }
         if ($this->is_adjustment) {
             return 'Stock adjustment: '.($this->reason ?: $this->source ?: $this->destination ?: 'Historical adjustment')
                 .' | Incident report: '.($this->incident_report_reference ?: 'Not recorded')
@@ -68,6 +81,31 @@ class InventoryTransaction extends Model
         }
 
         return $this->meta ? json_encode($this->meta) : 'N/A';
+    }
+
+    /** Return a presentation copy; authorization must never erase the stored audit details. */
+    public function forViewer(User $viewer): self
+    {
+        $copy = clone $this;
+        if (Gate::forUser($viewer)->denies('viewAnyCorrections', Delivery::class)) {
+            if ($this->meta['delivery_correction'] ?? false) {
+                $copy->reason = null;
+                $copy->incident_report_reference = null;
+                $copy->makeHidden(['reason', 'incident_report_reference']);
+            }
+            if (isset($this->meta['delivery_snapshots'])) {
+                $meta = $copy->meta;
+                unset($meta['delivery_snapshots']);
+                $copy->meta = $meta;
+            }
+        }
+
+        return $copy;
+    }
+
+    public function correctionDetailsRestricted(): bool
+    {
+        return ($this->meta['delivery_correction'] ?? false) && in_array('reason', $this->getHidden(), true);
     }
 
     /**

@@ -246,7 +246,7 @@
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                                     @if($transaction->transaction_type === 'stock_in') bg-green-100 text-green-800
                                                     @else bg-red-100 text-red-800 @endif">
-                                                    {{ $transaction->is_adjustment ? 'Adjustment · '.($transaction->transaction_type === 'stock_in' ? 'Increase' : 'Decrease') : ucfirst(str_replace('_', ' ', $transaction->transaction_type)) }}
+                                                    {{ ($transaction->meta['delivery_correction'] ?? false) ? 'Delivery correction' : ($transaction->is_adjustment ? 'Adjustment · '.($transaction->transaction_type === 'stock_in' ? 'Increase' : 'Decrease') : ucfirst(str_replace('_', ' ', $transaction->transaction_type))) }}
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -256,7 +256,7 @@
                                                 {{ $transaction->is_adjustment ? ($transaction->meta['recorded_by']['name'] ?? $transaction->user?->name ?? 'System') : ($transaction->user?->name ?? 'System') }}
                                             </td>
                                             <td class="px-6 py-4 text-sm">{{ $transaction->stock_before !== null ? $transaction->stock_before.' → '.$transaction->stock_after : '—' }}</td>
-                                            <td class="px-6 py-4 text-sm">{{ $transaction->incident_report_reference ?: ($transaction->is_adjustment ? 'Not recorded (historical)' : '—') }}</td>
+                                            <td class="px-6 py-4 text-sm">{{ $transaction->correctionDetailsRestricted() ? 'Restricted' : ($transaction->incident_report_reference ?: ($transaction->is_adjustment ? 'Not recorded (historical)' : '—')) }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {{ $transaction->details ?? 'N/A' }}
                                             </td>

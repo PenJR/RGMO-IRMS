@@ -157,6 +157,7 @@ class InventoryItem extends Model
     {
         $asOf ??= today()->toDateString();
         $allocations = [];
+        $deliverySnapshots = [];
         $batchAllocations = [];
         $historical = 0;
         $batches = $this->batches()->where('stock', '>', 0)->with(['deliveries' => fn ($q) => $q
@@ -218,6 +219,14 @@ class InventoryItem extends Model
             if ($row['lot']) {
                 $row['lot']->decrement('remaining_quantity', $take);
                 $allocations[] = ['delivery_id' => $row['lot']->id, 'quantity' => $take];
+                $deliverySnapshots[$row['lot']->id] = [
+                    'received_on' => $row['lot']->received_on->toDateString(),
+                    'delivery_receipt_number' => $row['lot']->delivery_receipt_number,
+                    'invoice_number' => $row['lot']->invoice_number,
+                    'reference' => $row['lot']->reference,
+                    'unit_cost' => $row['lot']->unit_cost,
+                    'unit_of_measurement' => $row['lot']->unit_of_measurement,
+                ];
             } else {
                 $historical += $take;
             }
@@ -227,7 +236,7 @@ class InventoryItem extends Model
             throw ValidationException::withMessages(['quantity' => 'Insufficient usable batch stock for this date. Expired or undated perishable stock cannot be released.']);
         }
 
-        return ['deliveries' => $allocations, 'historical_quantity' => $historical, 'batches' => array_values($batchAllocations)];
+        return ['deliveries' => $allocations, 'delivery_snapshots' => $deliverySnapshots, 'historical_quantity' => $historical, 'batches' => array_values($batchAllocations)];
     }
 
     protected $appends = ['reserved_quantity', 'available_stock', 'usable_stock', 'expired_stock', 'quarantined_stock'];

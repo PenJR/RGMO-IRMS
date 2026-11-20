@@ -139,6 +139,6 @@ class Procurement extends Model
 
     public function getRemainingQuantityAttribute(): int
     {
-        return max(0, $this->quantity - ($this->deliveries_sum_quantity ?? $this->deliveries()->sum('quantity')));
+        return max(0, $this->quantity - ($this->deliveries_sum_quantity ?? $this->deliveries()->whereNull('voided_at')->sum('quantity')));
     }
 }

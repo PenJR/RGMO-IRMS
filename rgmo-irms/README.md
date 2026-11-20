@@ -9,6 +9,7 @@ RGMO-IRMS is a Laravel-based Inventory and Resource Management System for the Re
 - Operational incident reports with private evidence, Storekeeper investigation, and administrator-controlled resolution and stock adjustments.
 - Reports and CSV/PDF exports for authorized roles.
 - Saved report and forecast history with original figures, filters, generator details, and PDF/CSV/JSON downloads.
+- Administrator-controlled delivery corrections and unused-receipt voids, with original receipt preservation and read-only oversight for RGMO Heads and Auditors.
 - Forecasting, personal notifications, and dashboard summaries.
 - Authentication, optional two-factor verification, user administration, and audit history.
 - Administrator-triggered backups and scheduled maintenance.

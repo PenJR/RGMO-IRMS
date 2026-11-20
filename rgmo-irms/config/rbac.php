@@ -9,6 +9,8 @@ return [
                 'assign-roles',
                 'manage-inventory',
                 'adjust-stock',
+                'correct-deliveries',
+                'view-delivery-corrections',
                 'manage-purchase-orders',
                 'approve-purchase-orders',
                 'view-suppliers',
@@ -56,6 +58,7 @@ return [
                 'view-projects', 'view-inventory', 'approve-purchase-orders', 'review-request', 'approve-request',
                 'monitor-status', 'view-history', 'generate-reports',
                 'view-forecasts', 'receive-notifications',
+                'view-delivery-corrections',
             ],
         ],
         'storekeeper' => [
@@ -78,6 +81,7 @@ return [
             'permissions' => [
                 'view-audit-trail', 'generate-reports', 'monitor-status', 'view-history',
                 'request-correction', 'view-incidents',
+                'view-delivery-corrections',
             ],
         ],
     ],
@@ -87,6 +91,8 @@ return [
         'assign-roles' => 'Assign roles and permissions',
         'manage-inventory' => 'Manage inventory records',
         'adjust-stock' => 'Record administrator stock adjustments with incident reports',
+        'correct-deliveries' => 'Record controlled delivery corrections and void unused receipts (Administrator only)',
+        'view-delivery-corrections' => 'View original receipts and delivery correction history',
         'manage-purchase-orders' => 'Create, edit, submit, and cancel purchase orders',
         'approve-purchase-orders' => 'Approve or reject purchase orders',
         'view-suppliers' => 'View suppliers',

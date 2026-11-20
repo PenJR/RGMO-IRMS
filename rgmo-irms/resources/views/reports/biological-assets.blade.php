@@ -52,7 +52,7 @@
                             <tr>
                                 <th>Area (ha/Qty)</th>
                                 <th>Value</th>
-                                <th>ADDITION Area</th>
+                                <th>Additions / corrections Qty</th>
                                 <th>Value</th>
                                 <th>DEDUCTION Area</th>
                                 <th>Value</th>

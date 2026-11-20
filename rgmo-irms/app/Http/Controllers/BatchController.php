@@ -67,7 +67,8 @@ class BatchController extends Controller
                 ->orderByDesc('received_on')->orderByDesc('id')->paginate(10, ['*'], 'deliveries_page'),
             'transactions' => $batch->transactions()->with('user')
                 ->orderByDesc('inventory_transactions.created_at')->orderByDesc('inventory_transactions.id')
-                ->paginate(15, ['inventory_transactions.*'], 'transactions_page'),
+                ->paginate(15, ['inventory_transactions.*'], 'transactions_page')
+                ->through(fn ($transaction) => $transaction->forViewer(auth()->user())),
         ]);
     }
 

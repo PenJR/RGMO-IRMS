@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 class Delivery extends Model
 {
@@ -11,7 +13,32 @@ class Delivery extends Model
 
     protected function casts(): array
     {
-        return ['received_on' => 'date', 'unit_cost' => 'decimal:2'];
+        return [
+            'received_on' => 'date', 'unit_cost' => 'decimal:2',
+            'correction_revision' => 'integer', 'original_data' => 'array', 'voided_at' => 'immutable_datetime',
+        ];
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(function (Delivery $delivery) {
+            if ($delivery->getOriginal('original_data') !== null && $delivery->isDirty('original_data')) {
+                throw ValidationException::withMessages(['delivery' => 'The original delivery snapshot cannot be changed.']);
+            }
+        });
+        static::deleting(function () {
+            throw ValidationException::withMessages(['delivery' => 'Recorded deliveries cannot be deleted. Use a controlled correction or void instead.']);
+        });
+    }
+
+    public function corrections(): HasMany
+    {
+        return $this->hasMany(DeliveryCorrection::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    public function isVoided(): bool
+    {
+        return $this->voided_at !== null;
     }
 
     public function procurementItem(): BelongsTo

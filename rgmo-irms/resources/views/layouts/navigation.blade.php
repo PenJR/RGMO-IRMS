@@ -105,7 +105,7 @@
         @endif
 
         @if(auth()->user()->hasPermission(['generate-reports', 'view-audit-trail']))
-            <details class="nav-group {{ request()->routeIs('reports.*') ? 'active' : '' }}" data-sidebar-item="reports" draggable="true" {{ request()->routeIs('reports.*') ? 'open' : '' }}>
+            <details class="nav-group {{ request()->routeIs('reports.*', 'deliveries.corrections.*') ? 'active' : '' }}" data-sidebar-item="reports" draggable="true" {{ request()->routeIs('reports.*', 'deliveries.corrections.*') ? 'open' : '' }}>
                 <summary>
                     <span class="nav-group-toggle" data-sidebar-tooltip="Reports" aria-label="Reports">
                         <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span>
@@ -117,6 +117,9 @@
                 <div class="nav-submenu">
                     <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}">Reporting Center</a>
                     <a href="{{ route('reports.history.index') }}" class="nav-link {{ request()->routeIs('reports.history.*') ? 'active' : '' }}">Saved Report History</a>
+                    @can('viewAnyCorrections', \App\Models\Delivery::class)
+                        <a href="{{ route('deliveries.corrections.overview') }}" class="nav-link {{ request()->routeIs('deliveries.corrections.*') ? 'active' : '' }}">Delivery Corrections</a>
+                    @endcan
                     <a href="{{ route('reports.inventory') }}" class="nav-link {{ request()->routeIs('reports.inventory') ? 'active' : '' }}">Inventory Summary</a>
                     <a href="{{ route('reports.biological-assets') }}" class="nav-link {{ request()->routeIs('reports.biological-assets') ? 'active' : '' }}">Biological Assets (Weekly)</a>
                     <a href="{{ route('reports.supplies-issuance') }}" class="nav-link {{ request()->routeIs('reports.supplies-issuance') ? 'active' : '' }}">Supplies Issuance (Monthly)</a>

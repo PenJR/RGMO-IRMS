@@ -19,11 +19,12 @@ class ProcurementService
     public function calculate(Procurement $procurement): array
     {
         $procurement->loadMissing(['items', 'deliveries']);
+        $deliveries = $procurement->deliveries->whereNull('voided_at');
         $ordered = (int) $procurement->items->sum('ordered_quantity');
-        $received = max((int) $procurement->items->sum('received_quantity'), (int) $procurement->deliveries->sum('quantity'));
+        $received = max((int) $procurement->items->sum('received_quantity'), (int) $deliveries->sum('quantity'));
         if ($procurement->items->isEmpty()) {
             $ordered = (int) $procurement->quantity;
-            $received = (int) $procurement->deliveries()->sum('quantity');
+            $received = (int) $deliveries->sum('quantity');
         }
         $remaining = max(0, $ordered - $received);
         $outstanding = '0.00';
@@ -55,7 +56,7 @@ class ProcurementService
             'total' => $total,
             'outstanding' => $outstanding,
             'overdue' => $overdue,
-            'delivery_count' => $procurement->deliveries_count ?? $procurement->deliveries()->count(),
+            'delivery_count' => $deliveries->count(),
             'progress' => $ordered > 0 ? (int) round(min(100, $received / $ordered * 100)) : 0,
         ];
     }
@@ -77,7 +78,8 @@ class ProcurementService
                 $total = $this->decimalAdd($total, $procurement->monitoring['total']);
             }
             $outstanding = $this->decimalAdd($outstanding, $procurement->monitoring['outstanding']);
-            foreach ($procurement->deliveries as $delivery) {
+            $deliveries = $procurement->deliveries->whereNull('voided_at');
+            foreach ($deliveries as $delivery) {
                 $receivedValue = $this->decimalAdd($receivedValue, $this->decimalMultiply(
                     (string) $delivery->quantity,
                     (string) ($delivery->unit_cost ?? $procurement->items->firstWhere('inventory_item_id', $delivery->inventory_item_id)?->unit_cost ?? $procurement->unit_cost)
@@ -85,7 +87,7 @@ class ProcurementService
             }
             // Keep historical received quantities that have no corresponding delivery detail.
             foreach ($procurement->items as $line) {
-                $unrecorded = max(0, $line->received_quantity - $procurement->deliveries
+                $unrecorded = max(0, $line->received_quantity - $deliveries
                     ->where('inventory_item_id', $line->inventory_item_id)->sum('quantity'));
                 $receivedValue = $this->decimalAdd($receivedValue, $this->decimalMultiply(
                     (string) $unrecorded, (string) $line->unit_cost

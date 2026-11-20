@@ -27,6 +27,7 @@ class SupplierPriceController extends Controller
             $comparisons = DB::query()->fromSub((clone $history)->select('deliveries.*'), 'deliveries')
                 ->join('procurements', 'procurements.id', '=', 'deliveries.procurement_id')
                 ->leftJoin('suppliers', 'suppliers.id', '=', 'procurements.supplier_id')
+                ->whereNull('deliveries.voided_at')
                 ->whereNotNull('deliveries.unit_cost')->where('deliveries.quantity', '>', 0)
                 ->selectRaw('procurements.supplier_id, COALESCE(suppliers.company_name, procurements.supplier_name) as supplier_name, deliveries.unit_of_measurement')
                 ->selectRaw('COUNT(*) as delivery_count, SUM(deliveries.quantity) as received_quantity')

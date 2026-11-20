@@ -15,7 +15,7 @@
                 <th rowspan="2" style="width: 4%;">Unit</th>
                 <th rowspan="2" style="width: 6%;">Value (Php)</th>
                 <th colspan="{{ count($fundingSources) * 2 + 2 }}">Beginning Balance</th>
-                <th colspan="2">Delivered</th>
+                <th colspan="2">Delivered / corrected</th>
                 <th colspan="2">Withdrawals</th>
                 <th colspan="2">Ending Balance</th>
                 <th rowspan="2" style="width: 6%;">Remarks</th>
