@@ -15,6 +15,7 @@
             </div>
         </div>
         <x-report-document-header title="Monthly Inventory of Agricultural Materials and Other Supplies" period="As of {{ DateTime::createFromFormat('!m', $month)->format('F') }} {{ $year }}" type="Monthly official report" />
+        @include('reports.partials.save-snapshot', ['reportKey' => 'monthly-inventory', 'snapshotFilters' => ['month' => $month, 'year' => $year]])
 
         <div class="card border-0 shadow-sm mb-4 d-print-none">
             <div class="card-body p-4">

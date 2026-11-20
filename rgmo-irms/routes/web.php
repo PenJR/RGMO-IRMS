@@ -6,6 +6,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FundingSourceController;
+use App\Http\Controllers\GeneratedReportSnapshotController;
 use App\Http\Controllers\IncidentReportController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\NotificationController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\ProcurementDraftController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReportSnapshotGenerationController;
 use App\Http\Controllers\ResourceRequestController;
 use App\Http\Controllers\ResourceUsageController;
 use App\Http\Controllers\SupplierController;
@@ -72,9 +74,14 @@ Route::middleware('auth')->group(function () {
     // Inventory demand forecasting
     Route::middleware(['permission:view-forecasts'])->group(function () {
         Route::get('/ai-forecasting', [AIForecastingController::class, 'index'])->name('ai-forecasting.index');
+        Route::post('/ai-forecasting', [AIForecastingController::class, 'generate'])
+            ->middleware('throttle:20,1')->name('ai-forecasting.generate');
         Route::get('/ai-forecasting/explanation', [AIForecastingController::class, 'explanation'])
             ->middleware('throttle:10,1')
             ->name('ai-forecasting.explanation');
+        Route::post('/ai-forecasting/explanation', [AIForecastingController::class, 'explanation'])
+            ->middleware('throttle:10,1')
+            ->name('ai-forecasting.explanation.generate');
     });
 
     Route::middleware('permission:manage-inventory,manage-purchase-orders,approve-purchase-orders')->group(function () {
@@ -190,6 +197,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/2fa/disable', [TwoFactorController::class, 'disable'])->middleware('throttle:5,1')->name('2fa.disable');
 
     // Reports
+    Route::middleware('permission:generate-reports,view-audit-trail,view-forecasts')->prefix('reports/history')->name('reports.history.')->group(function () {
+        Route::get('/', [GeneratedReportSnapshotController::class, 'index'])->name('index');
+        Route::post('/', [ReportSnapshotGenerationController::class, 'store'])->middleware('throttle:20,1')->name('generate');
+        Route::get('/{snapshot}', [GeneratedReportSnapshotController::class, 'show'])->whereUuid('snapshot')->name('show');
+        Route::get('/{snapshot}/pdf', [GeneratedReportSnapshotController::class, 'pdf'])->whereUuid('snapshot')->name('pdf');
+        Route::get('/{snapshot}/csv', [GeneratedReportSnapshotController::class, 'csv'])->whereUuid('snapshot')->name('csv');
+        Route::get('/{snapshot}/json', [GeneratedReportSnapshotController::class, 'json'])->whereUuid('snapshot')->name('json');
+    });
+
     Route::middleware(['permission:generate-reports,view-audit-trail'])->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/forms/{template}', [ReportController::class, 'formTemplate'])->name('reports.forms.show');

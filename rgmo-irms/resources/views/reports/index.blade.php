@@ -4,6 +4,10 @@
     <div class="container-fluid py-4">
         <x-breadcrumb :items="['Reports' => route('reports.index')]" compact />
         <x-report-document-header title="RGMO Reporting Center" period="Choose a report, set its reporting period, then print or export the approved format." type="Official formats" />
+        <div class="card border-0 shadow-sm mb-4"><div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div><h3 class="h5 mb-1">Saved report and forecast history</h3><p class="text-muted mb-0">Reopen previously generated results with their original figures, filters, and generator details.</p></div>
+            <a href="{{ route('reports.history.index') }}" class="btn btn-cmu">Open saved history</a>
+        </div></div>
 
         <div class="row g-4">
             <div class="col-12"><h3 class="report-section-title">Official submission formats</h3></div>

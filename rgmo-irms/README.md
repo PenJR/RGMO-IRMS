@@ -8,11 +8,22 @@ RGMO-IRMS is a Laravel-based Inventory and Resource Management System for the Re
 - Project records and a request → review → approval → release → utilization workflow.
 - Operational incident reports with private evidence, Storekeeper investigation, and administrator-controlled resolution and stock adjustments.
 - Reports and CSV/PDF exports for authorized roles.
+- Saved report and forecast history with original figures, filters, generator details, and PDF/CSV/JSON downloads.
 - Forecasting, personal notifications, and dashboard summaries.
 - Authentication, optional two-factor verification, user administration, and audit history.
 - Administrator-triggered backups and scheduled maintenance.
 
 Stock is deducted when resources are released. Actual utilization is recorded separately against released request items and does not deduct stock again.
+
+## Saved report and forecast history
+
+Run `php artisan migrate` when updating an existing installation to create the persistent report snapshot and saved forecast explanation tables.
+
+Open **Reports → Saved Report History** to search by report type, generation date, generator name, title, or snapshot ID. Report pages provide **Save to history**, which generates and saves a complete copy using the displayed filters. Generating a forecast saves it automatically and redirects to its saved dashboard. Refreshing a saved result or downloading it reads its stored values without recalculating inventory or forecasts. Submitting the same generation form again reopens the same saved result.
+
+History preserves item and funding labels, quantities, calculated values, currency, reporting period, and generator name. Changes to source records or settings do not change a saved result. Audit reports capture all matching entries across pages. Blank print-ready forms do not create history. Optional AI forecast summaries are generated on request from the saved numerical forecast; the first successful summary is saved separately with its own generation details.
+
+Access follows current permissions for each report type: `generate-reports` for normal reports, `view-audit-trail` for audit reports, and `view-forecasts` for forecasts. Authorized users share office history for their permitted types. Saved results have no edit or delete action. Existing results generated before this feature cannot be recovered retrospectively. Older bookmarked GET forecast generation URLs remain live previews; use **Generate Forecast** to save a new result.
 
 ## Documentation
 

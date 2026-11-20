@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\FundingSource;
+use App\Models\GeneratedReportSnapshot;
 use App\Models\IncidentReport;
 use App\Models\InventoryItem;
 use App\Models\Procurement;
@@ -11,6 +12,7 @@ use App\Models\Project;
 use App\Models\ResourceRequest;
 use App\Models\User;
 use App\Policies\FundingSourcePolicy;
+use App\Policies\GeneratedReportSnapshotPolicy;
 use App\Policies\IncidentReportPolicy;
 use App\Policies\InventoryItemPolicy;
 use App\Policies\ProcurementDraftPolicy;
@@ -32,6 +34,7 @@ class AuthServiceProvider extends ServiceProvider
         InventoryItem::class => InventoryItemPolicy::class,
         IncidentReport::class => IncidentReportPolicy::class,
         FundingSource::class => FundingSourcePolicy::class,
+        GeneratedReportSnapshot::class => GeneratedReportSnapshotPolicy::class,
         ResourceRequest::class => ResourceRequestPolicy::class,
         Procurement::class => ProcurementPolicy::class,
         ProcurementDraft::class => ProcurementDraftPolicy::class,

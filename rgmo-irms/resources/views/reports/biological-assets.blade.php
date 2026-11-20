@@ -15,6 +15,7 @@
             </div>
         </div>
         <x-report-document-header title="Weekly Report of Biological Assets and Agricultural Produce" period="Reporting period: {{ $startDate->format('M d, Y') }} – {{ $endDate->format('M d, Y') }}" type="Weekly official report" />
+        @include('reports.partials.save-snapshot', ['reportKey' => 'biological-assets', 'snapshotFilters' => ['start_date' => $startDate->toDateString(), 'end_date' => $endDate->toDateString()]])
 
         <div class="card border-0 shadow-sm mb-4 d-print-none">
             <div class="card-body p-4">

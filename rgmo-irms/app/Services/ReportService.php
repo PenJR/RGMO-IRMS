@@ -93,8 +93,8 @@ class ReportService
         $query = ResourceUsage::query()
             ->with('item', 'user', 'project');
 
-        if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
-            $query->dateRange($filters['start_date'], $filters['end_date']);
+        if (! empty($filters['start_date']) || ! empty($filters['end_date'])) {
+            $query->dateRange($filters['start_date'] ?? '0001-01-01', $filters['end_date'] ?? '9999-12-31');
         }
 
         if (! empty($filters['user_id'])) {
@@ -143,8 +143,11 @@ class ReportService
             $query->byUser($filters['user_id']);
         }
 
-        if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
-            $query->dateRange($filters['start_date'], $filters['end_date']);
+        if (! empty($filters['start_date'])) {
+            $query->where('created_at', '>=', Carbon::parse($filters['start_date'])->startOfDay());
+        }
+        if (! empty($filters['end_date'])) {
+            $query->where('created_at', '<=', Carbon::parse($filters['end_date'])->endOfDay());
         }
 
         return $query;
@@ -164,8 +167,11 @@ class ReportService
             $query->where('status', $filters['status']);
         }
 
-        if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
-            $query->dateRange($filters['start_date'], $filters['end_date']);
+        if (! empty($filters['start_date'])) {
+            $query->where('created_at', '>=', Carbon::parse($filters['start_date'])->startOfDay());
+        }
+        if (! empty($filters['end_date'])) {
+            $query->where('created_at', '<=', Carbon::parse($filters['end_date'])->endOfDay());
         }
 
         $requests = $query->get();

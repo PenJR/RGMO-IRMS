@@ -9,6 +9,7 @@ use App\Services\ReportService;
 use App\Support\InputRules;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
@@ -139,9 +140,7 @@ class ReportController extends Controller
      */
     public function biologicalAssets(Request $request)
     {
-        $dates = $request->validate(InputRules::dates());
-        $startDate = ! empty($dates['start_date']) ? Carbon::parse($dates['start_date']) : now()->startOfWeek();
-        $endDate = ! empty($dates['end_date']) ? Carbon::parse($dates['end_date']) : $startDate->copy()->endOfWeek();
+        [$startDate, $endDate] = $this->biologicalPeriod($request);
 
         $report = $this->reportService->getBiologicalAssetsReport($startDate, $endDate);
 
@@ -248,9 +247,7 @@ class ReportController extends Controller
      */
     public function exportBiologicalAssetsPdf(Request $request)
     {
-        $dates = $request->validate(InputRules::dates());
-        $startDate = ! empty($dates['start_date']) ? Carbon::parse($dates['start_date']) : now()->startOfWeek();
-        $endDate = ! empty($dates['end_date']) ? Carbon::parse($dates['end_date']) : $startDate->copy()->endOfWeek();
+        [$startDate, $endDate] = $this->biologicalPeriod($request);
 
         $report = $this->reportService->getBiologicalAssetsReport($startDate, $endDate);
 
@@ -333,6 +330,18 @@ class ReportController extends Controller
 
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function biologicalPeriod(Request $request): array
+    {
+        $dates = $request->validate(InputRules::dates());
+        $startDate = ! empty($dates['start_date']) ? Carbon::parse($dates['start_date'])->startOfDay() : now()->startOfWeek();
+        $endDate = ! empty($dates['end_date']) ? Carbon::parse($dates['end_date'])->endOfDay() : $startDate->copy()->endOfWeek();
+        if ($endDate->lessThan($startDate)) {
+            throw ValidationException::withMessages(['end_date' => 'The end date must be on or after the start date.']);
+        }
+
+        return [$startDate, $endDate];
     }
 
     private function monthlyPeriod(Request $request): array

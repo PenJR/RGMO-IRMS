@@ -8,6 +8,7 @@
     <div class="container-fluid py-4">
         <x-breadcrumb :items="['Reports' => '#', 'Audit Trail' => route('reports.audit-trail')]" />
         <x-report-document-header title="Audit Trail" period="System activity and configuration history" type="Controlled record" />
+        @include('reports.partials.save-snapshot', ['reportKey' => 'audit-trail', 'snapshotFilters' => $filters])
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">

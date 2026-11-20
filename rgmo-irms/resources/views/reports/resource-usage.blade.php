@@ -8,6 +8,7 @@
     <div class="container-fluid py-4">
         <x-breadcrumb :items="['Reports' => '#', 'Resource Usage' => route('reports.resource-usage')]" />
         <x-report-document-header title="Resource Usage Report" period="Consumption analysis for the selected reporting period" />
+        @include('reports.partials.save-snapshot', ['reportKey' => 'resource-usage', 'snapshotFilters' => $filters])
 
         <p class="text-muted">Older records may show released quantities. Linked records show actual usage.</p>
         <div class="card border-0 shadow-sm mb-4">

@@ -1,11 +1,24 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
             <h2 class="h5 fw-bold mb-0">Forecasts</h2>
+            <a href="{{ route('reports.history.index', ['report_key' => 'forecast']) }}" class="btn btn-sm btn-outline-secondary">
+                <i data-lucide="history" style="width: 16px; height: 16px;"></i>
+                Forecast History
+            </a>
         </div>
     </x-slot>
 
     <div class="container-fluid py-4">
+        @if($snapshot)
+            <div class="alert alert-info d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                <div>
+                    <strong>Saved forecast</strong>
+                    <div class="small">Generated {{ $snapshot->generated_at->format('M d, Y h:i A') }} by {{ $snapshot->generator_name }}. These results remain as originally generated.</div>
+                </div>
+                <a href="{{ route('reports.history.show', $snapshot) }}" class="btn btn-sm btn-outline-primary">View Saved Report &amp; Exports</a>
+            </div>
+        @endif
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
@@ -14,8 +27,9 @@
                     </div>
                     @if($generated)<span class="small text-muted">Generated {{ $as_of->format('M d, Y') }}</span>@endif
                 </div>
-                <form method="GET" action="{{ route('ai-forecasting.index') }}" class="row g-3 align-items-end">
-                    <input type="hidden" name="generate" value="1">
+                <form method="POST" action="{{ route('ai-forecasting.generate') }}" class="row g-3 align-items-end">
+                    @csrf
+                    <input type="hidden" name="generation_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
                     <div class="col-12 col-md-4 col-xl-3">
                         <label for="forecast-start" class="form-label small fw-semibold mb-1">Forecast start</label>
                         <input id="forecast-start" name="forecast_start" type="date" class="form-control" value="{{ $forecast_start->toDateString() }}" required>
@@ -26,6 +40,9 @@
                     </div>
                     <div class="col-12 col-md-auto">
                         <button type="submit" class="btn btn-cmu w-100">Generate Forecast</button>
+                    </div>
+                    <div class="col-12">
+                        <p class="small text-muted mb-0">Each generated forecast is saved to history.</p>
                     </div>
                 </form>
             </div>
@@ -162,7 +179,25 @@
                             <span class="badge text-bg-primary">Gemini</span>
                         </div>
                         <div class="card-body" id="ai-forecast-brief" aria-live="polite">
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="generate-ai-brief" data-endpoint="{{ route('ai-forecasting.explanation') }}" data-forecast-start="{{ $forecast_start->toDateString() }}" data-forecast-end="{{ $forecast_end->toDateString() }}">Generate Summary</button>
+                            @if($saved_ai_explanation)
+                                <p class="small mb-3">{{ $saved_ai_explanation['summary'] }}</p>
+                                @foreach(['priorities' => 'Priorities', 'warnings' => 'Warnings'] as $key => $label)
+                                    @if($saved_ai_explanation[$key])
+                                        <h6 class="small fw-bold">{{ $label }}</h6>
+                                        <ul class="small ps-3">
+                                            @foreach($saved_ai_explanation[$key] as $message)
+                                                <li>{{ $message }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @endif
+                                @endforeach
+                                <p class="small text-muted mb-0">Saved with this forecast.</p>
+                            @else
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="generate-ai-brief" data-endpoint="{{ route('ai-forecasting.explanation.generate') }}" data-snapshot="{{ $snapshot?->id }}" data-forecast-start="{{ $forecast_start->toDateString() }}" data-forecast-end="{{ $forecast_end->toDateString() }}">Generate Summary</button>
+                                @if($snapshot)
+                                    <p class="small text-muted mt-2 mb-0">The optional summary explains these saved results. Its first successful response is preserved with this forecast.</p>
+                                @endif
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -250,18 +285,23 @@
                     const controller = new AbortController();
                     const timeout = window.setTimeout(() => controller.abort(), 6000);
 
-                const parameters = new URLSearchParams({
-                    generate: '1',
-                    forecast_start: generateButton.dataset.forecastStart,
-                    forecast_end: generateButton.dataset.forecastEnd,
-                });
-                fetch(`${generateButton.dataset.endpoint}?${parameters}`, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    signal: controller.signal,
-                })
+                    const parameters = new URLSearchParams(generateButton.dataset.snapshot ? {
+                        snapshot: generateButton.dataset.snapshot,
+                    } : {
+                        generate: '1',
+                        forecast_start: generateButton.dataset.forecastStart,
+                        forecast_end: generateButton.dataset.forecastEnd,
+                    });
+                    fetch(generateButton.dataset.endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        },
+                        body: parameters,
+                        signal: controller.signal,
+                    })
                     .then(async (response) => {
                         const payload = await response.json().catch(() => ({}));
 
@@ -276,12 +316,36 @@
                         summary.className = 'small mb-3';
                         summary.textContent = payload.summary;
                         container.replaceChildren(summary);
+                        [['priorities', 'Priorities'], ['warnings', 'Warnings']].forEach(([key, label]) => {
+                            if (!Array.isArray(payload[key]) || payload[key].length === 0) return;
+
+                            const heading = document.createElement('h6');
+                            heading.className = 'small fw-bold';
+                            heading.textContent = label;
+                            const list = document.createElement('ul');
+                            list.className = 'small ps-3';
+                            payload[key].forEach((message) => {
+                                const item = document.createElement('li');
+                                item.textContent = message;
+                                list.append(item);
+                            });
+                            container.append(heading, list);
+                        });
+                        if (generateButton.dataset.snapshot) {
+                            const saved = document.createElement('p');
+                            saved.className = 'small text-muted mb-0';
+                            saved.textContent = 'Saved with this forecast.';
+                            container.append(saved);
+                        }
                     })
                     .catch((error) => {
                         const message = error.name === 'AbortError'
                             ? 'The AI brief timed out. The numerical forecast is still available.'
                             : error.message;
                         showMessage(message);
+                        generateButton.disabled = false;
+                        generateButton.textContent = 'Retry Summary';
+                        container.append(generateButton);
                     })
                     .finally(() => window.clearTimeout(timeout));
                 });

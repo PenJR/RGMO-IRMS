@@ -18,6 +18,7 @@
             (as of {{ $report['as_of']->format('F j, Y') }}). Remaining stock carries forward between years.
         </p>
         <x-report-document-header title="Inventory Summary" period="Fiscal year {{ $report['fiscal_year'] }} · Stock position as of {{ $report['as_of']->format('F j, Y') }}" />
+        @include('reports.partials.save-snapshot', ['reportKey' => 'inventory', 'snapshotFilters' => $filters])
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
