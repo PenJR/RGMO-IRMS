@@ -31,6 +31,8 @@ php artisan test tests/Feature/InputValidationTest.php
 php artisan test tests/Feature/ProcurementDraftTest.php tests/Feature/ProcurementDraftConversionTest.php tests/Feature/ProcurementDraftInterfaceTest.php
 node --test scripts/tests/purchase-draft-autosaver.test.mjs
 php artisan test tests/Feature/ReportHistoryTest.php tests/Feature/ReportHistoryExportsTest.php tests/Feature/ForecastSnapshotTest.php tests/Feature/AIForecastingTest.php
+php artisan test tests/Feature/LatestForecastDefaultTest.php
+php artisan test tests/Feature/YearEndInventorySnapshotTest.php tests/Feature/FiscalYearTest.php tests/Feature/ReportHistoryTest.php tests/Feature/ReportHistoryExportsTest.php
 php artisan test tests/Feature/DeliveryCorrectionTest.php tests/Feature/DeliveryCorrectionIntegrationTest.php tests/Feature/SupplierDeliveryTest.php tests/Feature/BatchInventoryTest.php
 php artisan test tests/Feature/PendingRequestQuantityEditTest.php tests/Feature/RequestWorkflowTest.php tests/Feature/RequestCorrectionTest.php tests/Feature/ManuscriptAccessControlTest.php
 ```
@@ -44,6 +46,9 @@ Use dedicated test accounts and clearly named test records. Check desktop and ph
 | Area | Expected result |
 |---|---|
 | Authentication | Each role can log in; logout then login opens the dashboard even after visiting another page. Test two-factor login where enabled. |
+| Year-end closing | Administrator previews a completed year and finalizes with reason/reference. Current/future years fail. Edit a price or stock after preview and verify finalization requires a refreshed review. Retry a successful submission and verify the same snapshot and a single closing audit entry. |
+| Annual permanence | On isolated test data, change source stock, item/category labels, prices, thresholds, currency, and archive status after closing. Saved annual HTML/PDF/CSV/JSON, Inventory Summary for that year, and saved history retain captured figures. Unknown prices remain explicit; large totals retain decimal precision. |
+| Annual access | RGMO Head and Auditor may read/export but cannot preview/finalize. Staff, Project Manager, Storekeeper, and Unit Head cannot read or close. Inactive/locked accounts and revoked explicit grants fail. No role has a snapshot edit/delete action. |
 | Administrator | Can manage users, inventory, projects, settings, backups, and audit records. Account safeguards still apply. |
 | RGMO Head | Can review/approve/reject and use reports/forecasts; cannot access account administration or audit exports. |
 | Project Manager | Can submit/view own requests; cannot edit pending requests, approve, release, record utilization, or access others' requests. |
@@ -58,6 +63,7 @@ Use dedicated test accounts and clearly named test records. Check desktop and ph
 | Saved history | Save a filtered report and generate a forecast; reopen them after changing source quantities, names, prices, currency, and funding labels. Original results and downloads stay fixed. Refresh and repeated submission do not duplicate snapshots. |
 | History access | RGMO Head cannot open audit snapshots; Auditor cannot open forecasts; ordinary Staff cannot open history. Test direct snapshot and PDF/CSV/JSON URLs as well as list filtering. |
 | Forecast summaries | Generate an optional summary from a saved forecast, then reopen it after source changes or AI configuration removal. The first successful saved summary remains available; failed requests preserve the numerical forecast and allow retry. |
+| Latest forecast | Open Forecasts with multiple saved results: the most recently generated authorized forecast appears with its original figures and dates. Refresh creates no snapshot or AI request. Explicit older links and date-only preparation still work; an empty archive shows the date-selection form. |
 | Notifications | Personal read/unread actions work and do not modify another user's notifications. |
 | Layout | Forms, account menu, sidebar, tables, and dialogs remain usable at phone and desktop sizes. |
 | Backup | A successful run produces an accessible ZIP; perform a separate restore rehearsal. |

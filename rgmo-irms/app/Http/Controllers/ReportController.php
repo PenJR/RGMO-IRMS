@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Models\YearEndInventorySnapshot;
 use App\Services\ReportService;
 use App\Support\InputRules;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -76,8 +77,10 @@ class ReportController extends Controller
      */
     public function inventory(Request $request)
     {
-        $filters = $request->validate(InputRules::reportFilters());
+        $this->authorize('viewAny', YearEndInventorySnapshot::class);
+        $filters = $request->validate(InputRules::inventoryReportFilters());
         $report = $this->reportService->getInventoryReport($filters);
+        $filters['fiscal_year'] = $report['fiscal_year'];
 
         return view('reports.inventory', [
             'report' => $report,
@@ -192,24 +195,37 @@ class ReportController extends Controller
      */
     public function exportInventoryCsv(Request $request)
     {
-        $filters = $request->validate(InputRules::reportFilters());
+        $this->authorize('viewAny', YearEndInventorySnapshot::class);
+        $filters = $request->validate(InputRules::inventoryReportFilters());
         $report = $this->reportService->getInventoryReport($filters);
 
         $filename = 'inventory_'.now()->format('Y-m-d_H-i-s').'.csv';
 
         $handle = fopen('php://memory', 'w');
-        fputcsv($handle, ['Item Name', 'Category', 'Stock as of FY '.$report['fiscal_year'], 'Min Stock', 'Unit', 'Price ('.SystemSetting::currencyCode().')', 'Status']);
+        $write = function (array $row) use ($handle): void {
+            fputcsv($handle, array_map(fn ($value) => is_string($value) && preg_match('/^\s*[=+\-@]/u', $value) ? "'".$value : $value, $row), ',', '"', '');
+        };
+        $write(['Fiscal year', $report['fiscal_year'], 'Source', $report['report_source']]);
+        if ($annual = $report['year_end_snapshot']) {
+            $write(['Permanent snapshot ID', $annual->id, 'Captured at', $annual->captured_at->toIso8601String()]);
+        }
+        foreach (['quantity_basis', 'metadata_basis', 'valuation_basis'] as $basis) {
+            $write([ucfirst(str_replace('_', ' ', $basis)), $report[$basis]]);
+        }
+        $write(['Priced value', $report['total_value'], 'Unpriced items', $report['missing_price_count']]);
+        $write(['Item Name', 'Category', 'Stock as of FY '.$report['fiscal_year'], 'Min Stock', 'Unit', 'Price ('.$report['currency']['code'].')', 'Status', 'Stock value']);
 
         foreach ($report['items'] as $item) {
-            fputcsv($handle, [
+            $write([
                 $item->name,
 
-                $item->category->name,
+                $item->category?->name ?? 'Uncategorized',
                 $item->stock_at_fiscal_year_end,
                 $item->min_stock,
                 $item->unit,
                 $item->price,
                 $item->stock_status_at_fiscal_year_end,
+                $item->stock_value,
             ]);
         }
 
@@ -230,13 +246,12 @@ class ReportController extends Controller
      */
     public function exportInventoryPdf(Request $request)
     {
-        $filters = $request->validate(InputRules::reportFilters());
+        $this->authorize('viewAny', YearEndInventorySnapshot::class);
+        $filters = $request->validate(InputRules::inventoryReportFilters());
         $report = $this->reportService->getInventoryReport($filters);
 
         $pdf = Pdf::loadView('reports.inventory-pdf', [
             'report' => $report,
-            'currencyCode' => SystemSetting::currencyCode(),
-            'currencySymbol' => SystemSetting::currencySymbol(),
         ]);
 
         return $pdf->download('inventory_'.now()->format('Y-m-d_H-i-s').'.pdf');

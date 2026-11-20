@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\GeneratedReportSnapshot;
 use App\Models\SystemSetting;
+use App\Support\DecimalFormatter;
+use Brick\Math\BigDecimal;
 use Illuminate\Support\Collection;
 
 class ReportSnapshotBuilder
@@ -14,11 +16,27 @@ class ReportSnapshotBuilder
         $snapshot = $this->base([
             'fiscal_year' => $report['fiscal_year'],
             'as_of' => $report['as_of']->toDateString(),
+            'timezone' => $report['as_of']->timezoneName,
+            'currency' => $report['currency'] ?? SystemSetting::currency(),
+            'report_source' => $report['report_source'] ?? 'live',
+            'is_provisional' => $report['is_provisional'] ?? false,
+            'quantity_basis' => $report['quantity_basis'] ?? 'As calculated when generated.',
+            'valuation_basis' => $report['valuation_basis'] ?? 'Unit prices available when generated.',
+            'metadata_basis' => $report['metadata_basis'] ?? 'Labels and settings available when generated.',
         ]);
+        if ($annual = $report['year_end_snapshot'] ?? null) {
+            $snapshot['metadata']['year_end_snapshot_id'] = $annual->id;
+            $snapshot['metadata']['year_end_captured_at'] = $annual->captured_at->toIso8601String();
+            $snapshot['metadata']['year_end_generated_by'] = $annual->generator_name;
+            $snapshot['metadata']['year_end_reference'] = $annual->reference;
+            $snapshot['metadata']['year_end_reason'] = $annual->reason;
+        }
+        $missingPrices = $report['missing_price_count'] ?? $report['items']->filter(fn ($item) => $item->price === null)->count();
         $snapshot['summary'] = $this->summary([
             'Total items' => $report['total_items'],
             'Low stock items' => $report['low_stock_items'],
-            'Total value' => $this->money($report['total_value'], $snapshot),
+            $missingPrices > 0 ? 'Priced subtotal (incomplete valuation)' : 'Total value' => $this->money($report['total_value'], $snapshot),
+            'Items without a recorded price' => $missingPrices,
         ]);
         $snapshot['sections'][] = $this->table('Inventory', [
             'name' => 'Item', 'sku' => 'SKU', 'category' => 'Category', 'stock' => 'Stock',
@@ -27,8 +45,8 @@ class ReportSnapshotBuilder
         ], $report['items']->map(fn ($item) => [
             'name' => $item->name, 'sku' => $item->sku, 'category' => $item->category?->name ?? 'Uncategorized',
             'stock' => (int) $item->stock_at_fiscal_year_end, 'unit' => $item->unit,
-            'min_stock' => (int) $item->min_stock, 'price' => $this->money($item->price, $snapshot),
-            'value' => $this->money($item->stock_at_fiscal_year_end * $item->price, $snapshot),
+            'min_stock' => (int) $item->min_stock, 'price' => $item->price === null ? 'Not recorded' : $this->money($item->price, $snapshot),
+            'value' => $item->price === null ? 'Not valued' : $this->money($item->stock_value ?? (string) BigDecimal::of($item->price)->multipliedBy($item->stock_at_fiscal_year_end)->toScale(2), $snapshot),
             'status' => ucfirst($item->stock_status_at_fiscal_year_end),
         ]));
 
@@ -226,16 +244,19 @@ class ReportSnapshotBuilder
 
     private function base(array $metadata = []): array
     {
+        $metadata['currency'] ??= SystemSetting::currency();
+        $metadata['timezone'] ??= config('app.timezone');
+
         return [
             'schema_version' => GeneratedReportSnapshot::SCHEMA_VERSION,
-            'metadata' => $metadata + ['currency' => SystemSetting::currency(), 'timezone' => config('app.timezone')],
+            'metadata' => $metadata,
             'summary' => [], 'sections' => [],
         ];
     }
 
     private function money(mixed $amount, array $snapshot): string
     {
-        return ($snapshot['metadata']['currency']['code'] ?? 'PHP').' '.number_format((float) $amount, 2);
+        return ($snapshot['metadata']['currency']['code'] ?? 'PHP').' '.DecimalFormatter::format($amount);
     }
 
     private function summary(array $values): array

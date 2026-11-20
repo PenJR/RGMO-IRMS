@@ -48,8 +48,9 @@ class ReportSnapshotGenerationController extends Controller
             return redirect()->route('reports.history.show', $existing);
         }
 
+        $inventory = $key === 'inventory' ? $this->reports->getInventoryReport($filters) : null;
         $snapshot = match ($key) {
-            'inventory' => $this->builder->inventory($this->reports->getInventoryReport($filters)),
+            'inventory' => $this->builder->inventory($inventory),
             'resource-usage' => $this->builder->resourceUsage($this->reports->getResourceUsageReport($filters)),
             'requests' => $this->builder->requests($this->reports->getResourceRequestReport($filters)),
             'audit-trail' => $this->builder->auditTrail($this->reports->auditTrailQuery($filters)->orderByDesc('created_at')->orderByDesc('id')->get()),
@@ -57,7 +58,9 @@ class ReportSnapshotGenerationController extends Controller
             'supplies-issuance' => $this->builder->suppliesIssuance($this->reports->getSuppliesIssuanceReport($filters['month'], $filters['year'])),
             'monthly-inventory' => $this->monthlyInventory($filters),
         };
-        $snapshot['metadata']['filter_labels'] = $this->filterLabels($filters);
+        $snapshot['metadata']['filter_labels'] = $key === 'inventory'
+            ? (empty($filters['category_id']) ? [] : ['category_id' => $inventory['items']->first()?->category?->name ?? 'No matching category in this report'])
+            : $this->filterLabels($filters);
         $saved = $this->snapshots->capture(
             $request->user(), $key, GeneratedReportSnapshot::reportTypes()[$key]['label'],
             $filters, $snapshot, $generationKey
@@ -91,12 +94,16 @@ class ReportSnapshotGenerationController extends Controller
         }
 
         $allowed = match ($key) {
-            'inventory' => ['category_id', 'low_stock'],
+            'inventory' => ['fiscal_year', 'category_id', 'low_stock'],
             'resource-usage' => ['start_date', 'end_date', 'user_id', 'item_id'],
             'requests' => ['start_date', 'end_date', 'status'],
             'audit-trail' => ['start_date', 'end_date', 'user_id', 'action', 'module'],
         };
-        $filters = Arr::only($request->validate(Arr::only(InputRules::reportFilters(), $allowed)), $allowed);
+        $rules = $key === 'inventory' ? InputRules::inventoryReportFilters() : InputRules::reportFilters();
+        $filters = Arr::only($request->validate(Arr::only($rules, $allowed)), $allowed);
+        if ($key === 'inventory') {
+            $filters['fiscal_year'] = (int) ($filters['fiscal_year'] ?? SystemSetting::fiscalYear());
+        }
         foreach (['category_id', 'user_id', 'item_id'] as $key) {
             if (isset($filters[$key])) {
                 $filters[$key] = (int) $filters[$key];

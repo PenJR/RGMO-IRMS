@@ -12,6 +12,7 @@ use App\Models\ProcurementDraft;
 use App\Models\Project;
 use App\Models\ResourceRequest;
 use App\Models\User;
+use App\Models\YearEndInventorySnapshot;
 use App\Policies\DeliveryPolicy;
 use App\Policies\FundingSourcePolicy;
 use App\Policies\GeneratedReportSnapshotPolicy;
@@ -22,6 +23,7 @@ use App\Policies\ProcurementPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\ResourceRequestPolicy;
 use App\Policies\UserPolicy;
+use App\Policies\YearEndInventorySnapshotPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -33,6 +35,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         User::class => UserPolicy::class,
+        YearEndInventorySnapshot::class => YearEndInventorySnapshotPolicy::class,
         Delivery::class => DeliveryPolicy::class,
         InventoryItem::class => InventoryItemPolicy::class,
         IncidentReport::class => IncidentReportPolicy::class,

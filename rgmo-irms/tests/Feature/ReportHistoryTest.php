@@ -327,9 +327,11 @@ class ReportHistoryTest extends TestCase
             $this->get(route($route))->assertOk();
         }
         $this->get(route('reports.forms.show', 'animal-physical-count'))->assertOk();
+        $emptyCategory = $this->get(route('reports.inventory', ['category_id' => 999999]))->assertOk();
+        $this->assertSame(0, $emptyCategory->viewData('report')['total_items']);
         $this->assertDatabaseCount('generated_report_snapshots', 0);
         $this->postJson(route('reports.history.generate'), [
-            'report_key' => 'inventory', 'generation_key' => (string) Str::uuid(), 'category_id' => 999999,
+            'report_key' => 'inventory', 'generation_key' => (string) Str::uuid(), 'category_id' => -1,
         ])->assertUnprocessable();
         $this->postJson(route('reports.history.generate'), [
             'report_key' => 'animal-physical-count', 'generation_key' => (string) Str::uuid(),
