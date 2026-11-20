@@ -32,6 +32,7 @@ php artisan test tests/Feature/ProcurementDraftTest.php tests/Feature/Procuremen
 node --test scripts/tests/purchase-draft-autosaver.test.mjs
 php artisan test tests/Feature/ReportHistoryTest.php tests/Feature/ReportHistoryExportsTest.php tests/Feature/ForecastSnapshotTest.php tests/Feature/AIForecastingTest.php
 php artisan test tests/Feature/DeliveryCorrectionTest.php tests/Feature/DeliveryCorrectionIntegrationTest.php tests/Feature/SupplierDeliveryTest.php tests/Feature/BatchInventoryTest.php
+php artisan test tests/Feature/PendingRequestQuantityEditTest.php tests/Feature/RequestWorkflowTest.php tests/Feature/RequestCorrectionTest.php tests/Feature/ManuscriptAccessControlTest.php
 ```
 
 Inspect actual results rather than copying old pass counts. SQLite tests do not establish PostgreSQL-specific behavior. Backup tests that mock a command do not create or restore a real archive.
@@ -50,6 +51,7 @@ Use dedicated test accounts and clearly named test records. Check desktop and ph
 | Fulfillment | Stock decreases once on release; repeated or invalid fulfillment is rejected. |
 | Utilization | Usage links to a released item, respects remaining quantity and valid dates, and does not deduct stock again. |
 | Validation | Invalid values produce visible errors; valid Unicode and permitted uploads still work. |
+| Pending quantities | Staff edits only their own initial pending request; Administrator can edit any pending request. Changes preserve item/line IDs and stock balances, record before/after quantities, and pass through verification again. Foreign IDs, invalid quantities, stale forms, and verified requests are rejected. |
 | Reports | Filters and exports match visible data and the role's scope. |
 | Delivery corrections | Administrator corrects a receipt or voids an unused lot with a reason/reference. Item/batch/PO balances change once; originals and prior release costs remain fixed. Issued quantities and reserved stock cannot be removed. |
 | Correction access | RGMO Head and Auditor can read correction history but direct mutation URLs return403. Storekeeper, Unit Head, Project Manager, and Staff cannot open the correction workflow. Revoked grants, inactive, and locked Administrator accounts are denied. |

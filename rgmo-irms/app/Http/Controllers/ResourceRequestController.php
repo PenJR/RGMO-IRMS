@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class ResourceRequestController extends Controller
 {
@@ -322,11 +323,14 @@ class ResourceRequestController extends Controller
     public function edit(ResourceRequest $request)
     {
         $this->authorize('update', $request);
+        $request->load('items.item');
 
         return view('requests.edit', [
-            'request' => $request->load('items'),
-            'items' => InventoryItem::active()->withReservationBalance()->get(),
+            'request' => $request,
+            'items' => InventoryItem::withTrashed()->withReservationBalance()
+                ->whereIn('id', $request->items->pluck('inventory_item_id'))->get(),
             'projects' => Project::query()->current()->orderBy('name')->get(),
+            'editToken' => $this->requestService->editToken($request),
         ]);
     }
 
@@ -343,16 +347,21 @@ class ResourceRequestController extends Controller
     {
         $this->authorize('update', $request);
 
-        $validated = $httpRequest->validate([
-            'project_id' => ['required', 'integer', new CurrentProject],
-            'purpose' => 'required|string|max:1000',
-            'remarks' => 'nullable|string|max:1000',
-            'needed_date' => 'nullable|date|after_or_equal:0001-01-01|before_or_equal:9999-12-31',
-        ]);
+        $httpRequest->validate($this->requestService->updateRules(true));
 
-        $this->requestService->updateRequest($request, $validated, (int) auth()->id());
+        try {
+            $this->requestService->updateRequest($request, $httpRequest->except(['_token', '_method']), (int) auth()->id());
+        } catch (HttpExceptionInterface $exception) {
+            if ($exception->getStatusCode() !== 409 || $httpRequest->expectsJson()) {
+                throw $exception;
+            }
 
-        return redirect()->route('requests.show', $request)->with('success', 'Resource request updated successfully.');
+            return redirect()->route('requests.edit', $request, 303)
+                ->withInput($httpRequest->except(['_token', '_method']))
+                ->withErrors(['edit_token' => 'This request changed after you opened it. Reload the current request and review its latest quantities before saving.']);
+        }
+
+        return redirect()->route('requests.show', $request, 303)->with('success', 'Resource request updated successfully.');
     }
 
     /**

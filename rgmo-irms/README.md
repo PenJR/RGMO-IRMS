@@ -6,6 +6,7 @@ RGMO-IRMS is a Laravel-based Inventory and Resource Management System for the Re
 
 - Inventory records, stock movements, low-stock thresholds, expiry tracking, and spreadsheet import/export.
 - Project records and a request → review → approval → release → utilization workflow.
+- Pending request quantity editing before Storekeeper verification, with ownership checks, stock validation, protection against stale forms, and before/after history.
 - Operational incident reports with private evidence, Storekeeper investigation, and administrator-controlled resolution and stock adjustments.
 - Reports and CSV/PDF exports for authorized roles.
 - Saved report and forecast history with original figures, filters, generator details, and PDF/CSV/JSON downloads.

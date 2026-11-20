@@ -44,19 +44,12 @@ class ResourceRequestPolicy
      */
     public function update(User $user, ResourceRequest $request): bool
     {
-        if (! $request->isPending()) {
+        if (! $user->isActive() || $user->isAccountLocked() || ! $request->isPending()) {
             return false;
         }
 
-        if ($user->hasPermission('manage-users')) {
-            return true;
-        }
-
-        if ($user->id === $request->user_id && $request->isPending() && $user->hasPermission('update-pending-request')) {
-            return true;
-        }
-
-        return false;
+        return in_array('update-pending-request', config('rbac.roles.'.$user->normalizedRole().'.permissions', []), true)
+            && ($user->isAdmin() || (int) $user->id === (int) $request->user_id);
     }
 
     /**

@@ -109,7 +109,11 @@ class OperationsController extends Controller
         $resourceRequest = ResourceRequest::findOrFail($requestId);
         $this->authorize('update', $resourceRequest);
 
-        return response()->json($this->service->updateRequest($requestId, $request->validate(['purpose' => 'sometimes|string|max:1000', 'remarks' => 'nullable|string|max:1000'])));
+        $requestService = app(ResourceRequestService::class);
+        $request->validate($requestService->updateRules());
+        $updated = $requestService->updateRequest($resourceRequest, $request->except(['_token', '_method']), (int) $request->user()->id);
+
+        return $this->editableRequestResponse($updated->load('items.inventoryItem', 'project'));
     }
 
     /**
@@ -151,7 +155,7 @@ class OperationsController extends Controller
         $resourceRequest = ResourceRequest::findOrFail($requestId);
         $this->authorize('view', $resourceRequest);
 
-        return response()->json($this->service->getRequestById($requestId));
+        return $this->editableRequestResponse($this->service->getRequestById($requestId));
     }
 
     /**
@@ -692,6 +696,16 @@ class OperationsController extends Controller
     public function getSystemSettings()
     {
         return response()->json($this->service->getSystemSettings());
+    }
+
+    private function editableRequestResponse(ResourceRequest $resourceRequest): JsonResponse
+    {
+        $data = $resourceRequest->toArray();
+        if (auth()->user()->can('update', $resourceRequest)) {
+            $data['edit_token'] = app(ResourceRequestService::class)->editToken($resourceRequest);
+        }
+
+        return response()->json($data);
     }
 
     /**

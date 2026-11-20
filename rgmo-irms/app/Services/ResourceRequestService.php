@@ -11,9 +11,13 @@ use App\Models\RequestItem;
 use App\Models\ResourceRequest;
 use App\Models\User;
 use App\Models\Withdrawal;
+use App\Rules\CurrentProject;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -113,27 +117,160 @@ class ResourceRequestService
     public function updateRequest(ResourceRequest $request, array $data, int $actorId): ResourceRequest
     {
         return DB::transaction(function () use ($request, $data, $actorId) {
-            $request = ResourceRequest::lockForUpdate()->findOrFail($request->id);
-            if (! $request->isPending()) {
+            $locked = ResourceRequest::lockForUpdate()->findOrFail($request->id);
+            $actor = User::findOrFail($actorId);
+            if (! $actor->isActive() || $actor->isAccountLocked()) {
+                throw new AuthorizationException('Your account cannot edit this request.');
+            }
+            Gate::forUser($actor)->authorize('update', $locked);
+            if (! $locked->isPending()) {
                 throw ValidationException::withMessages(['status' => 'Only requests awaiting storekeeper verification can be changed.']);
             }
-
-            $oldValues = $request->only(['project_id', 'purpose', 'remarks', 'needed_date']);
-            $request->update($data);
-            $request->refresh();
-
+            $lines = $locked->items()->orderBy('inventory_item_id')->orderBy('id')->lockForUpdate()->get();
+            foreach (['storekeeper_checked_by', 'storekeeper_checked_at', 'unit_head_approved_by', 'unit_head_approved_at', 'approved_by', 'approved_at', 'rejected_at', 'cancelled_at', 'fulfilled_at'] as $field) {
+                if ($locked->$field !== null) {
+                    throw ValidationException::withMessages(['status' => 'This request already has workflow history. Use the controlled correction process instead.']);
+                }
+            }
+            if ($locked->withdrawals()->exists() || $lines->contains(fn (RequestItem $line) => (int) $line->withdrawn_quantity > 0)
+                || $locked->items()->whereHas('usages')->exists()) {
+                throw ValidationException::withMessages(['status' => 'Requests with released or utilized items cannot be edited.']);
+            }
+            $allowed = ['project_id', 'purpose', 'remarks', 'needed_date', 'quantities', 'edit_token'];
+            if ($unexpected = array_diff(array_keys($data), $allowed)) {
+                throw ValidationException::withMessages(array_fill_keys($unexpected, 'This field cannot be changed through pending request editing.'));
+            }
+            $data = Validator::make($data, $this->updateRules())->validate();
+            $locked->setRelation('items', $lines);
+            if (isset($data['edit_token']) && ! hash_equals($this->editToken($locked), $data['edit_token'])) {
+                abort(409, 'This request changed since the form was opened. Reload it and review the current values before saving.');
+            }
+            $oldValues = $this->pendingUpdateSnapshot($locked, $lines);
+            $quantityChanges = [];
+            if (array_key_exists('quantities', $data)) {
+                $quantities = $this->pendingQuantities($lines, $data['quantities']);
+                $items = InventoryItem::withTrashed()->whereIn('id', $lines->pluck('inventory_item_id')->unique())
+                    ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+                foreach ($lines->groupBy('inventory_item_id') as $itemId => $itemLines) {
+                    $item = $items->get($itemId);
+                    $oldTotal = $itemLines->sum('quantity');
+                    $newTotal = $itemLines->sum(fn (RequestItem $line) => $quantities[$line->id]);
+                    $changed = $itemLines->filter(fn (RequestItem $line) => $quantities[$line->id] !== (int) $line->quantity);
+                    if ($changed->isEmpty()) {
+                        continue;
+                    }
+                    $errorKey = 'quantities.'.$changed->first()->id;
+                    if (! $item || $item->trashed()) {
+                        throw ValidationException::withMessages([$errorKey => 'This resource is archived. Restore it before changing its requested quantity.']);
+                    }
+                    if ($newTotal > $oldTotal && $newTotal > $item->available_stock) {
+                        throw ValidationException::withMessages([$errorKey => 'The increased quantity exceeds usable, unreserved stock. Reduce the quantity or wait for replenishment.']);
+                    }
+                    foreach ($changed as $line) {
+                        $quantityChanges[] = [
+                            'id' => (int) $line->id, 'inventory_item_id' => (int) $line->inventory_item_id,
+                            'item_name' => $item->name, 'unit' => $item->unit,
+                            'old_quantity' => (int) $line->quantity, 'new_quantity' => $quantities[$line->id],
+                        ];
+                    }
+                }
+            }
+            $headers = array_intersect_key($data, array_flip(['project_id', 'purpose', 'remarks', 'needed_date']));
+            if (isset($headers['project_id'])) {
+                $headers['project_id'] = (int) $headers['project_id'];
+            }
+            if (isset($headers['purpose'])) {
+                $headers['purpose'] = trim($headers['purpose']);
+            }
+            if (array_key_exists('remarks', $headers)) {
+                $headers['remarks'] = filled($headers['remarks']) ? trim($headers['remarks']) : null;
+            }
+            $locked->fill($headers);
+            if (! $locked->isDirty() && $quantityChanges === []) {
+                return $locked->load('items.item');
+            }
+            foreach ($quantityChanges as $change) {
+                $lines->firstWhere('id', $change['id'])->update(['quantity' => $change['new_quantity']]);
+            }
+            // Touch the document even when only line quantities changed.
+            $locked->updated_at = now();
+            $locked->save();
+            $locked->refresh();
+            $newLines = $locked->items()->orderBy('inventory_item_id')->orderBy('id')->get();
             AuditLog::log(
                 $actorId,
                 'update',
                 'resource_request',
                 ResourceRequest::class,
-                $request->id,
+                $locked->id,
                 $oldValues,
-                $request->only(['project_id', 'purpose', 'remarks', 'needed_date'])
+                $this->pendingUpdateSnapshot($locked, $newLines),
+                ['quantity_changes' => $quantityChanges, 'recorded_by' => ['id' => $actor->id, 'name' => $actor->name]]
             );
 
-            return $request;
+            return $locked->load('items.item');
         }, 5);
+    }
+
+    /** Shared rules for web forms, the ordinary update API, and service callers. */
+    public function updateRules(bool $requireMetadata = false): array
+    {
+        $presence = $requireMetadata ? ['required'] : ['sometimes', 'required'];
+
+        return [
+            'project_id' => [...$presence, 'integer', new CurrentProject],
+            'purpose' => [...$presence, 'string', 'max:1000'],
+            'remarks' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'needed_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:0001-01-01', 'before_or_equal:9999-12-31'],
+            'quantities' => ['sometimes', 'required', 'array', 'min:1', 'max:100'],
+            'quantities.*' => ['required', 'integer', 'min:1', 'max:2147483647'],
+            'edit_token' => ['required_with:quantities', 'nullable', 'string', 'size:64', 'regex:/^[a-f0-9]{64}$/D'],
+        ];
+    }
+
+    /** Sign exactly the document and lines rendered to the editor, including prior audit revisions. */
+    public function editToken(ResourceRequest $request): string
+    {
+        $request->loadMissing('items');
+        $state = $request->only([
+            'id', 'user_id', 'project_id', 'ris_no', 'responsible_center', 'purpose', 'remarks',
+            'requested_date', 'needed_date', 'status', 'storekeeper_checked_by', 'storekeeper_checked_at',
+            'unit_head_approved_by', 'unit_head_approved_at', 'approved_by', 'approved_at',
+            'rejected_at', 'cancelled_at', 'fulfilled_at', 'tracks_utilization', 'updated_at',
+        ]);
+        $state['items'] = $request->items->sortBy('id')->map(fn (RequestItem $line) => [
+            'id' => (int) $line->id, 'inventory_item_id' => (int) $line->inventory_item_id,
+            'quantity' => (int) $line->quantity, 'withdrawn_quantity' => (int) $line->withdrawn_quantity,
+        ])->values()->all();
+        $state['audit_revision'] = (int) AuditLog::where('model_type', ResourceRequest::class)->where('model_id', $request->id)->max('id');
+
+        return hash_hmac('sha256', json_encode($state, JSON_THROW_ON_ERROR), (string) config('app.key'));
+    }
+
+    private function pendingQuantities(Collection $lines, array $input): array
+    {
+        $quantities = [];
+        foreach ($input as $id => $quantity) {
+            if (! preg_match('/^[1-9][0-9]*$/D', (string) $id) || ! $lines->contains('id', $id)) {
+                throw ValidationException::withMessages(['quantities' => 'Include only existing line IDs belonging to this request.']);
+            }
+            $quantities[(int) $id] = (int) $quantity;
+        }
+        if (count($quantities) !== $lines->count() || $lines->isEmpty()) {
+            throw ValidationException::withMessages(['quantities' => 'Submit a quantity for every existing request line. Items cannot be added or removed through quantity editing.']);
+        }
+
+        return $quantities;
+    }
+
+    private function pendingUpdateSnapshot(ResourceRequest $request, Collection $lines): array
+    {
+        return $request->only(['project_id', 'purpose', 'remarks', 'needed_date']) + [
+            'items' => $lines->sortBy('id')->map(fn (RequestItem $line) => [
+                'id' => (int) $line->id, 'inventory_item_id' => (int) $line->inventory_item_id,
+                'quantity' => (int) $line->quantity,
+            ])->values()->all(),
+        ];
     }
 
     public function verifyRequest(ResourceRequest $request, int $storekeeperId, ?string $remarks = null): void

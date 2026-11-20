@@ -152,7 +152,16 @@
 	                        @if(in_array($request->status, ['pending', 'pending_unit_head', 'pending_rgmo_head']))
 	                            @unless($canFulfill)
 	                                <div class="alert alert-warning small">
-	                                    Insufficient stock. Restock or edit this request before approval.
+                                            Insufficient stock.
+                                            @if($request->isPending())
+                                                @can('update', $request)
+                                                    <a href="{{ route('requests.edit', $request) }}" class="alert-link">Edit requested quantities</a> or wait for replenishment before verification.
+                                                @else
+                                                    An authorized requester or Administrator can adjust pending quantities, or wait for replenishment before verification.
+                                                @endcan
+                                            @else
+                                                Replenishment or a controlled request correction is required before approval.
+                                            @endif
 	                                </div>
 	                            @endunless
 
@@ -271,13 +280,20 @@
 	                            <hr>
 	                            @foreach($workflowLogs as $log)
 	                                <div class="mb-3">
-	                                    <p class="mb-1"><strong>{{ str($log->action)->replace('_', ' ')->title() }}</strong></p>
+	                                    <p class="mb-1"><strong>{{ $log->action === 'update' && ! empty($log->details['quantity_changes']) ? 'Quantities updated' : str($log->action)->replace('_', ' ')->title() }}</strong></p>
 	                                    <p class="text-muted small mb-0">
 	                                        {{ $log->created_at?->format('M d, Y H:i') }}
-	                                        @if($log->user)
-	                                            by {{ $log->user->name }}
+	                                        @if($log->details['recorded_by']['name'] ?? $log->user?->name)
+	                                            by {{ $log->details['recorded_by']['name'] ?? $log->user?->name }}
 	                                        @endif
 	                                    </p>
+	                                    @if(! empty($log->details['quantity_changes']))
+                                            <ul class="small mb-0 mt-2 ps-3">
+                                                @foreach($log->details['quantity_changes'] as $change)
+                                                    <li>{{ $change['item_name'] ?? 'Item #'.$change['inventory_item_id'] }}: {{ $change['old_quantity'] }} → {{ $change['new_quantity'] }} {{ $change['unit'] ?? '' }}</li>
+                                                @endforeach
+                                            </ul>
+	                                    @endif
 	                                </div>
 	                            @endforeach
 	                        @endif
