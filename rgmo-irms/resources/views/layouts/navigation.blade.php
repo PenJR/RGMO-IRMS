@@ -1,7 +1,7 @@
 <nav id="sidebar">
     <div class="sidebar-brand">
         <div class="d-flex align-items-center gap-3">
-            <img src="{{ asset('images/logo.png') }}" alt="RGMO-IRMS Logo" class="rounded-circle brand-logo">
+            <x-application-logo class="rounded-circle brand-logo" />
             <div class="min-w-0">
                 <h1 class="sidebar-title">RGMO-IRMS</h1>
                 <p class="sidebar-kicker">Central Mindanao University</p>

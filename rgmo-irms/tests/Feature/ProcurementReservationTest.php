@@ -13,6 +13,8 @@ use App\Services\InventoryService;
 use App\Services\ProcurementService;
 use App\Services\ReportService;
 use App\Services\ResourceRequestService;
+use App\Services\RmsService;
+use App\Services\StockAdjustmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -48,7 +50,15 @@ class ProcurementReservationTest extends TestCase
         return ['submission_key' => (string) Str::uuid(), 'received_by' => 'Field recipient', 'withdrawn_on' => today()->toDateString()];
     }
 
-    public function test_legacy_shortage_migrates_without_rewriting_history_and_can_be_replenished(): void
+    private function approve(ResourceRequest $request, User $approver): void
+    {
+        $service = app(ResourceRequestService::class);
+        $service->verifyRequest($request, $approver->id);
+        $service->endorseRequest($request, $approver->id);
+        $service->approveRequest($request, $approver->id);
+    }
+
+    public function test_legacy_shortage_migrates_without_rewriting_history(): void
     {
         $admin = $this->actor();
         $this->actingAs($admin);
@@ -57,7 +67,6 @@ class ProcurementReservationTest extends TestCase
         $approved->update(['status' => 'approved', 'approved_at' => now()]);
         $completed = $this->requestFor($item, 5);
         $completed->update(['status' => 'completed']);
-        $pending = $this->requestFor($item, 1);
 
         // Recreate the pre-deployment schema with the same historical records.
         $migration = require database_path('migrations/2026_11_04_100000_add_procurement_and_partial_withdrawals.php');
@@ -73,7 +82,17 @@ class ProcurementReservationTest extends TestCase
         $this->assertEquals(0, $item->fresh()->available_stock);
         $this->assertDatabaseCount('inventory_transactions', 0);
         $this->assertDatabaseCount('withdrawals', 0);
-        $this->patchJson('/api/ops/requests/'.$pending->id.'/approve', [])->assertUnprocessable();
+    }
+
+    public function test_preserved_legacy_shortage_can_be_replenished_without_rewriting_approval(): void
+    {
+        $admin = $this->actor();
+        $this->actingAs($admin);
+        $item = $this->item(10);
+        $approved = $this->requestFor($item, 30);
+        $approved->update(['status' => ResourceRequest::STATUS_APPROVED, 'approved_at' => now()]);
+        $pending = $this->requestFor($item, 1);
+        $this->postJson(route('requests.verify', $pending))->assertUnprocessable()->assertJsonValidationErrors('items');
         $line = $approved->items()->first();
         $this->post(route('requests.fulfill', $approved), $this->details() + ['quantities' => [$line->id => 1]])
             ->assertSessionHasErrors('quantity');
@@ -91,8 +110,12 @@ class ProcurementReservationTest extends TestCase
         ], $admin);
         $this->assertEquals(15, $item->fresh()->stock);
         app(InventoryService::class)->updateItem($item, ['name' => 'Updated rice seed'], $admin->id);
-        app(InventoryService::class)->updateItem($item, ['stock' => 16], $admin->id);
-        app(\App\Services\RmsService::class)->increaseStock($item->id, 1);
+        app(StockAdjustmentService::class)->adjust($item, [
+            'adjustment_type' => 'stock_in', 'quantity' => 1,
+            'reason' => 'Verified legacy physical count', 'incident_report_reference' => 'IR-LEGACY-COUNT',
+            'idempotency_key' => (string) Str::uuid(),
+        ], $admin);
+        app(RmsService::class)->increaseStock($item->id, 1, 'Verified legacy physical count', 'IR-LEGACY-COUNT', (string) Str::uuid());
         $this->assertEquals(17, $item->fresh()->stock);
         $this->assertEquals(0, $item->fresh()->available_stock);
         try {
@@ -101,7 +124,9 @@ class ProcurementReservationTest extends TestCase
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('stock', $e->errors());
         }
-        app(InventoryService::class)->recordStockIn($item, 13, 'Remaining replenishment', $admin->id);
+        app(ProcurementService::class)->receive($purchase->fresh(), [
+            'quantity' => 13, 'received_on' => today()->toDateString(), 'submission_key' => (string) Str::uuid(),
+        ], $admin);
         app(ResourceRequestService::class)->fulfillRequest($approved, [$line->id => 30], $this->details());
         $this->assertEquals('completed', $approved->fresh()->status);
         $this->assertEquals(0, $item->fresh()->stock);
@@ -128,8 +153,10 @@ class ProcurementReservationTest extends TestCase
             ], $admin);
         }
         $this->get(route('inventory.index'))->assertOk()
-            ->assertSeeInOrder(['Use first', 'Older supplier', 'Newer supplier'])
-            ->assertSee(today()->subDays(3)->format('M d, Y'));
+            ->assertSee('FIFO')->assertSeeInOrder([
+                'Use first', $lots['Older supplier']->inventoryBatch->display_name,
+                $lots['Newer supplier']->inventoryBatch->display_name,
+            ]);
         $transaction = app(InventoryService::class)->recordStockOut($item, 12, 'Field', $admin->id);
         $this->assertEquals(0, $lots['Older supplier']->fresh()->remaining_quantity);
         $this->assertEquals(8, $lots['Newer supplier']->fresh()->remaining_quantity);
@@ -137,8 +164,8 @@ class ProcurementReservationTest extends TestCase
             ['delivery_id' => $lots['Older supplier']->id, 'quantity' => 10],
             ['delivery_id' => $lots['Newer supplier']->id, 'quantity' => 2],
         ], $transaction->meta['deliveries']);
-        $this->get(route('inventory.index'))->assertOk()->assertSee('Newer supplier')
-            ->assertDontSee('Older supplier');
+        $this->get(route('inventory.index'))->assertOk()->assertSee($lots['Newer supplier']->inventoryBatch->display_name)
+            ->assertDontSee($lots['Older supplier']->inventoryBatch->display_name);
     }
 
     public function test_purchase_increases_stock_only_when_received_and_is_idempotent(): void
@@ -166,7 +193,7 @@ class ProcurementReservationTest extends TestCase
         $this->actingAs($admin);
         $item = $this->item();
         $r = $this->requestFor($item, 30);
-        app(ResourceRequestService::class)->approveRequest($r, $admin->id);
+        $this->approve($r, $admin);
         $this->assertEquals(100, $item->fresh()->stock);
         $this->assertEquals(30, $item->reserved_quantity);
         $this->assertEquals(70, $item->available_stock);
@@ -196,9 +223,14 @@ class ProcurementReservationTest extends TestCase
         $item = $this->item();
         $a = $this->requestFor($item, 80);
         $b = $this->requestFor($item, 30);
+        $service = app(ResourceRequestService::class);
+        foreach ([$a, $b] as $request) {
+            $service->verifyRequest($request, $admin->id);
+            $service->endorseRequest($request, $admin->id);
+        }
         $this->patchJson('/api/ops/requests/'.$a->id.'/approve', [])->assertOk();
         $this->patchJson('/api/ops/requests/'.$b->id.'/approve', [])->assertUnprocessable();
-        $this->assertEquals('pending', $b->fresh()->status);
+        $this->assertEquals(ResourceRequest::STATUS_PENDING_RGMO_HEAD, $b->fresh()->status);
         try {
             app(InventoryService::class)->recordStockOut($item, 21, 'Other project', $admin->id);
             $this->fail('Reserved stock consumed');
@@ -223,7 +255,7 @@ class ProcurementReservationTest extends TestCase
         $delivery = app(ProcurementService::class)->receive($purchase, ['quantity' => 30, 'received_on' => today()->toDateString(), 'submission_key' => (string) Str::uuid()], $admin);
         $r = $this->requestFor($item, 30);
         $svc = app(ResourceRequestService::class);
-        $svc->approveRequest($r, $admin->id);
+        $this->approve($r, $admin);
         $line = $r->items()->first();
         $svc->fulfillRequest($r, [$line->id => 20], $this->details());
         $this->assertEquals(10, $delivery->fresh()->remaining_quantity);
@@ -242,7 +274,7 @@ class ProcurementReservationTest extends TestCase
         $item = $this->item();
         $a = $this->requestFor($item, 30);
         $b = $this->requestFor($item, 10);
-        app(ResourceRequestService::class)->approveRequest($a, $admin->id);
+        $this->approve($a, $admin);
         $this->post(route('requests.fulfill', $a), $this->details() + ['quantities' => [$b->items()->first()->id => 1]])->assertSessionHasErrors('quantities');
         $this->assertDatabaseCount('withdrawals', 0);
         $this->actingAs($this->actor('staff'))->post(route('procurements.store'), [])->assertForbidden();
@@ -256,7 +288,7 @@ class ProcurementReservationTest extends TestCase
         $second = $this->item(50);
         $request = $this->requestFor($first, 30);
         $line2 = $request->items()->create(['inventory_item_id' => $second->id, 'quantity' => 10]);
-        app(ResourceRequestService::class)->approveRequest($request, $admin->id);
+        $this->approve($request, $admin);
         $line1 = $request->items()->first();
         $this->post(route('requests.fulfill', $request), $this->details() + ['quantities' => [$line1->id => 20, $line2->id => 11]])->assertSessionHasErrors('quantities');
         $this->assertEquals(100, $first->fresh()->stock);
@@ -274,7 +306,7 @@ class ProcurementReservationTest extends TestCase
         $item = $this->item();
         $request = $this->requestFor($item, 30);
         $service = app(ResourceRequestService::class);
-        $service->approveRequest($request, $admin->id);
+        $this->approve($request, $admin);
         $line = $request->items()->first();
         $service->fulfillRequest($request, [$line->id => 20], $this->details());
         $item->update(['price' => 99]);

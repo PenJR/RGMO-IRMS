@@ -118,6 +118,7 @@ return [
         'request-correction' => 'Request a correction to a verified resource request',
         'manage-request-corrections' => 'Apply or reject resource request corrections',
         'report-incidents' => 'Report operational incidents',
+        'view-incidents' => 'View incident reports',
         'investigate-incidents' => 'Investigate reported incidents',
         'resolve-incidents' => 'Resolve incident reports and approve stock adjustments',
         'receive-notifications' => 'Receive notifications',

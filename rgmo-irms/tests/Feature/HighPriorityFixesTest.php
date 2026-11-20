@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Exports\InventoryItemsExport;
 use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\InventoryItem;
@@ -13,7 +12,7 @@ use App\Models\User;
 use App\Services\ResourceRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
-use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 class HighPriorityFixesTest extends TestCase
@@ -27,6 +26,7 @@ class HighPriorityFixesTest extends TestCase
 
     public function test_inventory_csv_and_excel_exports_include_more_than_250_items(): void
     {
+        $this->freezeTime();
         $admin = $this->activeUser(User::ROLE_ADMIN);
         $category = Category::create(['name' => 'Bulk Export']);
 
@@ -44,16 +44,36 @@ class HighPriorityFixesTest extends TestCase
         $csv = $this->actingAs($admin)->get(route('inventory.export-csv'));
 
         $csv->assertOk();
-        $this->assertStringContainsString('BULK-251', $csv->streamedContent());
+        $stream = fopen('php://temp', 'w+');
+        fwrite($stream, $csv->streamedContent());
+        rewind($stream);
+        $csvRows = [];
+        while (($row = fgetcsv($stream, null, ',', '"', '')) !== false) {
+            $csvRows[] = $row;
+        }
+        fclose($stream);
+        $expectedNames = array_map(fn ($number) => 'Bulk item '.$number, range(1, 251));
+        $headings = array_shift($csvRows);
+        $this->assertSame('Name', $headings[1]);
+        $this->assertCount(251, $csvRows);
+        $this->assertEqualsCanonicalizing($expectedNames, array_column($csvRows, 1));
 
-        Excel::fake();
-
-        $this->actingAs($admin)->get(route('inventory.export-excel'))->assertOk();
-
-        Excel::assertDownloaded(
-            'inventory_'.now()->format('Y-m-d_H-i-s').'.xlsx',
-            fn (InventoryItemsExport $export) => $export->query()->count() === 251
-        );
+        $excel = $this->get(route('inventory.export-excel'))->assertOk()
+            ->assertDownload('inventory_'.now()->format('Y-m-d_H-i-s').'.xlsx');
+        $path = $excel->baseResponse->getFile()->getPathname();
+        $workbook = null;
+        try {
+            $workbook = IOFactory::load($path);
+            $excelRows = $workbook->getActiveSheet()->toArray();
+            $this->assertSame($headings, array_shift($excelRows));
+            $this->assertCount(251, $excelRows);
+            $this->assertEqualsCanonicalizing($expectedNames, array_column($excelRows, 1));
+        } finally {
+            $workbook?->disconnectWorksheets();
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
     }
 
     public function test_audit_export_includes_records_beyond_the_first_page(): void

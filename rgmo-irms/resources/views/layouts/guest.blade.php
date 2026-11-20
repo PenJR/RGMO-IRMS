@@ -283,7 +283,7 @@
 
         <div class="auth-page-shell {{ request()->routeIs('login') ? 'auth-page-shell--interactive' : '' }}">
             <aside class="auth-panel" aria-label="Central Mindanao University">
-                <img src="{{ asset('images/logo.png') }}" alt="RGMO logo">
+                <x-application-logo />
                 <h1>Central Mindanao University</h1>
                 <p>Resource Generation Management Office<br>Inventory Resource Management System</p>
                 <p class="auth-motto">Excellence. Integrity. Service.</p>

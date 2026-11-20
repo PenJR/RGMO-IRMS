@@ -93,7 +93,7 @@ class ControlledStockAdjustmentTest extends TestCase
         $this->actingAs($this->actor());
         foreach ($this->aliases() as [$method, $path, $direction, $reasonField]) {
             $item = $this->item();
-            $url = sprintf($path, $item->id);
+            $url = $this->aliasUrl($path, $item);
             $payload = $this->payload($direction);
             unset($payload['adjustment_type'], $payload['reason'], $payload['idempotency_key']);
             $payload[$reasonField] = 'Alias count discrepancy';
@@ -126,7 +126,7 @@ class ControlledStockAdjustmentTest extends TestCase
             $this->actingAs($this->actor($role));
             $this->postJson(route('inventory.adjust-stock', $item), $this->payload())->assertForbidden();
             foreach ($this->aliases() as [$method, $path, $direction]) {
-                $this->json($method, sprintf($path, $item->id), $this->payload($direction))->assertForbidden();
+                $this->json($method, $this->aliasUrl($path, $item), $this->payload($direction))->assertForbidden();
             }
         }
         $this->assertSame(10, $item->fresh()->stock);
@@ -410,12 +410,17 @@ class ControlledStockAdjustmentTest extends TestCase
     private function aliases(): array
     {
         return [
-            ['POST', '/inventory/%d/stock-in', 'stock_in', 'source'],
-            ['POST', '/inventory/%d/stock-out', 'stock_out', 'destination'],
+            ['POST', '/inventory/%s/stock-in', 'stock_in', 'source'],
+            ['POST', '/inventory/%s/stock-out', 'stock_out', 'destination'],
             ['PATCH', '/api/inventory/%d/increase', 'stock_in', 'source'],
             ['PATCH', '/api/inventory/%d/decrease', 'stock_out', 'destination'],
             ['POST', '/api/ops/transactions/items/%d/in', 'stock_in', 'source'],
             ['POST', '/api/ops/transactions/items/%d/out', 'stock_out', 'destination'],
         ];
+    }
+
+    private function aliasUrl(string $path, InventoryItem $item): string
+    {
+        return sprintf($path, str_starts_with($path, '/api/') ? $item->id : $item->getRouteKey());
     }
 }
