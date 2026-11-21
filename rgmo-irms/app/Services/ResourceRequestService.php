@@ -8,6 +8,7 @@ use App\Models\InventoryItem;
 use App\Models\Project;
 use App\Models\RequestCorrection;
 use App\Models\RequestItem;
+use App\Models\RequestItemDeliveryReservation;
 use App\Models\ResourceRequest;
 use App\Models\User;
 use App\Models\Withdrawal;
@@ -315,6 +316,7 @@ class ResourceRequestService
             $this->ensureItemsAreAvailable($locked);
             $old = $locked->toArray();
             $locked->approve($approverId, $remarks);
+            $this->allocateReceivedDeliveryReservations($locked);
             AuditLog::log($approverId, 'approve', 'resource_request', ResourceRequest::class, $locked->id, $old, $locked->fresh()->toArray());
             $request->setRawAttributes($locked->getAttributes(), true);
         }, 5);
@@ -536,6 +538,64 @@ class ResourceRequestService
     }
 
     /**
+     * Assign an approved request to its received PO delivery lots without deducting stock.
+     *
+     * Item-level reservations remain the availability control. This ledger is the auditable
+     * PO assignment and leaves opening/legacy stock unlinked rather than attaching it to a
+     * PO that did not supply it.
+     */
+    private function allocateReceivedDeliveryReservations(ResourceRequest $request): void
+    {
+        $request->loadMissing('items');
+        foreach ($request->items as $line) {
+            $needed = $line->remaining_quantity;
+            if ($needed < 1) {
+                continue;
+            }
+
+            $deliveries = Delivery::query()
+                ->where('inventory_item_id', $line->inventory_item_id)
+                ->where('remaining_quantity', '>', 0)
+                ->whereDate('received_on', '<=', today())
+                ->orderBy('received_on')->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($deliveries as $delivery) {
+                if ($needed < 1) {
+                    break;
+                }
+                $alreadyReserved = (int) RequestItemDeliveryReservation::query()
+                    ->where('delivery_id', $delivery->id)
+                    ->sum(DB::raw('quantity - released_quantity'));
+                $availableFromLot = max(0, (int) $delivery->remaining_quantity - $alreadyReserved);
+                if ($availableFromLot < 1) {
+                    continue;
+                }
+                $quantity = min($needed, $availableFromLot);
+                $line->deliveryReservations()->create(['delivery_id' => $delivery->id, 'quantity' => $quantity]);
+                $needed -= $quantity;
+            }
+        }
+    }
+
+    /** Release assigned PO-lot balances in allocation order as this line is issued. */
+    private function releaseDeliveryReservations(RequestItem $line, int $quantity): void
+    {
+        $remaining = $quantity;
+        foreach ($line->deliveryReservations()->lockForUpdate()->get() as $reservation) {
+            if ($remaining < 1) {
+                break;
+            }
+            $released = min($remaining, $reservation->remaining_quantity);
+            if ($released > 0) {
+                $reservation->increment('released_quantity', $released);
+                $remaining -= $released;
+            }
+        }
+    }
+
+    /**
      * Mark a request as rejected and log the decision.
      *
      * @param  string|null  $remarks  Reason for rejection.
@@ -695,6 +755,7 @@ class ResourceRequestService
                 // Release only this line's reservation, inside the same stock transaction.
                 $line->increment('withdrawn_quantity', $quantity);
                 $transaction = app(InventoryService::class)->recordStockOut($item, $quantity, 'resource_request_'.$locked->id, auth()->id(), null, 'WD-'.$withdrawal->id, null, $date);
+                $this->releaseDeliveryReservations($line, $quantity);
                 $deliveryIds = collect($transaction->meta['deliveries'] ?? [])->pluck('delivery_id');
                 $deliverySnapshots = $transaction->meta['delivery_snapshots'] ?? [];
                 $predatesReceipt = Delivery::whereIn('id', $deliveryIds)->get(['id', 'received_on', 'original_data'])

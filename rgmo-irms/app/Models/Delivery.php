@@ -9,6 +9,12 @@ use Illuminate\Validation\ValidationException;
 
 class Delivery extends Model
 {
+    /** Request-line balances that have been assigned to this received PO lot. */
+    public function requestReservations(): HasMany
+    {
+        return $this->hasMany(RequestItemDeliveryReservation::class);
+    }
+
     protected $guarded = ['id'];
 
     protected function casts(): array

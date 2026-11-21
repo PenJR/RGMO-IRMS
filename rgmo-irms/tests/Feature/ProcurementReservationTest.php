@@ -7,6 +7,7 @@ use App\Models\InventoryItem;
 use App\Models\Procurement;
 use App\Models\Project;
 use App\Models\ResourceRequest;
+use App\Models\RequestItemDeliveryReservation;
 use App\Models\User;
 use App\Models\Withdrawal;
 use App\Services\InventoryService;
@@ -265,6 +266,43 @@ class ProcurementReservationTest extends TestCase
         $this->post(route('utilization.store'), array_replace($data, ['quantity' => 20]))->assertSessionHasNoErrors();
         $this->assertEquals(10, $item->fresh()->stock);
         $this->get(route('utilization.index'))->assertOk();
+    }
+
+    public function test_final_approval_assigns_reserved_request_stock_to_received_po_lots(): void
+    {
+        $admin = $this->actor();
+        $this->actingAs($admin);
+        $item = $this->item(0);
+
+        $older = Procurement::create([
+            'inventory_item_id' => $item->id, 'created_by' => $admin->id, 'supplier_name' => 'Older supplier',
+            'supplier_number' => '123', 'or_number' => 'OR-OLDER', 'po_number' => 'PO-OLDER',
+            'purchased_on' => today()->subDays(3), 'quantity' => 10, 'unit_cost' => 20, 'funding_source' => 'RGMO',
+        ]);
+        $newer = Procurement::create([
+            'inventory_item_id' => $item->id, 'created_by' => $admin->id, 'supplier_name' => 'Newer supplier',
+            'supplier_number' => '456', 'or_number' => 'OR-NEWER', 'po_number' => 'PO-NEWER',
+            'purchased_on' => today()->subDays(2), 'quantity' => 10, 'unit_cost' => 20, 'funding_source' => 'RGMO',
+        ]);
+        app(ProcurementService::class)->receive($newer, ['quantity' => 10, 'received_on' => today()->subDay()->toDateString(), 'submission_key' => (string) Str::uuid()], $admin);
+        app(ProcurementService::class)->receive($older, ['quantity' => 10, 'received_on' => today()->subDays(2)->toDateString(), 'submission_key' => (string) Str::uuid()], $admin);
+
+        $request = $this->requestFor($item, 15);
+        $this->approve($request, $admin);
+        $line = $request->items()->sole();
+
+        $reservations = RequestItemDeliveryReservation::with('delivery.procurement')
+            ->where('request_item_id', $line->id)->get();
+        $this->assertCount(2, $reservations);
+        $reservedByPo = $reservations->mapWithKeys(fn ($row) => [$row->delivery->procurement->po_number => $row->quantity]);
+        $this->assertSame(10, $reservedByPo['PO-OLDER']);
+        $this->assertSame(5, $reservedByPo['PO-NEWER']);
+        $this->get(route('requests.show', $request))->assertOk()->assertSee('PO allocation')->assertSee('PO-OLDER')->assertSee('PO-NEWER');
+
+        app(ResourceRequestService::class)->fulfillRequest($request, [$line->id => 6], $this->details());
+        $olderReservation = $reservations->first(fn ($row) => $row->delivery->procurement->po_number === 'PO-OLDER');
+        $this->assertSame(6, $olderReservation->fresh()->released_quantity);
+        $this->assertSame(4, $olderReservation->fresh()->remaining_quantity);
     }
 
     public function test_wrong_request_lines_and_unauthorized_procurement_are_rejected(): void

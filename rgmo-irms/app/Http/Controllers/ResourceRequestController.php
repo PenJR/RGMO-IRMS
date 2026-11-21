@@ -116,7 +116,7 @@ class ResourceRequestController extends Controller
     {
         $this->authorize('view', $request);
 
-        $request->load('user', 'project', 'approver', 'storekeeperChecker', 'unitHeadApprover', 'items.item', 'withdrawals.issuer', 'withdrawals.items.requestItem.item');
+        $request->load('user', 'project', 'approver', 'storekeeperChecker', 'unitHeadApprover', 'items.item', 'items.deliveryReservations.delivery.procurement', 'withdrawals.issuer', 'withdrawals.items.requestItem.item');
         $workflowLogs = AuditLog::with('user:id,name')
             ->where('model_type', ResourceRequest::class)
             ->where('model_id', $request->id)

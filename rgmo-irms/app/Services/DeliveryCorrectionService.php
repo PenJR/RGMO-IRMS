@@ -77,6 +77,10 @@ class DeliveryCorrectionService
                 if ($consumed < 0 || $locked->remaining_quantity < 0 || $quantity < $consumed) {
                     throw ValidationException::withMessages(['quantity' => 'The corrected quantity cannot be less than stock already released or otherwise consumed from this delivery.']);
                 }
+                $reserved = (int) $locked->requestReservations()->sum(DB::raw('quantity - released_quantity'));
+                if ((int) $locked->remaining_quantity + $delta < $reserved) {
+                    throw ValidationException::withMessages(['quantity' => 'The correction would reduce this delivery below quantities reserved for approved resource requests.']);
+                }
                 if ($delta !== 0 && $item->trashed()) {
                     throw ValidationException::withMessages(['quantity' => 'Restore the inventory item before changing a delivery quantity. Document and price corrections remain available.']);
                 }

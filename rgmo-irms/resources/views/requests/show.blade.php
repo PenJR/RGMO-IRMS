@@ -107,7 +107,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>Item</th>
-                                            <th>Requested</th><th>Withdrawn</th><th>Remaining</th>
+                                            <th>Requested</th><th>Withdrawn</th><th>Remaining</th><th>PO allocation</th>
                                             <th>Unit</th>
 	                                            <th>Available</th>
 	                                            <th>Availability</th>
@@ -118,6 +118,13 @@
                                             <tr>
                                                 <td>{{ $item->item?->name ?? 'Unknown item' }}</td>
 	                                                <td>{{ $item->quantity }}</td><td>{{ $item->withdrawn_quantity }}</td><td>{{ $item->remaining_quantity }}{{ $request->isReleasable() ? ' reserved' : '' }}</td>
+                                                    <td class="small">
+                                                        @forelse($item->deliveryReservations as $reservation)
+                                                            <div>PO {{ $reservation->delivery?->procurement?->po_number ?? 'PRC-'.$reservation->delivery?->procurement_id }}: {{ $reservation->remaining_quantity }} reserved <span class="text-muted">(received {{ $reservation->delivery?->received_on?->format('M d, Y') }})</span></div>
+                                                        @empty
+                                                            @if($request->isReleasable())<span class="text-muted">No received PO lot linked (legacy/opening stock).</span>@else<span class="text-muted">Assigned on final approval.</span>@endif
+                                                        @endforelse
+                                                    </td>
 	                                                <td>{{ $item->item?->unit ?? 'N/A' }}</td>
 	                                                <td>{{ $item->item?->available_stock ?? 0 }} {{ $item->item?->unit ?? '' }}</td>
 	                                                <td>

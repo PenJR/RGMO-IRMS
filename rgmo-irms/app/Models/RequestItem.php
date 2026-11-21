@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RequestItem extends Model
 {
+    /** Received PO lots reserved for this line when it was finally approved. */
+    public function deliveryReservations(): HasMany
+    {
+        return $this->hasMany(RequestItemDeliveryReservation::class)->orderBy('id');
+    }
+
     public function usages(): HasMany
     {
         return $this->hasMany(ResourceUsage::class);

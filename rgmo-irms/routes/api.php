@@ -148,7 +148,7 @@ Route::middleware('auth')->prefix('ops')->group(function () {
         Route::get('/settings/roles-permissions', [OperationsController::class, 'manageRolesPermissions']);
     });
 
-    Route::middleware('permission:manage-forecasting-settings')->group(function () {
+        Route::middleware('permission:manage-forecasting-settings')->group(function () {
         Route::put('/settings', [OperationsController::class, 'updateSystemSettings']);
         Route::post('/settings/low-stock-threshold', [OperationsController::class, 'setLowStockThreshold']);
     });
