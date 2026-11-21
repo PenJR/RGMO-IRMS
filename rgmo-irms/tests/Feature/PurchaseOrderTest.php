@@ -118,6 +118,8 @@ class PurchaseOrderTest extends TestCase
         ])->assertSessionHasNoErrors();
 
         $purchase = Procurement::where('or_number', 'OR-LEGACY-001')->firstOrFail();
+        $this->assertSame(Procurement::STATUS_DRAFT, $purchase->status);
+        $this->assertNull($purchase->approved_at);
         $this->assertSame($purchase->po_number, $purchase->or_number);
         $this->assertCount(1, $purchase->items);
         $this->assertSame($item->id, $purchase->items->first()->inventory_item_id);

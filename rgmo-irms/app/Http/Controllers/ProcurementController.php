@@ -252,8 +252,10 @@ class ProcurementController extends Controller
                     'created_by' => $request->user()->id,
                     'prepared_by' => $request->user()->id,
                     'receipt_path' => $path ?? $checkpoint?->receipt_path,
-                    'status' => $legacy ? Procurement::STATUS_APPROVED : Procurement::STATUS_DRAFT,
-                    'approved_at' => $legacy ? now() : null,
+                    // Compatibility input may be single-item, but it must never
+                    // bypass the same approval lifecycle as modern purchase orders.
+                    'status' => Procurement::STATUS_DRAFT,
+                    'approved_at' => null,
                 ]);
                 foreach ($items as $item) {
                     if ($purchase->items()->where('inventory_item_id', $item['inventory_item_id'])->exists()) {
