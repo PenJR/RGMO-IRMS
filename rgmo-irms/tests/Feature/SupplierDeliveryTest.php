@@ -11,6 +11,8 @@ use App\Models\Supplier;
 use App\Models\User;
 use App\Services\ProcurementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -70,6 +72,25 @@ class SupplierDeliveryTest extends TestCase
             'delivery_receipt_number' => 'DR-'.Str::random(8), 'invoice_number' => 'INV-TEST',
             'submission_key' => (string) Str::uuid(),
         ], $overrides);
+    }
+
+    public function test_delivery_attachment_is_private_and_available_for_preview_or_download(): void
+    {
+        Storage::fake('local');
+        $item = $this->item('Attached delivery item');
+        $purchase = $this->order($this->supplier('Attachment supplier'), [$item]);
+        $line = $purchase->items->sole();
+        $file = UploadedFile::fake()->create('delivery-note.pdf', 40, 'application/pdf');
+
+        $this->post(route('procurements.receive', $purchase), $this->receipt([
+            $line->id => ['quantity' => 5, 'unit_cost' => '10.00'],
+        ], ['delivery_attachment' => $file]))->assertRedirect();
+
+        $delivery = Delivery::sole();
+        $this->assertSame('delivery-note.pdf', $delivery->attachment_original_name);
+        Storage::disk('local')->assertExists($delivery->attachment_path);
+        $this->get(route('deliveries.attachment', $delivery))->assertOk();
+        $this->get(route('deliveries.attachment', ['delivery' => $delivery, 'preview' => 1]))->assertOk();
     }
 
     public function test_partial_receipts_update_each_item_and_retries_do_not_duplicate_stock(): void

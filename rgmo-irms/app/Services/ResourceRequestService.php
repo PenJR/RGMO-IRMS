@@ -675,6 +675,13 @@ class ResourceRequestService
             $withdrawal = $locked->withdrawals()->create([
                 'issued_by' => auth()->id(), 'received_by' => $details['received_by'] ?? $locked->user->name,
                 'withdrawn_on' => $date, 'submission_key' => $key, 'notes' => $details['notes'] ?? null,
+                'recipient_acknowledged_at' => ! empty($details['recipient_acknowledged']) ? now() : null,
+                'recipient_acknowledgment_snapshot' => ! empty($details['recipient_acknowledged']) ? [
+                    'recipient_name' => $details['received_by'] ?? $locked->user->name,
+                    'acknowledged_at' => now()->toIso8601String(),
+                    'recorded_by' => auth()->id(),
+                    'withdrawn_on' => $date,
+                ] : null,
             ]);
             foreach ($lines as $line) {
                 $quantity = $amounts[$line->id];

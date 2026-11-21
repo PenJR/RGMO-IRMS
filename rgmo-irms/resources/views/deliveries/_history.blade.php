@@ -47,7 +47,7 @@
                             <div>{{ $delivery->procurement->po_number ?: $delivery->procurement->or_number }}</div>
                         @endif
                     </td>
-                    <td><div>Receipt: {{ $delivery->delivery_receipt_number ?: 'Not recorded' }}</div><div>Invoice: {{ $delivery->invoice_number ?: 'Not recorded' }}</div>@if($delivery->reference)<div class="small text-muted">Reference: {{ $delivery->reference }}</div>@endif</td>
+                    <td><div>Receipt: {{ $delivery->delivery_receipt_number ?: 'Not recorded' }}</div><div>Invoice: {{ $delivery->invoice_number ?: 'Not recorded' }}</div>@if($delivery->reference)<div class="small text-muted">Reference: {{ $delivery->reference }}</div>@endif @if($delivery->attachment_path)<div class="small mt-1"><a href="{{ route('deliveries.attachment', $delivery) }}">Download attachment</a> · <a target="_blank" rel="noopener" href="{{ route('deliveries.attachment', ['delivery' => $delivery, 'preview' => 1]) }}">Preview</a></div>@endif</td>
                     <td>
                         {{ $delivery->quantity }} {{ $delivery->unit_of_measurement ?: $delivery->inventoryItem?->unit }}
                         @can('viewCorrections', $delivery)

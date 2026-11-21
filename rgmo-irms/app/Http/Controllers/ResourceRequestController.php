@@ -462,6 +462,7 @@ class ResourceRequestController extends Controller
             'quantities.*' => 'required|integer|min:0|max:2147483647',
             'received_by' => 'required|string|max:255',
             'withdrawn_on' => 'required|date_format:Y-m-d|before_or_equal:today',
+            'recipient_acknowledged' => 'sometimes|accepted',
             'submission_key' => 'required|uuid', 'notes' => 'nullable|string|max:5000',
         ]);
         $this->requestService->fulfillRequest($request, $data['quantities'], $data);

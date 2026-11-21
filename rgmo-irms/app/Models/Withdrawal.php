@@ -10,7 +10,11 @@ class Withdrawal extends Model
 
     protected function casts(): array
     {
-        return ['withdrawn_on' => 'date'];
+        return [
+            'withdrawn_on' => 'date',
+            'recipient_acknowledged_at' => 'immutable_datetime',
+            'recipient_acknowledgment_snapshot' => 'array',
+        ];
     }
 
     public function items()

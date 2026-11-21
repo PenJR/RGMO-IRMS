@@ -311,9 +311,25 @@ class ProcurementController extends Controller
             'received_on' => 'required|date_format:Y-m-d|before_or_equal:today',
             'delivery_receipt_number' => 'nullable|required_with:items|string|max:100',
             'invoice_number' => 'nullable|string|max:100',
-            'reference' => 'nullable|string|max:100', 'submission_key' => 'required|uuid',
+            'reference' => 'nullable|string|max:100',
+            'delivery_attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'submission_key' => 'required|uuid',
         ]);
-        $service->receive($procurement, $data, $request->user());
+        $attachment = $request->file('delivery_attachment');
+        if ($attachment) {
+            $data['attachment_path'] = $attachment->store('delivery-attachments', 'local');
+            $data['attachment_original_name'] = $attachment->getClientOriginalName();
+        }
+
+        try {
+            $service->receive($procurement, $data, $request->user());
+        } catch (\Throwable $exception) {
+            if (! empty($data['attachment_path'])) {
+                Storage::disk('local')->delete($data['attachment_path']);
+            }
+
+            throw $exception;
+        }
 
         return back()->with('success', 'Delivery received and added to inventory.');
     }
@@ -560,5 +576,20 @@ class ProcurementController extends Controller
         }
 
         return Storage::disk('local')->download($procurement->receipt_path);
+    }
+
+    public function deliveryAttachment(Request $request, \App\Models\Delivery $delivery)
+    {
+        $this->authorize('view', $delivery->procurement);
+        abort_unless($delivery->attachment_path && Storage::disk('local')->exists($delivery->attachment_path), 404);
+
+        $filename = $delivery->attachment_original_name ?: basename($delivery->attachment_path);
+        if ($request->boolean('preview')) {
+            return Storage::disk('local')->response($delivery->attachment_path, $filename, [
+                'Content-Disposition' => 'inline; filename="'.addcslashes($filename, '"\\').'"',
+            ]);
+        }
+
+        return Storage::disk('local')->download($delivery->attachment_path, $filename);
     }
 }

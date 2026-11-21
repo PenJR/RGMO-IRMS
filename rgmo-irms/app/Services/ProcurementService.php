@@ -283,6 +283,8 @@ class ProcurementService
                         'inventory_item_id' => $item->id, 'received_by' => $actor->id,
                         'received_on' => $data['received_on'], 'quantity' => $batchQuantity,
                         'remaining_quantity' => $batchQuantity, 'reference' => $data['reference'] ?? null,
+                        'attachment_path' => $data['attachment_path'] ?? null,
+                        'attachment_original_name' => $data['attachment_original_name'] ?? null,
                         'receipt_key' => $data['submission_key'],
                         'submission_key' => $firstDelivery ? (string) Str::uuid() : $data['submission_key'],
                         'delivery_receipt_number' => $data['delivery_receipt_number'] ?? null,

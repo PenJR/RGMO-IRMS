@@ -106,6 +106,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/procurements/prices', [SupplierPriceController::class, 'index'])->name('procurements.prices');
         Route::get('/procurements/{procurement}', [ProcurementController::class, 'show'])->name('procurements.show');
         Route::get('/procurements/{procurement}/receipt', [ProcurementController::class, 'receipt'])->name('procurements.receipt');
+        Route::get('/deliveries/{delivery}/attachment', [ProcurementController::class, 'deliveryAttachment'])->name('deliveries.attachment');
     });
     Route::middleware('permission:approve-purchase-orders')->group(function () {
         Route::post('/procurements/{procurement}/approve', [ProcurementController::class, 'approve'])->name('procurements.approve');

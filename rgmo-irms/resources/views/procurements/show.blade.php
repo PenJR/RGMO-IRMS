@@ -56,7 +56,7 @@
         </ul></div>@endif
         @if($procurement->receipt_path)<a class="btn btn-outline-success" href="{{ route('procurements.receipt', $procurement) }}">Download receipt</a> <a class="btn btn-outline-secondary" target="_blank" rel="noopener" href="{{ route('procurements.receipt', ['procurement' => $procurement, 'preview' => 1]) }}">Preview receipt</a>@endif @if($procurement->item && ! $procurement->item->trashed())<a class="btn btn-outline-secondary" href="{{ route('inventory.show', $procurement->item) }}">View item</a>@endif</div></div>
         @if(auth()->user()->hasPermission('manage-inventory') && $procurement->isReceivable() && $procurement->monitoring['remaining'] > 0)
-        <div class="card mb-4"><div class="card-body"><h3 class="h5">Receive delivery</h3><form method="POST" action="{{ route('procurements.receive', $procurement) }}">@csrf
+        <div class="card mb-4"><div class="card-body"><h3 class="h5">Receive delivery</h3><form method="POST" enctype="multipart/form-data" action="{{ route('procurements.receive', $procurement) }}">@csrf
             <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">
             <p class="small text-muted">0 = not received. Enter actual unit prices.</p>
             <details class="small text-muted mb-3"><summary>Help</summary><p class="mb-0">Split tracked items by batch / lot; quantities add up automatically. Prices default to the PO price. Check them against the delivery documents.</p></details>
@@ -65,6 +65,7 @@
                 <div class="col-md-4"><label for="delivery-receipt-number" class="form-label">Delivery receipt number</label><input id="delivery-receipt-number" name="delivery_receipt_number" class="form-control" maxlength="100" value="{{ old('delivery_receipt_number') }}" required></div>
                 <div class="col-md-4"><label for="invoice-number" class="form-label">Invoice number (optional)</label><input id="invoice-number" name="invoice_number" class="form-control" maxlength="100" value="{{ old('invoice_number') }}"></div>
                 <div class="col-md-6"><label for="delivery-reference" class="form-label">Reference (optional)</label><input id="delivery-reference" name="reference" class="form-control" maxlength="100" value="{{ old('reference') }}"></div>
+                <div class="col-md-6"><label for="delivery-attachment" class="form-label">Delivery attachment (optional)</label><input id="delivery-attachment" name="delivery_attachment" type="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control"><div class="form-text">Delivery receipt or invoice: PDF/image, up to 5 MB.</div></div>
                 <div class="col-md-6"><span class="form-label d-block">Received by</span><div class="form-control bg-light">{{ auth()->user()->name }}</div></div>
             </div>
             <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Item / Unit</th><th>Ordered</th><th>Received</th><th>Remaining</th><th>Received now</th><th>Unit price ({{ $currencyCode }})</th></tr></thead><tbody>

@@ -43,7 +43,7 @@ class RequestWorkflowTest extends TestCase
         $this->actingAs($storekeeper)->post(route('requests.fulfill', $request), [
             'quantities' => $request->items->pluck('quantity', 'id')->all(), 'received_by' => 'Test recipient',
             'withdrawn_on' => today()->toDateString(), 'submission_key' => (string) \Illuminate\Support\Str::uuid(),
-        ])->assertRedirect();
+        ])->assertRedirect()->assertSessionHasNoErrors();
         $this->assertSame(ResourceRequest::STATUS_COMPLETED, $request->fresh()->status);
     }
 
@@ -177,7 +177,7 @@ class RequestWorkflowTest extends TestCase
             ->assertRedirect(route('requests.show', $request));
 
         $this->actingAs($admin)
-            ->post(route('requests.fulfill', $request), ['quantities' => $request->items->pluck('quantity', 'id')->all(), 'received_by' => 'Test recipient', 'withdrawn_on' => today()->toDateString(), 'submission_key' => (string) \Illuminate\Support\Str::uuid()])
+            ->post(route('requests.fulfill', $request), ['quantities' => $request->items->pluck('quantity', 'id')->all(), 'received_by' => 'Test recipient', 'recipient_acknowledged' => '1', 'withdrawn_on' => today()->toDateString(), 'submission_key' => (string) \Illuminate\Support\Str::uuid()])
             ->assertRedirect(route('requests.show', $request))
             ->assertSessionHas('withdrawal_receipt_url', route('requests.withdrawal-slip.download', $request));
 
@@ -187,6 +187,8 @@ class RequestWorkflowTest extends TestCase
         $this->assertSame(ResourceRequest::STATUS_COMPLETED, $request->status);
         $this->assertNotNull($request->fulfilled_at);
         $this->assertSame(6, $item->stock);
+        $this->assertDatabaseHas('withdrawals', ['resource_request_id' => $request->id, 'received_by' => 'Test recipient']);
+        $this->assertNotNull($request->withdrawals()->sole()->recipient_acknowledged_at);
         $this->assertDatabaseHas('inventory_transactions', [
             'inventory_item_id' => $item->id,
             'transaction_type' => 'stock_out',
