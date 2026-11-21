@@ -60,6 +60,19 @@ class AIForecastingController extends Controller
         $range = $this->forecastRange($request);
 
         if (! $request->boolean('generate')) {
+            // Opening Forecasts reuses office history; explicit dates still open the preparation form.
+            if (! $request->filled('forecast_start') && ! $request->filled('forecast_end')) {
+                $latest = GeneratedReportSnapshot::query()->accessibleTo($request->user())
+                    ->where('report_key', 'forecast')
+                    ->orderByDesc('generated_at')->orderByDesc('id')->first();
+
+                if ($latest !== null) {
+                    $this->authorize('view', $latest);
+
+                    return view('ai-forecasting.index', $this->savedForecastData($latest) + ['latest_default' => true]);
+                }
+            }
+
             return view('ai-forecasting.index', [
                 'generated' => false,
                 'forecast_start' => $range['start'],

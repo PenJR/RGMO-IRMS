@@ -73,6 +73,16 @@ class InputRules
         ];
     }
 
+    public static function inventoryReportFilters(): array
+    {
+        return self::pagination() + [
+            'fiscal_year' => ['nullable', 'integer', 'min:1', 'max:'.now()->year],
+            // Frozen report categories remain filterable even after the live record is removed.
+            'category_id' => ['nullable', 'integer', 'min:1'],
+            'low_stock' => ['nullable', 'boolean'],
+        ];
+    }
+
     public static function reportExport(): array
     {
         $rules = [

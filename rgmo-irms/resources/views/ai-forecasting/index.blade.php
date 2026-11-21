@@ -13,7 +13,7 @@
         @if($snapshot)
             <div class="alert alert-info d-flex justify-content-between align-items-center gap-3 flex-wrap">
                 <div>
-                    <strong>Saved forecast</strong>
+                    <strong>{{ ($latest_default ?? false) ? 'Latest saved forecast' : 'Saved forecast' }}</strong>
                     <div class="small">Generated {{ $snapshot->generated_at->format('M d, Y h:i A') }} by {{ $snapshot->generator_name }}. These results remain as originally generated.</div>
                 </div>
                 <a href="{{ route('reports.history.show', $snapshot) }}" class="btn btn-sm btn-outline-primary">View Saved Report &amp; Exports</a>

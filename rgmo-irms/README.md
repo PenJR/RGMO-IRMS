@@ -10,6 +10,7 @@ RGMO-IRMS is a Laravel-based Inventory and Resource Management System for the Re
 - Operational incident reports with private evidence, Storekeeper investigation, and administrator-controlled resolution and stock adjustments.
 - Reports and CSV/PDF exports for authorized roles.
 - Saved report and forecast history with original figures, filters, generator details, and PDF/CSV/JSON downloads.
+- Permanent annual inventory snapshots with Administrator review, one finalization per completed year, and an audit record.
 - Administrator-controlled delivery corrections and unused-receipt voids, with original receipt preservation and read-only oversight for RGMO Heads and Auditors.
 - Forecasting, personal notifications, and dashboard summaries.
 - Authentication, optional two-factor verification, user administration, and audit history.
@@ -23,9 +24,19 @@ Run `php artisan migrate` when updating an existing installation to create the p
 
 Open **Reports → Saved Report History** to search by report type, generation date, generator name, title, or snapshot ID. Report pages provide **Save to history**, which generates and saves a complete copy using the displayed filters. Generating a forecast saves it automatically and redirects to its saved dashboard. Refreshing a saved result or downloading it reads its stored values without recalculating inventory or forecasts. Submitting the same generation form again reopens the same saved result.
 
+Opening **Forecasts** displays the latest saved office forecast available to the user's current permissions, including its original date range, generator, and saved AI summary. Opening the page does not generate new results or call AI. Forecast history links still open the selected older result. Explicit date-only URLs open the preparation form, and an office with no saved forecasts sees the date-selection form.
+
 History preserves item and funding labels, quantities, calculated values, currency, reporting period, and generator name. Changes to source records or settings do not change a saved result. Audit reports capture all matching entries across pages. Blank print-ready forms do not create history. Optional AI forecast summaries are generated on request from the saved numerical forecast; the first successful summary is saved separately with its own generation details.
 
 Access follows current permissions for each report type: `generate-reports` for normal reports, `view-audit-trail` for audit reports, and `view-forecasts` for forecasts. Authorized users share office history for their permitted types. Saved results have no edit or delete action. Existing results generated before this feature cannot be recovered retrospectively. Older bookmarked GET forecast generation URLs remain live previews; use **Generate Forecast** to save a new result.
+
+## Permanent year-end inventory
+
+Run `php artisan migrate` when updating an existing installation. Open **Reports → Year-end Snapshots**. An active, unlocked Administrator with `close-inventory-year` can select a completed calendar year, review the full preview, and finalize it with a reason and supporting reference. The current year remains open. Finalization is manual; changing the global fiscal year does not finalize a year. It does not reset stock, post movements, or change deliveries and requests.
+
+Each year is stored once as an independent snapshot. A changed preview must be reviewed again before saving; repeat submissions reopen the original snapshot. The saved record has no edit, replace, or delete action. Administrators, RGMO Heads, and Auditors with `generate-reports` can view and download PDF, CSV, and full JSON. Selecting a finalized fiscal year in **Inventory Summary**, its exports, or **Save to history** uses those preserved figures.
+
+The first capture reconstructs December 31 quantities from current physical stock less posted movements after that cutoff. Items created by the cutoff are included even if archived, since archiving does not remove physical stock. Negative reconstructed balances must be reconciled before finalization. Names, categories, units, minimum stock, archive status, unit prices, and currency reflect capture time; they are not verified historical versions. Missing prices remain unknown and are excluded from the priced subtotal. These bases are preserved and shown in the report. Years without a finalized snapshot remain clearly labeled provisional reconstructions. Monthly movement reports retain their existing calculations.
 
 ## Documentation
 

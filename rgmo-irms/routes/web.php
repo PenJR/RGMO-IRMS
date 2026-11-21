@@ -23,6 +23,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierPriceController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\YearEndInventorySnapshotController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -212,6 +213,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/2fa/disable', [TwoFactorController::class, 'disable'])->middleware('throttle:5,1')->name('2fa.disable');
 
     // Reports
+    Route::middleware('permission:generate-reports')->prefix('reports/year-end')->name('reports.year-end.')->group(function () {
+        Route::get('/', [YearEndInventorySnapshotController::class, 'index'])->name('index');
+        Route::get('/preview', [YearEndInventorySnapshotController::class, 'preview'])->middleware('permission:close-inventory-year')->name('preview');
+        Route::post('/', [YearEndInventorySnapshotController::class, 'store'])->middleware(['permission:close-inventory-year', 'throttle:10,1'])->name('store');
+        Route::get('/{snapshot}', [YearEndInventorySnapshotController::class, 'show'])->whereUuid('snapshot')->name('show');
+        Route::get('/{snapshot}/pdf', [YearEndInventorySnapshotController::class, 'pdf'])->whereUuid('snapshot')->name('pdf');
+        Route::get('/{snapshot}/csv', [YearEndInventorySnapshotController::class, 'csv'])->whereUuid('snapshot')->name('csv');
+        Route::get('/{snapshot}/json', [YearEndInventorySnapshotController::class, 'json'])->whereUuid('snapshot')->name('json');
+    });
+
     Route::middleware('permission:generate-reports,view-audit-trail,view-forecasts')->prefix('reports/history')->name('reports.history.')->group(function () {
         Route::get('/', [GeneratedReportSnapshotController::class, 'index'])->name('index');
         Route::post('/', [ReportSnapshotGenerationController::class, 'store'])->middleware('throttle:20,1')->name('generate');

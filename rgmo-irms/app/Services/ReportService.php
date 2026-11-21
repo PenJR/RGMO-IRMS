@@ -11,6 +11,8 @@ use App\Models\ResourceRequest;
 use App\Models\ResourceUsage;
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Models\YearEndInventorySnapshot;
+use Brick\Math\BigDecimal;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -21,18 +23,24 @@ class ReportService
     /**
      * Compile a comprehensive inventory report with statistical aggregates.
      *
-     * @param  array  $filters  (category_id, low_stock).
+     * @param  array  $filters  (fiscal_year, category_id, low_stock).
      * @return array Summary of total items, low stock counts, and total valuation.
      */
     public function getInventoryReport(array $filters = [])
     {
-        $fiscalYear = SystemSetting::fiscalYear();
+        $fiscalYear = (int) ($filters['fiscal_year'] ?? SystemSetting::fiscalYear());
+        $historical = $fiscalYear < now()->year;
+        if ($historical && ($snapshot = YearEndInventorySnapshot::where('fiscal_year', $fiscalYear)->first())) {
+            return app(YearEndInventorySnapshotService::class)->toReport($snapshot, $filters);
+        }
         $asOf = Carbon::create($fiscalYear, 12, 31)->endOfDay();
         if ($fiscalYear === now()->year) {
             $asOf = today()->endOfDay();
         }
 
-        $query = InventoryItem::active()->with('category');
+        $query = $historical
+            ? InventoryItem::withTrashed()->where('created_at', '<=', $asOf)->with(['category' => fn ($categories) => $categories->withTrashed()])
+            : InventoryItem::active()->with('category');
 
         if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
@@ -55,6 +63,7 @@ class ReportService
                 : max(0, (int) $item->stock - (int) $laterMovements->get($item->id, 0));
             $item->setAttribute('stock_at_fiscal_year_end', $stock);
             $item->setAttribute('stock_status_at_fiscal_year_end', $this->stockStatus($stock, (int) $item->min_stock));
+            $item->setAttribute('stock_value', $item->price === null ? null : (string) BigDecimal::of($item->price)->multipliedBy($stock)->toScale(2));
 
             return $item;
         });
@@ -63,13 +72,30 @@ class ReportService
             $items = $items->filter(fn (InventoryItem $item) => $item->stock_at_fiscal_year_end <= $item->min_stock);
         }
 
+        $totalValue = BigDecimal::zero()->toScale(2);
+        foreach ($items as $item) {
+            if ($item->stock_value !== null) {
+                $totalValue = $totalValue->plus($item->stock_value);
+            }
+        }
+        $missingPrices = $items->filter(fn ($item) => $item->price === null)->count();
+
         return [
             'total_items' => $items->count(),
             'low_stock_items' => $items->filter(fn ($item) => $item->stock_status_at_fiscal_year_end === 'low')->count(),
-            'total_value' => $items->sum(fn ($item) => $item->stock_at_fiscal_year_end * $item->price),
+            'total_value' => (string) $totalValue,
             'items' => $items,
             'fiscal_year' => $fiscalYear,
             'as_of' => $asOf,
+            'currency' => SystemSetting::currency(),
+            'year_end_snapshot' => null,
+            'report_source' => $historical ? 'historical_reconstruction' : 'live',
+            'is_provisional' => $historical,
+            'quantity_basis' => $historical ? 'Current balances less movements recorded after the year-end cutoff; not yet frozen.' : 'Current recorded inventory balances adjusted for movements after the reporting cutoff.',
+            'valuation_basis' => 'Unit prices available when this report is read; historical prices are not reconstructed.',
+            'metadata_basis' => 'Item names, categories, units, thresholds, and currency available when this report is read.',
+            'missing_price_count' => $missingPrices,
+            'valuation_complete' => $missingPrices === 0,
         ];
     }
 

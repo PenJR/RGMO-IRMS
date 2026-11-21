@@ -9,6 +9,13 @@
             <a href="{{ route('reports.history.index') }}" class="btn btn-cmu">Open saved history</a>
         </div></div>
 
+        @can('viewAny', \App\Models\YearEndInventorySnapshot::class)
+            <div class="card border-0 shadow-sm mb-4"><div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div><h3 class="h5 mb-1">Permanent year-end inventory</h3><p class="text-muted mb-0">Review finalized annual balances. Administrators can preview and finalize a completed fiscal year once.</p></div>
+                <a href="{{ route('reports.year-end.index') }}" class="btn btn-outline-secondary">Year-end snapshots</a>
+            </div></div>
+        @endcan
+
         <div class="row g-4">
             <div class="col-12"><h3 class="report-section-title">Official submission formats</h3></div>
             @foreach([

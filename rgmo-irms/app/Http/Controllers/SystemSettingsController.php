@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InventoryItem;
 use App\Models\SystemSetting;
+use App\Models\YearEndInventorySnapshot;
 use App\Services\RmsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -84,7 +85,7 @@ class SystemSettingsController extends Controller
     }
 
     /**
-     * List historical fiscal years back to the earliest inventory record.
+     * List historical fiscal years back to the earliest inventory record or permanent snapshot.
      *
      * @return array<int, int>
      */
@@ -92,6 +93,10 @@ class SystemSettingsController extends Controller
     {
         $earliestRecord = InventoryItem::withTrashed()->min('created_at');
         $firstYear = $earliestRecord ? Carbon::parse($earliestRecord)->year : now()->year;
+        $firstSnapshotYear = YearEndInventorySnapshot::min('fiscal_year');
+        if ($firstSnapshotYear !== null) {
+            $firstYear = min($firstYear, (int) $firstSnapshotYear);
+        }
 
         return range(now()->year, max(1, min(now()->year - 1, $firstYear)));
     }

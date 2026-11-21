@@ -117,6 +117,9 @@
                 <div class="nav-submenu">
                     <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}">Reporting Center</a>
                     <a href="{{ route('reports.history.index') }}" class="nav-link {{ request()->routeIs('reports.history.*') ? 'active' : '' }}">Saved Report History</a>
+                    @can('viewAny', \App\Models\YearEndInventorySnapshot::class)
+                        <a href="{{ route('reports.year-end.index') }}" class="nav-link {{ request()->routeIs('reports.year-end.*') ? 'active' : '' }}">Year-end Snapshots</a>
+                    @endcan
                     @can('viewAnyCorrections', \App\Models\Delivery::class)
                         <a href="{{ route('deliveries.corrections.overview') }}" class="nav-link {{ request()->routeIs('deliveries.corrections.*') ? 'active' : '' }}">Delivery Corrections</a>
                     @endcan

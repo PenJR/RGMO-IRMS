@@ -30,6 +30,18 @@ Administrator is the system superuser, subject to account safeguards and workflo
 
 The correction policy requires an active, unlocked Administrator and explicit `correct-deliveries` and `view-delivery-corrections` grants. Generic Administrator permission bypass, inventory management, and PO approval do not substitute for these grants. History requires the separate read permission. Routes, controller actions, and the transactional service enforce authorization; hiding controls is only a UI convenience. See [Suppliers and deliveries](SUPPLIERS-DELIVERIES.md#correct-a-recorded-delivery) for correction limits and the audit process.
 
+## Permanent year-end inventory
+
+| Capability | Administrator | RGMO Head | Auditor | Storekeeper | Unit Head | Project Manager | Staff |
+|---|---|---|---|---|---|---|---|
+| Preview and finalize a completed year | Yes | No | No | No | No | No | No |
+| Read and export permanent annual snapshots | Yes | Yes | Yes | No | No | No | No |
+| Edit, replace, or delete a finalized year | No | No | No | No | No | No | No |
+
+Finalization requires an active, unlocked Administrator with the explicit configured `close-inventory-year` grant. Read access requires an active, unlocked account with the configured `generate-reports` grant. Generic Administrator bypass and audit-only access do not substitute for these checks. The controller and transactional capture service enforce closing permission, including on retries. Snapshot policies deny updates and deletion for every role.
+
+Open **Reports → Year-end Snapshots**, preview a completed year, record the reason and supporting reference, and finalize. Source values are determined by the server; a signed preview prevents saving changed figures without renewed review. Saving the snapshot and its audit entry is atomic, and the unique fiscal-year constraint prevents replacement. This action preserves annual inventory independently of source records; it does not reset stock or reopen prior requests. See the [year-end inventory process](../README.md#permanent-year-end-inventory) for quantity and valuation bases.
+
 ## Incident reports
 
 Incident reports are a separate operational workflow and do not revise resource requests or other approved documents. Staff and Project Managers can report incidents and view their own reports. Storekeepers can view reports and record investigations; they cannot approve stock changes. Administrators review investigations and resolve reports by approving a stock adjustment, resolving without an adjustment, or closing/rejecting with a reason. The reporter and investigator cannot resolve their own report. Auditors have read-only access to all incident reports. Uploaded evidence is stored privately and downloaded only through an authorized report view.
