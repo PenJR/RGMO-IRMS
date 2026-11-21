@@ -1,15 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
-            <h2 class="h5 fw-bold mb-0">Forecasts</h2>
-            <a href="{{ route('reports.history.index', ['report_key' => 'forecast']) }}" class="btn btn-sm btn-outline-secondary">
-                <i data-lucide="history" style="width: 16px; height: 16px;"></i>
-                Forecast History
-            </a>
-        </div>
+        <h2 class="h5 fw-bold mb-0">Forecasts</h2>
     </x-slot>
 
     <div class="container-fluid py-4">
+        <div class="forecast-page-toolbar mb-4">
+            <div>
+                <p class="text-muted small mb-0">Generate demand forecasts and revisit saved results.</p>
+            </div>
+            <a href="{{ route('reports.history.index', ['report_key' => 'forecast']) }}" class="forecast-history-action">
+                <span class="forecast-history-icon" aria-hidden="true"><i data-lucide="history"></i></span>
+                <span><strong>Forecast history</strong><small>View saved forecasts</small></span>
+                <i data-lucide="arrow-up-right" class="forecast-history-arrow" aria-hidden="true"></i>
+            </a>
+        </div>
         @if($snapshot)
             <div class="alert alert-info d-flex justify-content-between align-items-center gap-3 flex-wrap">
                 <div>
