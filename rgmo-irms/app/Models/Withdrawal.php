@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Model;
 
 class Withdrawal extends Model
 {
+    use HasPublicId;
     protected $guarded = ['id'];
 
     protected function casts(): array

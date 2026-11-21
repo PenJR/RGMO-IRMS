@@ -321,14 +321,16 @@
     @endphp
 
     @unless($isPdf ?? false)
-        <form method="GET" action="{{ route('requests.withdrawal-slip.download', $request) }}">
+        <form method="POST" action="{{ route('requests.withdrawal-slip.save', $request) }}">
+            @csrf
     @endunless
 
     @unless($isPdf ?? false)
         <div class="print-toolbar" aria-label="Withdrawal slip actions">
             <button type="button" onclick="window.print()">Print Withdrawal Slip</button>
+            <button type="submit">Save fields</button>
             @if($request->status === 'approved')
-                <button type="submit">Download PDF</button>
+                <button type="submit" formmethod="GET" formaction="{{ route('requests.withdrawal-slip.download', $request) }}">Download PDF</button>
             @endif
             <a href="{{ route('requests.show', $request) }}">Back to Request</a>
         </div>

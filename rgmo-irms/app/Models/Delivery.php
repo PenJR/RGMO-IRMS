@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 class Delivery extends Model
 {
+    use HasPublicId;
     /** Request-line balances that have been assigned to this received PO lot. */
     public function requestReservations(): HasMany
     {

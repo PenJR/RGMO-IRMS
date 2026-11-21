@@ -59,7 +59,8 @@ class ResourceUsage extends Model
     {
         if ($user->isProjectManager()) {
             $query->where(function (Builder $query) use ($user) {
-                $query->whereHas('requestItem.request', fn (Builder $request) => $request->where('user_id', $user->id))
+                $query->whereHas('project.managers', fn (Builder $manager) => $manager->whereKey($user->id))
+                    ->orWhereHas('requestItem.request', fn (Builder $request) => $request->where('user_id', $user->id))
                     ->orWhere(fn (Builder $legacy) => $legacy->whereNull('request_item_id')->where('user_id', $user->id));
             });
         }

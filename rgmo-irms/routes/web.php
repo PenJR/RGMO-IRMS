@@ -170,6 +170,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/requests/{request}/withdrawals/{withdrawal}', [ResourceRequestController::class, 'withdrawalRecord'])->name('requests.withdrawal-record');
         Route::get('/requests/{request}/withdrawal-slip/download', [ResourceRequestController::class, 'downloadWithdrawalSlip'])->name('requests.withdrawal-slip.download');
         Route::get('/requests/{request}/withdrawal-slip', [ResourceRequestController::class, 'withdrawalSlip'])->name('requests.withdrawal-slip');
+        Route::post('/requests/{request}/withdrawal-slip', [ResourceRequestController::class, 'saveWithdrawalSlip'])->name('requests.withdrawal-slip.save');
         Route::post('/requests/{request}/fulfill', [ResourceRequestController::class, 'fulfill'])->name('requests.fulfill');
         Route::resource('requests', ResourceRequestController::class);
     });

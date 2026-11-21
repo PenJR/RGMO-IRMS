@@ -14,8 +14,7 @@ class ProjectInventoryService
         return RequestItem::query()
             ->whereHas('request', fn ($query) => $query
                 ->where('project_id', $project->id)
-                ->whereIn('status', ['approved', 'partially_withdrawn', 'completed'])
-                ->when($viewer->isProjectManager(), fn ($query) => $query->where('user_id', $viewer->id)))
+                ->whereIn('status', ['approved', 'partially_withdrawn', 'completed']))
             ->with('item.category')
             ->get()
             ->groupBy('inventory_item_id')

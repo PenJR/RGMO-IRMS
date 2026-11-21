@@ -37,13 +37,14 @@ class InventoryForecastingService
      *
      * @return array<string, mixed>
      */
-    public function buildForecast(int $forecastDays = self::DEFAULT_FORECAST_DAYS): array
+    public function buildForecast(int $forecastDays = self::DEFAULT_FORECAST_DAYS, ?CarbonImmutable $historyStart = null, ?CarbonImmutable $historyEnd = null): array
     {
         $forecastDays = max(1, min(365, $forecastDays));
-
         $asOf = CarbonImmutable::now()->startOfDay();
-        $historyStartsAt = $asOf->subDays(self::HISTORY_DAYS - 1);
-        $dailyUsage = $this->stockOutDailyTotals($historyStartsAt, $asOf->endOfDay());
+        $historyEndsAt = ($historyEnd ?? $asOf)->min($asOf);
+        $historyStartsAt = $historyStart ?? $historyEndsAt->subDays(self::HISTORY_DAYS - 1);
+        $historyDays = max(1, $historyStartsAt->diffInDays($historyEndsAt) + 1);
+        $dailyUsage = $this->stockOutDailyTotals($historyStartsAt, $historyEndsAt->endOfDay());
 
         $items = InventoryItem::query()
             ->active()
@@ -52,11 +53,11 @@ class InventoryForecastingService
             ->orderBy('name')
             ->get();
 
-        $forecasts = $items->map(function (InventoryItem $item) use ($dailyUsage, $historyStartsAt, $forecastDays): array {
+        $forecasts = $items->map(function (InventoryItem $item) use ($dailyUsage, $historyStartsAt, $historyDays, $forecastDays): array {
             $series = $this->dailySeries(
                 $dailyUsage->get($item->id, collect()),
                 $historyStartsAt,
-                self::HISTORY_DAYS
+                $historyDays
             );
             $prediction = $this->forecastSeries($series, $forecastDays);
             $currentUsage = (int) array_sum(array_slice($series, -$forecastDays));
@@ -110,7 +111,9 @@ class InventoryForecastingService
 
         return [
             'as_of' => $asOf,
-            'history_days' => self::HISTORY_DAYS,
+            'history_days' => $historyDays,
+            'history_start' => $historyStartsAt,
+            'history_end' => $historyEndsAt,
             'forecast_days' => $forecastDays,
             'forecast_periods' => self::FORECAST_PERIODS,
             'forecasts' => $rankedForecasts,

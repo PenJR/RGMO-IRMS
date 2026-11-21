@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ForecastApiUsage;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -136,6 +137,12 @@ PROMPT;
                     'responseSchema' => $this->responseSchema(),
                 ],
             ]);
+
+        // Count only actual outbound calls; cached explanations never reach this point.
+        ForecastApiUsage::query()->updateOrCreate(
+            ['usage_month' => now()->startOfMonth()->toDateString(), 'provider' => 'gemini'],
+            ['last_requested_at' => now()]
+        )->increment('requests');
 
         if (! $response->successful()) {
             Log::warning('Gemini forecast explanation request failed.', [

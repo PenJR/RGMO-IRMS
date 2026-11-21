@@ -44,8 +44,10 @@ class ProjectController extends Controller
         return view('projects.create', [
             'project' => new Project(['status' => Project::STATUS_ACTIVE]),
             'managers' => $this->managerOptions(),
+            'requesters' => $this->requesterOptions(),
             'statuses' => Project::statuses(),
             'selectedManagers' => [],
+            'selectedRequesters' => [],
         ]);
     }
 
@@ -58,10 +60,11 @@ class ProjectController extends Controller
 
         $validated = $this->validatedProject($request);
         $managerIds = $validated['manager_ids'] ?? [];
-        unset($validated['manager_ids']);
+        $requesterIds = $validated['requester_ids'] ?? [];
+        unset($validated['manager_ids'], $validated['requester_ids']);
 
         $project = Project::create($validated);
-        $project->managers()->sync($managerIds);
+        $this->syncParticipants($project, $managerIds, $requesterIds);
 
         return redirect()->route('projects.show', $project)->with('success', 'Project created successfully.');
     }
@@ -74,7 +77,7 @@ class ProjectController extends Controller
         $this->authorize('view', $project);
 
         $project->load([
-            'managers',
+            'managers', 'requesters',
             'resourceUsages' => fn ($query) => $query->visibleTo(auth()->user()),
             'resourceUsages.item.category',
             'resourceUsages.user',
@@ -109,10 +112,12 @@ class ProjectController extends Controller
         $this->authorize('update', $project);
 
         return view('projects.edit', [
-            'project' => $project->load('managers'),
+            'project' => $project->load('managers', 'requesters'),
             'managers' => $this->managerOptions(),
+            'requesters' => $this->requesterOptions(),
             'statuses' => Project::statuses(),
             'selectedManagers' => $project->managers->pluck('id')->all(),
+            'selectedRequesters' => $project->requesters->pluck('id')->all(),
         ]);
     }
 
@@ -125,10 +130,11 @@ class ProjectController extends Controller
 
         $validated = $this->validatedProject($request, $project);
         $managerIds = $validated['manager_ids'] ?? [];
-        unset($validated['manager_ids']);
+        $requesterIds = $validated['requester_ids'] ?? [];
+        unset($validated['manager_ids'], $validated['requester_ids']);
 
         $project->update($validated);
-        $project->managers()->sync($managerIds);
+        $this->syncParticipants($project, $managerIds, $requesterIds);
 
         return redirect()->route('projects.show', $project)->with('success', 'Project updated successfully.');
     }
@@ -166,6 +172,8 @@ class ProjectController extends Controller
                         ->where('status', User::STATUS_ACTIVE);
                 }),
             ],
+            'requester_ids' => ['nullable', 'array', 'max:100'],
+            'requester_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->where(fn ($query) => $query->where('status', User::STATUS_ACTIVE)->whereIn('role', [User::ROLE_STAFF, User::ROLE_PROJECT_MANAGER]))],
         ]);
     }
 
@@ -179,5 +187,20 @@ class ProjectController extends Controller
             ->where('status', User::STATUS_ACTIVE)
             ->orderBy('name')
             ->get();
+    }
+
+    private function requesterOptions()
+    {
+        return User::query()->whereIn('role', [User::ROLE_STAFF, User::ROLE_PROJECT_MANAGER])
+            ->where('status', User::STATUS_ACTIVE)->orderBy('name')->get();
+    }
+
+    private function syncParticipants(Project $project, array $managerIds, array $requesterIds): void
+    {
+        $participants = collect($requesterIds)->mapWithKeys(fn ($id) => [(int) $id => ['role' => 'requester']])->all();
+        foreach ($managerIds as $id) {
+            $participants[(int) $id] = ['role' => 'manager'];
+        }
+        $project->participants()->sync($participants);
     }
 }

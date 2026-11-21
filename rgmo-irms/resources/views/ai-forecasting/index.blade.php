@@ -38,6 +38,9 @@
                         <label for="forecast-start" class="form-label small fw-semibold mb-1">Forecast start</label>
                         <input id="forecast-start" name="forecast_start" type="date" class="form-control" value="{{ $forecast_start->toDateString() }}" required>
                     </div>
+                    <div class="col-12"><div class="small fw-semibold text-muted">Historical demand data used for this calculation</div></div>
+                    <div class="col-12 col-md-4 col-xl-3"><label for="history-start" class="form-label small fw-semibold mb-1">History start</label><input id="history-start" name="history_start" type="date" class="form-control" value="{{ $history_start->toDateString() }}" required></div>
+                    <div class="col-12 col-md-4 col-xl-3"><label for="history-end" class="form-label small fw-semibold mb-1">History end</label><input id="history-end" name="history_end" type="date" class="form-control" max="{{ today()->toDateString() }}" value="{{ $history_end->toDateString() }}" required></div>
                     <div class="col-12 col-md-4 col-xl-3">
                         <label for="forecast-end" class="form-label small fw-semibold mb-1">Forecast end</label>
                         <input id="forecast-end" name="forecast_end" type="date" class="form-control" value="{{ $forecast_end->toDateString() }}" required>
@@ -123,7 +126,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($forecasts as $forecast)
+                                    @forelse(($forecastPage ?? $forecasts) as $forecast)
                                         @php
                                             $item = $forecast['item'];
                                             $badge = [
@@ -168,6 +171,7 @@
                                 </tbody>
                             </table>
                         </div>
+                        @if(isset($forecastPage) && $forecastPage->hasPages())<div class="px-3 py-3 border-top">{{ $forecastPage->links() }}</div>@endif
                     </div>
                 </div>
             </div>

@@ -195,7 +195,12 @@ class User extends Authenticatable
      */
     public function managedProjects(): BelongsToMany
     {
-        return $this->belongsToMany(Project::class)->withTimestamps();
+        return $this->belongsToMany(Project::class)->wherePivot('role', 'manager')->withPivot('role')->withTimestamps();
+    }
+
+    public function requestedProjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class)->wherePivot('role', 'requester')->withPivot('role')->withTimestamps();
     }
 
     // Scopes

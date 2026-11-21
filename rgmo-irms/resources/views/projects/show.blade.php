@@ -20,9 +20,7 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-1">Inventory</h5>
-                @if(auth()->user()->isProjectManager())
-                    <p class="text-muted small mb-0">Your requests only.</p>
-                @endif
+                @if(auth()->user()->isProjectManager())<p class="text-muted small mb-0">All approved requests and utilization for this project.</p>@endif
             </div>
             <div class="card-body p-0">
                 @if($projectInventory->isNotEmpty())
@@ -135,6 +133,7 @@
                         @endif
                     </div>
                 </div>
+                <div class="card border-0 shadow-sm mt-4"><div class="card-header bg-white border-0"><h5 class="mb-0">Project Requesters</h5></div><div class="card-body p-4">@forelse($project->requesters as $requester)<div class="mb-2"><span class="fw-semibold">{{ $requester->name }}</span><span class="text-muted small"> · {{ $requester->email }}</span></div>@empty<p class="text-muted mb-0">No requesters assigned.</p>@endforelse</div></div>
             </div>
 
             <div class="col-lg-4">

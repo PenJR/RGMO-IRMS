@@ -49,6 +49,16 @@
                 </div>
             </div>
         </div>
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white border-0"><h5 class="mb-0">Project Requesters</h5></div>
+            <div class="card-body p-4">
+                <p class="small text-muted">Members can submit requests for this project. Project managers can view the complete project-wide inventory and utilization history.</p>
+                @foreach($requesters as $requester)
+                    <label class="d-flex align-items-start gap-2 border rounded p-3 mb-2"><input type="checkbox" name="requester_ids[]" value="{{ $requester->id }}" class="form-check-input mt-1" {{ in_array($requester->id, old('requester_ids', $selectedRequesters), false) ? 'checked' : '' }}><span><span class="d-block fw-semibold">{{ $requester->name }}</span><span class="d-block text-muted small">{{ $requester->email }}</span></span></label>
+                @endforeach
+                @error('requester_ids')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
+            </div>
+        </div>
     </div>
 
     <div class="col-lg-4">

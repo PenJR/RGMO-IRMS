@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 class ResourceRequest extends Model
 {
     use SoftDeletes;
+    use HasPublicId;
 
     const STATUS_PENDING = 'pending';
 
@@ -49,6 +51,7 @@ class ResourceRequest extends Model
         'cancelled_at',
         'fulfilled_at',
         'tracks_utilization',
+        'withdrawal_slip_fields',
     ];
 
     protected $casts = [
@@ -61,6 +64,7 @@ class ResourceRequest extends Model
         'cancelled_at' => 'datetime',
         'fulfilled_at' => 'datetime',
         'tracks_utilization' => 'boolean',
+        'withdrawal_slip_fields' => 'array',
     ];
 
     /**

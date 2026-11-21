@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Project extends Model
 {
     use SoftDeletes;
+    use HasPublicId;
 
     public const STATUS_ACTIVE = 'active';
 
@@ -58,7 +60,18 @@ class Project extends Model
      */
     public function managers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withTimestamps();
+        return $this->belongsToMany(User::class)->wherePivot('role', 'manager')->withPivot('role')->withTimestamps();
+    }
+
+    /** Active requesters who may submit requests for this project. */
+    public function requesters(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)->wherePivot('role', 'requester')->withPivot('role')->withTimestamps();
+    }
+
+    public function participants(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
     }
 
     /**

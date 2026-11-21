@@ -71,7 +71,7 @@ class ResourceRequestController extends Controller
 
         return view('requests.create', [
             'items' => InventoryItem::active()->withReservationBalance()->get(),
-            'projects' => Project::query()->current()->orderBy('name')->get(),
+            'projects' => $this->requestableProjects(),
         ]);
     }
 
@@ -136,7 +136,7 @@ class ResourceRequestController extends Controller
             'corrections' => $corrections,
             'correctionItemNames' => InventoryItem::withTrashed()->whereIn('id', $correctionItemIds)->pluck('name', 'id'),
             'correctionItems' => InventoryItem::active()->orderBy('name')->get(['id', 'name', 'unit']),
-            'projects' => Project::query()->current()->orderBy('name')->get(),
+            'projects' => $this->requestableProjects(),
             'canFulfill' => $this->requestService->canFulfillRequest($request),
         ]);
     }
@@ -245,21 +245,7 @@ class ResourceRequestController extends Controller
         $this->ensureWithdrawalReceiptIsAvailable($request);
 
         $request->load('user', 'project', 'approver', 'items.item', 'withdrawals.issuer', 'withdrawals.items.requestItem.item');
-        $signatureValues = array_replace(
-            $this->withdrawalSignatureDefaults($request),
-            $httpRequest->validate([
-                'po_number' => 'nullable|string|max:80',
-                'pr_number' => 'nullable|string|max:80',
-                'requested_by' => 'nullable|string|max:120',
-                'requested_by_title' => 'nullable|string|max:120',
-                'issued_by' => 'nullable|string|max:120',
-                'issued_by_title' => 'nullable|string|max:120',
-                'noted_by' => 'nullable|string|max:120',
-                'noted_by_title' => 'nullable|string|max:120',
-                'received_by' => 'nullable|string|max:120',
-                'received_by_title' => 'nullable|string|max:120',
-            ])
-        );
+        $signatureValues = array_replace($this->withdrawalSignatureDefaults($request), $this->withdrawalSlipFields($httpRequest));
         $slipNumber = $request->ris_no ?: 'RQ-'.$request->id;
         $filename = 'withdrawal-receipt-'.Str::slug($slipNumber).'.pdf';
 
@@ -268,6 +254,32 @@ class ResourceRequestController extends Controller
             'isPdf' => true,
             'signatureValues' => $signatureValues,
         ])->setPaper('a4')->download($filename);
+    }
+
+    /** Persist editable withdrawal-slip references and signature labels for future print/PDF copies. */
+    public function saveWithdrawalSlip(Request $httpRequest, ResourceRequest $request): RedirectResponse
+    {
+        $this->authorize('view', $request);
+        $this->ensureWithdrawalReceiptIsAvailable($request);
+        $request->update(['withdrawal_slip_fields' => $this->withdrawalSlipFields($httpRequest)]);
+
+        AuditLog::log($httpRequest->user()->id, 'update_withdrawal_slip', 'resource_request', ResourceRequest::class, $request->id,
+            null, ['withdrawal_slip_fields' => $request->withdrawal_slip_fields]);
+
+        return redirect()->route('requests.withdrawal-slip', $request)->with('success', 'Withdrawal-slip references and signatures saved.');
+    }
+
+    /** Current projects the signed-in requester may choose. */
+    private function requestableProjects()
+    {
+        $user = auth()->user();
+        $projects = Project::query()->current();
+        if ($user && ! $user->isAdmin()) {
+            $projects->where(fn ($query) => $query->whereDoesntHave('participants')
+                ->orWhereHas('participants', fn ($members) => $members->whereKey($user->id)));
+        }
+
+        return $projects->orderBy('name')->get();
     }
 
     /**
@@ -299,7 +311,7 @@ class ResourceRequestController extends Controller
             ? config('rbac.roles.'.$request->approver->normalizedRole().'.label', $request->approver->department ?? '')
             : '';
 
-        return [
+        return array_replace([
             'po_number' => '',
             'pr_number' => '',
             'requested_by' => $request->user?->name ?? '',
@@ -310,7 +322,19 @@ class ResourceRequestController extends Controller
             'noted_by_title' => $approverTitle,
             'received_by' => '',
             'received_by_title' => '',
-        ];
+        ], $request->withdrawal_slip_fields ?? []);
+    }
+
+    /** @return array<string, ?string> */
+    private function withdrawalSlipFields(Request $request): array
+    {
+        return $request->validate([
+            'po_number' => 'nullable|string|max:80', 'pr_number' => 'nullable|string|max:80',
+            'requested_by' => 'nullable|string|max:120', 'requested_by_title' => 'nullable|string|max:120',
+            'issued_by' => 'nullable|string|max:120', 'issued_by_title' => 'nullable|string|max:120',
+            'noted_by' => 'nullable|string|max:120', 'noted_by_title' => 'nullable|string|max:120',
+            'received_by' => 'nullable|string|max:120', 'received_by_title' => 'nullable|string|max:120',
+        ]);
     }
 
     /**
@@ -329,7 +353,7 @@ class ResourceRequestController extends Controller
             'request' => $request,
             'items' => InventoryItem::withTrashed()->withReservationBalance()
                 ->whereIn('id', $request->items->pluck('inventory_item_id'))->get(),
-            'projects' => Project::query()->current()->orderBy('name')->get(),
+            'projects' => $this->requestableProjects(),
             'editToken' => $this->requestService->editToken($request),
         ]);
     }
