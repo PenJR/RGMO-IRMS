@@ -44,19 +44,6 @@ class AIForecastingController extends Controller
             return view('ai-forecasting.index', $this->savedForecastData($snapshot));
         }
 
-        if (! $request->boolean('generate')) {
-            $latestSnapshot = GeneratedReportSnapshot::query()
-                ->accessibleTo($request->user())
-                ->where('report_key', 'forecast')
-                ->orderByDesc('generated_at')
-                ->orderByDesc('id')
-                ->first();
-
-            if ($latestSnapshot !== null) {
-                return view('ai-forecasting.index', $this->savedForecastData($latestSnapshot));
-            }
-        }
-
         $range = $this->forecastRange($request);
 
         if (! $request->boolean('generate')) {
