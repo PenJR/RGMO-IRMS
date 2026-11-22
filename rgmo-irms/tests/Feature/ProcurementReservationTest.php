@@ -176,6 +176,8 @@ class ProcurementReservationTest extends TestCase
         $item = $this->item(0);
         $this->post(route('procurements.store'), ['inventory_item_id' => $item->id, 'supplier_name' => 'Seed supplier', 'supplier_number' => '09123456789', 'or_number' => 'OR-100', 'purchased_on' => today()->toDateString(), 'quantity' => 100, 'unit_cost' => 20, 'funding_source' => 'JF'])->assertRedirect();
         $purchase = Procurement::firstOrFail();
+        $this->post(route('procurements.submit', $purchase))->assertSessionHasNoErrors();
+        $this->post(route('procurements.approve', $purchase->fresh()))->assertSessionHasNoErrors();
         $this->assertEquals(0, $item->fresh()->stock);
         $data = ['quantity' => 40, 'received_on' => today()->toDateString(), 'submission_key' => (string) Str::uuid()];
         $this->post(route('procurements.receive', $purchase), $data)->assertSessionHasNoErrors();
@@ -366,6 +368,8 @@ class ProcurementReservationTest extends TestCase
             'receipt' => UploadedFile::fake()->create('receipt.pdf', 10, 'application/pdf'),
         ])->assertSessionHasNoErrors();
         $purchase = Procurement::firstOrFail();
+        $this->post(route('procurements.submit', $purchase))->assertSessionHasNoErrors();
+        $this->post(route('procurements.approve', $purchase->fresh()))->assertSessionHasNoErrors();
         Storage::disk('local')->assertExists($purchase->receipt_path);
         $this->get(route('procurements.receipt', $purchase))->assertOk();
         $this->post(route('procurements.receive', $purchase), ['quantity' => 10, 'received_on' => today()->subDay()->toDateString(), 'submission_key' => (string) Str::uuid()])->assertSessionHasErrors('quantity');

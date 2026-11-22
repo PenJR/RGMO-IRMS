@@ -90,7 +90,7 @@ class ProcurementDraftConversionTest extends TestCase
 
         // A retried final request still contains the old revision and duplicate PO number.
         $this->post(route('procurements.store'), $finalPayload)->assertSessionHasNoErrors()
-            ->assertRedirect(route('procurements.show', $purchase));
+            ->assertRedirect(route('procurements.show', $purchase->fresh()));
         $this->assertDatabaseCount('procurements', 1);
         $this->assertDatabaseCount('procurement_items', 1);
         $this->postJson(route('procurement-drafts.save', $id), ['expected_revision' => 0, 'payload' => $payload])->assertConflict();

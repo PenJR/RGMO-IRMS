@@ -143,7 +143,7 @@ class ProcurementController extends Controller
                 $checkpoint = ProcurementDraft::lockForUpdate()->findOrFail($draftId);
                 $this->authorize('view', $checkpoint);
                 if ($checkpoint->status === ProcurementDraft::STATUS_COMPLETED) {
-                    return redirect()->route('procurements.show', $checkpoint->completed_procurement_id);
+                    return redirect()->route('procurements.show', $checkpoint->completedProcurement()->firstOrFail());
                 }
                 if ($checkpoint->status !== ProcurementDraft::STATUS_ACTIVE || $checkpoint->revision !== $draftRevision) {
                     throw new ProcurementDraftConflictException($checkpoint, 'This unfinished entry has changed. Load its saved version before creating the purchase order.');
@@ -282,7 +282,7 @@ class ProcurementController extends Controller
                 Storage::disk('local')->delete($path);
             }
             if ($e instanceof ProcurementDraftConflictException && $e->draft->status === ProcurementDraft::STATUS_COMPLETED) {
-                return redirect()->route('procurements.show', $e->draft->completed_procurement_id);
+                return redirect()->route('procurements.show', $e->draft->completedProcurement()->firstOrFail());
             }
             throw $e;
         }

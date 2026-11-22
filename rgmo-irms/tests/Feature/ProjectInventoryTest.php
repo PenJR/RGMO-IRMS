@@ -10,11 +10,12 @@ class ProjectInventoryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_project_inventory_shows_withdrawn_and_outstanding_allocations_and_scopes_managers(): void
+    public function test_project_inventory_shows_withdrawn_and_outstanding_allocations_to_project_managers(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
         $manager = User::factory()->create(['role' => 'project_manager', 'status' => 'active']);
         $project = Project::create(['name' => 'Rice project', 'code' => 'RICE', 'status' => 'active']);
+        $project->managers()->sync([$manager->id]);
         $other = Project::create(['name' => 'Other project', 'code' => 'OTHER', 'status' => 'active']);
         $item = InventoryItem::create(['category_id' => Category::create(['name' => 'Seeds'])->id,
             'name' => 'Rice seed', 'stock' => 100, 'unit' => 'sacks', 'min_stock' => 0]);
@@ -43,8 +44,8 @@ class ProjectInventoryTest extends TestCase
                 && $rows[0]['remaining'] == 20
                 && $rows[0]['withdrawn'] == 25);
         $this->actingAs($manager)->get(route('projects.show', $project))->assertOk()
-            ->assertSee('Your requests only.')
-            ->assertViewHas('projectInventory', fn ($rows) => $rows[0]['remaining'] == 10 && $rows[0]['withdrawn'] == 20);
+            ->assertSee('All approved requests and utilization for this project.')
+            ->assertViewHas('projectInventory', fn ($rows) => $rows[0]['remaining'] == 20 && $rows[0]['withdrawn'] == 25);
         $this->assertEquals(100, $item->fresh()->stock);
     }
 }
