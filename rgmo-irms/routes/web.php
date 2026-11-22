@@ -235,6 +235,10 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['permission:generate-reports,view-audit-trail'])->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/forms/records/{operationalReport}', [ReportController::class, 'showFormRecord'])->name('reports.forms.record');
+        Route::get('/reports/forms/records/{operationalReport}/edit', [ReportController::class, 'editFormRecord'])->name('reports.forms.edit');
+        Route::put('/reports/forms/records/{operationalReport}', [ReportController::class, 'updateFormRecord'])->name('reports.forms.update');
+        Route::post('/reports/forms/{template}', [ReportController::class, 'storeForm'])->name('reports.forms.store');
         Route::get('/reports/forms/{template}', [ReportController::class, 'formTemplate'])->name('reports.forms.show');
         Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
         Route::get('/reports/resource-usage', [ReportController::class, 'resourceUsage'])->name('reports.resource-usage');

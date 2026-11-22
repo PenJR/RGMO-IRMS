@@ -42,7 +42,7 @@
         </div>
 
         <div class="row g-4 mt-1">
-            <div class="col-12"><h3 class="report-section-title">Official print-ready forms</h3><p class="text-muted small mb-0">These reflect the additional project-report formats in the reference PDF. They are intentionally blank until their source data is captured in the system.</p></div>
+            <div class="col-12"><h3 class="report-section-title">Official operational forms</h3><p class="text-muted small mb-0">Enter, save, reopen, and print the additional project-report formats from the reference PDF.</p></div>
             @foreach([
                 ['template' => 'animal-physical-count', 'icon' => 'beef', 'title' => 'Animal Physical Count', 'description' => 'Livestock count by cow, heifer, bull, and calf classification.'],
                 ['template' => 'harvest-report', 'icon' => 'wheat', 'title' => 'Harvest Report', 'description' => 'Harvest balances, production, deductions, and ending stock.'],
@@ -50,7 +50,7 @@
                 ['template' => 'processing-report', 'icon' => 'factory', 'title' => 'Grains Processing', 'description' => 'Weekly processing activity and grain-balance record.'],
                 ['template' => 'production-expense', 'icon' => 'receipt-text', 'title' => 'Production Expenses', 'description' => 'Labor, inputs, services, beginning, additional, and ending expense balances.'],
             ] as $form)
-                <div class="col-md-6 col-xl-4"><a class="report-hub-card report-hub-card--analysis" href="{{ route('reports.forms.show', $form['template']) }}"><div class="report-hub-card__icon"><i data-lucide="{{ $form['icon'] }}"></i></div><div><span class="report-hub-card__frequency">Printable form</span><h4>{{ $form['title'] }}</h4><p>{{ $form['description'] }}</p><span class="report-hub-card__link">Open template <i data-lucide="arrow-right"></i></span></div></a></div>
+                <div class="col-md-6 col-xl-4"><a class="report-hub-card report-hub-card--analysis" href="{{ route('reports.forms.show', $form['template']) }}"><div class="report-hub-card__icon"><i data-lucide="{{ $form['icon'] }}"></i></div><div><span class="report-hub-card__frequency">Saved official form</span><h4>{{ $form['title'] }}</h4><p>{{ $form['description'] }}</p><span class="report-hub-card__link">Create report <i data-lucide="arrow-right"></i></span></div></a></div>
             @endforeach
         </div>
     </div>

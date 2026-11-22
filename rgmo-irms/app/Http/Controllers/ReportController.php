@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\OperationalReport;
+use App\Models\Project;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\YearEndInventorySnapshot;
@@ -29,10 +31,66 @@ class ReportController extends Controller
         return view('reports.index');
     }
 
-    /** Display a print-ready official template for data not yet captured by the system. */
+    /** Display an editable official operational-report form. */
     public function formTemplate(string $template): View
     {
-        $templates = [
+        $definition = $this->formDefinitions()[$template] ?? abort(404);
+
+        return view('reports.form-template', [
+            'templateKey' => $template,
+            'template' => $definition,
+            'projects' => Project::query()->orderBy('name')->get(['id', 'name', 'code']),
+        ]);
+    }
+
+    /** Store figures entered for an official operational-report format. */
+    public function storeForm(Request $request, string $template)
+    {
+        $definition = $this->formDefinitions()[$template] ?? abort(404);
+        $data = $this->validatedOperationalReport($request, $definition);
+        $report = OperationalReport::create($data + [
+            'template' => $template,
+            'title' => $definition['title'],
+            'created_by' => $request->user()->id,
+        ]);
+
+        return redirect()->route('reports.forms.record', $report)->with('success', 'Official report saved. You can reopen, edit, or print it at any time.');
+    }
+
+    /** Display a saved official form in print-ready format. */
+    public function showFormRecord(OperationalReport $operationalReport): View
+    {
+        $definition = $this->formDefinitions()[$operationalReport->template] ?? abort(404);
+
+        return view('reports.operational-form', compact('operationalReport', 'definition'));
+    }
+
+    /** Edit a saved official form. */
+    public function editFormRecord(OperationalReport $operationalReport): View
+    {
+        $definition = $this->formDefinitions()[$operationalReport->template] ?? abort(404);
+
+        return view('reports.form-template', [
+            'templateKey' => $operationalReport->template,
+            'template' => $definition,
+            'operationalReport' => $operationalReport,
+            'projects' => Project::query()->orderBy('name')->get(['id', 'name', 'code']),
+        ]);
+    }
+
+    /** Update figures for a saved official form. */
+    public function updateFormRecord(Request $request, OperationalReport $operationalReport)
+    {
+        $definition = $this->formDefinitions()[$operationalReport->template] ?? abort(404);
+        $operationalReport->update($this->validatedOperationalReport($request, $definition));
+
+        return redirect()->route('reports.forms.record', $operationalReport)->with('success', 'Official report updated.');
+    }
+
+    /** @return array<string, array{title: string, period: string, headers: array<int, string>, rows: int}> */
+    private function formDefinitions(): array
+    {
+        return [
             'animal-physical-count' => [
                 'title' => 'Total Physical Count of Animals',
                 'period' => 'As of '.now()->format('F d, Y'),
@@ -64,10 +122,29 @@ class ReportController extends Controller
                 'rows' => 12,
             ],
         ];
+    }
 
-        abort_unless(isset($templates[$template]), 404);
+    /** @param array{headers: array<int, string>} $definition */
+    private function validatedOperationalReport(Request $request, array $definition): array
+    {
+        $validated = $request->validate([
+            'period_start' => ['nullable', 'date'],
+            'period_end' => ['nullable', 'date', 'after_or_equal:period_start'],
+            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
+            'prepared_by' => ['nullable', 'string', 'max:120'],
+            'reviewed_by' => ['nullable', 'string', 'max:120'],
+            'noted_by' => ['nullable', 'string', 'max:120'],
+            'rows' => ['required', 'array', 'max:100'],
+            'rows.*' => ['array'],
+            'rows.*.*' => ['nullable', 'string', 'max:255'],
+        ]);
 
-        return view('reports.form-template', ['template' => $templates[$template]]);
+        $keys = array_map(fn (string $header) => str($header)->slug('_')->toString(), $definition['headers']);
+        $validated['rows'] = collect($validated['rows'])->map(function (array $row) use ($keys) {
+            return collect($keys)->mapWithKeys(fn (string $key) => [$key => trim((string) ($row[$key] ?? ''))])->all();
+        })->filter(fn (array $row) => collect($row)->contains(fn (string $value) => $value !== ''))->values()->all();
+
+        return $validated;
     }
 
     /**
