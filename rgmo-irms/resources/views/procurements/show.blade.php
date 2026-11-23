@@ -35,7 +35,7 @@
             </form>
         @endcan
         <div class="table-responsive mt-3"><h4 class="h6">Ordered items</h4><table class="table table-sm"><thead><tr><th>Item</th><th>Ordered</th><th>Received</th><th>Remaining</th><th>Unit cost</th><th>Subtotal</th></tr></thead><tbody>@foreach($procurement->items as $poItem)<tr><td>{{ $poItem->inventoryItem->name }}</td><td>{{ $poItem->ordered_quantity }} {{ $poItem->unit_of_measurement }}</td><td>{{ $poItem->received_quantity }} {{ $poItem->unit_of_measurement }}</td><td>{{ $poItem->remaining_quantity }} {{ $poItem->unit_of_measurement }}</td><td>₱{{ number_format((float) $poItem->unit_cost, 2) }}</td><td>₱{{ number_format((float) $poItem->subtotal, 2) }}</td></tr>@endforeach</tbody></table></div>
-        </div></div>
+        </div>
         <div class="card-body pt-0 border-top purchase-detail-workflow">
         @if($procurement->notes)<p class="text-muted small mb-4">{{ $procurement->notes }}</p>@endif
         <div class="d-flex align-items-center gap-2 flex-wrap mb-3"><strong>Status</strong><span class="badge text-bg-{{ match($procurement->status) { 'approved' => 'success', 'partially_received', 'completed' => 'info', 'rejected', 'cancelled' => 'danger', 'pending_approval' => 'warning', default => 'secondary' } }}">{{ $procurement->status_label }}</span></div>
