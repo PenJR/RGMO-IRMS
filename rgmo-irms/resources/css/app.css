@@ -2060,13 +2060,15 @@ html[data-bs-theme="dark"] .table-light {
 .purchase-reason-action {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 0.5rem;
 }
 .purchase-reason-action .form-control { width: min(260px, 100%); }
+.purchase-reason-action .btn { flex-shrink: 0; }
 @media (max-width: 575.98px) {
     .purchase-detail-actions,
     .purchase-reason-action { align-items: stretch; }
+    .purchase-reason-action { flex-wrap: wrap; }
     .purchase-detail-actions > *,
     .purchase-reason-action .form-control { width: 100%; }
 }
