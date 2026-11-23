@@ -67,11 +67,35 @@ document.addEventListener('invalid', (event) => {
 
 if (dialog) {
     let pending = null;
+    let directConfirmation = null;
     let approvedForm = null;
-    const cancel = () => dialog.close();
+    const cancel = () => {
+        if (directConfirmation) {
+            const resolve = directConfirmation;
+            directConfirmation = null;
+            dialog.close();
+            resolve(false);
+            return;
+        }
+        dialog.close();
+    };
     dialog.querySelector('[data-confirm-cancel]').addEventListener('click', cancel);
-    dialog.addEventListener('close', () => { pending = null; });
+    dialog.addEventListener('close', () => {
+        pending = null;
+        if (directConfirmation) {
+            const resolve = directConfirmation;
+            directConfirmation = null;
+            resolve(false);
+        }
+    });
     dialog.querySelector('[data-confirm-accept]').addEventListener('click', () => {
+        if (directConfirmation) {
+            const resolve = directConfirmation;
+            directConfirmation = null;
+            dialog.close();
+            resolve(true);
+            return;
+        }
         if (!pending) return;
         const { form, submitter } = pending;
         pending = null;
@@ -82,6 +106,27 @@ if (dialog) {
         } finally {
             approvedForm = null;
         }
+    });
+    window.rgmoConfirm = (message, options = {}) => new Promise((resolve) => {
+        if (dialog.open) {
+            resolve(false);
+            return;
+        }
+        const symbol = dialog.querySelector('.rgmo-confirm__symbol');
+        symbol.classList.remove('rgmo-confirm__symbol--review');
+        symbol.textContent = options.symbol || '!';
+        dialog.querySelector('#rgmo-confirm-title').textContent = options.title || 'Confirm action';
+        dialog.querySelector('#rgmo-confirm-message').textContent = message;
+        dialog.querySelector('[data-confirm-cancel]').textContent = options.cancelLabel || 'Cancel';
+        const accept = dialog.querySelector('[data-confirm-accept]');
+        accept.textContent = options.acceptLabel || 'Confirm';
+        accept.classList.toggle('btn-outline-danger', Boolean(options.destructive));
+        accept.classList.toggle('btn-cmu', !options.destructive);
+        const summary = dialog.querySelector('[data-confirm-summary]');
+        summary.replaceChildren();
+        summary.hidden = true;
+        directConfirmation = resolve;
+        dialog.showModal();
     });
     // Capture before the page loader so canceling never starts navigation.
     document.addEventListener('submit', (event) => {

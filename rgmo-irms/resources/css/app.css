@@ -2038,6 +2038,38 @@ html[data-bs-theme="dark"] .table-light {
 }
 .rgmo-confirm p { margin: 0.75rem 0 1.5rem; overflow-wrap: anywhere; }
 .rgmo-confirm__actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.75rem; }
+
+/* Keep the purchase-order decision area compact and visually grouped. */
+.purchase-detail-workflow {
+    padding-top: 1.5rem;
+}
+.purchase-receiving-progress {
+    max-width: 720px;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--cmu-border);
+    border-radius: 0.65rem;
+    background: rgba(2, 104, 30, 0.035);
+}
+.purchase-detail-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+.purchase-detail-actions form { margin: 0; }
+.purchase-reason-action {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.purchase-reason-action .form-control { width: min(260px, 100%); }
+@media (max-width: 575.98px) {
+    .purchase-detail-actions,
+    .purchase-reason-action { align-items: stretch; }
+    .purchase-detail-actions > *,
+    .purchase-reason-action .form-control { width: 100%; }
+}
 @media print {
     .rgmo-toasts, .rgmo-confirm { display: none !important; }
 

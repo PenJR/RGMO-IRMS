@@ -334,7 +334,11 @@ function initializePurchaseDraftForm() {
             try { await flush(); await loadDraft(id); } catch { showModal(); }
             return;
         }
-        if (!window.confirm('Discard this unfinished entry and its saved receipt? This cannot be undone.')) return;
+        const confirmed = await window.rgmoConfirm?.(
+            'Discard this unfinished entry and its saved receipt? This cannot be undone.',
+            { title: 'Discard unfinished entry?', acceptLabel: 'Discard entry', destructive: true }
+        );
+        if (!confirmed) return;
         discard.disabled = true;
         try {
             const row = discard.closest('[data-po-draft-row]');
@@ -351,8 +355,12 @@ function initializePurchaseDraftForm() {
     });
 
     form.querySelector('[data-po-autosave-retry]').addEventListener('click', () => { void flush().catch(() => {}); });
-    form.querySelector('[data-po-autosave-reload]').addEventListener('click', () => {
-        if (!window.confirm('Replace the fields in this tab with the saved version? Unsaved changes in this tab will be replaced.')) return;
+    form.querySelector('[data-po-autosave-reload]').addEventListener('click', async () => {
+        const confirmed = await window.rgmoConfirm?.(
+            'Replace the fields in this tab with the saved version? Unsaved changes in this tab will be replaced.',
+            { title: 'Reload saved draft?', acceptLabel: 'Reload saved version' }
+        );
+        if (!confirmed) return;
         void loadDraft(saver.id);
     });
     form.querySelector('[data-po-autosave-copy]').addEventListener('click', () => {
