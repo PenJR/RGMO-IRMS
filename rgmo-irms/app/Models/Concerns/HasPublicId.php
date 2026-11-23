@@ -25,6 +25,13 @@ trait HasPublicId
     /** Accept a numeric key only for pre-migration links; new URLs resolve by ULID. */
     public function resolveRouteBinding($value, $field = null)
     {
-        return $this->where('public_id', $value)->orWhere($this->getKeyName(), $value)->first();
+        // PostgreSQL evaluates both sides of an OR expression. Comparing a ULID
+        // to the numeric primary key therefore raises an invalid bigint error,
+        // even when the public ID matches. Select one compatible key instead.
+        if (ctype_digit((string) $value)) {
+            return $this->where($this->getKeyName(), $value)->first();
+        }
+
+        return $this->where('public_id', $value)->first();
     }
 }
