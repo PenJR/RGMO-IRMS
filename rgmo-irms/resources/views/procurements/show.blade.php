@@ -3,11 +3,11 @@
     <div class="container-fluid py-4">
         <div class="d-flex justify-content-end mb-4"><a href="{{ route('procurements.index') }}" class="btn btn-outline-secondary">Back</a></div>
         @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
-        <div class="card mb-4"><div class="card-body"><div class="row g-3">
-            <div class="col-md-6"><h3 class="h5">PO {{ $procurement->po_number ?? $procurement->or_number }}</h3><p><strong>{{ $procurement->supplier?->company_name ?: $procurement->supplier_name }}</strong><br>{{ $procurement->supplier?->contact_person }}<br>{{ $procurement->supplier?->contact_number ?: $procurement->supplier_number }}<br>{{ $procurement->supplier?->email }}<br>{{ $procurement->supplier?->business_address }}<br>OR: {{ $procurement->or_number ?? '—' }}<br>Ordered: {{ $procurement->order_date?->format('M d, Y') ?? $procurement->purchased_on->format('M d, Y') }}<br>Expected: {{ $procurement->expected_delivery_date?->format('M d, Y') ?? 'Not specified' }}</p></div>
-            <div class="col-md-6"><p>Total: <strong>₱{{ number_format((float) $procurement->total_amount, 2) }}</strong><br>Prepared by: {{ $procurement->preparedBy->name ?? '—' }}<br>Funding: {{ $procurement->fundingSource?->label ?? $procurement->funding_source }}
+        <div class="card mb-4 purchase-detail-card"><div class="card-body"><div class="row g-4 purchase-overview">
+            <div class="col-md-7"><h3 class="h5 mb-2">PO {{ $procurement->po_number ?? $procurement->or_number }}</h3><div class="purchase-supplier-details"><strong>{{ $procurement->supplier?->company_name ?: $procurement->supplier_name }}</strong><span>{{ $procurement->supplier?->contact_person }}</span><span>{{ $procurement->supplier?->contact_number ?: $procurement->supplier_number }}</span><span>{{ $procurement->supplier?->email }}</span><span>{{ $procurement->supplier?->business_address }}</span></div><div class="purchase-order-dates"><span><strong>OR</strong> {{ $procurement->or_number ?? '—' }}</span><span><strong>Ordered</strong> {{ $procurement->order_date?->format('M d, Y') ?? $procurement->purchased_on->format('M d, Y') }}</span><span><strong>Expected</strong> {{ $procurement->expected_delivery_date?->format('M d, Y') ?? 'Not specified' }}</span></div></div>
+            <div class="col-md-5 purchase-financial-details"><span><strong>Total</strong> ₱{{ number_format((float) $procurement->total_amount, 2) }}</span><span><strong>Prepared by</strong> {{ $procurement->preparedBy->name ?? '—' }}</span><span><strong>Funding</strong> {{ $procurement->fundingSource?->label ?? $procurement->funding_source }}</span>
                 @if($procurement->fundingSource && ! $procurement->fundingSource->isActive())<span class="badge text-bg-secondary">Inactive</span>@endif
-            </p></div>
+            </div>
         </div>
         @can('update', $procurement)
             <form method="POST" action="{{ route('procurements.update-funding-source', $procurement) }}" class="row g-2 align-items-end mt-2 mb-3">
@@ -38,9 +38,8 @@
         </div>
         <div class="card-body pt-0 border-top purchase-detail-workflow">
         @if($procurement->notes)<p class="text-muted small mb-4">{{ $procurement->notes }}</p>@endif
-        <div class="d-flex align-items-center gap-2 flex-wrap mb-3"><strong>Status</strong><span class="badge text-bg-{{ match($procurement->status) { 'approved' => 'success', 'partially_received', 'completed' => 'info', 'rejected', 'cancelled' => 'danger', 'pending_approval' => 'warning', default => 'secondary' } }}">{{ $procurement->status_label }}</span></div>
-        <div class="purchase-receiving-progress"><div class="d-flex justify-content-between small mb-1"><strong>Receiving progress</strong><span>{{ $procurement->monitoring['received'] }} of {{ $procurement->monitoring['ordered'] }} received</span></div><div class="progress"><div class="progress-bar" style="width: {{ $procurement->monitoring['progress'] }}%">{{ $procurement->monitoring['progress'] }}%</div></div></div>
-        <div class="purchase-detail-actions mt-4">
+        <div class="purchase-workflow-summary"><div class="purchase-status"><span class="small text-muted">Status</span><span class="badge text-bg-{{ match($procurement->status) { 'approved' => 'success', 'partially_received', 'completed' => 'info', 'rejected', 'cancelled' => 'danger', 'pending_approval' => 'warning', default => 'secondary' } }}">{{ $procurement->status_label }}</span></div><div class="purchase-receiving-progress"><div class="d-flex justify-content-between small mb-1"><strong>Receiving progress</strong><span>{{ $procurement->monitoring['received'] }} of {{ $procurement->monitoring['ordered'] }} received</span></div><div class="progress"><div class="progress-bar" style="width: {{ $procurement->monitoring['progress'] }}%">{{ $procurement->monitoring['progress'] }}%</div></div></div></div>
+        <div class="purchase-detail-actions">
         @if($procurement->status === \App\Models\Procurement::STATUS_DRAFT && auth()->user()->hasPermission('manage-inventory'))
         <form method="POST" action="{{ route('procurements.submit', $procurement) }}">@csrf<button class="btn btn-cmu">Submit for approval</button></form>
         @endif
@@ -51,13 +50,14 @@
         @if(auth()->user()->hasPermission(['manage-inventory','manage-purchase-orders']) && $procurement->canCancel())
         <form method="POST" action="{{ route('procurements.cancel', $procurement) }}" class="purchase-reason-action">@csrf<input name="reason" class="form-control" required minlength="5" maxlength="1000" placeholder="Cancellation reason"><button class="btn btn-outline-danger">Cancel</button></form>
         @endif
+        @if($procurement->receipt_path)<a class="btn btn-outline-success" href="{{ route('procurements.receipt', $procurement) }}">Download receipt</a> <a class="btn btn-outline-secondary" target="_blank" rel="noopener" href="{{ route('procurements.receipt', ['procurement' => $procurement, 'preview' => 1]) }}">Preview receipt</a>@endif @if($procurement->item && ! $procurement->item->trashed())<a class="btn btn-outline-secondary" href="{{ route('inventory.show', $procurement->item) }}">View item</a>@endif</div>
         @if($procurement->approved_at || $procurement->rejected_at || $procurement->cancelled_at)
-        <div class="mt-3 small"><strong>Approval history</strong><ul class="mb-0">
+        <div class="purchase-approval-history small"><strong>Approval history</strong><ul class="mb-0">
             @if($procurement->approved_at)<li>Approved by {{ $procurement->approvedBy?->name }} on {{ $procurement->approved_at->format('M d, Y g:i A') }}</li>@endif
             @if($procurement->rejected_at)<li>Rejected by {{ $procurement->rejectedBy?->name }} on {{ $procurement->rejected_at->format('M d, Y g:i A') }}: {{ $procurement->rejection_reason }}</li>@endif
             @if($procurement->cancelled_at)<li>Cancelled by {{ $procurement->cancelledBy?->name }} on {{ $procurement->cancelled_at->format('M d, Y g:i A') }}: {{ $procurement->cancellation_reason }}</li>@endif
         </ul></div>@endif
-        @if($procurement->receipt_path)<a class="btn btn-outline-success" href="{{ route('procurements.receipt', $procurement) }}">Download receipt</a> <a class="btn btn-outline-secondary" target="_blank" rel="noopener" href="{{ route('procurements.receipt', ['procurement' => $procurement, 'preview' => 1]) }}">Preview receipt</a>@endif @if($procurement->item && ! $procurement->item->trashed())<a class="btn btn-outline-secondary" href="{{ route('inventory.show', $procurement->item) }}">View item</a>@endif</div></div></div>
+        </div></div>
         @if(auth()->user()->hasPermission('manage-inventory') && $procurement->isReceivable() && $procurement->monitoring['remaining'] > 0)
         <div class="card mb-4"><div class="card-body"><h3 class="h5">Receive delivery</h3><form method="POST" enctype="multipart/form-data" action="{{ route('procurements.receive', $procurement) }}">@csrf
             <input type="hidden" name="submission_key" value="{{ old('submission_key', (string) Str::uuid()) }}">
